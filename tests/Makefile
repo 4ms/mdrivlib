@@ -1,6 +1,8 @@
 #Set this to @ to keep the makefile quiet
 # SILENCE = @
 
+CPPUTEST_HOME = tests/
+
 #---- Outputs ----#
 COMPONENT_NAME = localtests
 CPPUTEST_OBJS_DIR = tests/build/objs
@@ -15,9 +17,7 @@ PROJECT_HOME_DIR = .
 # CPPUTEST_USE_STD_C_LIB = N
 # CPPUTEST_USE_STD_CPP_LIB = N
 
-SRC_FILES = src/drivers/rotary.cc \
-			# src/debug.cc \
-			#src/drivers/pin.cc
+SRC_FILES = drivers/rotary.cc \
 
 # SRC_DIRS = \
 # 	src \
@@ -25,7 +25,6 @@ SRC_FILES = src/drivers/rotary.cc \
 TEST_SRC_DIRS = \
 	tests \
 	tests/stubs \
-	tests/stubs/driver \
 	tests/stubs/stm32 \
 
 
@@ -35,13 +34,11 @@ INCLUDE_DIRS =\
 	tests/ \
 	tests/stubs \
 	tests/stubs/stm32 \
-	tests/stubs/driver \
-	stm32/periph/include \
-	stm32/device/include \
-	stm32/core/include \
-	src \
-	src/util \
-	src/drivers \
+	tests/ext/HAL \
+	tests/ext/HAL/include \
+	tests/ext/CMSIS/include \
+	tests/ext/device/include \
+	drivers \
 
 
 MOCKS_SRC_DIRS = \

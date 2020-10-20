@@ -1,6 +1,6 @@
 #include "CppUTest/TestHarness.h"
-#include "drivers/pin.hh"
-#include "drivers/rotary.hh"
+#include "pin.hh"
+#include "rotary.hh"
 #include "fake_gpio.h"
 #include <fff.h>
 

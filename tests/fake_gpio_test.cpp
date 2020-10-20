@@ -1,5 +1,5 @@
 #include "CppUTest/TestHarness.h"
-#include "drivers/pin.hh"
+#include "pin.hh"
 #include "fake_gpio.h"
 #include <fff.h>
 
