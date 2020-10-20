@@ -45,11 +45,12 @@ public:
 
 		HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7);
 
-		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_USART6 |RCC_PERIPHCLK_SAI1|RCC_PERIPHCLK_I2C1;
-		PeriphClkInitStruct.PLLSAI.PLLSAIN = 172;// mult by 344 = 344MHz
-		PeriphClkInitStruct.PLLSAI.PLLSAIR = 2;  // div by 4 = 86MHz
-		PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;  // div by 7 = 12.285714MHz
-                                                 // div by 256 for bit rate = 47.991kHz
+		PeriphClkInitStruct.PeriphClockSelection =
+			RCC_PERIPHCLK_USART3 | RCC_PERIPHCLK_USART6 | RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_I2C1;
+		PeriphClkInitStruct.PLLSAI.PLLSAIN = 172; // mult by 344 = 344MHz
+		PeriphClkInitStruct.PLLSAI.PLLSAIR = 2;	  // div by 4 = 86MHz
+		PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;	  // div by 7 = 12.285714MHz
+												  // div by 256 for bit rate = 47.991kHz
 		PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV2;
 		PeriphClkInitStruct.PLLSAIDivQ = 7;
 		PeriphClkInitStruct.PLLSAIDivR = RCC_PLLSAIDIVR_2;
@@ -485,7 +486,7 @@ public:
 		// APB2 --> divider = 1;
 		// APB1 --> divider = 2;
 		uint32_t divider;
-		uint32_t TIMx_BASE_ADDR = reinterpret_cast<uint32_t>(TIM);
+		auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
 		if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
 			divider = 2;
 		else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
