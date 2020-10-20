@@ -485,7 +485,7 @@ public:
 		// APB2 --> divider = 1;
 		// APB1 --> divider = 2;
 		uint32_t divider;
-		uint32_t TIMx_BASE_ADDR = reinterpret_cast<uint32_t>(TIM);
+		auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
 		if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
 			divider = 2;
 		else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
