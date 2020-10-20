@@ -17,10 +17,10 @@
  */
 
 #pragma once
-#include "stm32f7xx.h"
 #include "stm32f7xx_ll_bus.h"
 #include "stm32f7xx_ll_gpio.h"
-#include <system.hh>
+#include "stm32xx.h"
+#include "system.hh"
 
 enum class PinPolarity {
 	Normal,

@@ -1,6 +1,6 @@
 #pragma once
-#include "drivers/interrupt.hh"
 #include "i2c_config_struct.hh"
+#include "interrupt.hh"
 #include "pin.hh"
 #include <stdint.h>
 
