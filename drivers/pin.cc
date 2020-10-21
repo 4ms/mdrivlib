@@ -44,12 +44,12 @@ void Pin::off() const
 }
 void Pin::set_to(uint32_t v)
 {
-	// v ? on() : off();
 	if (v)
 		on();
 	else
 		off();
 }
+void Pin::toggle() const { LL_GPIO_TogglePin(GPIOPort(port_), pin_); }
 
 bool Pin::read_raw()
 {

@@ -95,6 +95,7 @@ public:
 	void on() const;
 	void off() const;
 	void set_to(uint32_t v);
+	void toggle() const;
 	bool read_raw();
 	uint8_t is_on();
 	void set_mode(PinMode mode);
