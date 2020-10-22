@@ -65,6 +65,11 @@ public:
 
 		HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
 		HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+		
+		// Debug:
+		SCB_DisableICache();
+		SCB_InvalidateDCache();
+		SCB_DisableDCache();
 
 		// Code execution from flash over ITCM bus (using ART and Prefetch)
 		// SCB_DisableICache();
@@ -72,9 +77,9 @@ public:
 		// SCB_EnableDCache();
 
 		// Code execution from flash over AXIM bus using I-Cache:
-		SCB_EnableICache();
-		SCB_InvalidateDCache();
-		SCB_EnableDCache();
+		// SCB_EnableICache();
+		// SCB_InvalidateDCache();
+		// SCB_EnableDCache();
 
 		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 		HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);
