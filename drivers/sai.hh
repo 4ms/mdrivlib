@@ -1,7 +1,7 @@
 #pragma once
-#include "interrupt.hh"
 #include "pin.hh"
 #include "sai_config_struct.hh"
+#include "interrupt.hh"
 #include <cstdint>
 
 class SaiPeriph {
@@ -52,5 +52,11 @@ private:
 	void _config_tx_dma();
 	Error _init_sai_protocol();
 	Error _init_sai_dma();
+
+	uint32_t dma_tc_flag_index;// = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
+	uint32_t dma_ht_flag_index;// = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
+	volatile uint32_t *dma_isr_reg;//= __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
+	volatile uint32_t *dma_ifcr_reg; // = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+	volatile DMA_Stream_TypeDef *dma_stream;// = saidef_.dma_init_tx.stream;
 };
 
