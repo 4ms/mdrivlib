@@ -13,7 +13,7 @@ struct AnalogIn : AdcChan<p, c, uint32_t> {
 		oversampler_.add_val(this->get_val());
 	}
 
-	uint16_t get()
+	uint32_t get()
 	{
 		return oversampler_.val();
 	}

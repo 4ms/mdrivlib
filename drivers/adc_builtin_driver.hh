@@ -33,10 +33,7 @@
 #include "stm32f7xx_ll_adc.h"
 #include <array>
 #include <stm32f7xx.h>
-// FixMe:
-// constexpr function as a template parameter is awkward.
-// Replace with ... int? 1 ==> ADC1, 2 ==> ADC2, 3 ==> ADC3, else static_assert a failure
-// then have a constexpr function: ADC_TypeDef *get_adc_periph(int periph_num);
+
 enum class AdcChanNum { _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15 };
 enum class AdcPeriphNum { _1, _2, _3 };
 
@@ -52,7 +49,7 @@ public:
 		AdcPeriph<ADCN>::add_channel(c, sampletime);
 	}
 
-	T &get_val_ref()
+	const T &get_val_ref()
 	{ // experimental, perhaps dangerous? Todo: create a read-only struct to return
 		return AdcPeriph<ADCN>::get_val_ref(c);
 	}
@@ -84,7 +81,7 @@ public:
 		return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]];
 	}
 
-	static uint16_t &get_val_ref(const AdcChanNum channel)
+	static const uint16_t &get_val_ref(const AdcChanNum channel)
 	{
 		return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]];
 	}
