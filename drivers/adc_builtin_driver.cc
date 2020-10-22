@@ -32,7 +32,6 @@
 #include "stm32f7xx_ll_bus.h"
 #include "stm32f7xx_ll_dma.h"
 
-// Todo: research if there's a way to not have to declare these class templates
 template class AdcPeriph<AdcPeriphNum::_1>;
 template class AdcPeriph<AdcPeriphNum::_2>;
 template class AdcPeriph<AdcPeriphNum::_3>;
