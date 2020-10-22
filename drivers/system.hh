@@ -4,91 +4,37 @@
 #include "stm32xx.h"
 
 // Todo: refactor for LL intead of HAL
-class System {
+struct System {
+	System() {}
 
-	void SetVectorTable(uint32_t reset_address)
+	static void SetVectorTable(uint32_t reset_address)
 	{
 		SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80;
 	}
 
-public:
-	System()
+	static void init_clocks(const RCC_OscInitTypeDef &osc_def,
+							const RCC_ClkInitTypeDef &clk_def,
+							const RCC_PeriphCLKInitTypeDef &pclk_def,
+							const uint32_t systick_freq_hz = 1000)
 	{
-		SetVectorTable(0x08000000);
-		HAL_Init();
 		__HAL_RCC_PWR_CLK_ENABLE();
 		__HAL_RCC_SYSCFG_CLK_ENABLE();
 
-		RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-		RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-		RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-
-		__HAL_RCC_PWR_CLK_ENABLE();
-		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-		RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-		RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-		RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-		RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-		RCC_OscInitStruct.PLL.PLLM = 8;
-		RCC_OscInitStruct.PLL.PLLN = 216;
-		RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-		RCC_OscInitStruct.PLL.PLLQ = 9;
-		HAL_RCC_OscConfig(&RCC_OscInitStruct);
+		RCC_OscInitTypeDef osc_def_ = osc_def;
+		HAL_RCC_OscConfig(&osc_def_);
 
 		HAL_PWREx_EnableOverDrive();
-		RCC_ClkInitStruct.ClockType =
-			RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-		RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-		RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-		RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-		RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-		HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7);
+		RCC_ClkInitTypeDef clk_def_ = clk_def;
+		HAL_RCC_ClockConfig(&clk_def_, FLASH_LATENCY_7);
 
-		PeriphClkInitStruct.PeriphClockSelection =
-			RCC_PERIPHCLK_USART3 | RCC_PERIPHCLK_USART6 | RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_I2C1;
-		PeriphClkInitStruct.PLLSAI.PLLSAIN = 172; // mult by 344 = 344MHz
-		PeriphClkInitStruct.PLLSAI.PLLSAIR = 2;	  // div by 4 = 86MHz
-		PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;	  // div by 7 = 12.285714MHz
-												  // div by 256 for bit rate = 47.991kHz
-		PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV2;
-		PeriphClkInitStruct.PLLSAIDivQ = 7;
-		PeriphClkInitStruct.PLLSAIDivR = RCC_PLLSAIDIVR_2;
-		PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLLSAI;
-		PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-		PeriphClkInitStruct.Usart6ClockSelection = RCC_USART6CLKSOURCE_PCLK2;
-		PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-		HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+		RCC_PeriphCLKInitTypeDef pclk_def_ = pclk_def;
+		HAL_RCCEx_PeriphCLKConfig(&pclk_def_);
 
 		HAL_RCC_EnableCSS();
 
-		HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
+		HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / systick_freq_hz);
 		HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-		
-		// Debug:
-		SCB_DisableICache();
-		SCB_InvalidateDCache();
-		SCB_DisableDCache();
-
-		// Code execution from flash over ITCM bus (using ART and Prefetch)
-		// SCB_DisableICache();
-		// SCB_InvalidateDCache();
-		// SCB_EnableDCache();
-
-		// Code execution from flash over AXIM bus using I-Cache:
-		// SCB_EnableICache();
-		// SCB_InvalidateDCache();
-		// SCB_EnableDCache();
-
-		HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-		HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);
-		HAL_NVIC_SetPriority(BusFault_IRQn, 0, 0);
-		HAL_NVIC_SetPriority(UsageFault_IRQn, 0, 0);
-		HAL_NVIC_SetPriority(SVCall_IRQn, 0, 0);
-		HAL_NVIC_SetPriority(DebugMonitor_IRQn, 0, 0);
-		HAL_NVIC_SetPriority(PendSV_IRQn, 0, 0);
-		HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 	}
 
 	static uint32_t encode_nvic_priority(uint32_t pri1, uint32_t pri2)
