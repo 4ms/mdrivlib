@@ -12,7 +12,6 @@ struct AnalogIn : AdcChan<p, c, uint32_t> {
 	{
 		oversampler_.add_val(this->get_val());
 	}
-	// void read_TESTME() { oversampler_.add_val(AdcPeriph<p>::get_val(c)); }
 
 	uint16_t get()
 	{
