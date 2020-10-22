@@ -11,16 +11,18 @@ using IRQType = uint32_t;
 
 class Interrupt {
 public:
+	// Todo: Try inplace_function<void(void)> instead of std::function
+	// https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
 	using ISRType = std::function<void(void)>;
 
 	Interrupt() {}
-	static void registerISR(IRQType irqnum, ISRType func)
+	static void registerISR(IRQType irqnum, ISRType &&func)
 	{
-		ISRs[irqnum] = func;
+		ISRs[irqnum] = std::move(func);
 	}
-	Interrupt(IRQType irqnum, ISRType func)
+	Interrupt(IRQType irqnum, ISRType &&func)
 	{
-		registerISR(irqnum, func);
+		ISRs[irqnum] = std::move(func);
 	}
 	static inline void callISR(IRQType irqnum)
 	{
