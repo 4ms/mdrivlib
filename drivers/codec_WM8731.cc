@@ -62,6 +62,11 @@ void CodecWM8731::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uin
 	sai_.set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
 }
 
+void CodecWM8731::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb)
+{
+	sai_.set_callbacks(std::move(tx_complete_cb), std::move(tx_half_complete_cb));
+}
+
 uint32_t CodecWM8731::get_samplerate()
 {
 	return samplerate_;
