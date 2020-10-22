@@ -19,7 +19,9 @@ struct System {
 	{
 		__HAL_RCC_PWR_CLK_ENABLE();
 		__HAL_RCC_SYSCFG_CLK_ENABLE();
+		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
+		// Todo: const_cast or fix HAL_RCC_ functions to take a const struct
 		RCC_OscInitTypeDef osc_def_ = osc_def;
 		HAL_RCC_OscConfig(&osc_def_);
 
