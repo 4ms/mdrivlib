@@ -1,8 +1,7 @@
 #pragma once
 #include "adc_builtin_driver.hh"
-#include "util/filter.hh"
 
-template<AdcPeriphNum p, AdcChanNum c, int kOverSampleAmt = 128>
+template<AdcPeriphNum p, AdcChanNum c, typename FILTER>
 struct AnalogIn : AdcChan<p, c> {
 	AnalogIn(GPIO port, uint8_t pin_num)
 	{
@@ -20,19 +19,21 @@ struct AnalogIn : AdcChan<p, c> {
 	}
 
 private:
-	Oversampler<kOverSampleAmt, uint32_t> oversampler_;
+	FILTER oversampler_;
 };
 
-template<AdcPeriphNum p, AdcChanNum c, typename FILTER>
-struct AnalogInput : AdcChan<p, c> {
-	AnalogInput(GPIO port, uint8_t pin_num)
+//Todo: is this worth getting working? ~12% faster than AnalogIn
+template<typename ADCIN, uint16_t *const DMABUFFER, typename FILTER>
+struct AnalogInPtr {
+	AnalogInPtr(GPIO port, uint8_t pin_num)
+		:offset_(ADCIN::get_rank())
 	{
 		Pin pin(port, pin_num, PinMode::Analog);
 	}
 
 	void read()
 	{
-		oversampler_.add_val(this->get_val());
+		oversampler_.add_val(*(DMABUFFER + offset_));
 	}
 
 	auto get()
@@ -41,29 +42,8 @@ struct AnalogInput : AdcChan<p, c> {
 	}
 
 private:
+	unsigned offset_;
 	FILTER oversampler_;
 };
-
-template<typename ADCIN, typename FILTER>
-struct AnalogIn2 {
-	AnalogIn2(GPIO port, uint8_t pin_num)
-		: adcval(ADCIN::get_val_ptr())
-	{
-		Pin pin(port, pin_num, PinMode::Analog);
-	}
-
-	void read()
-	{
-		oversampler_.add_val(*adcval);
-	}
-
-	auto get()
-	{
-		return oversampler_.val();
-	}
-
-private:
-	uint16_t *const adcval;
-	FILTER oversampler_;
-};
-
+//Usage
+//AnalogInPtr<AdcChan<AdcPeriphNum::_1, AdcChanNum::_0>, adc_buffer, Oversampler<16>> freq_cv1 = {GPIO::A, 0};
