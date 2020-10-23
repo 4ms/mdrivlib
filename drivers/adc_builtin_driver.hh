@@ -50,7 +50,7 @@ public:
 	}
 
 	const T &get_val_ref()
-	{ // experimental, perhaps dangerous? Todo: create a read-only struct to return
+	{
 		return AdcPeriph<ADCN>::get_val_ref(c);
 	}
 
@@ -59,11 +59,11 @@ public:
 		return AdcPeriph<ADCN>::get_val(c);
 	}
 
-	void start_dma(const DMA_LL_Config dma_defs)
-	{
-		AdcPeriph<ADCN>::init_dma(dma_defs);
-		AdcPeriph<ADCN>::start_adc();
-	}
+	// void start_dma(const DMA_LL_Config dma_defs)
+	// {
+	// 	AdcPeriph<ADCN>::init_dma(dma_defs);
+	// 	AdcPeriph<ADCN>::start_adc();
+	// }
 };
 
 template<AdcPeriphNum ADCN>
@@ -72,7 +72,7 @@ class AdcPeriph {
 	friend class AdcChan;
 
 public:
-	static void init_dma(const DMA_LL_Config dma_defs);
+	static void init_dma(const DMA_LL_Config &dma_defs, uint16_t *dma_buffer = default_dma_buffer_);
 	static void enable_DMA_IT();
 	static void start_adc();
 
@@ -94,7 +94,8 @@ private:
 
 	static inline uint8_t num_channels_;
 	static inline uint8_t ranks_[16];
-	static inline uint16_t dma_buffer_[16];
+	static inline uint16_t *dma_buffer_;
+	static inline uint16_t default_dma_buffer_[16];
 
 	static inline IRQn_Type DMA_IRQn;
 	static inline uint8_t DMA_IRQ_pri;
@@ -102,8 +103,7 @@ private:
 
 	static ADC_TypeDef *get_ADC_base(AdcPeriphNum p = ADCN)
 	{
-		return (p == AdcPeriphNum::_1)
-				   ? ADC1
-				   : (p == AdcPeriphNum::_2) ? ADC2 : (p == AdcPeriphNum::_3) ? ADC3 : nullptr;
+		return (p == AdcPeriphNum::_1) ? ADC1
+									   : (p == AdcPeriphNum::_2) ? ADC2 : (p == AdcPeriphNum::_3) ? ADC3 : nullptr;
 	}
 };

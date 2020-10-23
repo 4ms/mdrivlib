@@ -48,6 +48,8 @@ AdcPeriph<p>::AdcPeriph()
 {
 	System::enable_adc_rcc(get_ADC_base(p));
 
+	dma_buffer_ = default_dma_buffer_;
+
 	num_channels_ = 0;
 	LL_ADC_Disable(get_ADC_base(p));
 
@@ -86,34 +88,36 @@ template<AdcPeriphNum p>
 void AdcPeriph<p>::add_channel(const AdcChanNum channel, const uint32_t sampletime)
 {
 	uint32_t channel_int = static_cast<uint32_t>(channel);
-	LL_ADC_REG_SetSequencerRanks(get_ADC_base(p), _LL_ADC_DECIMAL_NB_TO_RANK(num_channels_),
-								 __LL_ADC_DECIMAL_NB_TO_CHANNEL(channel_int));
-	LL_ADC_REG_SetSequencerLength(get_ADC_base(p),
-								  _LL_ADC_DECIMAL_NB_TO_REG_SEQ_LENGTH(num_channels_));
-	LL_ADC_SetChannelSamplingTime(get_ADC_base(p), __LL_ADC_DECIMAL_NB_TO_CHANNEL(channel_int),
-								  sampletime);
+	LL_ADC_REG_SetSequencerRanks(
+		get_ADC_base(p), _LL_ADC_DECIMAL_NB_TO_RANK(num_channels_), __LL_ADC_DECIMAL_NB_TO_CHANNEL(channel_int));
+	LL_ADC_REG_SetSequencerLength(get_ADC_base(p), _LL_ADC_DECIMAL_NB_TO_REG_SEQ_LENGTH(num_channels_));
+	LL_ADC_SetChannelSamplingTime(get_ADC_base(p), __LL_ADC_DECIMAL_NB_TO_CHANNEL(channel_int), sampletime);
 	uint8_t rank_decimal = num_channels_;
 	num_channels_++;
 	ranks_[channel_int] = rank_decimal;
 }
 
 template<AdcPeriphNum p>
-void AdcPeriph<p>::init_dma(const DMA_LL_Config dma_defs)
+void AdcPeriph<p>::init_dma(const DMA_LL_Config &dma_defs, uint16_t *dma_buffer)
 {
+	dma_buffer_ = dma_buffer;
+
 	if (!num_channels_)
 		return;
 
 	System::enable_dma_rcc(dma_defs.DMAx);
 
 	LL_DMA_SetChannelSelection(dma_defs.DMAx, dma_defs.stream, dma_defs.channel);
-	LL_DMA_ConfigTransfer(dma_defs.DMAx, dma_defs.stream,
-						  LL_DMA_DIRECTION_PERIPH_TO_MEMORY | LL_DMA_MODE_CIRCULAR |
-							  LL_DMA_PERIPH_NOINCREMENT | LL_DMA_MEMORY_INCREMENT |
-							  LL_DMA_PDATAALIGN_HALFWORD | LL_DMA_MDATAALIGN_HALFWORD |
+	LL_DMA_ConfigTransfer(dma_defs.DMAx,
+						  dma_defs.stream,
+						  LL_DMA_DIRECTION_PERIPH_TO_MEMORY | LL_DMA_MODE_CIRCULAR | LL_DMA_PERIPH_NOINCREMENT |
+							  LL_DMA_MEMORY_INCREMENT | LL_DMA_PDATAALIGN_HALFWORD | LL_DMA_MDATAALIGN_HALFWORD |
 							  LL_DMA_PRIORITY_HIGH);
-	LL_DMA_ConfigAddresses(dma_defs.DMAx, dma_defs.stream,
+	LL_DMA_ConfigAddresses(dma_defs.DMAx,
+						   dma_defs.stream,
 						   LL_ADC_DMA_GetRegAddr(get_ADC_base(p), LL_ADC_DMA_REG_REGULAR_DATA),
-						   (uint32_t)(dma_buffer_), LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+						   (uint32_t)(dma_buffer_),
+						   LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 	LL_DMA_SetDataLength(dma_defs.DMAx, dma_defs.stream, num_channels_);
 	LL_DMA_EnableIT_TC(dma_defs.DMAx, dma_defs.stream);
 	LL_DMA_DisableIT_HT(dma_defs.DMAx, dma_defs.stream);
