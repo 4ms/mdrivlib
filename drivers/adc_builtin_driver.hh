@@ -40,7 +40,7 @@ enum class AdcPeriphNum { _1, _2, _3 };
 template<AdcPeriphNum ADCN>
 class AdcPeriph;
 
-template<AdcPeriphNum ADCN, AdcChanNum c, typename T>
+template<AdcPeriphNum ADCN, AdcChanNum c, typename T = uint16_t>
 class AdcChan {
 public:
 	AdcChan(const uint32_t sampletime = LL_ADC_SAMPLINGTIME_144CYCLES)
@@ -49,7 +49,11 @@ public:
 		AdcPeriph<ADCN>::add_channel(c, sampletime);
 	}
 
-	const T &get_val_ref()
+	static T *const get_val_ptr()
+	{
+		return AdcPeriph<ADCN>::get_val_ptr(c);
+	}
+	static const T &get_val_ref()
 	{
 		return AdcPeriph<ADCN>::get_val_ref(c);
 	}
@@ -79,6 +83,11 @@ public:
 	static uint16_t get_val(const AdcChanNum channel)
 	{
 		return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]];
+	}
+
+	static uint16_t *const get_val_ptr(const AdcChanNum channel)
+	{
+		return &(dma_buffer_[ranks_[static_cast<uint8_t>(channel)]]);
 	}
 
 	static const uint16_t &get_val_ref(const AdcChanNum channel)
