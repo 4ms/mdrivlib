@@ -1,8 +1,9 @@
 #include "interrupt.hh"
 #include "pca9685_led_driver.hh"
 
-PCA9685Driver::DMADriver::DMADriver(PCA9685Driver &parent)
+PCA9685Driver::DMADriver::DMADriver(PCA9685Driver &parent, PCA9685Driver::FrameBuffer &frame_buf)
 	: driver_(parent)
+	, frame_buffer(frame_buf)
 {}
 
 LEDDriverError PCA9685Driver::DMADriver::start_dma(const DMAConfig &dma_defs)

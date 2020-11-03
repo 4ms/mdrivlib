@@ -1,10 +1,10 @@
 #include "pca9685_led_driver.hh"
 
-PCA9685Driver::PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs)
+PCA9685Driver::PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs, PCA9685Driver::FrameBuffer &frame_buf)
 	: i2c_periph_(i2c)
 	, num_chips_(num_chips)
 	, dma_defs_(dma_defs)
-	, dma_(*this)
+	, dma_(*this, frame_buf)
 {}
 
 // Reset chip registers

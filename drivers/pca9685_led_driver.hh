@@ -11,9 +11,12 @@ class PCA9685Driver : public ILedDmaDriver {
 public:
 	const static int kNumLedsPerChip = 16;
 	const static int kNumRGBLEDsPerChip = 5;
+	const static size_t kRequiredBufferSize = kNumLedDriverChips * PCA9685Driver::kNumLedsPerChip;
+
+	using FrameBuffer = uint32_t[kRequiredBufferSize];
 
 public:
-	PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs);
+	PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs, FrameBuffer& frame_buf);
 
 	virtual LEDDriverError start();
 	virtual void start_it_mode();
@@ -38,7 +41,7 @@ private:
 		friend class PCA9685Driver;
 
 	public:
-		DMADriver(PCA9685Driver &parent);
+		DMADriver(PCA9685Driver &parent, FrameBuffer &frame_buf);
 		LEDDriverError start_dma(const DMAConfig &dma_defs);
 
 	private:
@@ -51,7 +54,7 @@ private:
 		Interrupt dma_task;
 		uint8_t cur_chip_num_ = 0;
 		uint32_t *frame_buffer_cur_pos;
-		uint32_t frame_buffer[kNumLedDriverChips * PCA9685Driver::kNumLedsPerChip];
+		uint32_t (&frame_buffer)[kRequiredBufferSize];
 
 		HALCallback transfer_complete{HALCallbackID::I2C_MemTxCplt, [this]() {
 										  advance_frame_buffer();
