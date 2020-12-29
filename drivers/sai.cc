@@ -64,7 +64,7 @@ void SaiPeriph::_config_rx_sai()
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
 #ifdef STM32H7
-	hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
+	hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE; //todo: also used for MP1
 	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_rx.Init.PdmInit.Activation = DISABLE;
 #endif
