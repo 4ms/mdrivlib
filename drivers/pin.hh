@@ -17,8 +17,16 @@
  */
 
 #pragma once
+
+#ifdef STM32F7
 #include "stm32f7xx_ll_bus.h"
 #include "stm32f7xx_ll_gpio.h"
+#endif
+#ifdef STM32MP1
+#include "stm32mp1xx_ll_bus.h"
+#include "stm32mp1xx_ll_gpio.h"
+#endif
+
 #include "stm32xx.h"
 #include "system.hh"
 

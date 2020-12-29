@@ -1,6 +1,6 @@
 #include "i2c.hh"
 #include "interrupt.hh"
-#include "stm32f7xx.h"
+#include "stm32xx.h"
 #include "system.hh"
 
 const uint32_t _I2C_FLAG_TIMEOUT = 1;

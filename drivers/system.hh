@@ -1,6 +1,11 @@
 #pragma once
 
+#ifdef STM32F7
 #include "stm32f7xx_ll_bus.h"
+#endif
+#ifdef STM32MP1
+#include "stm32mp1xx_ll_bus.h"
+#endif
 #include "stm32xx.h"
 
 // Todo: refactor for LL intead of HAL
@@ -17,6 +22,7 @@ struct System {
 							const RCC_PeriphCLKInitTypeDef &pclk_def,
 							const uint32_t systick_freq_hz = 1000)
 	{
+#ifndef STM32MP1
 		__HAL_RCC_PWR_CLK_ENABLE();
 		__HAL_RCC_SYSCFG_CLK_ENABLE();
 		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
@@ -37,6 +43,7 @@ struct System {
 
 		HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / systick_freq_hz);
 		HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+#endif
 	}
 
 	static uint32_t encode_nvic_priority(uint32_t pri1, uint32_t pri2)
@@ -48,6 +55,7 @@ struct System {
 	{
 		if (port == nullptr)
 			return;
+#ifndef STM32MP1
 #ifdef GPIOA
 		else if (port == GPIOA && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN))
 			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
@@ -91,6 +99,7 @@ struct System {
 #ifdef GPIOK
 		else if (port == GPIOK && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOKEN))
 			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOK);
+#endif
 #endif
 	}
 
