@@ -5,7 +5,7 @@
 #include "hal_callback.hh"
 #include "i2c.hh"
 #include "led_driver.hh"
-#include "stm32f7xx.h"
+#include "stm32xx.h"
 
 class PCA9685Driver : public ILedDmaDriver {
 public:
@@ -16,7 +16,7 @@ public:
 	using FrameBuffer = uint32_t[kRequiredBufferSize];
 
 public:
-	PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs, FrameBuffer& frame_buf);
+	PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs, FrameBuffer &frame_buf);
 
 	virtual LEDDriverError start();
 	virtual void start_it_mode();

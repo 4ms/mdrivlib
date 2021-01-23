@@ -27,10 +27,7 @@
  * -----------------------------------------------------------------------------
  */
 #include "adc_builtin_driver.hh"
-#include "stm32f7xx.h"
-#include "stm32f7xx_ll_adc.h"
-#include "stm32f7xx_ll_bus.h"
-#include "stm32f7xx_ll_dma.h"
+#include "stm32xx.h"
 
 template class AdcPeriph<AdcPeriphNum::_1>;
 template class AdcPeriph<AdcPeriphNum::_2>;
