@@ -1,12 +1,8 @@
 #pragma once
-
-#ifdef STM32F7
-#include "stm32f7xx_ll_bus.h"
-#endif
-#ifdef STM32MP1
-#include "stm32mp1xx_ll_bus.h"
-#endif
 #include "stm32xx.h"
+#include "stm32xx_busdefs.h"
+
+using namespace mdrivlib;
 
 // Todo: refactor for LL intead of HAL
 struct System {
@@ -22,16 +18,28 @@ struct System {
 							const RCC_PeriphCLKInitTypeDef &pclk_def,
 							const uint32_t systick_freq_hz = 1000)
 	{
-#ifndef STM32MP1
+#ifdef STM32H7
+		HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+		while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
+		}
+		__HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
+
+#endif
+#if defined(STM32F7) || defined(STM32F4)
 		__HAL_RCC_PWR_CLK_ENABLE();
 		__HAL_RCC_SYSCFG_CLK_ENABLE();
 		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+#endif
 
+#ifndef STM32MP1
 		// Todo: const_cast or fix HAL_RCC_ functions to take a const struct
 		RCC_OscInitTypeDef osc_def_ = osc_def;
 		HAL_RCC_OscConfig(&osc_def_);
 
+	#ifdef STM32F7
 		HAL_PWREx_EnableOverDrive();
+	#endif
 
 		RCC_ClkInitTypeDef clk_def_ = clk_def;
 		HAL_RCC_ClockConfig(&clk_def_, FLASH_LATENCY_7);
@@ -55,51 +63,49 @@ struct System {
 	{
 		if (port == nullptr)
 			return;
-#ifndef STM32MP1
 #ifdef GPIOA
-		else if (port == GPIOA && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+		else if (port == GPIOA && !_is_enabled(GPIOEnableBit::A))
+			_enable(GPIOEnableBit::A);
 #endif
 #ifdef GPIOB
-		else if (port == GPIOB && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOBEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+		else if (port == GPIOB && !_is_enabled(GPIOEnableBit::B))
+			_enable(GPIOEnableBit::B);
 #endif
 #ifdef GPIOC
-		else if (port == GPIOC && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+		else if (port == GPIOC && !_is_enabled(GPIOEnableBit::C))
+			_enable(GPIOEnableBit::C);
 #endif
 #ifdef GPIOD
-		else if (port == GPIOD && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIODEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
+		else if (port == GPIOD && !_is_enabled(GPIOEnableBit::D))
+			_enable(GPIOEnableBit::D);
 #endif
 #ifdef GPIOE
-		else if (port == GPIOE && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOEEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOE);
+		else if (port == GPIOE && !_is_enabled(GPIOEnableBit::E))
+			_enable(GPIOEnableBit::E);
 #endif
 #ifdef GPIOF
-		else if (port == GPIOF && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOFEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
+		else if (port == GPIOF && !_is_enabled(GPIOEnableBit::F))
+			_enable(GPIOEnableBit::F);
 #endif
 #ifdef GPIOG
-		else if (port == GPIOG && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOGEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOG);
+		else if (port == GPIOG && !_is_enabled(GPIOEnableBit::G))
+			_enable(GPIOEnableBit::G);
 #endif
 #ifdef GPIOH
-		else if (port == GPIOH && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOHEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOH);
+		else if (port == GPIOH && !_is_enabled(GPIOEnableBit::H))
+			_enable(GPIOEnableBit::H);
 #endif
 #ifdef GPIOI
-		else if (port == GPIOI && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOIEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOI);
+		else if (port == GPIOI && !_is_enabled(GPIOEnableBit::I))
+			_enable(GPIOEnableBit::I);
 #endif
 #ifdef GPIOJ
-		else if (port == GPIOJ && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOJEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOJ);
+		else if (port == GPIOJ && !_is_enabled(GPIOEnableBit::J))
+			_enable(GPIOEnableBit::J);
 #endif
 #ifdef GPIOK
-		else if (port == GPIOK && !READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOKEN))
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOK);
-#endif
+		else if (port == GPIOK && !_is_enabled(GPIOEnableBit::K))
+			_enable(GPIOEnableBit::K);
 #endif
 	}
 
@@ -109,15 +115,15 @@ struct System {
 			return;
 #ifdef ADC1
 		if (ADCx == ADC1)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC1);
+			_enable(ADCEnableBit::_1);
 #endif
 #ifdef ADC2
 		else if (ADCx == ADC2)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC2);
+			_enable(ADCEnableBit::_2);
 #endif
 #ifdef ADC3
 		else if (ADCx == ADC3)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC3);
+			_enable(ADCEnableBit::_3);
 #endif
 	}
 
@@ -127,15 +133,15 @@ struct System {
 			return;
 #ifdef DMA1
 		else if (DMAx == DMA1)
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+			_enable(DMAEnableBit::_1);
 #endif
 #ifdef DMA2
 		else if (DMAx == DMA2)
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
+			_enable(DMAEnableBit::_2);
 #endif
 #ifdef DMA3
 		else if (DMAx == DMA3)
-			LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA3);
+			_enable(DMAEnableBit::_3);
 #endif
 	}
 
@@ -145,15 +151,15 @@ struct System {
 			return;
 #ifdef I2C1
 		else if (I2Cx == I2C1)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+			_enable(I2CEnableBit::_1);
 #endif
 #ifdef I2C2
 		else if (I2Cx == I2C2)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C2);
+			_enable(I2CEnableBit::_2);
 #endif
 #ifdef I2C3
 		else if (I2Cx == I2C3)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C3);
+			_enable(I2CEnableBit::_3);
 #endif
 	}
 
@@ -163,15 +169,15 @@ struct System {
 			return;
 #ifdef I2C1
 		else if (I2Cx == I2C1)
-			LL_APB1_GRP1_DisableClock(LL_APB1_GRP1_PERIPH_I2C1);
+			_disable(I2CEnableBit::_1);
 #endif
 #ifdef I2C2
 		else if (I2Cx == I2C2)
-			LL_APB1_GRP1_DisableClock(LL_APB1_GRP1_PERIPH_I2C2);
+			_disable(I2CEnableBit::_2);
 #endif
 #ifdef I2C3
 		else if (I2Cx == I2C3)
-			LL_APB1_GRP1_DisableClock(LL_APB1_GRP1_PERIPH_I2C3);
+			_disable(I2CEnableBit::_3);
 #endif
 	}
 
@@ -181,19 +187,19 @@ struct System {
 			return;
 #ifdef SAI1
 		else if (SAIx == SAI1)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SAI1);
+			_enable(SAIEnableBit::_1);
 #endif
 #ifdef SAI2
 		else if (SAIx == SAI2)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SAI2);
+			_enable(SAIEnableBit::_2);
 #endif
 #ifdef SAI3
 		else if (SAIx == SAI3)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SAI3);
+			_enable(SAIEnableBit::_3);
 #endif
 #ifdef SAI4
 		else if (SAIx == SAI4)
-			LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SAI4);
+			_enable(SAI4EnableBit::_4);
 #endif
 	}
 
@@ -203,19 +209,19 @@ struct System {
 			return;
 #ifdef SAI1
 		else if (SAIx == SAI1)
-			LL_APB2_GRP1_DisableClock(LL_APB2_GRP1_PERIPH_SAI1);
+			_disable(SAIEnableBit::_1);
 #endif
 #ifdef SAI2
 		else if (SAIx == SAI2)
-			LL_APB2_GRP1_DisableClock(LL_APB2_GRP1_PERIPH_SAI2);
+			_disable(SAIEnableBit::_2);
 #endif
 #ifdef SAI3
 		else if (SAIx == SAI3)
-			LL_APB2_GRP1_DisableClock(LL_APB2_GRP1_PERIPH_SAI3);
+			_disable(SAIEnableBit::_3);
 #endif
 #ifdef SAI4
 		else if (SAIx == SAI4)
-			LL_APB4_GRP1_DisableClock(LL_APB4_GRP1_PERIPH_SAI4);
+			_disable(SAI4EnableBit::_4);
 #endif
 	}
 

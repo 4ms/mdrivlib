@@ -1,7 +1,5 @@
 #include "sdram.hh"
 #include "pin.hh"
-#include "stm32f7xx_ll_fmc.h"
-#include "stm32f7xx_ll_gpio.h"
 #include "stm32xx.h"
 
 //#define SDRAM_DO_TEST

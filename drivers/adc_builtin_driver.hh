@@ -30,9 +30,9 @@
 
 #include "dma_config_struct.hh"
 #include "pin.hh"
-#include "stm32f7xx_ll_adc.h"
+#include "stm32h7xx_ll_adc.h"
+#include "stm32xx.h"
 #include <array>
-#include <stm32f7xx.h>
 
 enum class AdcChanNum { _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15 };
 enum class AdcPeriphNum { _1, _2, _3 };
