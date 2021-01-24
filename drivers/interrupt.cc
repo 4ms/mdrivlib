@@ -21,10 +21,12 @@ extern "C" void DMA1_Stream4_IRQHandler(void) { ISRHandler(DMA1_Stream4_IRQn); }
 extern "C" void DMA1_Stream5_IRQHandler(void) { ISRHandler(DMA1_Stream5_IRQn); }
 extern "C" void DMA1_Stream6_IRQHandler(void) { ISRHandler(DMA1_Stream6_IRQn); }
 extern "C" void ADC_IRQHandler(void) { ISRHandler(ADC_IRQn); }
+#ifdef CAN1
 extern "C" void CAN1_TX_IRQHandler(void) { ISRHandler(CAN1_TX_IRQn); }
 extern "C" void CAN1_RX0_IRQHandler(void) { ISRHandler(CAN1_RX0_IRQn); }
 extern "C" void CAN1_RX1_IRQHandler(void) { ISRHandler(CAN1_RX1_IRQn); }
 extern "C" void CAN1_SCE_IRQHandler(void) { ISRHandler(CAN1_SCE_IRQn); }
+#endif
 extern "C" void EXTI9_5_IRQHandler(void) { ISRHandler(EXTI9_5_IRQn); }
 extern "C" void TIM1_BRK_TIM9_IRQHandler(void) { ISRHandler(TIM1_BRK_TIM9_IRQn); }
 extern "C" void TIM1_UP_TIM10_IRQHandler(void) { ISRHandler(TIM1_UP_TIM10_IRQn); }
@@ -94,16 +96,16 @@ extern "C" void SDMMC2_IRQHandler(void) { ISRHandler(SDMMC2_IRQn); }
 extern "C" void SPI6_IRQHandler(void) { ISRHandler(SPI6_IRQn); }
 #endif
 #ifdef LTDC
-extern "C" void LTDC_IRQHandler(void) { ISRHandler(LTDC_IRQn); } 
+extern "C" void LTDC_IRQHandler(void) { ISRHandler(LTDC_IRQn); }
 #endif
 #ifdef LTDC
 extern "C" void LTDC_ER_IRQHandler(void) { ISRHandler(LTDC_ER_IRQn); }
 #endif
 #ifdef DMA2D
-extern "C" void DMA2D_IRQHandler(void) { ISRHandler(DMA2D_IRQn); }  
+extern "C" void DMA2D_IRQHandler(void) { ISRHandler(DMA2D_IRQn); }
 #endif
 #ifdef CEC
-extern "C" void CEC_IRQHandler(void) { ISRHandler(CEC_IRQn); }    
+extern "C" void CEC_IRQHandler(void) { ISRHandler(CEC_IRQn); }
 #endif
 #ifdef I2C4
 extern "C" void I2C4_EV_IRQHandler(void) { ISRHandler(I2C4_EV_IRQn); }
