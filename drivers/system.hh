@@ -1,6 +1,6 @@
 #pragma once
+#include "rcc.hh"
 #include "stm32xx.h"
-#include "stm32xx_busdefs.h"
 
 using namespace mdrivlib;
 
@@ -64,66 +64,67 @@ struct System {
 		if (port == nullptr)
 			return;
 #ifdef GPIOA
-		else if (port == GPIOA && !_is_enabled(GPIOEnableBit::A))
-			_enable(GPIOEnableBit::A);
+		else if (port == GPIOA && !is_enabled_rcc(GPIOEnableBit::A))
+			enable_rcc(GPIOEnableBit::A);
 #endif
 #ifdef GPIOB
-		else if (port == GPIOB && !_is_enabled(GPIOEnableBit::B))
-			_enable(GPIOEnableBit::B);
+		else if (port == GPIOB && !is_enabled_rcc(GPIOEnableBit::B))
+			enable_rcc(GPIOEnableBit::B);
 #endif
 #ifdef GPIOC
-		else if (port == GPIOC && !_is_enabled(GPIOEnableBit::C))
-			_enable(GPIOEnableBit::C);
+		else if (port == GPIOC && !is_enabled_rcc(GPIOEnableBit::C))
+			enable_rcc(GPIOEnableBit::C);
 #endif
 #ifdef GPIOD
-		else if (port == GPIOD && !_is_enabled(GPIOEnableBit::D))
-			_enable(GPIOEnableBit::D);
+		else if (port == GPIOD && !is_enabled_rcc(GPIOEnableBit::D))
+			enable_rcc(GPIOEnableBit::D);
 #endif
 #ifdef GPIOE
-		else if (port == GPIOE && !_is_enabled(GPIOEnableBit::E))
-			_enable(GPIOEnableBit::E);
+		else if (port == GPIOE && !is_enabled_rcc(GPIOEnableBit::E))
+			enable_rcc(GPIOEnableBit::E);
 #endif
 #ifdef GPIOF
-		else if (port == GPIOF && !_is_enabled(GPIOEnableBit::F))
-			_enable(GPIOEnableBit::F);
+		else if (port == GPIOF && !is_enabled_rcc(GPIOEnableBit::F))
+			enable_rcc(GPIOEnableBit::F);
 #endif
 #ifdef GPIOG
-		else if (port == GPIOG && !_is_enabled(GPIOEnableBit::G))
-			_enable(GPIOEnableBit::G);
+		else if (port == GPIOG && !is_enabled_rcc(GPIOEnableBit::G))
+			enable_rcc(GPIOEnableBit::G);
 #endif
 #ifdef GPIOH
-		else if (port == GPIOH && !_is_enabled(GPIOEnableBit::H))
-			_enable(GPIOEnableBit::H);
+		else if (port == GPIOH && !is_enabled_rcc(GPIOEnableBit::H))
+			enable_rcc(GPIOEnableBit::H);
 #endif
 #ifdef GPIOI
-		else if (port == GPIOI && !_is_enabled(GPIOEnableBit::I))
-			_enable(GPIOEnableBit::I);
+		else if (port == GPIOI && !is_enabled_rcc(GPIOEnableBit::I))
+			enable_rcc(GPIOEnableBit::I);
 #endif
 #ifdef GPIOJ
-		else if (port == GPIOJ && !_is_enabled(GPIOEnableBit::J))
-			_enable(GPIOEnableBit::J);
+		else if (port == GPIOJ && !is_enabled_rcc(GPIOEnableBit::J))
+			enable_rcc(GPIOEnableBit::J);
 #endif
 #ifdef GPIOK
-		else if (port == GPIOK && !_is_enabled(GPIOEnableBit::K))
-			_enable(GPIOEnableBit::K);
+		else if (port == GPIOK && !is_enabled_rcc(GPIOEnableBit::K))
+			enable_rcc(GPIOEnableBit::K);
 #endif
 	}
 
 	static constexpr void enable_adc_rcc(ADC_TypeDef *ADCx)
 	{
+		// RCC::ADC::enable(ADCx);
 		if (ADCx == nullptr)
 			return;
 #ifdef ADC1
 		if (ADCx == ADC1)
-			_enable(ADCEnableBit::_1);
+			enable_rcc(ADCEnableBit::_1);
 #endif
 #ifdef ADC2
 		else if (ADCx == ADC2)
-			_enable(ADCEnableBit::_2);
+			enable_rcc(ADCEnableBit::_2);
 #endif
 #ifdef ADC3
 		else if (ADCx == ADC3)
-			_enable(ADCEnableBit::_3);
+			enable_rcc(ADC3EnableBit::_3);
 #endif
 	}
 
@@ -133,15 +134,15 @@ struct System {
 			return;
 #ifdef DMA1
 		else if (DMAx == DMA1)
-			_enable(DMAEnableBit::_1);
+			enable_rcc(DMAEnableBit::_1);
 #endif
 #ifdef DMA2
 		else if (DMAx == DMA2)
-			_enable(DMAEnableBit::_2);
+			enable_rcc(DMAEnableBit::_2);
 #endif
 #ifdef DMA3
 		else if (DMAx == DMA3)
-			_enable(DMAEnableBit::_3);
+			enable_rcc(DMAEnableBit::_3);
 #endif
 	}
 
@@ -151,15 +152,15 @@ struct System {
 			return;
 #ifdef I2C1
 		else if (I2Cx == I2C1)
-			_enable(I2CEnableBit::_1);
+			enable_rcc(I2CEnableBit::_1);
 #endif
 #ifdef I2C2
 		else if (I2Cx == I2C2)
-			_enable(I2CEnableBit::_2);
+			enable_rcc(I2CEnableBit::_2);
 #endif
 #ifdef I2C3
 		else if (I2Cx == I2C3)
-			_enable(I2CEnableBit::_3);
+			enable_rcc(I2CEnableBit::_3);
 #endif
 	}
 
@@ -169,15 +170,15 @@ struct System {
 			return;
 #ifdef I2C1
 		else if (I2Cx == I2C1)
-			_disable(I2CEnableBit::_1);
+			disable_rcc(I2CEnableBit::_1);
 #endif
 #ifdef I2C2
 		else if (I2Cx == I2C2)
-			_disable(I2CEnableBit::_2);
+			disable_rcc(I2CEnableBit::_2);
 #endif
 #ifdef I2C3
 		else if (I2Cx == I2C3)
-			_disable(I2CEnableBit::_3);
+			disable_rcc(I2CEnableBit::_3);
 #endif
 	}
 
@@ -187,19 +188,19 @@ struct System {
 			return;
 #ifdef SAI1
 		else if (SAIx == SAI1)
-			_enable(SAIEnableBit::_1);
+			enable_rcc(SAIEnableBit::_1);
 #endif
 #ifdef SAI2
 		else if (SAIx == SAI2)
-			_enable(SAIEnableBit::_2);
+			enable_rcc(SAIEnableBit::_2);
 #endif
 #ifdef SAI3
 		else if (SAIx == SAI3)
-			_enable(SAIEnableBit::_3);
+			enable_rcc(SAIEnableBit::_3);
 #endif
 #ifdef SAI4
 		else if (SAIx == SAI4)
-			_enable(SAI4EnableBit::_4);
+			enable_rcc(SAI4EnableBit::_4);
 #endif
 	}
 
@@ -209,19 +210,19 @@ struct System {
 			return;
 #ifdef SAI1
 		else if (SAIx == SAI1)
-			_disable(SAIEnableBit::_1);
+			disable_rcc(SAIEnableBit::_1);
 #endif
 #ifdef SAI2
 		else if (SAIx == SAI2)
-			_disable(SAIEnableBit::_2);
+			disable_rcc(SAIEnableBit::_2);
 #endif
 #ifdef SAI3
 		else if (SAIx == SAI3)
-			_disable(SAIEnableBit::_3);
+			disable_rcc(SAIEnableBit::_3);
 #endif
 #ifdef SAI4
 		else if (SAIx == SAI4)
-			_disable(SAI4EnableBit::_4);
+			disable_rcc(SAI4EnableBit::_4);
 #endif
 	}
 
