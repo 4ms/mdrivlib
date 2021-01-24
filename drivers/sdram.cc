@@ -7,8 +7,7 @@
 SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
 
 	: status(HAL_ERROR)
-	, defs(sdram_defs)
-{
+	, defs(sdram_defs) {
 	init_gpio();
 	status = init();
 
@@ -30,8 +29,7 @@ SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
 #endif
 }
 
-HAL_StatusTypeDef SDRAMPeriph::init()
-{
+HAL_StatusTypeDef SDRAMPeriph::init() {
 	__HAL_RCC_FMC_CLK_ENABLE();
 
 	config_timing();
@@ -39,11 +37,11 @@ HAL_StatusTypeDef SDRAMPeriph::init()
 	return HAL_OK;
 }
 
-void SDRAMPeriph::config_timing()
-{
+void SDRAMPeriph::config_timing() {
 	auto num_to_CAS = [](uint8_t cas_latency) {
-		return cas_latency == 2 ? FMC_SDRAM_CAS_LATENCY_2
-								: cas_latency == 1 ? FMC_SDRAM_CAS_LATENCY_1 : FMC_SDRAM_CAS_LATENCY_3;
+		return cas_latency == 2	  ? FMC_SDRAM_CAS_LATENCY_2
+			   : cas_latency == 1 ? FMC_SDRAM_CAS_LATENCY_1
+								  : FMC_SDRAM_CAS_LATENCY_3;
 	};
 	auto freq_to_clockdiv = [HCLK = SystemCoreClock](uint8_t freq) {
 		uint32_t clockdiv = HCLK / freq;
@@ -82,8 +80,7 @@ void SDRAMPeriph::config_timing()
 	FMC_SDRAM_Timing_Init(FMC_SDRAM_DEVICE, &SdramTiming, init.SDBank);
 }
 
-void SDRAMPeriph::start_refresh()
-{
+void SDRAMPeriph::start_refresh() {
 	FMC_SDRAM_CommandTypeDef cmd;
 
 	wait_until_ready();
@@ -136,26 +133,26 @@ void SDRAMPeriph::start_refresh()
 	wait_until_ready();
 }
 
-void SDRAMPeriph::init_gpio()
-{
+void SDRAMPeriph::init_gpio() {
 	for (auto &pind : defs.pin_list.pin_array) {
 		Pin{pind.gpio, pind.pin, PinMode::Alt, pind.af, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 	}
 }
 
-bool SDRAMPeriph::is_busy()
-{
+bool SDRAMPeriph::is_busy() {
+#ifdef FMC_SDSR_BUSY
 	return __FMC_SDRAM_GET_FLAG(FMC_SDRAM_DEVICE, FMC_SDRAM_FLAG_BUSY);
+#else
+	return false;
+#endif
 }
 
-void SDRAMPeriph::wait_until_ready()
-{
+void SDRAMPeriph::wait_until_ready() {
 	while (is_busy())
 		;
 }
 
-uint32_t SDRAMPeriph::test(const uint32_t ram_start, const uint32_t ram_size)
-{
+uint32_t SDRAMPeriph::test(const uint32_t ram_start, const uint32_t ram_size) {
 	uint32_t num_fails = 0;
 
 	auto countup_func = [](uint32_t x) { return x; };
@@ -167,8 +164,7 @@ uint32_t SDRAMPeriph::test(const uint32_t ram_start, const uint32_t ram_size)
 	return num_fails;
 }
 
-uint32_t SDRAMPeriph::do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_t ram_start, const uint32_t ram_size)
-{
+uint32_t SDRAMPeriph::do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_t ram_start, const uint32_t ram_size) {
 	uint32_t num_fails = 0;
 	const size_t test_val_size = sizeof(uint32_t);
 
