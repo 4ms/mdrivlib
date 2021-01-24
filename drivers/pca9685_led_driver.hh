@@ -17,6 +17,7 @@ public:
 
 public:
 	PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, const DMAConfig &dma_defs, FrameBuffer &frame_buf);
+	PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, FrameBuffer &frame_buf);
 
 	virtual LEDDriverError start();
 	virtual void start_it_mode();
@@ -32,7 +33,6 @@ private:
 	I2CPeriph &i2c_periph_;
 	uint32_t num_chips_;
 	LEDDriverError led_error_;
-	const DMAConfig &dma_defs_;
 
 	LEDDriverError write_register(uint8_t driverAddr, uint8_t registerAddr, uint8_t registerValue);
 	LEDDriverError reset_chip(uint8_t driverAddr);
@@ -41,11 +41,11 @@ private:
 		friend class PCA9685Driver;
 
 	public:
-		DMADriver(PCA9685Driver &parent, FrameBuffer &frame_buf);
-		LEDDriverError start_dma(const DMAConfig &dma_defs);
+		DMADriver(PCA9685Driver &parent, const DMAConfig &dma_defs, FrameBuffer &frame_buf);
+		LEDDriverError start_dma();
 
 	private:
-		LEDDriverError init_dma(const DMAConfig &dma_defs);
+		LEDDriverError init_dma();
 		void advance_frame_buffer();
 		void write_current_frame_to_chip();
 
@@ -55,6 +55,7 @@ private:
 		uint8_t cur_chip_num_ = 0;
 		uint32_t *frame_buffer_cur_pos;
 		uint32_t (&frame_buffer)[kRequiredBufferSize];
+		const DMAConfig &dma_defs_;
 
 		HALCallback transfer_complete{HALCallbackID::I2C_MemTxCplt, [this]() {
 										  advance_frame_buffer();
@@ -71,3 +72,6 @@ private:
 	const static inline uint32_t I2C_BASE_ADDRESS = 0b10000000;
 	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
+
+class PCA9685DmaDriver : public PCA9685Driver {};
+

@@ -1,28 +1,27 @@
 #include "interrupt.hh"
 #include "pca9685_led_driver.hh"
 
-PCA9685Driver::DMADriver::DMADriver(PCA9685Driver &parent, PCA9685Driver::FrameBuffer &frame_buf)
+PCA9685Driver::DMADriver::DMADriver(PCA9685Driver &parent,
+									const DMAConfig &dma_defs,
+									PCA9685Driver::FrameBuffer &frame_buf)
 	: driver_(parent)
 	, frame_buffer(frame_buf)
-{}
+	, dma_defs_{dma_defs} {}
 
-LEDDriverError PCA9685Driver::DMADriver::start_dma(const DMAConfig &dma_defs)
-{
+LEDDriverError PCA9685Driver::DMADriver::start_dma() {
 	frame_buffer_cur_pos = frame_buffer;
 
-	auto err = init_dma(dma_defs);
+	auto err = init_dma();
 	if (err != LEDDriverError::None)
 		return err;
 
 	// Link I2C and DMA
 	driver_.i2c_periph_.link_DMA_TX(&hal_dma_h_);
 
-	InterruptManager::registerISR(dma_defs.IRQn,
-								  [dmah_ptr = &hal_dma_h_]() { HAL_DMA_IRQHandler(dmah_ptr); });
+	InterruptManager::registerISR(dma_defs_.IRQn, [dmah_ptr = &hal_dma_h_]() { HAL_DMA_IRQHandler(dmah_ptr); });
 
-	HAL_NVIC_SetPriority(dma_defs.IRQn, dma_defs.pri, dma_defs.subpri);
-	HAL_NVIC_EnableIRQ(dma_defs.IRQn);
-	
+	HAL_NVIC_SetPriority(dma_defs_.IRQn, dma_defs_.pri, dma_defs_.subpri);
+	HAL_NVIC_EnableIRQ(dma_defs_.IRQn);
 
 	write_current_frame_to_chip();
 
@@ -31,11 +30,14 @@ LEDDriverError PCA9685Driver::DMADriver::start_dma(const DMAConfig &dma_defs)
 	return LEDDriverError::None;
 }
 
-LEDDriverError PCA9685Driver::DMADriver::init_dma(const DMAConfig &dma_defs)
-{
-	System::enable_dma_rcc(dma_defs.DMAx);
-	hal_dma_h_.Instance = dma_defs.stream;
-	hal_dma_h_.Init.Channel = dma_defs.channel;
+LEDDriverError PCA9685Driver::DMADriver::init_dma() {
+	System::enable_dma_rcc(dma_defs_.DMAx);
+	hal_dma_h_.Instance = dma_defs_.stream;
+
+	// Todo: get DMA working on H7x5 chips
+#if !defined(STM32H745xx) && !defined(STM32H755xx)
+	hal_dma_h_.Init.Channel = dma_defs_.channel;
+#endif
 	hal_dma_h_.Init.Direction = DMA_MEMORY_TO_PERIPH;
 	hal_dma_h_.Init.PeriphInc = DMA_PINC_DISABLE;
 	hal_dma_h_.Init.MemInc = DMA_MINC_ENABLE;
@@ -56,8 +58,7 @@ LEDDriverError PCA9685Driver::DMADriver::init_dma(const DMAConfig &dma_defs)
 	return LEDDriverError::None;
 }
 
-void PCA9685Driver::DMADriver::advance_frame_buffer()
-{
+void PCA9685Driver::DMADriver::advance_frame_buffer() {
 	if (++cur_chip_num_ >= driver_.num_chips_)
 		cur_chip_num_ = 0;
 
@@ -65,13 +66,13 @@ void PCA9685Driver::DMADriver::advance_frame_buffer()
 	frame_buffer_cur_pos = &(frame_buffer[start_of_cur_chip]);
 }
 
-void PCA9685Driver::DMADriver::write_current_frame_to_chip()
-{
+void PCA9685Driver::DMADriver::write_current_frame_to_chip() {
 	uint16_t chip_address = I2C_BASE_ADDRESS | (cur_chip_num_ << 1);
-	auto err =
-		driver_.i2c_periph_.mem_write_dma(chip_address, REG_LED0, REGISTER_ADDR_SIZE,
-										  reinterpret_cast<uint8_t *>(frame_buffer_cur_pos),
-										  PCA9685Driver::kNumLedsPerChip * sizeof(frame_buffer[0]));
+	auto err = driver_.i2c_periph_.mem_write_dma(chip_address,
+												 REG_LED0,
+												 REGISTER_ADDR_SIZE,
+												 reinterpret_cast<uint8_t *>(frame_buffer_cur_pos),
+												 PCA9685Driver::kNumLedsPerChip * sizeof(frame_buffer[0]));
 
 	if (err != I2CPeriph::Error::I2C_NO_ERR)
 		driver_.led_error_ = LEDDriverError::DMA_XMIT_ERR;
