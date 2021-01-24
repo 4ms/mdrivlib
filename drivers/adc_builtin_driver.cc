@@ -106,7 +106,8 @@ AdcPeriph<p>::AdcPeriph() {
 #endif
 
 	LL_ADC_SetResolution(get_ADC_base(p), LL_ADC_RESOLUTION_12B);
-#if !defined(STM32H755xx)
+
+#if !defined(STM32H755xx) && !defined(STM32H745xx)
 	LL_ADC_SetDataAlignment(get_ADC_base(p), LL_ADC_DATA_ALIGN_RIGHT);
 	LL_ADC_SetSequencersScanMode(get_ADC_base(p), LL_ADC_SEQ_SCAN_ENABLE);
 #endif
