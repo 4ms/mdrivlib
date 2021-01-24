@@ -1,12 +1,14 @@
 #pragma once
 
-#ifdef STM32F7
-	#include "stm32f7xx.h"
+#include "stm32xx.h"
+
+#if defined(STM32F7) || defined(STM32H7) || defined(STM32F4) || defined(STM32MP1)
 using IRQType = IRQn_Type;
 #else
-	#include <cstdint>
+#include <cstdint>
 using IRQType = uint32_t;
 #endif
+
 #include <functional>
 
 class Interrupt {
@@ -16,18 +18,9 @@ public:
 	using ISRType = std::function<void(void)>;
 
 	Interrupt() {}
-	static void registerISR(IRQType irqnum, ISRType &&func)
-	{
-		ISRs[irqnum] = std::move(func);
-	}
-	Interrupt(IRQType irqnum, ISRType &&func)
-	{
-		ISRs[irqnum] = std::move(func);
-	}
-	static inline void callISR(IRQType irqnum)
-	{
-		ISRs[irqnum]();
-	}
+	static void registerISR(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+	Interrupt(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+	static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
 
 private:
 	static inline ISRType ISRs[128];
