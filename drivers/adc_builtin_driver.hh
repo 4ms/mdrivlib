@@ -30,7 +30,6 @@
 
 #include "dma_config_struct.hh"
 #include "pin.hh"
-#include "stm32h7xx_ll_adc.h"
 #include "stm32xx.h"
 #include <array>
 
@@ -40,28 +39,24 @@ enum class AdcPeriphNum { _1, _2, _3 };
 template<AdcPeriphNum ADCN>
 class AdcPeriph;
 
+#ifdef STM32F7
+const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_144CYCLES;
+#elif defined(STM32H7)
+const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_64CYCLES_5;
+#endif
+
 template<AdcPeriphNum ADCN, AdcChanNum c, typename T = uint16_t>
 class AdcChan {
 public:
-	AdcChan(const uint32_t sampletime = LL_ADC_SAMPLINGTIME_144CYCLES)
-	{
+	AdcChan(const uint32_t sampletime /* = ADC_DEFAULT_SAMPLINGTIME*/) {
 		auto init_adc_once = AdcPeriph<ADCN>::AdcInstance();
 		AdcPeriph<ADCN>::add_channel(c, sampletime);
 	}
 
-	static T *const get_val_ptr()
-	{
-		return AdcPeriph<ADCN>::get_val_ptr(c);
-	}
-	static const T &get_val_ref()
-	{
-		return AdcPeriph<ADCN>::get_val_ref(c);
-	}
+	static T *const get_val_ptr() { return AdcPeriph<ADCN>::get_val_ptr(c); }
+	static const T &get_val_ref() { return AdcPeriph<ADCN>::get_val_ref(c); }
 
-	T get_val()
-	{
-		return AdcPeriph<ADCN>::get_val(c);
-	}
+	T get_val() { return AdcPeriph<ADCN>::get_val(c); }
 
 	// void start_dma(const DMA_LL_Config dma_defs)
 	// {
@@ -80,18 +75,13 @@ public:
 	static void enable_DMA_IT();
 	static void start_adc();
 
-	static uint16_t get_val(const AdcChanNum channel)
-	{
-		return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]];
-	}
+	static uint16_t get_val(const AdcChanNum channel) { return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]]; }
 
-	static uint16_t *const get_val_ptr(const AdcChanNum channel)
-	{
+	static uint16_t *const get_val_ptr(const AdcChanNum channel) {
 		return &(dma_buffer_[ranks_[static_cast<uint8_t>(channel)]]);
 	}
 
-	static const uint16_t &get_val_ref(const AdcChanNum channel)
-	{
+	static const uint16_t &get_val_ref(const AdcChanNum channel) {
 		return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]];
 	}
 
@@ -110,9 +100,10 @@ private:
 	static inline uint8_t DMA_IRQ_pri;
 	static inline uint8_t DMA_IRQ_subpri;
 
-	static ADC_TypeDef *get_ADC_base(AdcPeriphNum p = ADCN)
-	{
-		return (p == AdcPeriphNum::_1) ? ADC1
-									   : (p == AdcPeriphNum::_2) ? ADC2 : (p == AdcPeriphNum::_3) ? ADC3 : nullptr;
+	static ADC_TypeDef *get_ADC_base(AdcPeriphNum p = ADCN) {
+		return (p == AdcPeriphNum::_1)	 ? ADC1
+			   : (p == AdcPeriphNum::_2) ? ADC2
+			   : (p == AdcPeriphNum::_3) ? ADC3
+										 : nullptr;
 	}
 };
