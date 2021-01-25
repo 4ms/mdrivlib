@@ -23,7 +23,7 @@ public:
 	static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
 
 private:
-	static inline ISRType ISRs[128];
+	static inline ISRType ISRs[256];
 };
 
 using InterruptManager = Interrupt;
