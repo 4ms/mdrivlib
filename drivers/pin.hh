@@ -18,15 +18,6 @@
 
 #pragma once
 
-#ifdef STM32F7
-#include "stm32f7xx_ll_bus.h"
-#include "stm32f7xx_ll_gpio.h"
-#endif
-#ifdef STM32MP1
-#include "stm32mp1xx_ll_bus.h"
-#include "stm32mp1xx_ll_gpio.h"
-#endif
-
 #include "stm32xx.h"
 #include "system.hh"
 
@@ -84,6 +75,13 @@ enum PinAF {
 	AFNone = 0,
 };
 
+// Convenient container for passing pin defintions to a peripheral which performs the initialization
+struct PinNoInit {
+	GPIO gpio;
+	uint8_t pin;
+	uint8_t af;
+};
+
 class Pin {
 public:
 	Pin() = default;
@@ -98,6 +96,7 @@ public:
 		PinSpeed speed = PinSpeed::High,
 		PinOType otype = PinOType::PushPull);
 
+	void init(PinNoInit &other);
 	void high() const;
 	void low() const;
 	void on() const;
@@ -118,21 +117,10 @@ private:
 	PinPolarity polarity_;
 
 	template<typename X>
-	uint32_t HALParam(X x)
-	{
+	uint32_t HALParam(X x) {
 		return static_cast<uint32_t>(x);
 	}
 
-	auto GPIOPort(GPIO port_) const
-	{
-		return reinterpret_cast<GPIO_TypeDef *>(port_);
-	}
-};
-
-// Convenient container for passing pin defintions to a peripheral which performs the initialization
-struct PinNoInit {
-	GPIO gpio;
-	uint8_t pin;
-	uint8_t af;
+	auto GPIOPort(GPIO port_) const { return reinterpret_cast<GPIO_TypeDef *>(port_); }
 };
 
