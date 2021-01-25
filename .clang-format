@@ -6,7 +6,6 @@ IndentWidth : 4
 ColumnLimit : 120
 AccessModifierOffset : -4
 AlignAfterOpenBracket: "Align"
-AllowShortFunctionsOnASingleLine: "All"
 AllowShortIfStatementsOnASingleLine : "Never"
 AllowShortBlocksOnASingleLine : "true"
 AlwaysBreakTemplateDeclarations : "true"
