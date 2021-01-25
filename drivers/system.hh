@@ -8,24 +8,20 @@ using namespace mdrivlib;
 struct System {
 	System() {}
 
-	static void SetVectorTable(uint32_t reset_address)
-	{
-		SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80;
-	}
+	static void SetVectorTable(uint32_t reset_address) { SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80; }
 
 	static void init_clocks(const RCC_OscInitTypeDef &osc_def,
 							const RCC_ClkInitTypeDef &clk_def,
 							const RCC_PeriphCLKInitTypeDef &pclk_def,
-							const uint32_t systick_freq_hz = 1000)
-	{
-#ifdef STM32H7
+							const uint32_t systick_freq_hz = 1000) {
+#if defined(STM32H745xx) || defined(STM32H755xx)
 		HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
 		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 		while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
 		}
 		__HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
-
 #endif
+
 #if defined(STM32F7) || defined(STM32F4)
 		__HAL_RCC_PWR_CLK_ENABLE();
 		__HAL_RCC_SYSCFG_CLK_ENABLE();
@@ -37,9 +33,9 @@ struct System {
 		RCC_OscInitTypeDef osc_def_ = osc_def;
 		HAL_RCC_OscConfig(&osc_def_);
 
-	#ifdef STM32F7
+#ifdef STM32F7
 		HAL_PWREx_EnableOverDrive();
-	#endif
+#endif
 
 		RCC_ClkInitTypeDef clk_def_ = clk_def;
 		HAL_RCC_ClockConfig(&clk_def_, FLASH_LATENCY_7);
@@ -54,82 +50,23 @@ struct System {
 #endif
 	}
 
-	static uint32_t encode_nvic_priority(uint32_t pri1, uint32_t pri2)
-	{
+	static uint32_t encode_nvic_priority(uint32_t pri1, uint32_t pri2) {
 		return NVIC_EncodePriority(NVIC_GetPriorityGrouping(), pri1, pri2);
 	}
 
-	static constexpr void enable_gpio_rcc(GPIO_TypeDef *port)
-	{
+	static void enable_gpio_rcc(GPIO_TypeDef *port) {
 		if (port == nullptr)
 			return;
-#ifdef GPIOA
-		else if (port == GPIOA && !is_enabled_rcc(GPIOEnableBit::A))
-			enable_rcc(GPIOEnableBit::A);
-#endif
-#ifdef GPIOB
-		else if (port == GPIOB && !is_enabled_rcc(GPIOEnableBit::B))
-			enable_rcc(GPIOEnableBit::B);
-#endif
-#ifdef GPIOC
-		else if (port == GPIOC && !is_enabled_rcc(GPIOEnableBit::C))
-			enable_rcc(GPIOEnableBit::C);
-#endif
-#ifdef GPIOD
-		else if (port == GPIOD && !is_enabled_rcc(GPIOEnableBit::D))
-			enable_rcc(GPIOEnableBit::D);
-#endif
-#ifdef GPIOE
-		else if (port == GPIOE && !is_enabled_rcc(GPIOEnableBit::E))
-			enable_rcc(GPIOEnableBit::E);
-#endif
-#ifdef GPIOF
-		else if (port == GPIOF && !is_enabled_rcc(GPIOEnableBit::F))
-			enable_rcc(GPIOEnableBit::F);
-#endif
-#ifdef GPIOG
-		else if (port == GPIOG && !is_enabled_rcc(GPIOEnableBit::G))
-			enable_rcc(GPIOEnableBit::G);
-#endif
-#ifdef GPIOH
-		else if (port == GPIOH && !is_enabled_rcc(GPIOEnableBit::H))
-			enable_rcc(GPIOEnableBit::H);
-#endif
-#ifdef GPIOI
-		else if (port == GPIOI && !is_enabled_rcc(GPIOEnableBit::I))
-			enable_rcc(GPIOEnableBit::I);
-#endif
-#ifdef GPIOJ
-		else if (port == GPIOJ && !is_enabled_rcc(GPIOEnableBit::J))
-			enable_rcc(GPIOEnableBit::J);
-#endif
-#ifdef GPIOK
-		else if (port == GPIOK && !is_enabled_rcc(GPIOEnableBit::K))
-			enable_rcc(GPIOEnableBit::K);
-#endif
+		RCCControl::GPIO::enable(reinterpret_cast<uint32_t>(port));
 	}
 
-	static constexpr void enable_adc_rcc(ADC_TypeDef *ADCx)
-	{
-		// RCC::ADC::enable(ADCx);
+	static void enable_adc_rcc(ADC_TypeDef *ADCx) {
 		if (ADCx == nullptr)
 			return;
-#ifdef ADC1
-		if (ADCx == ADC1)
-			enable_rcc(ADCEnableBit::_1);
-#endif
-#ifdef ADC2
-		else if (ADCx == ADC2)
-			enable_rcc(ADCEnableBit::_2);
-#endif
-#ifdef ADC3
-		else if (ADCx == ADC3)
-			enable_rcc(ADC3EnableBit::_3);
-#endif
+		// RCCControl::ADC::enable(reinterpret_cast<uint32_t>(ADCx));
 	}
 
-	static constexpr void enable_dma_rcc(const DMA_TypeDef *DMAx)
-	{
+	static constexpr void enable_dma_rcc(const DMA_TypeDef *DMAx) {
 		if (DMAx == nullptr)
 			return;
 #ifdef DMA1
@@ -146,8 +83,7 @@ struct System {
 #endif
 	}
 
-	static constexpr void enable_i2c_rcc(I2C_TypeDef *I2Cx)
-	{
+	static constexpr void enable_i2c_rcc(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr)
 			return;
 #ifdef I2C1
@@ -164,8 +100,7 @@ struct System {
 #endif
 	}
 
-	static constexpr void disable_i2c_rcc(I2C_TypeDef *I2Cx)
-	{
+	static constexpr void disable_i2c_rcc(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr)
 			return;
 #ifdef I2C1
@@ -182,8 +117,7 @@ struct System {
 #endif
 	}
 
-	static constexpr void enable_sai_rcc(SAI_TypeDef *SAIx)
-	{
+	static constexpr void enable_sai_rcc(SAI_TypeDef *SAIx) {
 		if (SAIx == nullptr)
 			return;
 #ifdef SAI1
@@ -204,8 +138,7 @@ struct System {
 #endif
 	}
 
-	static constexpr void disable_sai_rcc(SAI_TypeDef *SAIx)
-	{
+	static constexpr void disable_sai_rcc(SAI_TypeDef *SAIx) {
 		if (SAIx == nullptr)
 			return;
 #ifdef SAI1
@@ -226,8 +159,7 @@ struct System {
 #endif
 	}
 
-	static void enable_tim_rcc(TIM_TypeDef *TIM)
-	{
+	static void enable_tim_rcc(TIM_TypeDef *TIM) {
 #ifdef TIM1
 		if (TIM == TIM1)
 			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
@@ -300,8 +232,7 @@ struct System {
 
 	static inline constexpr uint8_t kTimPeriphMax = 17;
 
-	static uint8_t tim_periph_to_num(TIM_TypeDef *TIM)
-	{
+	static uint8_t tim_periph_to_num(TIM_TypeDef *TIM) {
 		if (TIM == nullptr)
 			return 0;
 #ifdef TIM1
@@ -375,8 +306,7 @@ struct System {
 		else
 			return 0;
 	}
-	static IRQn_Type tim_periph_to_IRQn(TIM_TypeDef *TIM)
-	{
+	static IRQn_Type tim_periph_to_IRQn(TIM_TypeDef *TIM) {
 		if (TIM == nullptr)
 			return (IRQn_Type)(0);
 #ifdef TIM1
@@ -451,8 +381,7 @@ struct System {
 			return (IRQn_Type)(0);
 	}
 
-	static uint32_t tim_periph_max_freq(TIM_TypeDef *TIM)
-	{
+	static uint32_t tim_periph_max_freq(TIM_TypeDef *TIM) {
 		// APB2 --> divider = 1;
 		// APB1 --> divider = 2;
 		uint32_t divider;
