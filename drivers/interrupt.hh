@@ -1,8 +1,7 @@
 #pragma once
 
-#include "stm32xx.h"
-
 #if defined(STM32F7) || defined(STM32H7) || defined(STM32F4) || defined(STM32MP1)
+#include "stm32xx.h"
 using IRQType = IRQn_Type;
 #else
 #include <cstdint>

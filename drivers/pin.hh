@@ -19,7 +19,6 @@
 #pragma once
 
 #include "stm32xx.h"
-#include "system.hh"
 
 enum class PinPolarity {
 	Normal,
