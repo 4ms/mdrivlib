@@ -4,6 +4,3 @@
 [submodule "tests/fff"]
 	path = tests/fff
 	url = https://github.com/meekrosoft/fff.git
-[submodule "tests/doctest"]
-	path = tests/doctest
-	url = https://github.com/onqtam/doctest.git
