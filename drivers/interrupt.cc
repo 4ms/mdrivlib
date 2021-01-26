@@ -1,6 +1,6 @@
 #include "interrupt.hh"
 
-static void ISRHandler(IRQType irqnum) { InterruptManager::callISR(irqnum); }
+// static void ISRHandler(IRQType irqnum) { InterruptManager::callISR(irqnum); }
 static void ISRHandler(unsigned irqnum) { InterruptManager::callISR(irqnum); }
 
 extern "C" {
@@ -261,7 +261,7 @@ void IRQ_Trampoline_253() { ISRHandler(253); }
 void IRQ_Trampoline_254() { ISRHandler(254); }
 void IRQ_Trampoline_255() { ISRHandler(255); }
 }
-
+/*
 extern "C" void WWDG_IRQHandler(void) { ISRHandler(WWDG_IRQn); }
 extern "C" void PVD_IRQHandler(void) { ISRHandler(PVD_IRQn); }
 extern "C" void TAMP_STAMP_IRQHandler(void) { ISRHandler(TAMP_STAMP_IRQn); }
@@ -536,3 +536,4 @@ extern "C" void HOLD_CORE_IRQHandler(void) { ISRHandler(HOLD_CORE_IRQn); }
 #ifdef WAKEUP_PIN_IRQn
 extern "C" void WAKEUP_PIN_IRQHandler(void) { ISRHandler(WAKEUP_PIN_IRQn); }
 #endif
+*/

@@ -11,21 +11,31 @@ using IRQType = uint32_t;
 
 #include <functional>
 
+// Interrupt class
+// register a callable object (e.g. lambda) to an IRQType
 class Interrupt {
 public:
 	// Todo: Try inplace_function<void(void)> instead of std::function
 	// https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
 	using ISRType = std::function<void(void)>;
+	static inline const uint32_t NumISRs = 256;
 
 	Interrupt() {}
-	static void registerISR(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
 	Interrupt(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
-	static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
-	static inline void callISR(unsigned irqnum) { ISRs[irqnum](); }
-	static inline void Default_IRQHandler_() { __BKPT(); }
+	static void registerISR(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+	// static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
+	static inline void callISR(uint32_t irqnum) { ISRs[irqnum](); }
+
+	// Sets a default handler for all ISRs.
+	// This could be done for debug builds, to point to debug breakpoint
+	// Copies the provided func, so a function pointer is recommended
+	static inline void SetDefaultISR(ISRType func) {
+		for (uint32_t i = 0; i < NumISRs; i++)
+			ISRs[i] = func;
+	}
 
 private:
-	static inline ISRType ISRs[256] = {Default_IRQHandler_};
+	static inline ISRType ISRs[NumISRs];
 };
 
 using InterruptManager = Interrupt;
