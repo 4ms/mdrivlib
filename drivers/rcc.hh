@@ -35,31 +35,49 @@ bool is_enabled_rcc(T en_bit) {
 		(uint8_t *)RCC, static_cast<volatile RegisterT>(T::reg), static_cast<RegisterT>(en_bit));
 }
 
-#ifdef STM32H7
-// stm32h755xx.h:
-
 template<typename PeriphT>
 struct RCCPeriph {
-	void enable(RegisterT bit) { *PeriphT::_reg |= bit; }
-	// RCC->*PeriphT::rcc_enabled_field |= bit;
-	void disable(RegisterT bit) { *PeriphT::_reg &= ~bit; }
-	bool is_enabled(RegisterT bit) { return *PeriphT::_reg & bit; }
+	static void enable() { *PeriphT::_reg |= PeriphT::_bit; }
+	static void disable() { *PeriphT::_reg &= ~PeriphT::_bit; }
+	static bool is_enabled() { return *PeriphT::_reg & PeriphT::_bit; }
 };
+
+template<typename PeriphT>
+struct RCCPeriphs {
+	static void enable(unsigned pnum) { *PeriphT::_regs[pnum - 1] |= PeriphT::_bits[pnum - 1]; }
+	static void disable(unsigned pnum) { *PeriphT::_regs[pnum - 1] &= ~PeriphT::_bits[pnum - 1]; }
+	static bool is_enabled(unsigned pnum) { return *PeriphT::_regs[pnum - 1] & PeriphT::_bits[pnum - 1]; }
+};
+
+#ifdef STM32H7
+// stm32h755xx.h:
 
 struct RCCControl {
 	// special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 	struct GPIO {
 		static inline volatile RegisterT *const _reg = &(RCC->AHB4ENR);
-		static void enable(uint32_t periph_base_addr) { *_reg |= (periph_base_addr >> 10); }
-		static void disable(uint32_t periph_base_addr) { *_reg &= ~(periph_base_addr >> 10); }
-		static bool is_enabled(uint32_t periph_base_addr) { return (*_reg) & (periph_base_addr >> 10); }
+		static uint32_t get_gpio_bit(uint32_t periph_base_addr) { return (periph_base_addr & 0x00003C00) >> 10; }
+		static void enable(uint32_t periph_base_addr) { *_reg |= get_gpio_bit(periph_base_addr); }
+		static void disable(uint32_t periph_base_addr) { *_reg &= ~get_gpio_bit(periph_base_addr); }
+		static bool is_enabled(uint32_t periph_base_addr) { return (*_reg) & get_gpio_bit(periph_base_addr); }
 	};
 
-	// Todo: #ifdef around const structs with just {Reg, _bit}
+	struct ADC : RCCPeriphs<ADC> {
+		const static inline unsigned NumP = 3;
+		volatile static inline RegisterT *const _regs[NumP] = {
+			&RCC->AHB1ENR,
+			&RCC->AHB1ENR,
+			&RCC->AHB1ENR,
+		};
+		const static inline RegisterT _bits[NumP] = {
+			RCC_AHB1ENR_ADC12EN,
+			RCC_AHB1ENR_ADC12EN,
+			RCC_AHB4ENR_ADC3EN,
+		};
+	};
 
 	struct ADC_1 : public RCCPeriph<ADC_1> {
-		// static inline volatile uint32_t RCC_TypeDef::*rcc_enable_field = &RCC_TypeDef::AHB1ENR;
-		volatile static inline RegisterT *const Reg = &(RCC->AHB1ENR);
+		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
 		const static inline RegisterT _bit = RCC_AHB1ENR_ADC12EN;
 	};
 	struct ADC_2 : public RCCPeriph<ADC_2> {
@@ -71,8 +89,10 @@ struct RCCControl {
 		const static inline RegisterT _bit = RCC_AHB4ENR_ADC3EN;
 	};
 
+	// Todo: decide if the ADC : RCCPeriphs<ADC> method or the ADC_1 : RCCPeriph<ADC_1> method is better, and apply to
+	// all (including GPIO):
 	struct DMA_1 : public RCCPeriph<DMA_1> {
-		volatile static inline RegisterT *const Reg = &(RCC->AHB1ENR);
+		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
 		const static inline RegisterT _bit = RCC_AHB1ENR_DMA1EN;
 	};
 	struct DMA_2 : public RCCPeriph<DMA_2> {
@@ -81,8 +101,7 @@ struct RCCControl {
 	};
 
 	struct I2C_1 : public RCCPeriph<I2C_1> {
-		// static inline volatile uint32_t RCC_TypeDef::*rcc_enable_field = &RCC_TypeDef::APB1LENR;
-		volatile static inline RegisterT *const Reg = &(RCC->APB1LENR);
+		volatile static inline RegisterT *const _reg = &(RCC->APB1LENR);
 		const static inline RegisterT _bit = RCC_APB1LENR_I2C1EN;
 	};
 	struct I2C_2 : public RCCPeriph<I2C_2> {
@@ -95,8 +114,7 @@ struct RCCControl {
 	};
 
 	struct SAI_1 : public RCCPeriph<SAI_1> {
-		// static inline volatile uint32_t RCC_TypeDef::*rcc_enable_field = &RCC_TypeDef::APB2ENR;
-		volatile static inline RegisterT *const Reg = &(RCC->APB2ENR);
+		volatile static inline RegisterT *const _reg = &(RCC->APB2ENR);
 		const static inline RegisterT _bit = RCC_APB2ENR_SAI1EN;
 	};
 	struct SAI_2 : public RCCPeriph<SAI_2> {
@@ -111,6 +129,48 @@ struct RCCControl {
 		volatile static inline RegisterT *const _reg = &(RCC->APB4ENR);
 		const static inline RegisterT _bit = RCC_APB4ENR_SAI4EN;
 	};
+
+	struct TIM : RCCPeriphs<TIM> {
+		const static inline unsigned NumP = 17;
+		volatile static inline RegisterT *const _regs[NumP] = {
+			&RCC->APB2ENR,
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB2ENR,
+			&RCC->APB2ENR, // TIM9 is not present: map to TIM1
+			&RCC->APB2ENR, // TIM10 is not present: map to TIM1
+			&RCC->APB2ENR, // TIM11 is not present: map to TIM1
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB1LENR,
+			&RCC->APB2ENR,
+			&RCC->APB2ENR,
+			&RCC->APB2ENR,
+		};
+		const static inline RegisterT _bits[NumP] = {
+			RCC_APB2ENR_TIM1EN,
+			RCC_APB1LENR_TIM2EN,
+			RCC_APB1LENR_TIM3EN,
+			RCC_APB1LENR_TIM4EN,
+			RCC_APB1LENR_TIM5EN,
+			RCC_APB1LENR_TIM6EN,
+			RCC_APB1LENR_TIM7EN,
+			RCC_APB2ENR_TIM8EN,
+			RCC_APB2ENR_TIM1EN, //?? TIM9 is not present: map to TIM1
+			RCC_APB2ENR_TIM1EN, //?? TIM10 is not present: map to TIM1
+			RCC_APB2ENR_TIM1EN, //?? TIM11 is not present: map to TIM1
+			RCC_APB1LENR_TIM12EN,
+			RCC_APB1LENR_TIM13EN,
+			RCC_APB1LENR_TIM14EN,
+			RCC_APB2ENR_TIM15EN,
+			RCC_APB2ENR_TIM16EN,
+			RCC_APB2ENR_TIM17EN,
+		};
+	};
 };
 
 #endif
@@ -121,76 +181,80 @@ struct RCCControl {
 
 #ifdef STM32F7
 // stm32f746xx.h:
-class GPIOEnableBit {
-	const static inline uint32_t A = RCC_AHB1ENR_GPIOAEN;
-	const static inline uint32_t B = RCC_AHB1ENR_GPIOBEN;
-	const static inline uint32_t C = RCC_AHB1ENR_GPIOCEN;
-	const static inline uint32_t D = RCC_AHB1ENR_GPIODEN;
-	const static inline uint32_t E = RCC_AHB1ENR_GPIOEEN;
-	const static inline uint32_t F = RCC_AHB1ENR_GPIOFEN;
-	const static inline uint32_t G = RCC_AHB1ENR_GPIOGEN;
-	const static inline uint32_t H = RCC_AHB1ENR_GPIOHEN;
-	const static inline uint32_t I = RCC_AHB1ENR_GPIOIEN;
-	const static inline uint32_t J = RCC_AHB1ENR_GPIOJEN;
-	const static inline uint32_t K = RCC_AHB1ENR_GPIOKEN;
-	constexpr static inline offset = offsetof(RCC_TypeDef, AHB1ENR);
-};
-bool _is_enabled(GPIOEnableBit en_bit) { return _read_bit(RCC->AHB1ENR, en_bit); }
-void _enable(GPIOEnableBit en_bit) { _set_bit(RCC->AHB1ENR, en_bit); }
-void _disable(GPIOEnableBit en_bit) { _clear_bit(RCC->AHB1ENR, en_bit); }
 
-enum class ADCEnableBit : uint32_t {
-	_1 = RCC_APB2ENR_ADC1EN,
-	_2 = RCC_APB2ENR_ADC2EN,
-	_3 = RCC_APB2ENR_ADC3EN,
+struct GPIO {
+	static inline volatile RegisterT *const _reg = &(RCC->AHB4ENR);
+	static uint32_t get_gpio_bit(uint32_t periph_base_addr) { return (periph_base_addr & 0x00003C00) >> 10; }
+	static void enable(uint32_t periph_base_addr) { *_reg |= get_gpio_bit(periph_base_addr); }
+	static void disable(uint32_t periph_base_addr) { *_reg &= ~get_gpio_bit(periph_base_addr); }
+	static bool is_enabled(uint32_t periph_base_addr) { return (*_reg) & get_gpio_bit(periph_base_addr); }
 };
-bool _is_enabled(ADCEnableBit en_bit) { return _read_bit(RCC->APB2ENR, en_bit); }
-void _enable(ADCEnableBit en_bit) { _set_bit(RCC->APB2ENR, en_bit); }
-void _disable(ADCEnableBit en_bit) { _clear_bit(RCC->APB2ENR, en_bit); }
 
-enum class DMAEnableBit : uint32_t {
-	_1 = RCC_AHB1ENR_DMA1EN,
-	_2 = RCC_AHB1ENR_DMA2EN,
-};
-bool _is_enabled(DMAEnableBit en_bit) { return _read_bit(RCC->AHB1ENR, en_bit); }
-void _enable(DMAEnableBit en_bit) { _set_bit(RCC->AHB1ENR, en_bit); }
-void _disable(DMAEnableBit en_bit) { _clear_bit(RCC->AHB1ENR, en_bit); }
+// Todo: convert this to new format:
+// enum class ADCEnableBit : uint32_t {
+// 	_1 = RCC_APB2ENR_ADC1EN,
+// 	_2 = RCC_APB2ENR_ADC2EN,
+// 	_3 = RCC_APB2ENR_ADC3EN,
+// };
+// enum class DMAEnableBit : uint32_t {
+// 	_1 = RCC_AHB1ENR_DMA1EN,
+// 	_2 = RCC_AHB1ENR_DMA2EN,
+// };
+// enum class I2CEnableBit : uint32_t {
+// 	_1 = RCC_APB1ENR_I2C1EN,
+// 	_2 = RCC_APB1ENR_I2C2EN,
+// 	_3 = RCC_APB1ENR_I2C3EN,
+// };
+// enum class SAIEnableBit : uint32_t {
+// 	_1 = RCC_APB2ENR_SAI1EN,
+// 	_2 = RCC_APB2ENR_SAI2EN,
+// 	_3 = RCC_APB2ENR_SAI3EN,
+// };
+// enum class SAI4EnableBit : uint32_t {
+// 	_4 = RCC_APB4ENR_SAI4EN,
+// };
 
-enum class I2CEnableBit : uint32_t {
-	_1 = RCC_APB1ENR_I2C1EN,
-	_2 = RCC_APB1ENR_I2C2EN,
-	_3 = RCC_APB1ENR_I2C3EN,
+struct TIM : RCCPeriphs<TIM> {
+	const static inline unsigned NumP = 17;
+	volatile static inline RegisterT *const _regs[NumP] = {
+		&RCC->APB2ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB2ENR,
+		&RCC->APB2ENR,
+		&RCC->APB2ENR,
+		&RCC->APB2ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB1ENR,
+		&RCC->APB2ENR,
+		&RCC->APB2ENR,
+		&RCC->APB2ENR,
+	};
+	const static inline RegisterT _bits[NumP] = {
+		RCC_APB2ENR_TIM1EN,
+		RCC_APB1ENR_TIM2EN,
+		RCC_APB1ENR_TIM3EN,
+		RCC_APB1ENR_TIM4EN,
+		RCC_APB1ENR_TIM5EN,
+		RCC_APB1ENR_TIM6EN,
+		RCC_APB1ENR_TIM7EN,
+		RCC_APB2ENR_TIM8EN,
+		RCC_APB2ENR_TIM9EN,
+		RCC_APB2ENR_TIM10EN,
+		RCC_APB2ENR_TIM11EN,
+		RCC_APB1ENR_TIM12EN,
+		RCC_APB1ENR_TIM13EN,
+		RCC_APB1ENR_TIM14EN,
+		RCC_APB2ENR_TIM15EN,
+		RCC_APB2ENR_TIM16EN,
+		RCC_APB2ENR_TIM17EN,
+	};
 };
-bool _is_enabled(I2CEnableBit en_bit) { return _read_bit(RCC->APB1ENR, en_bit); }
-void _enable(I2CEnableBit en_bit) { _set_bit(RCC->APB1ENR, en_bit); }
-void _disable(I2CEnableBit en_bit) { _clear_bit(RCC->APB1ENR, en_bit); }
-
-enum class SAIEnableBit : uint32_t {
-	_1 = RCC_APB2ENR_SAI1EN,
-	_2 = RCC_APB2ENR_SAI2EN,
-	_3 = RCC_APB2ENR_SAI3EN,
-};
-enum class SAI4EnableBit : uint32_t {
-	_4 = RCC_APB4ENR_SAI4EN,
-};
-__IO uint32_t RCCTypeDef::*SAIRCCReg = &RCC_TypeDef::APB2ENR;
-__IO uint32_t RCCTypeDef::*SAI4RCCReg = &RCC_TypeDef::APB4ENR;
-bool _is_enabled(SAIEnableBit en_bit) { return _read_bit(RCC->*SAIRCCReg, en_bit); }
-void _enable(SAIEnableBit en_bit) { _set_bit(RCC->*SAIRCCReg, en_bit); }
-void _disable(SAIEnableBit en_bit) { _clear_bit(RCC->*SAIRCCReg, en_bit); }
-bool _is_enabled(SAI4EnableBit en_bit) { return _read_bit(RCC->*SAI4RCCReg, en_bit); }
-void _enable(SAI4EnableBit en_bit) { _set_bit(RCC->*SAI4RCCReg, en_bit); }
-void _disable(SAI4EnableBit en_bit) { _clear_bit(RCC->*SAI4RCCReg, en_bit); }
-
-enum class SAIEnableBit : uint32_t {
-	_1 = RCC_APB2ENR_SAI1EN,
-	_2 = RCC_APB2ENR_SAI2EN,
-	_3 = RCC_APB2ENR_SAI3EN,
-};
-__IO uint32_t RCCTypeDef::*SAIRCCReg = &RCC_TypeDef::APB2ENR;
-bool _is_enabled(SAIEnableBit en_bit) { return _read_bit(RCC->*SAIRCCReg, en_bit); }
-void _enable(SAIEnableBit en_bit) { _set_bit(RCC->*SAIRCCReg, en_bit); }
-void _disable(SAIEnableBit en_bit) { _clear_bit(RCC->*SAIRCCReg, en_bit); }
 
 #endif
 

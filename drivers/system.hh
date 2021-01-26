@@ -60,328 +60,173 @@ struct System {
 		RCCControl::GPIO::enable(reinterpret_cast<uint32_t>(port));
 	}
 
-	static void enable_adc_rcc(ADC_TypeDef *ADCx) {
+	static unsigned adc_periph_to_num(ADC_TypeDef *ADCx) {
 		if (ADCx == nullptr)
-			return;
-		// RCCControl::ADC::enable(reinterpret_cast<uint32_t>(ADCx));
+			return 0;
+		else if (ADCx == ADC1)
+			return 1;
+		else if (ADCx == ADC2)
+			return 2;
+		else if (ADCx == ADC3)
+			return 3;
+		else
+			return 0;
 	}
+
+	static void enable_adc_rcc(unsigned periph_num) {
+		if (periph_num >= 1 && periph_num <= RCCControl::ADC::NumP)
+			RCCControl::ADC::enable(periph_num);
+	}
+
+	static void enable_adc_rcc(ADC_TypeDef *ADCx) { RCCControl::ADC::enable(adc_periph_to_num(ADCx)); }
 
 	static constexpr void enable_dma_rcc(const DMA_TypeDef *DMAx) {
 		if (DMAx == nullptr)
 			return;
-#ifdef DMA1
 		else if (DMAx == DMA1)
-			enable_rcc(DMAEnableBit::_1);
-#endif
-#ifdef DMA2
+			RCCControl::DMA_1::enable();
 		else if (DMAx == DMA2)
-			enable_rcc(DMAEnableBit::_2);
-#endif
-#ifdef DMA3
-		else if (DMAx == DMA3)
-			enable_rcc(DMAEnableBit::_3);
-#endif
+			RCCControl::DMA_2::enable();
 	}
 
 	static constexpr void enable_i2c_rcc(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr)
 			return;
-#ifdef I2C1
 		else if (I2Cx == I2C1)
-			enable_rcc(I2CEnableBit::_1);
-#endif
-#ifdef I2C2
+			RCCControl::I2C_1::enable();
 		else if (I2Cx == I2C2)
-			enable_rcc(I2CEnableBit::_2);
-#endif
-#ifdef I2C3
+			RCCControl::I2C_2::enable();
 		else if (I2Cx == I2C3)
-			enable_rcc(I2CEnableBit::_3);
-#endif
+			RCCControl::I2C_3::enable();
 	}
 
 	static constexpr void disable_i2c_rcc(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr)
 			return;
-#ifdef I2C1
 		else if (I2Cx == I2C1)
-			disable_rcc(I2CEnableBit::_1);
-#endif
-#ifdef I2C2
+			RCCControl::I2C_1::disable();
 		else if (I2Cx == I2C2)
-			disable_rcc(I2CEnableBit::_2);
-#endif
-#ifdef I2C3
+			RCCControl::I2C_2::disable();
 		else if (I2Cx == I2C3)
-			disable_rcc(I2CEnableBit::_3);
-#endif
+			RCCControl::I2C_3::disable();
 	}
 
 	static constexpr void enable_sai_rcc(SAI_TypeDef *SAIx) {
 		if (SAIx == nullptr)
 			return;
-#ifdef SAI1
 		else if (SAIx == SAI1)
-			enable_rcc(SAIEnableBit::_1);
-#endif
-#ifdef SAI2
+			RCCControl::SAI_1::enable();
 		else if (SAIx == SAI2)
-			enable_rcc(SAIEnableBit::_2);
-#endif
-#ifdef SAI3
+			RCCControl::SAI_2::enable();
 		else if (SAIx == SAI3)
-			enable_rcc(SAIEnableBit::_3);
-#endif
-#ifdef SAI4
+			RCCControl::SAI_3::enable();
 		else if (SAIx == SAI4)
-			enable_rcc(SAI4EnableBit::_4);
-#endif
+			RCCControl::SAI_4::enable();
 	}
 
 	static constexpr void disable_sai_rcc(SAI_TypeDef *SAIx) {
 		if (SAIx == nullptr)
 			return;
-#ifdef SAI1
 		else if (SAIx == SAI1)
-			disable_rcc(SAIEnableBit::_1);
-#endif
-#ifdef SAI2
+			RCCControl::SAI_1::disable();
 		else if (SAIx == SAI2)
-			disable_rcc(SAIEnableBit::_2);
-#endif
-#ifdef SAI3
+			RCCControl::SAI_2::disable();
 		else if (SAIx == SAI3)
-			disable_rcc(SAIEnableBit::_3);
-#endif
-#ifdef SAI4
+			RCCControl::SAI_3::disable();
 		else if (SAIx == SAI4)
-			disable_rcc(SAI4EnableBit::_4);
-#endif
+			RCCControl::SAI_4::disable();
 	}
 
-	static void enable_tim_rcc(TIM_TypeDef *TIM) {
-#ifdef TIM1
-		if (TIM == TIM1)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
-#endif
-#ifdef TIM2
-		if (TIM == TIM2)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
-#endif
-#ifdef TIM3
-		if (TIM == TIM3)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
-#endif
-#ifdef TIM4
-		if (TIM == TIM4)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
-#endif
-#ifdef TIM5
-		if (TIM == TIM5)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM5);
-#endif
-#ifdef TIM6
-		if (TIM == TIM6)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
-#endif
-#ifdef TIM7
-		if (TIM == TIM7)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
-#endif
-#ifdef TIM8
-		if (TIM == TIM8)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM8);
-#endif
-#ifdef TIM9
-		if (TIM == TIM9)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM9);
-#endif
-#ifdef TIM10
-		if (TIM == TIM10)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM10);
-#endif
-#ifdef TIM11
-		if (TIM == TIM11)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM11);
-#endif
-#ifdef TIM12
-		if (TIM == TIM12)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM12);
-#endif
-#ifdef TIM13
-		if (TIM == TIM13)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM13);
-#endif
-#ifdef TIM14
-		if (TIM == TIM14)
-			LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM14);
-#endif
-#ifdef TIM15
-		if (TIM == TIM15)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM15);
-#endif
-#ifdef TIM16
-		if (TIM == TIM16)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM16);
-#endif
-#ifdef TIM17
-		if (TIM == TIM17)
-			LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM17);
-#endif
-	}
-
-	static inline constexpr uint8_t kTimPeriphMax = 17;
-
-	static uint8_t tim_periph_to_num(TIM_TypeDef *TIM) {
-		if (TIM == nullptr)
+	static uint8_t tim_periph_to_num(TIM_TypeDef *TIMx) {
+		if (TIMx == nullptr)
 			return 0;
-#ifdef TIM1
-		else if (TIM == TIM1)
+		else if (TIMx == TIM1)
 			return 1;
-#endif
-#ifdef TIM2
-		else if (TIM == TIM2)
+		else if (TIMx == TIM2)
 			return 2;
-#endif
-#ifdef TIM3
-		else if (TIM == TIM3)
+		else if (TIMx == TIM3)
 			return 3;
-#endif
-#ifdef TIM4
-		else if (TIM == TIM4)
+		else if (TIMx == TIM4)
 			return 4;
-#endif
-#ifdef TIM5
-		else if (TIM == TIM5)
+		else if (TIMx == TIM5)
 			return 5;
-#endif
-#ifdef TIM6
-		else if (TIM == TIM6)
+		else if (TIMx == TIM6)
 			return 6;
-#endif
-#ifdef TIM7
-		else if (TIM == TIM7)
+		else if (TIMx == TIM7)
 			return 7;
-#endif
-#ifdef TIM8
-		else if (TIM == TIM8)
+		else if (TIMx == TIM8)
 			return 8;
-#endif
-#ifdef TIM9
-		else if (TIM == TIM9)
+		else if (TIMx == TIM9)
 			return 9;
-#endif
-#ifdef TIM10
-		else if (TIM == TIM10)
+		else if (TIMx == TIM10)
 			return 10;
-#endif
-#ifdef TIM11
-		else if (TIM == TIM11)
+		else if (TIMx == TIM11)
 			return 11;
-#endif
-#ifdef TIM12
-		else if (TIM == TIM12)
+		else if (TIMx == TIM12)
 			return 12;
-#endif
-#ifdef TIM13
-		else if (TIM == TIM13)
+		else if (TIMx == TIM13)
 			return 13;
-#endif
-#ifdef TIM14
-		else if (TIM == TIM14)
+		else if (TIMx == TIM14)
 			return 14;
-#endif
-#ifdef TIM15
-		else if (TIM == TIM15)
+		else if (TIMx == TIM15)
 			return 15;
-#endif
-#ifdef TIM16
-		else if (TIM == TIM16)
+		else if (TIMx == TIM16)
 			return 16;
-#endif
-#ifdef TIM17
-		else if (TIM == TIM17)
+		else if (TIMx == TIM17)
 			return 17;
-#endif
 		else
 			return 0;
 	}
+
+	static void enable_tim_rcc(unsigned periph_num) {
+		if (periph_num >= 1 && periph_num <= RCCControl::TIM::NumP)
+			RCCControl::TIM::enable(periph_num);
+	}
+	static void enable_tim_rcc(TIM_TypeDef *TIMx) { enable_tim_rcc(tim_periph_to_num(TIMx)); }
+
 	static IRQn_Type tim_periph_to_IRQn(TIM_TypeDef *TIM) {
 		if (TIM == nullptr)
 			return (IRQn_Type)(0);
-#ifdef TIM1
 		else if (TIM == TIM1)
 			return TIM1_UP_TIM10_IRQn;
-#endif
-#ifdef TIM2
 		else if (TIM == TIM2)
 			return TIM2_IRQn;
-#endif
-#ifdef TIM3
 		else if (TIM == TIM3)
 			return TIM3_IRQn;
-#endif
-#ifdef TIM4
 		else if (TIM == TIM4)
 			return TIM4_IRQn;
-#endif
-#ifdef TIM5
 		else if (TIM == TIM5)
 			return TIM5_IRQn;
-#endif
-#ifdef TIM6
 		else if (TIM == TIM6)
 			return TIM6_DAC_IRQn;
-#endif
-#ifdef TIM7
 		else if (TIM == TIM7)
 			return TIM7_IRQn;
-#endif
-#ifdef TIM8
 		else if (TIM == TIM8)
 			return TIM8_UP_TIM13_IRQn;
-#endif
-#ifdef TIM9
 		else if (TIM == TIM9)
 			return TIM1_BRK_TIM9_IRQn;
-#endif
-#ifdef TIM10
 		else if (TIM == TIM10)
 			return TIM1_UP_TIM10_IRQn;
-#endif
-#ifdef TIM11
 		else if (TIM == TIM11)
 			return TIM1_TRG_COM_TIM11_IRQn;
-#endif
-#ifdef TIM12
 		else if (TIM == TIM12)
 			return TIM8_BRK_TIM12_IRQn;
-#endif
-#ifdef TIM13
 		else if (TIM == TIM13)
 			return TIM8_UP_TIM13_IRQn;
-#endif
-#ifdef TIM14
 		else if (TIM == TIM14)
 			return TIM8_TRG_COM_TIM14_IRQn;
-#endif
-#ifdef TIM15
 		else if (TIM == TIM15)
 			return TIM15_IRQn;
-#endif
-#ifdef TIM16
 		else if (TIM == TIM16)
 			return TIM16_IRQn;
-#endif
-#ifdef TIM17
 		else if (TIM == TIM17)
 			return TIM17_IRQn;
-#endif
 		else
 			return (IRQn_Type)(0);
 	}
 
 	static uint32_t tim_periph_max_freq(TIM_TypeDef *TIM) {
+		// Todo: get this to work on all arch
 		// APB2 --> divider = 1;
 		// APB1 --> divider = 2;
 		uint32_t divider;

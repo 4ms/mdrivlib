@@ -35,7 +35,8 @@ template<unsigned NUM_CHIPS = 1>
 class SpiPeriph {
 public:
 	SpiPeriph(const SpiConfig<NUM_CHIPS> &conf)
-		: _spi{conf.spi} {}
+		: _spi{conf.spi}
+		, _conf{conf} {}
 
 	void init() {
 		Pin sclk{_conf.SCLK};
