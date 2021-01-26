@@ -21,9 +21,11 @@ public:
 	static void registerISR(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
 	Interrupt(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
 	static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
+	static inline void callISR(unsigned irqnum) { ISRs[irqnum](); }
+	static inline void Default_IRQHandler_() { __BKPT(); }
 
 private:
-	static inline ISRType ISRs[256];
+	static inline ISRType ISRs[256] = {Default_IRQHandler_};
 };
 
 using InterruptManager = Interrupt;
