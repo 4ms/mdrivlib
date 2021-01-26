@@ -1,0 +1,14 @@
+---
+CompileFlags:
+	Add: [
+		"-I../shared/doctest/doctest",
+		"-Ilib/mdrivlib/drivers",
+		"-Ilib/mdrivlib/tests",
+		"-Ilib/mdrivlib/tests/stubs",
+		"-Ilib/mdrivlib/tests/stubs/stm32",
+		"-std=gnu++2a",
+		"-DSTM32H7",
+		"-DSTM32H755xx",
+		"-DCORE_CM7",
+		"-DTESTPROJECT"
+	]
