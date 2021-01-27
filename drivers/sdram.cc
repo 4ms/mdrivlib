@@ -2,7 +2,7 @@
 #include "pin.hh"
 #include "stm32xx.h"
 
-//#define SDRAM_DO_TEST
+#define SDRAM_DO_TEST
 
 SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
 
@@ -39,13 +39,12 @@ HAL_StatusTypeDef SDRAMPeriph::init() {
 
 void SDRAMPeriph::config_timing() {
 	auto num_to_CAS = [](uint8_t cas_latency) {
-		return cas_latency == 2	  ? FMC_SDRAM_CAS_LATENCY_2
-			   : cas_latency == 1 ? FMC_SDRAM_CAS_LATENCY_1
-								  : FMC_SDRAM_CAS_LATENCY_3;
+		return cas_latency == 2 ? FMC_SDRAM_CAS_LATENCY_2
+								: cas_latency == 1 ? FMC_SDRAM_CAS_LATENCY_1 : FMC_SDRAM_CAS_LATENCY_3;
 	};
 	auto freq_to_clockdiv = [HCLK = SystemCoreClock](uint8_t freq) {
 		uint32_t clockdiv = HCLK / freq;
-		uint32_t rounded = clockdiv + 500000U;
+		uint32_t rounded = clockdiv + 500000U; // 999999U; // 500000U;
 		clockdiv = (uint32_t)(rounded / 1000000U);
 		return clockdiv;
 	};
@@ -67,7 +66,8 @@ void SDRAMPeriph::config_timing() {
 		.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8,
 		.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_12,
 		.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_16,
-		.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4,
+		.InternalBankNumber =
+			defs.arch.num_internal_banks == 4 ? FMC_SDRAM_INTERN_BANKS_NUM_4 : FMC_SDRAM_INTERN_BANKS_NUM_2,
 		.CASLatency = num_to_CAS(defs.timing.CAS_latency),
 		.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE,
 		.SDClockPeriod =
