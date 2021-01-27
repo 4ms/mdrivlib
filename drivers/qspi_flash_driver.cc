@@ -38,7 +38,8 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs)
 
 	HAL_QSPI_DeInit(&handle);
 
-	QSPI_CLK_ENABLE();
+	// FixMe: Why isn't this unlocked by HAL?
+	handle.Lock = HAL_UNLOCKED;
 
 	QSPI_FORCE_RESET();
 	QSPI_RELEASE_RESET();
