@@ -13,7 +13,7 @@ Pin::Pin(GPIO port,
 	: port_(port)
 	, pin_(static_cast<uint16_t>(1 << (pin & 0x0F)))
 	, polarity_(polarity) {
-	// System::enable_gpio_rcc(GPIOPort(port_));
+
 	RCCControl::GPIO::enable((uint32_t)port_);
 
 	set_mode(mode);
