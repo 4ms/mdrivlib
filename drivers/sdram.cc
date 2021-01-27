@@ -29,7 +29,7 @@ SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
 #endif
 }
 
-HAL_StatusTypeDef SDRAMPeriph::init() {
+uint32_t SDRAMPeriph::init() {
 	__HAL_RCC_FMC_CLK_ENABLE();
 
 	config_timing();
@@ -38,46 +38,46 @@ HAL_StatusTypeDef SDRAMPeriph::init() {
 }
 
 void SDRAMPeriph::config_timing() {
-	auto num_to_CAS = [](uint8_t cas_latency) {
-		return cas_latency == 2 ? FMC_SDRAM_CAS_LATENCY_2
-								: cas_latency == 1 ? FMC_SDRAM_CAS_LATENCY_1 : FMC_SDRAM_CAS_LATENCY_3;
-	};
-	auto freq_to_clockdiv = [HCLK = SystemCoreClock](uint8_t freq) {
-		uint32_t clockdiv = HCLK / freq;
-		uint32_t rounded = clockdiv + 500000U; // 999999U; // 500000U;
-		clockdiv = (uint32_t)(rounded / 1000000U);
-		return clockdiv;
-	};
-	sdram_clock_ = SystemCoreClock / freq_to_clockdiv(defs.timing.max_freq_MHz);
-	auto ns_to_hclks = [sdram_clock = sdram_clock_](uint32_t ns) { return 1 + ((ns * 10000000U) / sdram_clock); };
+
+	sdram_clock_ = SystemCoreClock / SDRAMPeriphMath::freq_to_clockdiv(SystemCoreClock, defs.timing.max_freq_MHz);
 
 	FMC_SDRAM_TimingTypeDef SdramTiming = {
-		.LoadToActiveDelay = ns_to_hclks(defs.timing.tMRD_ns),
-		.ExitSelfRefreshDelay = ns_to_hclks(defs.timing.tXSR_ns),
-		.SelfRefreshTime = ns_to_hclks(defs.timing.tRAS_ns),
-		.RowCycleDelay = ns_to_hclks(defs.timing.tRC_ns),
-		.WriteRecoveryTime = ns_to_hclks(defs.timing.tWR_ns),
-		.RPDelay = ns_to_hclks(defs.timing.tRP_ns),
-		.RCDDelay = ns_to_hclks(defs.timing.tRCD_ns),
+		.LoadToActiveDelay = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tMRD_ns),
+		.ExitSelfRefreshDelay = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tXSR_ns),
+		.SelfRefreshTime = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tRAS_ns),
+		.RowCycleDelay = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tRC_ns),
+		.WriteRecoveryTime = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tWR_ns),
+		.RPDelay = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tRP_ns),
+		.RCDDelay = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tRCD_ns),
 	};
 
 	FMC_SDRAM_InitTypeDef init = {
 		.SDBank = FMC_SDRAM_BANK1,
-		.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8,
-		.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_12,
-		.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_16,
+		.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8, // use defs
+		.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_12,		 // use defs
+		.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_16,	 // use defs
 		.InternalBankNumber =
 			defs.arch.num_internal_banks == 4 ? FMC_SDRAM_INTERN_BANKS_NUM_4 : FMC_SDRAM_INTERN_BANKS_NUM_2,
-		.CASLatency = num_to_CAS(defs.timing.CAS_latency),
+		.CASLatency = defs.timing.CAS_latency == 2
+						  ? FMC_SDRAM_CAS_LATENCY_2
+						  : defs.timing.CAS_latency == 1 ? FMC_SDRAM_CAS_LATENCY_1 : FMC_SDRAM_CAS_LATENCY_3,
+
 		.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE,
-		.SDClockPeriod =
-			freq_to_clockdiv(defs.timing.max_freq_MHz) == 2 ? FMC_SDRAM_CLOCK_PERIOD_2 : FMC_SDRAM_CLOCK_PERIOD_3,
-		.ReadBurst = FMC_SDRAM_RBURST_ENABLE,
-		.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_2,
+		.SDClockPeriod = SDRAMPeriphMath::freq_to_clockdiv(sdram_clock_, defs.timing.max_freq_MHz) == 2
+							 ? FMC_SDRAM_CLOCK_PERIOD_2
+							 : FMC_SDRAM_CLOCK_PERIOD_3,
+		.ReadBurst = FMC_SDRAM_RBURST_ENABLE,	  // use defs
+		.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_2, // use defs
 	};
 
 	FMC_SDRAM_Init(FMC_SDRAM_DEVICE, &init);
 	FMC_SDRAM_Timing_Init(FMC_SDRAM_DEVICE, &SdramTiming, init.SDBank);
+	FMC_SDRAM_DEVICE->SDRTR |= FMC_SDRTR_REIE;
+}
+
+extern "C" void FMC_IRQHandler() {
+	while (1)
+		__BKPT();
 }
 
 void SDRAMPeriph::start_refresh() {
@@ -98,7 +98,11 @@ void SDRAMPeriph::start_refresh() {
 
 	// All Bank Precharge command
 	cmd = {
-		.CommandMode = FMC_SDRAM_CMD_PALL, .CommandTarget = bank, .AutoRefreshNumber = 2, .ModeRegisterDefinition = 0};
+		.CommandMode = FMC_SDRAM_CMD_PALL,
+		.CommandTarget = bank,
+		.AutoRefreshNumber = 2,
+		.ModeRegisterDefinition = 0,
+	};
 	FMC_SDRAM_SendCommand(FMC_SDRAM_DEVICE, &cmd, 0);
 	wait_until_ready();
 
