@@ -56,9 +56,23 @@ struct RCCControl {
 	// special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 	struct GPIO {
 		static inline volatile RegisterT *const _reg = &(RCC->AHB4ENR);
-		static uint32_t get_gpio_bit(uint32_t periph_base_addr) { return (periph_base_addr & 0x00003C00) >> 10; }
-		static void enable(uint32_t periph_base_addr) { *_reg |= get_gpio_bit(periph_base_addr); }
-		static void disable(uint32_t periph_base_addr) { *_reg &= ~get_gpio_bit(periph_base_addr); }
+		static uint32_t get_gpio_bit(uint32_t periph_base_addr) { return 1 << ((periph_base_addr & 0x00003C00) >> 10); }
+		static void enable(uint32_t periph_base_addr) {
+			// *_reg |= get_gpio_bit(periph_base_addr);
+			// std::atomic
+			auto tmp = *_reg;
+			tmp |= get_gpio_bit(periph_base_addr);
+			*_reg = tmp;
+			// end
+		}
+		static void disable(uint32_t periph_base_addr) {
+			// *_reg &= ~get_gpio_bit(periph_base_addr);
+			// std::atomic
+			auto tmp = *_reg;
+			tmp &= ~get_gpio_bit(periph_base_addr);
+			*_reg = tmp;
+			// end
+		}
 		static bool is_enabled(uint32_t periph_base_addr) { return (*_reg) & get_gpio_bit(periph_base_addr); }
 	};
 
