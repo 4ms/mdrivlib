@@ -45,7 +45,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
 	HAL_NVIC_SetPriority(QUADSPI_IRQn, defs.IRQ_pri, defs.IRQ_subpri);
 	HAL_NVIC_EnableIRQ(QUADSPI_IRQn);
 	InterruptManager::registerISR(QUADSPI_IRQn, [hal_handle_ptr = &handle]() {
-		//
+		// Todo: use our own handler, so can get rid of the status instance_ and extern "C" functions
 		HAL_QSPI_IRQHandler(hal_handle_ptr);
 	});
 
