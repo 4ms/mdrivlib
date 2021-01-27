@@ -23,13 +23,13 @@ struct System {
 	static void enable_adc_rcc(unsigned periph_num);
 	static void enable_adc_rcc(ADC_TypeDef *ADCx);
 
-	static constexpr void enable_dma_rcc(const DMA_TypeDef *DMAx);
+	static void enable_dma_rcc(const DMA_TypeDef *DMAx);
 
-	static constexpr void enable_i2c_rcc(I2C_TypeDef *I2Cx);
-	static constexpr void disable_i2c_rcc(I2C_TypeDef *I2Cx);
+	static void enable_i2c_rcc(I2C_TypeDef *I2Cx);
+	static void disable_i2c_rcc(I2C_TypeDef *I2Cx);
 
-	static constexpr void enable_sai_rcc(SAI_TypeDef *SAIx);
-	static constexpr void disable_sai_rcc(SAI_TypeDef *SAIx);
+	static void enable_sai_rcc(SAI_TypeDef *SAIx);
+	static void disable_sai_rcc(SAI_TypeDef *SAIx);
 
 	static uint8_t tim_periph_to_num(TIM_TypeDef *TIMx);
 	static void enable_tim_rcc(unsigned periph_num);

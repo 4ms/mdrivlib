@@ -72,7 +72,7 @@ void System::enable_adc_rcc(unsigned periph_num) {
 
 void System::enable_adc_rcc(ADC_TypeDef *ADCx) { RCCControl::ADC::enable(adc_periph_to_num(ADCx)); }
 
-constexpr void System::enable_dma_rcc(const DMA_TypeDef *DMAx) {
+void System::enable_dma_rcc(const DMA_TypeDef *DMAx) {
 	if (DMAx == nullptr)
 		return;
 	else if (DMAx == DMA1)
@@ -81,7 +81,7 @@ constexpr void System::enable_dma_rcc(const DMA_TypeDef *DMAx) {
 		RCCControl::DMA_2::enable();
 }
 
-constexpr void System::enable_i2c_rcc(I2C_TypeDef *I2Cx) {
+void System::enable_i2c_rcc(I2C_TypeDef *I2Cx) {
 	if (I2Cx == nullptr)
 		return;
 	else if (I2Cx == I2C1)
@@ -92,7 +92,7 @@ constexpr void System::enable_i2c_rcc(I2C_TypeDef *I2Cx) {
 		RCCControl::I2C_3::enable();
 }
 
-constexpr void System::disable_i2c_rcc(I2C_TypeDef *I2Cx) {
+void System::disable_i2c_rcc(I2C_TypeDef *I2Cx) {
 	if (I2Cx == nullptr)
 		return;
 	else if (I2Cx == I2C1)
@@ -103,7 +103,7 @@ constexpr void System::disable_i2c_rcc(I2C_TypeDef *I2Cx) {
 		RCCControl::I2C_3::disable();
 }
 
-constexpr void System::enable_sai_rcc(SAI_TypeDef *SAIx) {
+void System::enable_sai_rcc(SAI_TypeDef *SAIx) {
 	if (SAIx == nullptr)
 		return;
 	else if (SAIx == SAI1)
@@ -116,7 +116,7 @@ constexpr void System::enable_sai_rcc(SAI_TypeDef *SAIx) {
 		RCCControl::SAI_4::enable();
 }
 
-constexpr void System::disable_sai_rcc(SAI_TypeDef *SAIx) {
+void System::disable_sai_rcc(SAI_TypeDef *SAIx) {
 	if (SAIx == nullptr)
 		return;
 	else if (SAIx == SAI1)
