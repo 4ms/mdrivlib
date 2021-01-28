@@ -11,6 +11,7 @@ SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
 	System::enable_sai_rcc(saidef_.sai);
+
 #if defined(STM32H755xx) || defined(STM32H745xx)
 	// Todo: put this in RCCControl::BDMA
 	__HAL_RCC_BDMA_CLK_ENABLE();
@@ -83,7 +84,7 @@ void SaiPeriph::_config_tx_sai() {
 	hsai_tx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_tx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_tx.Init.AudioFrequency = saidef_.samplerate;
-#ifdef STM32H7
+#if defined(STM32H7)
 	hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_tx.Init.PdmInit.Activation = DISABLE;
