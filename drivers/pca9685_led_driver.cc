@@ -1,20 +1,16 @@
 #include "pca9685_led_driver.hh"
 
-PCA9685Driver::PCA9685Driver(I2CPeriph &i2c,
-							 uint32_t num_chips,
-							 const DMAConfig &dma_defs,
-							 PCA9685Driver::FrameBuffer &frame_buf)
+PCA9685DmaDriver::PCA9685DmaDriver(I2CPeriph &i2c,
+								   uint32_t num_chips,
+								   const DMAConfig &dma_defs,
+								   PCA9685DmaDriver::FrameBuffer &frame_buf)
 	: i2c_periph_(i2c)
 	, num_chips_(num_chips)
-	, dma_(*this, dma_defs, frame_buf) {}
-
-PCA9685Driver::PCA9685Driver(I2CPeriph &i2c, uint32_t num_chips, PCA9685Driver::FrameBuffer &frame_buf)
-	: i2c_periph_(i2c)
-	, num_chips_(num_chips)
-	, dma_(*this, {}, frame_buf) {}
+	, dma_(*this, dma_defs, frame_buf) {
+}
 
 // Reset chip registers
-LEDDriverError PCA9685Driver::start() {
+LEDDriverError PCA9685DmaDriver::start() {
 	uint8_t driverAddr;
 	LEDDriverError err;
 
@@ -30,17 +26,33 @@ LEDDriverError PCA9685Driver::start() {
 
 // Enables I2C transfers in background using interrupts
 // (not implemented in I2CPeriph yet)
-void PCA9685Driver::start_it_mode() {
-	// Todo: check if start() has been called, and call it if not
+void PCA9685DmaDriver::start_it_mode() {
+	start();
 	i2c_periph_.enable_IT(2, 2);
 }
 
 // Start transferring via DMA, given a frame buffer and the hardware
 // configuration
-LEDDriverError PCA9685Driver::start_dma_mode() {
-	// Todo: check if start() has been called, and call it if not
+LEDDriverError PCA9685DmaDriver::start_dma_mode() {
 	start_it_mode();
 	return dma_.start_dma();
+}
+
+LEDDriverError PCA9685DmaDriver::write_once() {
+
+	for (uint16_t chip_i = 0; chip_i < num_chips_; chip_i++) {
+		uint16_t driverAddr = I2C_BASE_ADDRESS | (chip_i << 1);
+
+		auto err = i2c_periph_.mem_write_IT(driverAddr,
+											REG_LED0,
+											REGISTER_ADDR_SIZE,
+											reinterpret_cast<uint8_t *>(dma_.frame_buffer),
+											kNumLedsPerChip * 4);
+		if (err != I2CPeriph::I2C_NO_ERR)
+			return LEDDriverError::I2C_XMIT_TIMEOUT;
+	}
+
+	return LEDDriverError::None;
 }
 
 // Sets the brightness value of a single LED
@@ -50,7 +62,7 @@ LEDDriverError PCA9685Driver::start_dma_mode() {
 // led_element_number==15 is PWM pin 15 of PCA9685 chip with address 0
 // led_element_number==16 is PWM pin 0 of PCA9685 chip with address 1
 // ...
-LEDDriverError PCA9685Driver::set_single_led(uint8_t led_element_number, uint16_t brightness) {
+LEDDriverError PCA9685DmaDriver::set_single_led(uint8_t led_element_number, uint16_t brightness) {
 	uint8_t driver_addr;
 	uint8_t data[5];
 
@@ -86,7 +98,7 @@ LEDDriverError PCA9685Driver::set_single_led(uint8_t led_element_number, uint16_
 // led_number==9 refers to PWM pins 12,13,14 of PCA9685 chip with address 1
 //
 // Note: This function cannot access pin 15
-LEDDriverError PCA9685Driver::set_rgb_led(uint8_t led_number, uint16_t c_red, uint16_t c_green, uint16_t c_blue) {
+LEDDriverError PCA9685DmaDriver::set_rgb_led(uint8_t led_number, uint16_t c_red, uint16_t c_green, uint16_t c_blue) {
 	uint8_t driverAddr;
 	uint8_t data[13];
 
@@ -122,7 +134,7 @@ LEDDriverError PCA9685Driver::set_rgb_led(uint8_t led_number, uint16_t c_red, ui
 	return (err == I2CPeriph::Error::I2C_NO_ERR) ? LEDDriverError::None : LEDDriverError::I2C_XMIT_TIMEOUT;
 }
 
-LEDDriverError PCA9685Driver::reset_chip(uint8_t driverAddr) {
+LEDDriverError PCA9685DmaDriver::reset_chip(uint8_t driverAddr) {
 	LEDDriverError err;
 
 	err = write_register(driverAddr, REG_MODE1, 0b00000000); // clear sleep mode
@@ -146,7 +158,7 @@ LEDDriverError PCA9685Driver::reset_chip(uint8_t driverAddr) {
 	return LEDDriverError::None;
 }
 
-LEDDriverError PCA9685Driver::write_register(uint8_t driverAddr, uint8_t registerAddr, uint8_t registerValue) {
+LEDDriverError PCA9685DmaDriver::write_register(uint8_t driverAddr, uint8_t registerAddr, uint8_t registerValue) {
 	uint8_t data[2] = {registerAddr, registerValue};
 
 	driverAddr = I2C_BASE_ADDRESS | (driverAddr << 1);
@@ -158,13 +170,15 @@ LEDDriverError PCA9685Driver::write_register(uint8_t driverAddr, uint8_t registe
 
 // returns led element number of the red element of the given RGB LED id (green
 // is red + 1, blue = red + 2)
-uint8_t PCA9685Driver::get_red_led_element_id(uint8_t rgb_led_id) {
+uint8_t PCA9685DmaDriver::get_red_led_element_id(uint8_t rgb_led_id) {
 	return (rgb_led_id * 3) + (rgb_led_id / kNumRGBLEDsPerChip);
 }
 
-uint8_t PCA9685Driver::get_chip_num(uint8_t rgb_led_id) { return (rgb_led_id / kNumRGBLEDsPerChip); }
+uint8_t PCA9685DmaDriver::get_chip_num(uint8_t rgb_led_id) {
+	return (rgb_led_id / kNumRGBLEDsPerChip);
+}
 
 // returns the address within the frame buffer of the requested led and chip
-uint32_t *const PCA9685Driver::get_buf_addr(const uint32_t chip_num, const uint32_t led_num) {
+uint32_t *const PCA9685DmaDriver::get_buf_addr(const uint32_t chip_num, const uint32_t led_num) {
 	return &(dma_.frame_buffer[chip_num * kNumLedsPerChip + led_num]);
 }

@@ -9,6 +9,7 @@ struct DMAConfig {
 	IRQn_Type IRQn;
 	uint32_t pri;
 	uint32_t subpri;
+	bool continuous;
 };
 
 struct DMA_LL_Config {
@@ -18,6 +19,7 @@ struct DMA_LL_Config {
 	IRQn_Type IRQn;
 	uint32_t pri;
 	uint32_t subpri;
+	// bool continuous;
 };
 
 struct BDMA_Config {
@@ -26,6 +28,7 @@ struct BDMA_Config {
 	IRQn_Type IRQn;
 	uint32_t pri;
 	uint32_t subpri;
+	// bool continuous;
 };
 
 // Todo: this should be in some dma manager class

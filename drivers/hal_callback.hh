@@ -27,9 +27,10 @@ private:
 };
 
 struct HALCallback : public HALCallbackManager::HALCBBase {
-	template<typename Func>
-	HALCallback(HALCallbackID cbnum, const Func func)
-		: func_(func) {
+	// template<typename Func>
+	using Func = std::function<void(void)>;
+	HALCallback(HALCallbackID cbnum, const Func &&func)
+		: func_(std::move(func)) {
 		HALCallbackManager::registerHALCB(cbnum, this);
 	}
 	virtual void halcb() { func_(); }
