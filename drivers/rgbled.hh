@@ -2,73 +2,69 @@
 #include "colors.hh"
 #include "oscs.hh"
 
-//MixedRgbLed: each color element can have a different
-//LED driver (e.g. PWM, DAC, external chip)
-//Todo: use concepts to ensure LedT all have .set();
+// MixedRgbLed: each color element can have a different
+// LED driver (e.g. PWM, DAC, external chip)
+// Todo: use concepts to ensure LedT all have .set();
 template<typename RLedT, typename GLedT, typename BLedT>
 struct MixedRgbLed {
 
 	MixedRgbLed(RLedT r_LED, GLedT g_LED, BLedT b_LED)
 		: r_(r_LED)
 		, g_(g_LED)
-		, b_(b_LED)
-	{
+		, b_(b_LED) {
 	}
 
-	void set_background(Color const &col)
-	{
+	void set_background(Color const &col) {
 		background_color_ = col;
 	}
-	void blend_background(Color const col)
-	{
+	void blend_background(Color const col) {
 		background_color_ = background_color_.blend(col);
 	}
-	void add_background(Color const col)
-	{
+	void add_background(Color const col) {
 		background_color_ = background_color_ + col;
 	}
-	//void set_solid(Color const &col) { solid_color_ = col; }
+	// void set_solid(Color const &col) { solid_color_ = col; }
 
-	void flash(Color const &c, uint32_t const flash_freq = 100)
-	{
+	// freq is given in: secs * update_rate_Hz
+	void flash(Color const &c, uint32_t const flash_freq = 100) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
-		flash_freq_ = flash_freq; // divided by update_rate?
+		flash_freq_ = flash_freq;
 	}
 
-	// freq in secs
-	void set_glow(Color const &c, uint32_t const freq = 0x00FFFFFF)
-	{
-		glow_color_ = c;
-		fader_.set_frequency(freq); //divided by update_rate?
+	// freq is given in: secs * update_rate_Hz
+	void breathe(Color const &c, uint32_t const freq = 0x00FFFFFF) {
+		breathe_color_ = c;
+		fader_.set_frequency(freq);
 	}
 
-	constexpr void set_color(Color const &col) const
-	{
+	void reset_breathe() {
+		fader_.set_frequency(0);
+		fader_.set_phase(0);
+	}
+
+	constexpr void set_color(Color const &col) const {
 		r_.set(col.red());
 		g_.set(col.green());
 		b_.set(col.blue());
 	}
-	void set_color(Color const &col, uint8_t const brightness) const
-	{
+	void set_color(Color const &col, uint8_t const brightness) const {
 		r_.set((col.red() * brightness) >> 8);
 		g_.set((col.green() * brightness) >> 8);
 		b_.set((col.blue() * brightness) >> 8);
 	}
-	void set_color(Color const &col, float const brightness) const
-	{
+	void set_color(Color const &col, float const brightness) const {
 		r_.set(col.red() * brightness);
 		g_.set(col.green() * brightness);
 		b_.set(col.blue() * brightness);
 	}
 
-	//Todo: don't waste cycles updating if nothing's changed
-	void refresh()
-	{
+	// Todo: don't waste cycles updating if nothing's changed
+	void update_animation() {
 		Color c = background_color_;
 		// if (solid_color_ != Colors::off) c = solid_color_;
-		// c = c.blend(glow_color_, fader_.Process());
-		// c = c.blend(flash_color_, flash_phase_);
+		c = c.blend(breathe_color_, fader_.Process());
+		c = c.blend(flash_color_, flash_phase_);
 		// c = c.adjust(color_cal_);
 		set_color(c);
 		if (flash_phase_ > flash_freq_)
@@ -85,7 +81,7 @@ private:
 	Color background_color_ = Colors::off;
 	Color solid_color_ = Colors::off;
 	Color flash_color_ = Colors::white;
-	Color glow_color_ = Colors::red;
+	Color breathe_color_ = Colors::red;
 	uint32_t flash_freq_ = 100;
 	uint32_t flash_phase_ = 0;
 	//    Color::Adjustment& color_cal_;

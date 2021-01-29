@@ -11,12 +11,10 @@ public:
 	I2CPeriph() = default;
 	~I2CPeriph() = default;
 
-	I2CPeriph(I2C_TypeDef *periph)
-	{
+	I2CPeriph(I2C_TypeDef *periph) {
 		init(periph);
 	}
-	I2CPeriph(I2C_TypeDef *periph, const I2CTimingConfig &timing)
-	{
+	I2CPeriph(I2C_TypeDef *periph, const I2CTimingConfig &timing) {
 		init(periph, timing);
 	}
 	Error init(I2C_TypeDef *periph);
