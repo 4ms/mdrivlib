@@ -38,11 +38,11 @@ SaiPeriph::Error SaiPeriph::init() {
 	__HAL_SAI_ENABLE(&hsai_tx);
 
 	tx_irqn = saidef_.dma_init_tx.IRQn;
-	HAL_NVIC_SetPriority(tx_irqn, 1, 0);
+	HAL_NVIC_SetPriority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
 	HAL_NVIC_DisableIRQ(tx_irqn);
 
 	rx_irqn = saidef_.dma_init_rx.IRQn;
-	HAL_NVIC_SetPriority(rx_irqn, 1, 1);
+	HAL_NVIC_SetPriority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
 	HAL_NVIC_DisableIRQ(rx_irqn);
 
 	return SAI_NO_ERR;
@@ -51,6 +51,7 @@ SaiPeriph::Error SaiPeriph::init() {
 void SaiPeriph::_config_rx_sai() {
 	__HAL_SAI_RESET_HANDLE_STATE(&hsai_rx);
 	hsai_rx.Instance = saidef_.rx_block;
+
 	__HAL_SAI_DISABLE(&hsai_rx);
 
 	if (saidef_.mode == SaiConfig::RXMaster) {
@@ -129,7 +130,7 @@ void SaiPeriph::_config_rx_dma() {
 	hdma_rx.Instance = saidef_.dma_init_rx.stream;
 
 #if defined(STM32H755xx) || defined(STM32H745xx)
-	hdma_rx.Init.Request = saidef_.dma_init_rx.request;
+	hdma_rx.Init.Request = saidef_.dma_init_rx.channel;
 #else
 #if defined(STM32H7)
 	hdma_rx.Init.Request = saidef_.dma_init_rx.channel;
@@ -147,6 +148,8 @@ void SaiPeriph::_config_rx_dma() {
 	hdma_rx.Init.Mode = DMA_CIRCULAR;
 	hdma_rx.Init.Priority = DMA_PRIORITY_VERY_HIGH;
 	hdma_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_rx.Init.MemBurst = DMA_MBURST_SINGLE;
+	hdma_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
 	__HAL_LINKDMA(&hsai_rx, hdmarx, hdma_rx);
 	HAL_DMA_DeInit(&hdma_rx);
@@ -155,7 +158,7 @@ void SaiPeriph::_config_rx_dma() {
 void SaiPeriph::_config_tx_dma() {
 	hdma_tx.Instance = saidef_.dma_init_tx.stream;
 #if defined(STM32H755xx) || defined(STM32H745xx)
-	hdma_tx.Init.Request = saidef_.dma_init_tx.request;
+	hdma_tx.Init.Request = saidef_.dma_init_tx.channel;
 #else
 #if defined(STM32H7)
 	hdma_tx.Init.Request = saidef_.dma_init_tx.channel;
@@ -172,6 +175,8 @@ void SaiPeriph::_config_tx_dma() {
 	hdma_tx.Init.Mode = DMA_CIRCULAR;
 	hdma_tx.Init.Priority = DMA_PRIORITY_VERY_HIGH;
 	hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
+	hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
 	__HAL_LINKDMA(&hsai_tx, hdmatx, hdma_tx);
 	HAL_DMA_DeInit(&hdma_tx);

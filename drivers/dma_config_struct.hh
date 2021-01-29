@@ -2,7 +2,7 @@
 #include "stm32xx.h"
 #include "system.hh"
 
-struct DMAConfig {
+struct DMA_Config {
 	DMA_TypeDef *DMAx;
 	DMA_Stream_TypeDef *stream;
 	uint32_t channel;
@@ -21,8 +21,9 @@ struct DMA_LL_Config {
 };
 
 struct BDMA_Config {
+	BDMA_TypeDef *BDMAx;
 	BDMA_Channel_TypeDef *stream;
-	uint32_t request;
+	uint32_t channel;
 	IRQn_Type IRQn;
 	uint32_t pri;
 	uint32_t subpri;

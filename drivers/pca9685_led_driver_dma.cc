@@ -2,7 +2,7 @@
 #include "pca9685_led_driver.hh"
 
 PCA9685Driver::DMADriver::DMADriver(PCA9685Driver &parent,
-									const DMAConfig &dma_defs,
+									const DMA_Config &dma_defs,
 									PCA9685Driver::FrameBuffer &frame_buf)
 	: driver_(parent)
 	, frame_buffer(frame_buf)
