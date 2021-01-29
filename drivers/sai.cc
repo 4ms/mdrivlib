@@ -19,15 +19,17 @@ SaiPeriph::Error SaiPeriph::init() {
 	System::enable_dma_rcc(saidef_.dma_init_rx.DMAx);
 	System::enable_dma_rcc(saidef_.dma_init_tx.DMAx);
 	{
-		_config_rx_sai();
+		// Todo: swap order: always init slave first
 		_config_tx_sai();
+		_config_rx_sai();
 		auto err = _init_sai_protocol();
 		if (err != SAI_NO_ERR)
 			return err;
 	}
 	{
-		_config_rx_dma();
+		// Todo: swap order: always init slave first
 		_config_tx_dma();
+		_config_rx_dma();
 		auto err = _init_sai_dma();
 		if (err != SAI_NO_ERR)
 			return err;
@@ -68,7 +70,7 @@ void SaiPeriph::_config_rx_sai() {
 	}
 	hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
-	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_DISABLE;
+	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE; // was DIS for TXMaster
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
@@ -151,6 +153,7 @@ void SaiPeriph::_config_rx_dma() {
 	hdma_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
 	__HAL_LINKDMA(&hsai_rx, hdmarx, hdma_rx);
+	// __HAL_LINKDMA(&hsai_rx, hdmatx, hdma_rx); //??!
 	HAL_DMA_DeInit(&hdma_rx);
 }
 
@@ -178,15 +181,24 @@ void SaiPeriph::_config_tx_dma() {
 	hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
 	__HAL_LINKDMA(&hsai_tx, hdmatx, hdma_tx);
+	// __HAL_LINKDMA(&hsai_tx, hdmarx, hdma_tx); //??!
 	HAL_DMA_DeInit(&hdma_tx);
 }
 
 SaiPeriph::Error SaiPeriph::_init_sai_dma() {
-	if (HAL_DMA_Init(&hdma_rx) != HAL_OK)
-		return SAI_INIT_ERR;
+	// Todo always init slave first
 
 	if (HAL_DMA_Init(&hdma_tx) != HAL_OK)
 		return SAI_INIT_ERR;
+
+	// __HAL_LINKDMA(&hsai_tx, hdmatx, hdma_tx);
+	// __HAL_LINKDMA(&hsai_tx, hdmarx, hdma_tx); //??!
+
+	if (HAL_DMA_Init(&hdma_rx) != HAL_OK)
+		return SAI_INIT_ERR;
+
+	// __HAL_LINKDMA(&hsai_rx, hdmarx, hdma_rx);
+	// __HAL_LINKDMA(&hsai_rx, hdmatx, hdma_rx); //??!
 
 	return SAI_NO_ERR;
 }
@@ -246,19 +258,19 @@ void SaiPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::funct
 
 void SaiPeriph::start() {
 	IRQn_Type _irqn;
-	if (saidef_.mode == SaiConfig::RXMaster) {
-		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_rx);
-		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_rx);
-		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_rx.stream);
-		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_rx.stream);
-		_irqn = rx_irqn;
-	} else {
-		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
-		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
-		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
-		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
-		_irqn = tx_irqn;
-	}
+	// if (saidef_.mode == SaiConfig::RXMaster) {
+	// 	dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_rx);
+	// 	dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_rx);
+	// 	dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_rx.stream);
+	// 	dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_rx.stream);
+	// 	_irqn = rx_irqn;
+	// } else {
+	dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
+	dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
+	dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
+	dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+	_irqn = tx_irqn;
+	// }
 
 	InterruptManager::registerISR(_irqn, [this]() {
 		if ((*dma_isr_reg & dma_tc_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_TC)*/) {
@@ -272,10 +284,11 @@ void SaiPeriph::start() {
 		}
 	});
 
-	if (saidef_.mode == SaiConfig::RXMaster)
-		HAL_NVIC_EnableIRQ(rx_irqn);
-	else
-		HAL_NVIC_EnableIRQ(tx_irqn);
+	// if (saidef_.mode == SaiConfig::RXMaster)
+	// HAL_NVIC_EnableIRQ(rx_irqn);
+	// else
+	HAL_NVIC_EnableIRQ(tx_irqn);
+
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
 }
