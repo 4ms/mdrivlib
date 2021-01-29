@@ -88,6 +88,7 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 
 	deinit(periph);
 
+	enable_FMP();
 	System::enable_i2c_rcc(periph);
 
 	hal_i2c_.Instance = periph;
@@ -123,6 +124,21 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 
 	already_init = true;
 	return I2C_NO_ERR;
+}
+
+void I2CPeriph::enable_FMP() {
+#if defined(STM32H7x5xx)
+
+	RCCControl::SYS_CFG::enable();
+
+	if (hal_i2c_.Instance == I2C1) {
+		SYSCFG->PMCR |= (SYSCFG_PMCR_I2C1_FMP | SYSCFG_PMCR_I2C_PB6_FMP | SYSCFG_PMCR_I2C_PB7_FMP);
+	} else if (hal_i2c_.Instance == I2C2) {
+		SYSCFG->PMCR |= SYSCFG_PMCR_I2C2_FMP;
+	} else if (hal_i2c_.Instance == I2C3) {
+		SYSCFG->PMCR |= SYSCFG_PMCR_I2C3_FMP;
+	}
+#endif
 }
 
 void I2CPeriph::enable_IT(uint8_t pri1, uint8_t pri2) {

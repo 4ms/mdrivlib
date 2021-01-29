@@ -131,3 +131,13 @@
 #ifndef SPI6
 #define SPI6 nullptr
 #endif
+
+#ifndef SYSCFG_PMCR_I2C1_FMP
+#define SYSCFG_PMCR_I2C1_FMP -1
+#endif
+#ifndef SYSCFG_PMCR_I2C2_FMP
+#define SYSCFG_PMCR_I2C2_FMP -1
+#endif
+#ifndef SYSCFG_PMCR_I2C3_FMP
+#define SYSCFG_PMCR_I2C3_FMP -1
+#endif

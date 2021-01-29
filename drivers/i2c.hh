@@ -34,6 +34,8 @@ public:
 	void link_DMA_TX(DMA_HandleTypeDef *dmatx);
 	void link_DMA_RX(DMA_HandleTypeDef *dmarx);
 
+	void enable_FMP();
+
 private:
 	bool already_init = false;
 	I2C_HandleTypeDef hal_i2c_;
