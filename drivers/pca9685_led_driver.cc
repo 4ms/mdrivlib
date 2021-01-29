@@ -2,7 +2,7 @@
 
 PCA9685DmaDriver::PCA9685DmaDriver(I2CPeriph &i2c,
 								   uint32_t num_chips,
-								   const DMAConfig &dma_defs,
+								   const DMA_Config &dma_defs,
 								   PCA9685DmaDriver::FrameBuffer &frame_buf)
 	: i2c_periph_(i2c)
 	, num_chips_(num_chips)
