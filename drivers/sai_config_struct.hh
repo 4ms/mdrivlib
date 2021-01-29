@@ -9,6 +9,8 @@ struct SaiConfig {
 	SAI_Block_TypeDef *tx_block;
 	SAI_Block_TypeDef *rx_block;
 
+	enum SAIRxTxMode { RXMaster, TXMaster } mode;
+
 	BDMA_Config dma_init_tx;
 	BDMA_Config dma_init_rx;
 

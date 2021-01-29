@@ -19,7 +19,6 @@ SaiPeriph::Error SaiPeriph::init() {
 	System::enable_dma_rcc(saidef_.dma_init_rx.DMAx);
 	System::enable_dma_rcc(saidef_.dma_init_tx.DMAx);
 #endif
-
 	{
 		_config_rx_sai();
 		_config_tx_sai();
@@ -54,21 +53,32 @@ void SaiPeriph::_config_rx_sai() {
 	hsai_rx.Instance = saidef_.rx_block;
 	__HAL_SAI_DISABLE(&hsai_rx);
 
-	hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
-	hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
+	if (saidef_.mode == SaiConfig::RXMaster) {
+		hsai_rx.Init.AudioMode = SAI_MODEMASTER_RX;
+		hsai_rx.Init.Synchro = SAI_ASYNCHRONOUS;
+#if defined(STM32H7)
+		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
+#endif
+	} else {
+		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
+		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
+#if defined(STM32H7)
+		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
+#endif
+	}
 	hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_DISABLE;
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
-#if defined(STM32H7)
-	hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE; // todo: also used for MP1
-	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
-	hsai_rx.Init.PdmInit.Activation = DISABLE;
-#endif
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_rx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_rx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+#if defined(STM32H7)
+	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
+	hsai_rx.Init.PdmInit.Activation = DISABLE;
+#endif
+
 	HAL_SAI_DeInit(&hsai_rx);
 }
 
@@ -77,21 +87,31 @@ void SaiPeriph::_config_tx_sai() {
 	hsai_tx.Instance = saidef_.tx_block;
 	__HAL_SAI_DISABLE(&hsai_tx);
 
-	hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
-	hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
+	if (saidef_.mode == SaiConfig::RXMaster) {
+		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
+		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
+#if defined(STM32H7)
+		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
+#endif
+	} else {
+		hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
+		hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
+#if defined(STM32H7)
+		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
+#endif
+	}
 	hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	hsai_tx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_tx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_tx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_tx.Init.AudioFrequency = saidef_.samplerate;
-#if defined(STM32H7)
-	hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
-	hsai_tx.Init.PdmInit.Activation = DISABLE;
-#endif
 	hsai_tx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_tx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_tx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+#if defined(STM32H7)
+	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
+	hsai_tx.Init.PdmInit.Activation = DISABLE;
+#endif
 	HAL_SAI_DeInit(&hsai_tx);
 }
 
@@ -221,12 +241,22 @@ void SaiPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::funct
 }
 
 void SaiPeriph::start() {
-	dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
-	dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
-	dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
-	dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+	IRQn_Type _irqn;
+	if (saidef_.mode == SaiConfig::RXMaster) {
+		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_rx);
+		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_rx);
+		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_rx.stream);
+		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_rx.stream);
+		_irqn = rx_irqn;
+	} else {
+		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
+		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
+		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
+		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+		_irqn = tx_irqn;
+	}
 
-	InterruptManager::registerISR(tx_irqn, [this]() {
+	InterruptManager::registerISR(_irqn, [this]() {
 		if ((*dma_isr_reg & dma_tc_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_TC)*/) {
 			*dma_ifcr_reg = dma_tc_flag_index;
 			tx_tc_cb();
@@ -238,12 +268,16 @@ void SaiPeriph::start() {
 		}
 	});
 
-	HAL_NVIC_EnableIRQ(tx_irqn);
-	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
+	if (saidef_.mode == SaiConfig::RXMaster)
+		HAL_NVIC_EnableIRQ(rx_irqn);
+	else
+		HAL_NVIC_EnableIRQ(tx_irqn);
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
+	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
 }
 
 void SaiPeriph::stop() {
 	HAL_NVIC_DisableIRQ(tx_irqn);
 	HAL_NVIC_DisableIRQ(rx_irqn);
 }
+
