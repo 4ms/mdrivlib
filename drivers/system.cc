@@ -1,6 +1,8 @@
 #include "system.hh"
 
-void System::SetVectorTable(uint32_t reset_address) { SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80; }
+void System::SetVectorTable(uint32_t reset_address) {
+	SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80;
+}
 
 void System::init_clocks(const RCC_OscInitTypeDef &osc_def,
 						 const RCC_ClkInitTypeDef &clk_def,
@@ -70,7 +72,9 @@ void System::enable_adc_rcc(unsigned periph_num) {
 		RCCControl::ADC::enable(periph_num);
 }
 
-void System::enable_adc_rcc(ADC_TypeDef *ADCx) { RCCControl::ADC::enable(adc_periph_to_num(ADCx)); }
+void System::enable_adc_rcc(ADC_TypeDef *ADCx) {
+	RCCControl::ADC::enable(adc_periph_to_num(ADCx));
+}
 
 void System::enable_dma_rcc(const DMA_TypeDef *DMAx) {
 	if (DMAx == nullptr)
@@ -79,6 +83,8 @@ void System::enable_dma_rcc(const DMA_TypeDef *DMAx) {
 		RCCControl::DMA_1::enable();
 	else if (DMAx == DMA2)
 		RCCControl::DMA_2::enable();
+	else if (DMAx == reinterpret_cast<DMA_TypeDef *>(BDMA))
+		RCCControl::BDMA_P::enable();
 }
 
 void System::enable_i2c_rcc(I2C_TypeDef *I2Cx) {
@@ -174,7 +180,9 @@ void System::enable_tim_rcc(unsigned periph_num) {
 	if (periph_num >= 1 && periph_num <= RCCControl::TIM::NumP)
 		RCCControl::TIM::enable(periph_num);
 }
-void System::enable_tim_rcc(TIM_TypeDef *TIMx) { enable_tim_rcc(tim_periph_to_num(TIMx)); }
+void System::enable_tim_rcc(TIM_TypeDef *TIMx) {
+	enable_tim_rcc(tim_periph_to_num(TIMx));
+}
 
 IRQn_Type System::tim_periph_to_IRQn(TIM_TypeDef *TIM) {
 	if (TIM == nullptr)

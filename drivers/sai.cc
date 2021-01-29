@@ -3,22 +3,21 @@
 #include "stm32xx.h"
 #include "system.hh"
 
-DMA_HandleTypeDef *SaiPeriph::get_rx_dmahandle() { return &hdma_rx; }
+DMA_HandleTypeDef *SaiPeriph::get_rx_dmahandle() {
+	return &hdma_rx;
+}
 
-DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() { return &hdma_tx; }
+DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() {
+	return &hdma_tx;
+}
 
 SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
 	System::enable_sai_rcc(saidef_.sai);
 
-#if defined(STM32H755xx) || defined(STM32H745xx)
-	// Todo: put this in RCCControl::BDMA
-	__HAL_RCC_BDMA_CLK_ENABLE();
-#else
 	System::enable_dma_rcc(saidef_.dma_init_rx.DMAx);
 	System::enable_dma_rcc(saidef_.dma_init_tx.DMAx);
-#endif
 	{
 		_config_rx_sai();
 		_config_tx_sai();
