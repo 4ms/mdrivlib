@@ -21,7 +21,9 @@ public:
 
 	Interrupt() {}
 	Interrupt(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+
 	static void registerISR(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+
 	// static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
 	static inline void callISR(uint32_t irqnum) { ISRs[irqnum](); }
 
