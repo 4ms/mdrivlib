@@ -9,7 +9,7 @@ namespace _CodecWM8731
 
 const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
 
-//Registers:
+// Registers:
 #define WM8731_REG_INBOTH ((uint8_t)8)
 #define WM8731_REG_INMUTE ((uint8_t)7)
 #define WM8731_REG_POWERDOWN ((uint8_t)6)
@@ -33,7 +33,7 @@ const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
 //...
 #define HPVOL_0dB (0b1111001)
 
-//Register 4: Analogue Audio Path Control
+// Register 4: Analogue Audio Path Control
 #define MICBOOST (1 << 0)	/* Boost Mic level */
 #define MUTEMIC (1 << 1)	/* Mute Mic to ADC */
 #define INSEL_mic (1 << 2)	/* Mic Select*/
@@ -46,7 +46,7 @@ const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
 #define SIDEATT_neg9dB (0b01 << 6)
 #define SIDEATT_neg6dB (0b00 << 6)
 
-//Register 5: Digital Audio Path Control
+// Register 5: Digital Audio Path Control
 #define ADCHPFDisable 1 /* ADC High Pass Filter */
 #define ADCHPFEnable 0
 #define DEEMPH_48k (0b11 << 1) /* De-emphasis Control */
@@ -58,7 +58,7 @@ const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
 #define HPOR_store (1 << 4) /* Store DC offset when HPF disabled */
 #define HPOR_clear (0 << 4)
 
-//Register 6: Power Down Control: 1= enable power down, 0=disable power down
+// Register 6: Power Down Control: 1= enable power down, 0=disable power down
 #define PD_LINEIN (1 << 0)
 #define PD_MIC (1 << 1)
 #define PD_ADC (1 << 2)
@@ -68,7 +68,7 @@ const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
 #define PD_CLKOUT (1 << 6)
 #define PD_POWEROFF (1 << 7)
 
-//Register 7: Digital Audio Interface Format
+// Register 7: Digital Audio Interface Format
 #define format_MSB_Right 0
 #define format_MSB_Left 1
 #define format_I2S 2
@@ -78,9 +78,9 @@ const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
 #define format_24b (2 << 2)
 #define format_32b (3 << 2)
 
-//Register: Sample Rate Controls
-#define SR_USB_NORM (1 << 0) //1=USB (250/272fs), 0=Normal Mode (256/384fs)
-#define SR_BOSR (1 << 1)	 //Base Over-Sampling Rate: 0=250/256fs, 1=272/384fs (also 128/192)
+// Register: Sample Rate Controls
+#define SR_USB_NORM (1 << 0) // 1=USB (250/272fs), 0=Normal Mode (256/384fs)
+#define SR_BOSR (1 << 1)	 // Base Over-Sampling Rate: 0=250/256fs, 1=272/384fs (also 128/192)
 #define SR_NORM_8K (0b1011 << 2)
 #define SR_NORM_32K (0b0110 << 2)
 #define SR_NORM_44K (0b1000 << 2)

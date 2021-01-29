@@ -74,5 +74,8 @@ private:
 	Error _write_all_registers(uint32_t sample_rate);
 	Error _reset();
 	uint16_t _calc_samplerate(uint32_t sample_rate);
+
+	// const static inline uint32_t I2C_BASE_ADDRESS = 0b10000000;
+	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
 

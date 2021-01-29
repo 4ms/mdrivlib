@@ -51,46 +51,38 @@ uint16_t default_codec_init_data[] = {
 CodecWM8731::CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef)
 	: i2c_(i2c)
 	, sai_{saidef}
-	, samplerate_{saidef.samplerate}
-{
+	, samplerate_{saidef.samplerate} {
 	init_at_samplerate(samplerate_);
 	sai_.init();
 }
 
-void CodecWM8731::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size)
-{
+void CodecWM8731::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
 	sai_.set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
 }
 
-void CodecWM8731::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb)
-{
+void CodecWM8731::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
 	sai_.set_callbacks(std::move(tx_complete_cb), std::move(tx_half_complete_cb));
 }
 
-uint32_t CodecWM8731::get_samplerate()
-{
+uint32_t CodecWM8731::get_samplerate() {
 	return samplerate_;
 }
-void CodecWM8731::start()
-{
+void CodecWM8731::start() {
 	sai_.start();
 }
 
-CodecWM8731::Error CodecWM8731::init_at_samplerate(uint32_t new_sample_rate)
-{
+CodecWM8731::Error CodecWM8731::init_at_samplerate(uint32_t new_sample_rate) {
 	auto err = _reset();
 	if (err != CODEC_NO_ERR)
 		return err;
 	return _write_all_registers(new_sample_rate);
 }
 
-CodecWM8731::Error CodecWM8731::_reset()
-{
+CodecWM8731::Error CodecWM8731::_reset() {
 	return _write_register(WM8731_REG_RESET, 0);
 }
 
-CodecWM8731::Error CodecWM8731::_write_all_registers(uint32_t sample_rate)
-{
+CodecWM8731::Error CodecWM8731::_write_all_registers(uint32_t sample_rate) {
 	CodecWM8731::Error err;
 
 	for (uint8_t i = 0; i < WM8731_NUM_REGS; i++) {
@@ -105,8 +97,7 @@ CodecWM8731::Error CodecWM8731::_write_all_registers(uint32_t sample_rate)
 	return err;
 }
 
-uint16_t CodecWM8731::_calc_samplerate(uint32_t sample_rate)
-{
+uint16_t CodecWM8731::_calc_samplerate(uint32_t sample_rate) {
 	if (sample_rate == 48000)
 		return SR_NORM_48K;
 	else if (sample_rate == 44100)
@@ -123,32 +114,26 @@ uint16_t CodecWM8731::_calc_samplerate(uint32_t sample_rate)
 		return 0;
 }
 
-CodecWM8731::Error CodecWM8731::_write_register(uint8_t RegisterAddr, uint16_t RegisterValue)
-{
-	// Assemble 2-byte data
-	uint8_t Byte1 = ((RegisterAddr << 1) & 0xFE) | ((RegisterValue >> 8) & 0x01);
-	uint8_t Byte2 = RegisterValue & 0xFF;
-	uint8_t data[2];
-
-	data[0] = Byte1;
-	data[1] = Byte2;
+CodecWM8731::Error CodecWM8731::_write_register(uint8_t reg_address, uint16_t reg_value) {
+	uint8_t Byte1 = ((reg_address << 1) & 0xFE) | ((reg_value >> 8) & 0x01);
+	uint8_t Byte2 = reg_value & 0xFF;
+	uint8_t data[2] = {Byte1, Byte2};
 
 	auto err = i2c_.write(CODEC_ADDRESS, data, 2);
+
+	// auto err = i2c_.mem_write(CODEC_ADDRESS, Byte1, REGISTER_ADDR_SIZE, &Byte2, 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
 
-CodecWM8731::Error CodecWM8731::power_down(void)
-{
+CodecWM8731::Error CodecWM8731::power_down(void) {
 	return _write_register(WM8731_REG_POWERDOWN, 0xFF); // Power Down enable all
 }
 
-DMA_HandleTypeDef *CodecWM8731::get_rx_dmahandle()
-{
+DMA_HandleTypeDef *CodecWM8731::get_rx_dmahandle() {
 	return sai_.get_rx_dmahandle();
 }
 
-DMA_HandleTypeDef *CodecWM8731::get_tx_dmahandle()
-{
+DMA_HandleTypeDef *CodecWM8731::get_tx_dmahandle() {
 	return sai_.get_tx_dmahandle();
 }
 
