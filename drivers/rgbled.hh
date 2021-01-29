@@ -25,16 +25,22 @@ struct MixedRgbLed {
 	}
 	// void set_solid(Color const &col) { solid_color_ = col; }
 
+	// freq is given in: secs * update_rate_Hz
 	void flash(Color const &c, uint32_t const flash_freq = 100) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
-		flash_freq_ = flash_freq; // divided by update_rate?
+		flash_freq_ = flash_freq;
 	}
 
-	// freq in secs
-	void set_glow(Color const &c, uint32_t const freq = 0x00FFFFFF) {
-		glow_color_ = c;
-		fader_.set_frequency(freq); // divided by update_rate?
+	// freq is given in: secs * update_rate_Hz
+	void breathe(Color const &c, uint32_t const freq = 0x00FFFFFF) {
+		breathe_color_ = c;
+		fader_.set_frequency(freq);
+	}
+
+	void reset_breathe() {
+		fader_.set_frequency(0);
+		fader_.set_phase(0);
 	}
 
 	constexpr void set_color(Color const &col) const {
@@ -57,8 +63,8 @@ struct MixedRgbLed {
 	void update_animation() {
 		Color c = background_color_;
 		// if (solid_color_ != Colors::off) c = solid_color_;
-		// c = c.blend(glow_color_, fader_.Process());
-		// c = c.blend(flash_color_, flash_phase_);
+		c = c.blend(breathe_color_, fader_.Process());
+		c = c.blend(flash_color_, flash_phase_);
 		// c = c.adjust(color_cal_);
 		set_color(c);
 		if (flash_phase_ > flash_freq_)
@@ -75,7 +81,7 @@ private:
 	Color background_color_ = Colors::off;
 	Color solid_color_ = Colors::off;
 	Color flash_color_ = Colors::white;
-	Color glow_color_ = Colors::red;
+	Color breathe_color_ = Colors::red;
 	uint32_t flash_freq_ = 100;
 	uint32_t flash_phase_ = 0;
 	//    Color::Adjustment& color_cal_;

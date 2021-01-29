@@ -19,13 +19,20 @@ public:
 	using ISRType = std::function<void(void)>;
 	static inline const uint32_t NumISRs = 256;
 
-	Interrupt() {}
-	Interrupt(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+	Interrupt() {
+	}
+	Interrupt(IRQType irqnum, ISRType &&func) {
+		ISRs[irqnum] = std::move(func);
+	}
 
-	static void registerISR(IRQType irqnum, ISRType &&func) { ISRs[irqnum] = std::move(func); }
+	static void registerISR(IRQType irqnum, ISRType &&func) {
+		ISRs[irqnum] = std::move(func);
+	}
 
 	// static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
-	static inline void callISR(uint32_t irqnum) { ISRs[irqnum](); }
+	static inline void callISR(uint32_t irqnum) {
+		ISRs[irqnum]();
+	}
 
 	// Sets a default handler for all ISRs.
 	// This could be done for debug builds, to point to debug breakpoint

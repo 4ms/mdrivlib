@@ -59,6 +59,14 @@ private:
 		uint32_t (&frame_buffer)[kRequiredBufferSize];
 		const DMAConfig &dma_defs_;
 		bool transfer_complete;
+		// Todo: Fix HALCallbacks so we can move a temporary (stack-created) lambda into HALCBs
+		HALCallback transfer_complete_cb{HALCallbackID::I2C_MemTxCplt, [this]() {
+											 advance_frame_buffer();
+											 if (!dma_defs_.continuous && cur_chip_num_ == 0)
+												 transfer_complete = true;
+											 else
+												 write_current_frame_to_chip();
+										 }};
 	};
 	friend class PCA9685DmaDriver::DMADriver;
 	DMADriver dma_;

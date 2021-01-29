@@ -16,7 +16,7 @@ PCA9685DmaDriver::DMADriver::DMADriver(PCA9685DmaDriver &parent,
 	// else
 	// 	HALCallback transfer_complete_cb{HALCallbackID::I2C_MemTxCplt, [this]() {
 	// 										 advance_frame_buffer();
-	// 										 if (cur_chip_num_ == 0)
+	// 										 if (!dma_defs_.continuous && cur_chip_num_ == 0)
 	// 											 transfer_complete = true;
 	// 										 else
 	// 											 write_current_frame_to_chip();
