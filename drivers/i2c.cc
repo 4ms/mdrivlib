@@ -5,7 +5,7 @@
 
 const uint32_t _I2C_FLAG_TIMEOUT = 1;
 const uint32_t _I2C_LONG_TIMEOUT = 30;
-const uint32_t _I2C_VLONG_TIMEOUT = 100;
+const uint32_t _I2C_VLONG_TIMEOUT = 10000;
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
 	HAL_StatusTypeDef err;
@@ -88,9 +88,6 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 
 	deinit(periph);
 
-	enable_FMP();
-	System::enable_i2c_rcc(periph);
-
 	hal_i2c_.Instance = periph;
 	hal_i2c_.Init.Timing = timing.calc();
 	hal_i2c_.Init.OwnAddress1 = 0x33;
@@ -112,6 +109,9 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 		i2c_err_irq_num_ = I2C3_ER_IRQn;
 	}
 
+	enable_FMP();
+	System::enable_i2c_rcc(periph);
+
 	HAL_I2C_DeInit(&hal_i2c_);
 	if (HAL_I2C_Init(&hal_i2c_) != HAL_OK)
 		return I2C_INIT_ERR;
@@ -128,7 +128,6 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 
 void I2CPeriph::enable_FMP() {
 #if defined(STM32H7x5xx)
-
 	RCCControl::SYS_CFG::enable();
 
 	if (hal_i2c_.Instance == I2C1) {
