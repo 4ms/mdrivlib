@@ -37,16 +37,46 @@ bool is_enabled_rcc(T en_bit) {
 
 template<typename PeriphT>
 struct RCCPeriph {
-	static void enable() { *PeriphT::_reg |= PeriphT::_bit; }
-	static void disable() { *PeriphT::_reg &= ~PeriphT::_bit; }
-	static bool is_enabled() { return *PeriphT::_reg & PeriphT::_bit; }
+	static void enable() {
+		*PeriphT::_reg |= PeriphT::_bit;
+	}
+	static void disable() {
+		*PeriphT::_reg &= ~PeriphT::_bit;
+	}
+	static bool is_enabled() {
+		return *PeriphT::_reg & PeriphT::_bit;
+	}
 };
 
 template<typename PeriphT>
 struct RCCPeriphs {
-	static void enable(unsigned pnum) { *PeriphT::_regs[pnum - 1] |= PeriphT::_bits[pnum - 1]; }
-	static void disable(unsigned pnum) { *PeriphT::_regs[pnum - 1] &= ~PeriphT::_bits[pnum - 1]; }
-	static bool is_enabled(unsigned pnum) { return *PeriphT::_regs[pnum - 1] & PeriphT::_bits[pnum - 1]; }
+	static void enable(unsigned pnum) {
+		*PeriphT::_regs[pnum - 1] |= PeriphT::_bits[pnum - 1];
+	}
+	static void disable(unsigned pnum) {
+		*PeriphT::_regs[pnum - 1] &= ~PeriphT::_bits[pnum - 1];
+	}
+	static bool is_enabled(unsigned pnum) {
+		return *PeriphT::_regs[pnum - 1] & PeriphT::_bits[pnum - 1];
+	}
+};
+
+struct EnableFlag {
+	volatile RegisterT *const reg;
+	const RegisterT bit;
+};
+
+template<typename PeriphT>
+struct RCCPeriphControl {
+	static void enable(unsigned pnum = 1) {
+		*PeriphT::_enableflags[pnum - 1].reg |= PeriphT::_enableflags[pnum - 1].bit;
+	}
+	static void disable(unsigned pnum = 1) {
+		*PeriphT::_enableflags[pnum - 1].reg &= ~PeriphT::_enableflags[pnum - 1].bit;
+	}
+	static bool is_enabled(unsigned pnum = 1) {
+		return *PeriphT::_enableflags[pnum - 1].reg & PeriphT::_enableflags[pnum - 1].bit;
+	}
 };
 
 #ifdef STM32H7
@@ -56,9 +86,10 @@ struct RCCControl {
 	// special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 	struct GPIO {
 		static inline volatile RegisterT *const _reg = &(RCC->AHB4ENR);
-		static uint32_t get_gpio_bit(uint32_t periph_base_addr) { return 1 << ((periph_base_addr & 0x00003C00) >> 10); }
+		static uint32_t get_gpio_bit(uint32_t periph_base_addr) {
+			return 1 << ((periph_base_addr & 0x00003C00) >> 10);
+		}
 		static void enable(uint32_t periph_base_addr) {
-			// *_reg |= get_gpio_bit(periph_base_addr);
 			// std::atomic
 			auto tmp = *_reg;
 			tmp |= get_gpio_bit(periph_base_addr);
@@ -66,14 +97,29 @@ struct RCCControl {
 			// end
 		}
 		static void disable(uint32_t periph_base_addr) {
-			// *_reg &= ~get_gpio_bit(periph_base_addr);
 			// std::atomic
 			auto tmp = *_reg;
 			tmp &= ~get_gpio_bit(periph_base_addr);
 			*_reg = tmp;
 			// end
 		}
-		static bool is_enabled(uint32_t periph_base_addr) { return (*_reg) & get_gpio_bit(periph_base_addr); }
+		static bool is_enabled(uint32_t periph_base_addr) {
+			return (*_reg) & get_gpio_bit(periph_base_addr);
+		}
+	};
+
+	struct SYS_CFG : RCCPeriphControl<SYS_CFG> {
+		const static inline unsigned NumP = 1;
+		static inline EnableFlag _enableflags[NumP] = {
+			{&RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN},
+		};
+	};
+
+	struct BDMA_P : RCCPeriphControl<BDMA_P> {
+		const static inline unsigned NumP = 1;
+		static inline EnableFlag _enableflags[NumP] = {
+			{&RCC->AHB4ENR, RCC_AHB4ENR_BDMAEN},
+		};
 	};
 
 	struct ADC : RCCPeriphs<ADC> {
@@ -198,10 +244,18 @@ struct RCCControl {
 
 struct GPIO {
 	static inline volatile RegisterT *const _reg = &(RCC->AHB4ENR);
-	static uint32_t get_gpio_bit(uint32_t periph_base_addr) { return (periph_base_addr & 0x00003C00) >> 10; }
-	static void enable(uint32_t periph_base_addr) { *_reg |= get_gpio_bit(periph_base_addr); }
-	static void disable(uint32_t periph_base_addr) { *_reg &= ~get_gpio_bit(periph_base_addr); }
-	static bool is_enabled(uint32_t periph_base_addr) { return (*_reg) & get_gpio_bit(periph_base_addr); }
+	static uint32_t get_gpio_bit(uint32_t periph_base_addr) {
+		return (periph_base_addr & 0x00003C00) >> 10;
+	}
+	static void enable(uint32_t periph_base_addr) {
+		*_reg |= get_gpio_bit(periph_base_addr);
+	}
+	static void disable(uint32_t periph_base_addr) {
+		*_reg &= ~get_gpio_bit(periph_base_addr);
+	}
+	static bool is_enabled(uint32_t periph_base_addr) {
+		return (*_reg) & get_gpio_bit(periph_base_addr);
+	}
 };
 
 // Todo: convert this to new format:
