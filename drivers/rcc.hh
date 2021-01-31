@@ -1,40 +1,44 @@
 #pragma once
+#include "register_access.hh"
 #include "stm32xx.h"
 
 namespace mdrivlib
 {
-using RegisterT = uint32_t;
+using RegisterDataT = uint32_t;
 
-static inline void _set_bit_in_struct_by_offset(uint8_t *base, RegisterT offset, RegisterT bit) {
-	*(RegisterT *)(base + offset) |= bit;
+/*
+static inline void _set_bit_in_struct_by_offset(uint8_t *base, RegisterDataT offset, RegisterDataT bit) {
+	*(RegisterDataT *)(base + offset) |= bit;
 }
 
-static inline void _clear_bit_in_struct_by_offset(uint8_t *base, RegisterT offset, RegisterT bit) {
-	*(RegisterT *)(base + offset) &= ~bit;
+static inline void _clear_bit_in_struct_by_offset(uint8_t *base, RegisterDataT offset, RegisterDataT bit) {
+	*(RegisterDataT *)(base + offset) &= ~bit;
 }
 
-static inline RegisterT _read_bit_in_struct_by_offset(uint8_t *base, RegisterT offset, RegisterT bit) {
-	return (*(RegisterT *)(base + offset)) & bit;
+static inline RegisterDataT _read_bit_in_struct_by_offset(uint8_t *base, RegisterDataT offset, RegisterDataT bit) {
+	return (*(RegisterDataT *)(base + offset)) & bit;
 }
 
 template<typename T>
 void enable_rcc(T en_bit) {
 	_set_bit_in_struct_by_offset(
-		(uint8_t *)RCC, static_cast<volatile RegisterT>(T::reg), static_cast<RegisterT>(en_bit));
+		(uint8_t *)RCC, static_cast<volatile RegisterDataT>(T::reg), static_cast<RegisterDataT>(en_bit));
 }
 
 template<typename T>
 void disable_rcc(T en_bit) {
 	_clear_bit_in_struct_by_offset(
-		(uint8_t *)RCC, static_cast<volatile RegisterT>(T::reg), static_cast<RegisterT>(en_bit));
+		(uint8_t *)RCC, static_cast<volatile RegisterDataT>(T::reg), static_cast<RegisterDataT>(en_bit));
 }
 
 template<typename T>
 bool is_enabled_rcc(T en_bit) {
 	return _read_bit_in_struct_by_offset(
-		(uint8_t *)RCC, static_cast<volatile RegisterT>(T::reg), static_cast<RegisterT>(en_bit));
+		(uint8_t *)RCC, static_cast<volatile RegisterDataT>(T::reg), static_cast<RegisterDataT>(en_bit));
 }
+*/
 
+// Method #1:
 template<typename PeriphT>
 struct RCCPeriph {
 	static void enable() {
@@ -48,6 +52,7 @@ struct RCCPeriph {
 	}
 };
 
+// Method #2:
 template<typename PeriphT>
 struct RCCPeriphs {
 	static void enable(unsigned pnum) {
@@ -61,9 +66,10 @@ struct RCCPeriphs {
 	}
 };
 
+// Method #3:
 struct EnableFlag {
-	volatile RegisterT *const reg;
-	const RegisterT bit;
+	volatile RegisterDataT *const reg;
+	const RegisterDataT bit;
 };
 
 template<typename PeriphT>
@@ -82,10 +88,87 @@ struct RCCPeriphControl {
 #ifdef STM32H7
 // stm32h755xx.h:
 
+// Method #4:
+//(uses register_access.hh)
+namespace stm32h7x5xx
+{
+namespace RCC_Control
+{
+using GPIO_A = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOAEN>;
+using GPIO_B = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOBEN>;
+using GPIO_C = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOCEN>;
+using GPIO_D = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIODEN>;
+using GPIO_E = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOEEN>;
+using GPIO_F = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOFEN>;
+using GPIO_G = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOGEN>;
+using GPIO_H = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOHEN>;
+using GPIO_I = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOIEN>;
+using GPIO_J = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOJEN>;
+// special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
+struct GPIO {
+	const static inline uint32_t NumPeriph = 10;
+
+	static inline volatile RegisterDataT *const _reg = &(RCC->AHB4ENR);
+
+	static uint32_t get_gpio_bit(RegisterDataT periph) {
+		return 1 << ((periph & 0x00003C00) >> 10);
+	}
+	static void enable(GPIO_TypeDef *periph) {
+		*_reg = *_reg | get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
+		[[maybe_unused]] bool delay_after_enabling = is_enabled(periph);
+	}
+	static void disable(GPIO_TypeDef *periph) {
+		*_reg = *_reg & ~get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
+		[[maybe_unused]] bool delay_after_disabling = is_enabled(periph);
+	}
+	static bool is_enabled(GPIO_TypeDef *periph) {
+		return (*_reg) & get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
+	}
+};
+
+using ADC_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR), RCC_AHB1ENR_ADC12EN>;
+using ADC_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR), RCC_AHB1ENR_ADC12EN>;
+using ADC_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_ADC3EN>;
+struct ADC {
+	const static inline uint32_t NumPeriph = 3;
+};
+
+using SYSCFG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4ENR), RCC_APB4ENR_SYSCFGEN>;
+
+using SAI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI1EN>;
+using SAI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI2EN>;
+using SAI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI3EN>;
+using SAI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB4ENR_SAI4EN>;
+struct SAI {
+	const static inline uint32_t NumPeriph = 4;
+};
+
+struct TIM {
+	const static inline unsigned NumPerpih = 17;
+};
+
+using TIM_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_TIM1EN>;
+using TIM_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM2EN>;
+using TIM_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM3EN>;
+using TIM_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM4EN>;
+using TIM_5 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM5EN>;
+using TIM_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM6EN>;
+using TIM_7 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM7EN>;
+using TIM_8 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_TIM8EN>;
+using TIM_12 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM12EN>;
+using TIM_13 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM13EN>;
+using TIM_14 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM14EN>;
+using TIM_15 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_TIM15EN>;
+using TIM_16 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_TIM16EN>;
+using TIM_17 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_TIM17EN>;
+} // namespace RCC_Control
+} // namespace stm32h7x5xx
+
+// Methods 1-3:
 struct RCCControl {
 	// special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 	struct GPIO {
-		static inline volatile RegisterT *const _reg = &(RCC->AHB4ENR);
+		static inline volatile RegisterDataT *const _reg = &(RCC->AHB4ENR);
 		static uint32_t get_gpio_bit(uint32_t periph_base_addr) {
 			return 1 << ((periph_base_addr & 0x00003C00) >> 10);
 		}
@@ -124,12 +207,12 @@ struct RCCControl {
 
 	struct ADC : RCCPeriphs<ADC> {
 		const static inline unsigned NumP = 3;
-		volatile static inline RegisterT *const _regs[NumP] = {
+		volatile static inline RegisterDataT *const _regs[NumP] = {
 			&RCC->AHB1ENR,
 			&RCC->AHB1ENR,
-			&RCC->AHB1ENR,
+			&RCC->AHB4ENR,
 		};
-		const static inline RegisterT _bits[NumP] = {
+		const static inline RegisterDataT _bits[NumP] = {
 			RCC_AHB1ENR_ADC12EN,
 			RCC_AHB1ENR_ADC12EN,
 			RCC_AHB4ENR_ADC3EN,
@@ -137,62 +220,62 @@ struct RCCControl {
 	};
 
 	struct ADC_1 : public RCCPeriph<ADC_1> {
-		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
-		const static inline RegisterT _bit = RCC_AHB1ENR_ADC12EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->AHB1ENR);
+		const static inline RegisterDataT _bit = RCC_AHB1ENR_ADC12EN;
 	};
 	struct ADC_2 : public RCCPeriph<ADC_2> {
-		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
-		const static inline RegisterT _bit = RCC_AHB1ENR_ADC12EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->AHB1ENR);
+		const static inline RegisterDataT _bit = RCC_AHB1ENR_ADC12EN;
 	};
 	struct ADC_3 : public RCCPeriph<ADC_3> {
-		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
-		const static inline RegisterT _bit = RCC_AHB4ENR_ADC3EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->AHB4ENR);
+		const static inline RegisterDataT _bit = RCC_AHB4ENR_ADC3EN;
 	};
 
 	// Todo: decide if the ADC : RCCPeriphs<ADC> method or the ADC_1 : RCCPeriph<ADC_1> method is better, and apply to
 	// all (including GPIO):
 	struct DMA_1 : public RCCPeriph<DMA_1> {
-		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
-		const static inline RegisterT _bit = RCC_AHB1ENR_DMA1EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->AHB1ENR);
+		const static inline RegisterDataT _bit = RCC_AHB1ENR_DMA1EN;
 	};
 	struct DMA_2 : public RCCPeriph<DMA_2> {
-		volatile static inline RegisterT *const _reg = &(RCC->AHB1ENR);
-		const static inline RegisterT _bit = RCC_AHB1ENR_DMA2EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->AHB1ENR);
+		const static inline RegisterDataT _bit = RCC_AHB1ENR_DMA2EN;
 	};
 
 	struct I2C_1 : public RCCPeriph<I2C_1> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB1LENR);
-		const static inline RegisterT _bit = RCC_APB1LENR_I2C1EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB1LENR);
+		const static inline RegisterDataT _bit = RCC_APB1LENR_I2C1EN;
 	};
 	struct I2C_2 : public RCCPeriph<I2C_2> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB1LENR);
-		const static inline RegisterT _bit = RCC_APB1LENR_I2C2EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB1LENR);
+		const static inline RegisterDataT _bit = RCC_APB1LENR_I2C2EN;
 	};
 	struct I2C_3 : public RCCPeriph<I2C_3> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB1LENR);
-		const static inline RegisterT _bit = RCC_APB1LENR_I2C3EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB1LENR);
+		const static inline RegisterDataT _bit = RCC_APB1LENR_I2C3EN;
 	};
 
 	struct SAI_1 : public RCCPeriph<SAI_1> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB2ENR);
-		const static inline RegisterT _bit = RCC_APB2ENR_SAI1EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB2ENR);
+		const static inline RegisterDataT _bit = RCC_APB2ENR_SAI1EN;
 	};
 	struct SAI_2 : public RCCPeriph<SAI_2> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB2ENR);
-		const static inline RegisterT _bit = RCC_APB2ENR_SAI2EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB2ENR);
+		const static inline RegisterDataT _bit = RCC_APB2ENR_SAI2EN;
 	};
 	struct SAI_3 : public RCCPeriph<SAI_3> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB2ENR);
-		const static inline RegisterT _bit = RCC_APB2ENR_SAI3EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB2ENR);
+		const static inline RegisterDataT _bit = RCC_APB2ENR_SAI3EN;
 	};
 	struct SAI_4 : public RCCPeriph<SAI_4> {
-		volatile static inline RegisterT *const _reg = &(RCC->APB4ENR);
-		const static inline RegisterT _bit = RCC_APB4ENR_SAI4EN;
+		volatile static inline RegisterDataT *const _reg = &(RCC->APB4ENR);
+		const static inline RegisterDataT _bit = RCC_APB4ENR_SAI4EN;
 	};
 
 	struct TIM : RCCPeriphs<TIM> {
 		const static inline unsigned NumP = 17;
-		volatile static inline RegisterT *const _regs[NumP] = {
+		volatile static inline RegisterDataT *const _regs[NumP] = {
 			&RCC->APB2ENR,
 			&RCC->APB1LENR,
 			&RCC->APB1LENR,
@@ -211,7 +294,7 @@ struct RCCControl {
 			&RCC->APB2ENR,
 			&RCC->APB2ENR,
 		};
-		const static inline RegisterT _bits[NumP] = {
+		const static inline RegisterDataT _bits[NumP] = {
 			RCC_APB2ENR_TIM1EN,
 			RCC_APB1LENR_TIM2EN,
 			RCC_APB1LENR_TIM3EN,
@@ -333,3 +416,7 @@ struct TIM : RCCPeriphs<TIM> {
 #endif
 
 } // namespace mdrivlib
+
+// FixMe: Is this a good idea to always include a "using namespace" file??
+#include "arch.hh"
+

@@ -1,4 +1,5 @@
 #include "tim.hh"
+#include "rcc.hh"
 #include "system.hh"
 
 void TIMPeriph::init_periph(TIM_TypeDef *TIM, uint32_t period, uint16_t prescaler, uint32_t clock_division) {
@@ -13,7 +14,7 @@ void TIMPeriph::init_periph(TIM_TypeDef *TIM, uint32_t period, uint16_t prescale
 }
 
 void TIMPeriph::init_periph_once(TIM_TypeDef *TIM, uint32_t period, uint16_t prescaler, uint32_t clock_division) {
-	static bool did_init[RCCControl::TIM::NumP] = {false};
+	static bool did_init[RCC_Control::TIM::NumPerpih] = {false};
 
 	uint8_t tim_i = System::tim_periph_to_num(TIM);
 

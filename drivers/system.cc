@@ -1,4 +1,5 @@
 #include "system.hh"
+#include "rcc.hh"
 
 void System::SetVectorTable(uint32_t reset_address) {
 	SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80;
@@ -48,12 +49,6 @@ uint32_t System::encode_nvic_priority(uint32_t pri1, uint32_t pri2) {
 	return NVIC_EncodePriority(NVIC_GetPriorityGrouping(), pri1, pri2);
 }
 
-void System::enable_gpio_rcc(GPIO_TypeDef *port) {
-	if (port == nullptr)
-		return;
-	RCCControl::GPIO::enable(reinterpret_cast<uint32_t>(port));
-}
-
 unsigned System::adc_periph_to_num(ADC_TypeDef *ADCx) {
 	if (ADCx == nullptr)
 		return 0;
@@ -68,7 +63,7 @@ unsigned System::adc_periph_to_num(ADC_TypeDef *ADCx) {
 }
 
 void System::enable_adc_rcc(unsigned periph_num) {
-	if (periph_num >= 1 && periph_num <= RCCControl::ADC::NumP)
+	if (periph_num >= 1 && periph_num <= RCC_Control::ADC::NumPeriph)
 		RCCControl::ADC::enable(periph_num);
 }
 
@@ -113,26 +108,26 @@ void System::enable_sai_rcc(SAI_TypeDef *SAIx) {
 	if (SAIx == nullptr)
 		return;
 	else if (SAIx == SAI1)
-		RCCControl::SAI_1::enable();
+		RCC_Control::SAI_1::set();
 	else if (SAIx == SAI2)
-		RCCControl::SAI_2::enable();
+		RCC_Control::SAI_2::set();
 	else if (SAIx == SAI3)
-		RCCControl::SAI_3::enable();
+		RCC_Control::SAI_3::set();
 	else if (SAIx == SAI4)
-		RCCControl::SAI_4::enable();
+		RCC_Control::SAI_4::set();
 }
 
 void System::disable_sai_rcc(SAI_TypeDef *SAIx) {
 	if (SAIx == nullptr)
 		return;
 	else if (SAIx == SAI1)
-		RCCControl::SAI_1::disable();
+		RCC_Control::SAI_1::clear();
 	else if (SAIx == SAI2)
-		RCCControl::SAI_2::disable();
+		RCC_Control::SAI_2::clear();
 	else if (SAIx == SAI3)
-		RCCControl::SAI_3::disable();
+		RCC_Control::SAI_3::clear();
 	else if (SAIx == SAI4)
-		RCCControl::SAI_4::disable();
+		RCC_Control::SAI_4::clear();
 }
 
 uint8_t System::tim_periph_to_num(TIM_TypeDef *TIMx) {

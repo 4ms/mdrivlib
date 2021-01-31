@@ -1,12 +1,11 @@
 #pragma once
-#include "rcc.hh"
 #include "stm32xx.h"
 
-using namespace mdrivlib;
-
-// Todo: refactor for LL intead of HAL
+// Todo: refactor to use CMSIS header intead of HAL (RCC_OscInitTypeDef, etc)
+// Todo: move rcc enable/disable to RCC_Control
 struct System {
-	System() {}
+	System() {
+	}
 
 	static void SetVectorTable(uint32_t reset_address);
 
