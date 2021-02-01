@@ -1,4 +1,5 @@
 #include "pin.hh"
+#include "arch.hh"
 #include "rcc.hh"
 
 Pin::Pin(GPIO port,

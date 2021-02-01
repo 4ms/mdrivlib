@@ -1,5 +1,6 @@
 #include "i2c.hh"
 #include "interrupt.hh"
+#include "rcc.hh"
 #include "stm32xx.h"
 #include "system.hh"
 
@@ -74,7 +75,7 @@ bool I2CPeriph::is_ready() {
 }
 
 void I2CPeriph::deinit(I2C_TypeDef *periph) {
-	System::disable_i2c_rcc(periph);
+	System::I2C::disable(periph);
 }
 
 I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph) {
@@ -110,7 +111,7 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 	}
 
 	enable_FMP();
-	System::enable_i2c_rcc(periph);
+	System::I2C::enable(periph);
 
 	HAL_I2C_DeInit(&hal_i2c_);
 	if (HAL_I2C_Init(&hal_i2c_) != HAL_OK)
@@ -128,7 +129,7 @@ I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &tim
 
 void I2CPeriph::enable_FMP() {
 #if defined(STM32H7x5xx)
-	RCCControl::SYS_CFG::enable();
+	RCC_Control::SYSCFG_::set();
 
 	if (hal_i2c_.Instance == I2C1) {
 		SYSCFG->PMCR |= (SYSCFG_PMCR_I2C1_FMP | SYSCFG_PMCR_I2C_PB6_FMP | SYSCFG_PMCR_I2C_PB7_FMP);

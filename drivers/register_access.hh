@@ -11,7 +11,7 @@ using regsize_t = uint32_t;
 // todo: Requre AccessPolicyT has read() write() set() clear()
 template<typename AccessPolicyT, regsize_t address, regsize_t mask>
 struct RegisterBits {
-
+	static const regsize_t BusEnableBaseAddress = address;
 	static regsize_t read() {
 		return AccessPolicyT::read(reinterpret_cast<volatile regsize_t *>(address), mask);
 	}
@@ -23,6 +23,19 @@ struct RegisterBits {
 	}
 	static void clear() {
 		AccessPolicyT::clear(reinterpret_cast<volatile regsize_t *>(address), mask);
+	}
+};
+
+// Null register (periph does not exist)
+struct NonexistantRegister {
+	static regsize_t read() {
+		return 0;
+	}
+	static void write(regsize_t val) {
+	}
+	static void set() {
+	}
+	static void clear() {
 	}
 };
 
@@ -92,16 +105,16 @@ struct WriteOnly {
 };
 
 struct ReadWrite : ReadOnly {
-	static void write(volatile unsigned *address, unsigned offset, unsigned mask, unsigned val) {
+	static void write(volatile regsize_t *address, regsize_t offset, regsize_t mask, regsize_t val) {
 		*address = (*address & ~mask) | ((val << offset) & mask);
 	}
-	static void write(volatile unsigned *address, unsigned mask, unsigned val) {
+	static void write(volatile regsize_t *address, regsize_t mask, regsize_t val) {
 		*address = (*address & ~mask) | (val & mask);
 	}
-	static void set(volatile unsigned *address, unsigned mask) {
+	static void set(volatile regsize_t *address, regsize_t mask) {
 		*address = *address | mask;
 	}
-	static void clear(volatile unsigned *address, unsigned mask) {
+	static void clear(volatile regsize_t *address, regsize_t mask) {
 		*address = *address & ~mask;
 	}
 };

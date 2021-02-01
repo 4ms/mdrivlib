@@ -1,9 +1,10 @@
 #include "tim.hh"
-#include "rcc.hh"
+#include "arch.hh"
+#include "periph.hh"
 #include "system.hh"
 
 void TIMPeriph::init_periph(TIM_TypeDef *TIM, uint32_t period, uint16_t prescaler, uint32_t clock_division) {
-	System::enable_tim_rcc(TIM);
+	System::TIM::enable(TIM);
 	LL_TIM_InitTypeDef timinit = {.Prescaler = prescaler,
 								  .CounterMode = LL_TIM_COUNTERMODE_UP,
 								  .Autoreload = period,
@@ -14,9 +15,9 @@ void TIMPeriph::init_periph(TIM_TypeDef *TIM, uint32_t period, uint16_t prescale
 }
 
 void TIMPeriph::init_periph_once(TIM_TypeDef *TIM, uint32_t period, uint16_t prescaler, uint32_t clock_division) {
-	static bool did_init[RCC_Control::TIM::NumPerpih] = {false};
+	static bool did_init[peripherals::TIM::NumPeriph]{false};
 
-	uint8_t tim_i = System::tim_periph_to_num(TIM);
+	uint8_t tim_i = peripherals::TIM::to_num(TIM);
 
 	if (tim_i == 0 || did_init[tim_i - 1])
 		return;

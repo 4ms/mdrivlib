@@ -4,49 +4,43 @@
 #include "tim.hh"
 
 Timekeeper::Timekeeper()
-	: is_running(false)
-{}
+	: is_running(false) {
+}
 
-void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> func)
-{
+void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> func) {
 	set_periph(config.TIMx);
 	task_func = func;
 	register_task(func);
-	System::enable_tim_rcc(timx);
+	System::TIM::enable(timx);
 	set_timing(config.period_ns, config.priority1, config.priority2);
 }
 
 Timekeeper::Timekeeper(const TimekeeperConfig &config, std::function<void(void)> func)
 	: timx(config.TIMx)
-	, irqn(System::tim_periph_to_IRQn(timx))
+	, irqn(peripherals::TIM::IRQn(timx))
 	, task_func(func)
-	, is_running(false)
-{
+	, is_running(false) {
 	register_task(func);
-	System::enable_tim_rcc(timx);
+	System::TIM::enable(timx);
 	set_timing(config.period_ns, config.priority1, config.priority2);
 }
 
-void Timekeeper::start()
-{
+void Timekeeper::start() {
 	is_running = true;
 }
 
-void Timekeeper::stop()
-{
+void Timekeeper::stop() {
 	is_running = false;
 }
 
-void Timekeeper::set_periph(TIM_TypeDef *TIMx)
-{
+void Timekeeper::set_periph(TIM_TypeDef *TIMx) {
 	timx = TIMx;
-	irqn = System::tim_periph_to_IRQn(timx);
+	irqn = peripherals::TIM::IRQn(timx);
 }
 
 // Todo: Support 32-bit timers. Right now it runs 32-bit timers in 16-bit mode
-void Timekeeper::set_timing(uint32_t period_ns, uint32_t priority1, uint32_t priority2)
-{
-	uint32_t sysfreq_Hz = System::tim_periph_max_freq(timx);
+void Timekeeper::set_timing(uint32_t period_ns, uint32_t priority1, uint32_t priority2) {
+	uint32_t sysfreq_Hz = peripherals::TIM::max_freq(timx);
 	float sysfreq_ns = 1000000000.f / sysfreq_Hz;
 	uint32_t period_clocks = period_ns / sysfreq_ns;
 
@@ -78,8 +72,7 @@ void Timekeeper::set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pri
 	LL_TIM_EnableCounter(timx);
 }
 
-void Timekeeper::register_task(std::function<void(void)> func)
-{
+void Timekeeper::register_task(std::function<void(void)> func) {
 	task_func = func;
 	InterruptManager::registerISR(irqn, [this]() {
 		if (tim_update_IT_is_set()) {
@@ -93,16 +86,13 @@ void Timekeeper::register_task(std::function<void(void)> func)
 	});
 }
 
-bool Timekeeper::tim_update_IT_is_set() const
-{
+bool Timekeeper::tim_update_IT_is_set() const {
 	return LL_TIM_IsActiveFlag_UPDATE(timx);
 }
-bool Timekeeper::tim_update_IT_is_source() const
-{
+bool Timekeeper::tim_update_IT_is_source() const {
 	return LL_TIM_IsEnabledIT_UPDATE(timx);
 }
-void Timekeeper::tim_update_IT_clear() const
-{
+void Timekeeper::tim_update_IT_clear() const {
 	LL_TIM_ClearFlag_UPDATE(timx);
 }
 

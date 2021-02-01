@@ -76,7 +76,7 @@ AdcPeriph<p> &AdcPeriph<p>::AdcInstance() {
 
 template<AdcPeriphNum p>
 AdcPeriph<p>::AdcPeriph() {
-	System::enable_adc_rcc(get_ADC_base(p));
+	System::ADC::enable(get_ADC_base(p));
 
 	dma_buffer_ = default_dma_buffer_;
 
@@ -132,7 +132,9 @@ constexpr uint32_t _LL_ADC_DECIMAL_NB_TO_RANK(const uint8_t x) {
 						: 0);
 }
 
-constexpr uint32_t _LL_ADC_DECIMAL_NB_TO_REG_SEQ_LENGTH(const uint8_t x) { return (x << ADC_SQR1_L_Pos); }
+constexpr uint32_t _LL_ADC_DECIMAL_NB_TO_REG_SEQ_LENGTH(const uint8_t x) {
+	return (x << ADC_SQR1_L_Pos);
+}
 
 template<AdcPeriphNum p>
 void AdcPeriph<p>::add_channel(const AdcChanNum channel, const uint32_t sampletime) {
@@ -153,7 +155,7 @@ void AdcPeriph<p>::init_dma(const DMA_LL_Config &dma_defs, uint16_t *dma_buffer)
 	if (!num_channels_)
 		return;
 
-	System::enable_dma_rcc(dma_defs.DMAx);
+	System::DMA::enable(dma_defs.DMAx);
 
 #if defined(STM32F7)
 	LL_DMA_SetChannelSelection(dma_defs.DMAx, dma_defs.stream, dma_defs.channel);
