@@ -14,8 +14,8 @@ public:
 	};
 
 	SaiPeriph(const SaiConfig &def)
-		: saidef_(def)
-	{}
+		: saidef_(def) {
+	}
 
 	~SaiPeriph() = default;
 
@@ -23,8 +23,7 @@ public:
 	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
 	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
 
-	Error init(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size)
-	{
+	Error init(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
 		set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
 		return init();
 	}
@@ -57,10 +56,12 @@ private:
 	std::function<void()> tx_tc_cb;
 	std::function<void()> tx_ht_cb;
 
-	// Todo: can these be const and assigned in ctor?
-	uint32_t dma_tc_flag_index;		 // = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
-	uint32_t dma_ht_flag_index;		 // = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
-	volatile uint32_t *dma_isr_reg;	 //= __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
-	volatile uint32_t *dma_ifcr_reg; // = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+	// Todo: can we use RegisterBits<>, if SaiConfig is a constexpr?
+	// or: Saiconfig contains a RegisterBits object or type alias?
+	uint32_t dma_tc_flag_index;
+	uint32_t dma_ht_flag_index;
+	uint32_t dma_te_flag_index;
+	volatile uint32_t *dma_isr_reg;
+	volatile uint32_t *dma_ifcr_reg;
 };
 
