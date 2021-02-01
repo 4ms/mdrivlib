@@ -258,19 +258,21 @@ void SaiPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::funct
 
 void SaiPeriph::start() {
 	IRQn_Type _irqn;
-	// if (saidef_.mode == SaiConfig::RXMaster) {
-	// 	dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_rx);
-	// 	dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_rx);
-	// 	dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_rx.stream);
-	// 	dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_rx.stream);
-	// 	_irqn = rx_irqn;
-	// } else {
-	dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
-	dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
-	dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
-	dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
-	_irqn = tx_irqn;
-	// }
+	if (saidef_.mode == SaiConfig::RXMaster) {
+		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_rx);
+		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_rx);
+		dma_te_flag_index = __HAL_DMA_GET_TE_FLAG_INDEX(&hdma_rx);
+		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_rx.stream);
+		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_rx.stream);
+		_irqn = rx_irqn;
+	} else {
+		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
+		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
+		dma_te_flag_index = __HAL_DMA_GET_TE_FLAG_INDEX(&hdma_tx);
+		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
+		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+		_irqn = tx_irqn;
+	}
 
 	InterruptManager::registerISR(_irqn, [this]() {
 		if ((*dma_isr_reg & dma_tc_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_TC)*/) {
@@ -282,12 +284,17 @@ void SaiPeriph::start() {
 			*dma_ifcr_reg = dma_ht_flag_index;
 			tx_ht_cb();
 		}
+
+		if ((*dma_isr_reg & dma_te_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_HT)*/) {
+			*dma_ifcr_reg = dma_te_flag_index;
+			// Error: debug breakpoint or logging here
+		}
 	});
 
-	// if (saidef_.mode == SaiConfig::RXMaster)
-	// HAL_NVIC_EnableIRQ(rx_irqn);
-	// else
-	HAL_NVIC_EnableIRQ(tx_irqn);
+	if (saidef_.mode == SaiConfig::RXMaster)
+		HAL_NVIC_EnableIRQ(rx_irqn);
+	else
+		HAL_NVIC_EnableIRQ(tx_irqn);
 
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
