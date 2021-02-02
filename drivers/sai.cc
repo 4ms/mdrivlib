@@ -14,10 +14,10 @@ DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() {
 SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
-	System::SAI::enable(saidef_.sai);
+	Clocks::SAI::enable(saidef_.sai);
 
-	System::DMA::enable(saidef_.dma_init_rx.DMAx);
-	System::DMA::enable(saidef_.dma_init_tx.DMAx);
+	Clocks::DMA::enable(saidef_.dma_init_rx.DMAx);
+	Clocks::DMA::enable(saidef_.dma_init_tx.DMAx);
 	{
 		// Todo: swap order: always init slave first
 		_config_tx_sai();
@@ -70,7 +70,7 @@ void SaiPeriph::_config_rx_sai() {
 	}
 	hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
-	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE; // was DIS for TXMaster
+	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;

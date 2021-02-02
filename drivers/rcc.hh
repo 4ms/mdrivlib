@@ -1,12 +1,12 @@
 #pragma once
 #include "register_access.hh"
 #include "stm32xx.h"
+#include <variant>
 
 namespace mdrivlib
 {
 
-#ifdef STM32H7
-namespace stm32h7x5xx
+namespace stm32h7x5
 {
 namespace RCC_Control
 {
@@ -46,12 +46,17 @@ using ADC_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR),
 using ADC_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR), RCC_AHB1ENR_ADC12EN>;
 using ADC_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_ADC3EN>;
 
+using ADC = std::variant<ADC_1, ADC_2, ADC_3>;
+
 using SYSCFG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4ENR), RCC_APB4ENR_SYSCFGEN>;
 
 using SAI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI1EN>;
 using SAI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI2EN>;
 using SAI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI3EN>;
 using SAI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB4ENR_SAI4EN>;
+
+// Todo: this is just here for _attic/templatized_conf_idea.hh
+using SAI_variant = std::variant<SAI_1, SAI_2, SAI_3, SAI_4>;
 
 using TIM_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_TIM1EN>;
 using TIM_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_TIM2EN>;
@@ -79,15 +84,24 @@ using I2C_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR)
 using I2C_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C2EN>;
 using I2C_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C3EN>;
 } // namespace RCC_Control
-} // namespace stm32h7x5xx
+} // namespace stm32h7x5
 
-#endif
+namespace stm32f7xx
+{
+namespace RCC_Control
+{
+using RegisterDataT = uint32_t;
+}
+} // namespace stm32f7xx
 
-#ifdef STM32F4
+namespace stm32f4xx
+{
+namespace RCC_Control
+{
 // Todo: Can we just copy F7 values?
-#endif
-
-#ifdef STM32F7
+using RegisterDataT = uint32_t;
+} // namespace RCC_Control
+} // namespace stm32f4xx
 // stm32f746xx.h:
 
 // Todo: convert this to new format:
@@ -154,14 +168,6 @@ using I2C_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR)
 // 		RCC_APB2ENR_TIM17EN,
 // 	};
 // };
-
-#endif
-
-#ifdef STM32MP1
-#ifdef CORE_CM4
-
-#endif
-#endif
 
 } // namespace mdrivlib
 

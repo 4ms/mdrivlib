@@ -14,7 +14,7 @@ Pin::Pin(GPIO port,
 	, pin_(static_cast<uint16_t>(1 << (pin & 0x0F)))
 	, polarity_(polarity) {
 
-	RCC_Control::GPIO::enable(GPIOPort(port_));
+	target::RCC_Control::GPIO::enable(GPIOPort(port_));
 
 	set_mode(mode);
 	set_pull(pull);
@@ -31,7 +31,7 @@ void Pin::init(PinNoInit &other) {
 	port_ = other.gpio;
 	pin_ = other.pin;
 	polarity_ = PinPolarity::Normal;
-	RCC_Control::GPIO::enable(GPIOPort(port_));
+	target::RCC_Control::GPIO::enable(GPIOPort(port_));
 	set_mode(PinMode::Alt);
 	set_pull(PinPull::None);
 	set_speed(PinSpeed::High);

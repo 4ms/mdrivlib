@@ -1,5 +1,5 @@
 // Based on github.com/kensmith/cortex-from-scratch
-// Todo: Seek license/permission
+// Todo: Seek license/permission?
 
 #pragma once
 #include <cstdint>
@@ -8,7 +8,7 @@
 using regsize_t = uint32_t;
 
 // Bits in register specified by mask
-// todo: Requre AccessPolicyT has read() write() set() clear()
+// todo: Require AccessPolicyT has read() write() set() clear()
 template<typename AccessPolicyT, regsize_t address, regsize_t mask>
 struct RegisterBits {
 	static const regsize_t BusEnableBaseAddress = address;
@@ -58,7 +58,7 @@ template<regsize_t offset, regsize_t width>
 constexpr regsize_t mask_v = generate_mask_t<offset, width>::value;
 
 template<typename AccessPolicyT, regsize_t address, regsize_t offset, regsize_t width>
-struct RegisterOffset {
+struct RegisterSection {
 	static_assert(width > 0, "Register must be at least 1 bit wide");
 	static_assert(width + offset <= std::numeric_limits<regsize_t>::digits,
 				  "Register bits specified by width+offset exceeds size of register");
