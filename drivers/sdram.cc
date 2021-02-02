@@ -1,6 +1,8 @@
 #include "sdram.hh"
+#include "arch.hh"
 #include "interrupt.hh"
 #include "pin.hh"
+#include "rcc.hh"
 #include "stm32xx.h"
 
 #define SDRAM_DO_TEST
@@ -18,7 +20,7 @@ SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
 		// vs SRAM1/2: 128ms
 		// vs DTCM: 111ms
 		uint32_t start = HAL_GetTick();
-		uint32_t sdram_fails = SDRAMPeriph::test(0xD0000000, 0x00800000);
+		uint32_t sdram_fails = SDRAMPeriph::test(0xC0000000, 0x00800000);
 		volatile uint32_t elapsed = HAL_GetTick() - start;
 		if (elapsed > 540) {
 			while (1)
@@ -40,9 +42,8 @@ uint32_t SDRAMPeriph::init() {
 
 void SDRAMPeriph::config_timing() {
 
-	// Todo: pass the FMC clock in the conf. But... actual freq measured is 2x what CubeMX says divided by the clock
-	// divider
-	sdram_clock_ = 150000000; // / SDRAMPeriphMath::freq_to_clockdiv(SystemCoreClock, defs.timing.max_freq_MHz);
+	// Todo: pass the FMC clock in the conf.
+	sdram_clock_ = 150000000UL / SDRAMPeriphMath::freq_to_clockdiv(15000000UL, defs.timing.max_freq_MHz);
 
 	FMC_SDRAM_TimingTypeDef SdramTiming = {
 		.LoadToActiveDelay = SDRAMPeriphMath::ns_to_hclks(sdram_clock_, defs.timing.tMRD_ns),
@@ -75,8 +76,9 @@ void SDRAMPeriph::config_timing() {
 
 	FMC_SDRAM_Init(FMC_SDRAM_DEVICE, &init);
 	FMC_SDRAM_Timing_Init(FMC_SDRAM_DEVICE, &SdramTiming, init.SDBank);
-	// InterruptManager::registerISR(FMC_IRQn, []() { __BKPT(); });
-	// FMC_SDRAM_DEVICE->SDRTR |= FMC_SDRTR_REIE;
+
+	InterruptManager::registerISR(FMC_IRQn, []() { __BKPT(); });
+	FMC_SDRAM_DEVICE->SDRTR |= FMC_SDRTR_REIE;
 }
 
 void SDRAMPeriph::start_refresh() {
@@ -138,9 +140,8 @@ void SDRAMPeriph::start_refresh() {
 
 void SDRAMPeriph::init_gpio() {
 	// Hack for H7x5: pins PC_2C and PC_3C must be configured. See RM0399 Rev 3, page 588
-	uint32_t tmp = SYSCFG->PMCR;
-	tmp &= ~(SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk);
-	SYSCFG->PMCR = tmp;
+	RCC_Control::SYSCFG_::set();
+	SYSCFG->PMCR = SYSCFG->PMCR & ~(SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk);
 
 	for (auto &pind : defs.pin_list.pin_array) {
 		Pin{pind.gpio, pind.pin, PinMode::Alt, pind.af, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
