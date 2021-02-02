@@ -46,7 +46,7 @@ LEDDriverError PCA9685DmaDriver::DMADriver::start_dma() {
 }
 
 LEDDriverError PCA9685DmaDriver::DMADriver::init_dma() {
-	System::DMA::enable(dma_defs_.DMAx);
+	Clocks::DMA::enable(dma_defs_.DMAx);
 	hal_dma_h_.Instance = dma_defs_.stream;
 
 	// Todo: get DMA working on H7x5 chips

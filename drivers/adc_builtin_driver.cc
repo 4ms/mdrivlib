@@ -76,7 +76,7 @@ AdcPeriph<p> &AdcPeriph<p>::AdcInstance() {
 
 template<AdcPeriphNum p>
 AdcPeriph<p>::AdcPeriph() {
-	System::ADC::enable(get_ADC_base(p));
+	Clocks::ADC::enable(get_ADC_base(p));
 
 	dma_buffer_ = default_dma_buffer_;
 
@@ -155,7 +155,7 @@ void AdcPeriph<p>::init_dma(const DMA_LL_Config &dma_defs, uint16_t *dma_buffer)
 	if (!num_channels_)
 		return;
 
-	System::DMA::enable(dma_defs.DMAx);
+	Clocks::DMA::enable(dma_defs.DMAx);
 
 #if defined(STM32F7)
 	LL_DMA_SetChannelSelection(dma_defs.DMAx, dma_defs.stream, dma_defs.channel);

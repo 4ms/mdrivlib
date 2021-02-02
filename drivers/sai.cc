@@ -14,10 +14,10 @@ DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() {
 SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
-	System::SAI::enable(saidef_.sai);
+	Clocks::SAI::enable(saidef_.sai);
 
-	System::DMA::enable(saidef_.dma_init_rx.DMAx);
-	System::DMA::enable(saidef_.dma_init_tx.DMAx);
+	Clocks::DMA::enable(saidef_.dma_init_rx.DMAx);
+	Clocks::DMA::enable(saidef_.dma_init_tx.DMAx);
 	{
 		// Todo: swap order: always init slave first
 		_config_tx_sai();

@@ -6,7 +6,7 @@ namespace mdrivlib
 {
 
 #ifdef STM32H7
-namespace stm32h7x5xx
+namespace stm32h7x5
 {
 namespace RCC_Control
 {
@@ -79,7 +79,7 @@ using I2C_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR)
 using I2C_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C2EN>;
 using I2C_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C3EN>;
 } // namespace RCC_Control
-} // namespace stm32h7x5xx
+} // namespace stm32h7x5
 
 #endif
 

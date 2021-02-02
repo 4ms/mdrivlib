@@ -4,7 +4,7 @@
 
 namespace mdrivlib
 {
-namespace stm32h7x5xx
+namespace stm32h7x5
 {
 namespace peripherals
 {
@@ -120,7 +120,7 @@ struct TIM {
 	}
 };
 } // namespace peripherals
-} // namespace stm32h7x5xx
+} // namespace stm32h7x5
 
 namespace stm32f7xx
 {

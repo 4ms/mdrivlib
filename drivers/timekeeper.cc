@@ -11,17 +11,17 @@ void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> 
 	set_periph(config.TIMx);
 	task_func = func;
 	register_task(func);
-	System::TIM::enable(timx);
+	Clocks::TIM::enable(timx);
 	set_timing(config.period_ns, config.priority1, config.priority2);
 }
 
 Timekeeper::Timekeeper(const TimekeeperConfig &config, std::function<void(void)> func)
 	: timx(config.TIMx)
-	, irqn(peripherals::TIM::IRQn(timx))
+	, irqn(target::peripherals::TIM::IRQn(timx))
 	, task_func(func)
 	, is_running(false) {
 	register_task(func);
-	System::TIM::enable(timx);
+	Clocks::TIM::enable(timx);
 	set_timing(config.period_ns, config.priority1, config.priority2);
 }
 
@@ -35,12 +35,12 @@ void Timekeeper::stop() {
 
 void Timekeeper::set_periph(TIM_TypeDef *TIMx) {
 	timx = TIMx;
-	irqn = peripherals::TIM::IRQn(timx);
+	irqn = target::peripherals::TIM::IRQn(timx);
 }
 
 // Todo: Support 32-bit timers. Right now it runs 32-bit timers in 16-bit mode
 void Timekeeper::set_timing(uint32_t period_ns, uint32_t priority1, uint32_t priority2) {
-	uint32_t sysfreq_Hz = peripherals::TIM::max_freq(timx);
+	uint32_t sysfreq_Hz = target::peripherals::TIM::max_freq(timx);
 	float sysfreq_ns = 1000000000.f / sysfreq_Hz;
 	uint32_t period_clocks = period_ns / sysfreq_ns;
 

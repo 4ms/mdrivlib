@@ -1,3 +1,5 @@
+// Todo: include the specific CMSIS file, e.g. stm32h745xx.h. This avoids needing to include stm32xx_hal.h (and
+// hal_conf.h, which includes all _hal.h and _ll.h). If a file needs to include hal, it can do so specificly
 #pragma once
 #ifdef STM32F7
 #include "stm32f7xx.h"
@@ -15,11 +17,14 @@
 #error "STM32MP1 is defined, but not CORE_CM4. This library does not support Cortex-A cores"
 #endif
 #else
-#error "Please #define STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile"
+#error                                                                                                                 \
+	"Please #define STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile. Other targets are not yet supported."
 #endif
 #endif
 #endif
 #endif
+
+// Peripheral names not defined in CMSIS header will be set to nullptr
 
 #ifndef ADC1
 #define ADC1 nullptr
@@ -132,12 +137,3 @@
 #define SPI6 nullptr
 #endif
 
-#ifndef SYSCFG_PMCR_I2C1_FMP
-#define SYSCFG_PMCR_I2C1_FMP -1
-#endif
-#ifndef SYSCFG_PMCR_I2C2_FMP
-#define SYSCFG_PMCR_I2C2_FMP -1
-#endif
-#ifndef SYSCFG_PMCR_I2C3_FMP
-#define SYSCFG_PMCR_I2C3_FMP -1
-#endif

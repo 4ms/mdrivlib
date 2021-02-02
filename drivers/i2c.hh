@@ -11,15 +11,16 @@ public:
 	I2CPeriph() = default;
 	~I2CPeriph() = default;
 
+	I2CPeriph(const I2CConfig &defs) {
+		init(defs);
+	}
 	I2CPeriph(I2C_TypeDef *periph) {
 		init(periph);
 	}
-	I2CPeriph(I2C_TypeDef *periph, const I2CTimingConfig &timing) {
-		init(periph, timing);
-	}
+	Error init(const I2CConfig &defs);
 	Error init(I2C_TypeDef *periph);
 	Error init(I2C_TypeDef *periph, const I2CTimingConfig &timing);
-	void deinit(I2C_TypeDef *periph);
+	void deinit();
 
 	bool is_ready();
 

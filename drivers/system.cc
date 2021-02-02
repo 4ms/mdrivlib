@@ -3,6 +3,44 @@
 #include "periph.hh"
 #include "rcc.hh"
 
+// Todo: how to handle vastly different startup sequences for F7/H7-dualcore/MP1
+//-replace HAL macros with register access, and use namespaced functions. some RCC functions are huge!
+// Or:
+//-header-only class and #include the correct one based on a bunch of #defines (same as in stm32xx.h). Messy
+// Or:
+//-just use namespaced functions, passing structs as needed (e.g HAL_RCC_OscConfig(&osc_def_)) Replace simple macros
+//with register access.
+
+namespace mdrivlib
+{
+namespace stm32h7x5
+{
+struct Init {
+	static void poweron() {
+		// Replace with register access:
+		HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+		while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
+		}
+		__HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
+	}
+};
+} // namespace stm32h7x5
+
+namespace stm32f7xx
+{
+struct Init {
+	static void poweron() {
+#if defined(STM32F7) || defined(STM32F4)
+		__HAL_RCC_PWR_CLK_ENABLE();
+		__HAL_RCC_SYSCFG_CLK_ENABLE();
+		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+#endif
+	}
+};
+} // namespace stm32f7xx
+} // namespace mdrivlib
+
 void System::SetVectorTable(uint32_t reset_address) {
 	SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80;
 }
@@ -11,21 +49,9 @@ void System::init_clocks(const RCC_OscInitTypeDef &osc_def,
 						 const RCC_ClkInitTypeDef &clk_def,
 						 const RCC_PeriphCLKInitTypeDef &pclk_def,
 						 const uint32_t systick_freq_hz) {
-#if defined(STM32H745xx) || defined(STM32H755xx)
-	HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
-	while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
-	}
-	__HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
-#endif
 
-#if defined(STM32F7) || defined(STM32F4)
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_RCC_SYSCFG_CLK_ENABLE();
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-#endif
+	target::Init::poweron();
 
-#ifndef STM32MP1
 	// Todo: const_cast or fix HAL_RCC_ functions to take a const struct
 	RCC_OscInitTypeDef osc_def_ = osc_def;
 	HAL_RCC_OscConfig(&osc_def_);
@@ -44,7 +70,6 @@ void System::init_clocks(const RCC_OscInitTypeDef &osc_def,
 
 	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / systick_freq_hz);
 	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-#endif
 }
 
 uint32_t System::encode_nvic_priority(uint32_t pri1, uint32_t pri2) {
