@@ -23,7 +23,7 @@ struct System {
 
 struct Clocks {
 	struct ADC {
-		static void enable(unsigned periph_num) {
+		static void enable(const unsigned periph_num) {
 			if (periph_num == 1)
 				target::RCC_Control::ADC_1::set();
 			else if (periph_num == 2)
@@ -34,7 +34,7 @@ struct Clocks {
 		static void enable(ADC_TypeDef *ADCx) {
 			enable(target::peripherals::ADC::to_num(ADCx));
 		}
-		static void disable(unsigned periph_num) {
+		static void disable(const unsigned periph_num) {
 			if (periph_num == 1)
 				target::RCC_Control::ADC_1::clear();
 			else if (periph_num == 2)

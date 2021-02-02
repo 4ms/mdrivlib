@@ -70,7 +70,7 @@ void SaiPeriph::_config_rx_sai() {
 	}
 	hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
-	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE; // was DIS for TXMaster
+	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
