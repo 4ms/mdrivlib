@@ -14,12 +14,7 @@ public:
 	I2CPeriph(const I2CConfig &defs) {
 		init(defs);
 	}
-	I2CPeriph(I2C_TypeDef *periph) {
-		init(periph);
-	}
 	Error init(const I2CConfig &defs);
-	Error init(I2C_TypeDef *periph);
-	Error init(I2C_TypeDef *periph, const I2CTimingConfig &timing);
 	void deinit();
 
 	bool is_ready();
@@ -46,4 +41,9 @@ private:
 	Interrupt error_isr;
 	void i2c_error_handler();
 	void i2c_event_handler();
+
+	Error _init_periph(I2C_TypeDef *periph, const I2CTimingConfig &timing);
+	Error _init_periph(I2C_TypeDef *periph) {
+		return _init_periph(periph, I2CTimingConfig{.PRESC = 0x50, .SCLDEL_SDADEL = 0x70, .SCLH = 0x75, .SCLL = 0xB1});
+	}
 };

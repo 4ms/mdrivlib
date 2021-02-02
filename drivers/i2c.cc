@@ -138,14 +138,10 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 			PinOType::OpenDrain};
 
 	target::I2C::init(defs);
-	return init(defs.I2Cx, defs.timing);
+	return _init_periph(defs.I2Cx, defs.timing);
 }
 
-I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph) {
-	return init(periph, I2CTimingConfig{.PRESC = 0x50, .SCLDEL_SDADEL = 0x70, .SCLH = 0x75, .SCLL = 0xB1});
-}
-
-I2CPeriph::Error I2CPeriph::init(I2C_TypeDef *periph, const I2CTimingConfig &timing) {
+I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingConfig &timing) {
 	if (already_init)
 		return I2C_ALREADY_INIT;
 
