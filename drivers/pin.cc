@@ -26,18 +26,22 @@ Pin::Pin(GPIO port,
 	if (mode == PinMode::Alt)
 		set_alt(af);
 }
+// Pin::Pin(const PinNoInit &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype) {
+// 	init(other, mode, pull, polarity, speed, otype);
+// }
 
-void Pin::init(PinNoInit &other) {
-	port_ = other.gpio;
-	pin_ = other.pin;
-	polarity_ = PinPolarity::Normal;
-	target::RCC_Control::GPIO::enable(GPIOPort(port_));
-	set_mode(PinMode::Alt);
-	set_pull(PinPull::None);
-	set_speed(PinSpeed::High);
-	set_otype(PinOType::PushPull);
-	set_alt(other.af);
-}
+// void Pin::init(
+// 	const PinNoInit &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype) {
+// 	target::RCC_Control::GPIO::enable(GPIOPort(port_));
+// 	port_ = other.gpio;
+// 	pin_ = static_cast<uint16_t>(1 << (other.pin & 0x0F));
+// 	polarity_ = polarity;
+// 	set_alt(other.af);
+// 	set_mode(mode);
+// 	set_pull(pull);
+// 	set_speed(speed);
+// 	set_otype(otype);
+// }
 
 void Pin::high() const {
 	LL_GPIO_SetOutputPin(GPIOPort(port_), pin_);

@@ -95,7 +95,19 @@ public:
 		PinSpeed speed = PinSpeed::High,
 		PinOType otype = PinOType::PushPull);
 
-	void init(PinNoInit &other);
+	// Pin(const PinNoInit &other,
+	// 	PinMode mode = PinMode::Alt,
+	// 	PinPull pull = PinPull::None,
+	// 	PinPolarity polarity = PinPolarity::Normal,
+	// 	PinSpeed speed = PinSpeed::High,
+	// 	PinOType otype = PinOType::PushPull);
+
+	// void init(const PinNoInit &other,
+	// 		  PinMode mode = PinMode::Alt,
+	// 		  PinPull pull = PinPull::None,
+	// 		  PinPolarity polarity = PinPolarity::Normal,
+	// 		  PinSpeed speed = PinSpeed::High,
+	// 		  PinOType otype = PinOType::PushPull);
 	void high() const;
 	void low() const;
 	void on() const;

@@ -58,6 +58,15 @@ I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t s
 	return err == HAL_OK ? I2C_NO_ERR : I2C_XMIT_ERR;
 }
 
+I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	HAL_StatusTypeDef err;
+	while ((err = HAL_I2C_Master_Receive_IT(&hal_i2c_, dev_address, data, size)) != HAL_OK) {
+		if (HAL_I2C_GetError(&hal_i2c_) != HAL_I2C_ERROR_AF)
+			return I2C_XMIT_ERR;
+	}
+	return err == HAL_OK ? I2C_NO_ERR : I2C_XMIT_ERR;
+}
+
 I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
 	HAL_StatusTypeDef err;
 	while ((err = HAL_I2C_Master_Transmit(&hal_i2c_, dev_address, data, size, _I2C_VLONG_TIMEOUT)) != HAL_OK) {

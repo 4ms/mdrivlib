@@ -36,7 +36,7 @@ private:
 
 	LEDDriverError write_register(uint8_t driverAddr, uint8_t registerAddr, uint8_t registerValue);
 	LEDDriverError reset_chip(uint8_t driverAddr);
-	LEDDriverError write_once();
+	LEDDriverError write_once(uint16_t chip_num);
 
 	// Todo: pull this out of PCA driver, it should be a template class so we can use other LedDmaDrivers
 	class DMADriver {

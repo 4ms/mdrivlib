@@ -38,19 +38,14 @@ LEDDriverError PCA9685DmaDriver::start_dma_mode() {
 	return dma_.start_dma();
 }
 
-LEDDriverError PCA9685DmaDriver::write_once() {
+LEDDriverError PCA9685DmaDriver::write_once(uint16_t chip_num) {
 
-	for (uint16_t chip_i = 0; chip_i < num_chips_; chip_i++) {
-		uint16_t driverAddr = I2C_BASE_ADDRESS | (chip_i << 1);
+	uint16_t driverAddr = I2C_BASE_ADDRESS | (chip_num << 1);
 
-		auto err = i2c_periph_.mem_write_IT(driverAddr,
-											REG_LED0,
-											REGISTER_ADDR_SIZE,
-											reinterpret_cast<uint8_t *>(dma_.frame_buffer),
-											kNumLedsPerChip * 4);
-		if (err != I2CPeriph::I2C_NO_ERR)
-			return LEDDriverError::I2C_XMIT_TIMEOUT;
-	}
+	auto err = i2c_periph_.mem_write_IT(
+		driverAddr, REG_LED0, REGISTER_ADDR_SIZE, reinterpret_cast<uint8_t *>(dma_.frame_buffer), kNumLedsPerChip * 4);
+	if (err != I2CPeriph::I2C_NO_ERR)
+		return LEDDriverError::I2C_XMIT_TIMEOUT;
 
 	return LEDDriverError::None;
 }
