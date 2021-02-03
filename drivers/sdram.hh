@@ -11,7 +11,8 @@ static uint32_t freq_to_clockdiv(uint32_t FMC_clock, uint32_t freq) {
 	return ((freq * 2 * 1000000) >= FMC_clock) ? 2 : 3;
 };
 
-static uint32_t ns_to_hclks(uint32_t sdram_clock, uint32_t ns) {
+static constexpr uint32_t ns_to_hclks(const uint32_t sdram_clock, const uint32_t ns) {
+	// return 16;
 	uint32_t sdram_mhz = sdram_clock / 1000000U;
 	uint32_t clks_x1000 = ns * sdram_mhz;
 	uint32_t clks_x10 = clks_x1000 / 100;
@@ -19,7 +20,6 @@ static uint32_t ns_to_hclks(uint32_t sdram_clock, uint32_t ns) {
 	return round_up_clks_x10 / 10;
 };
 
-// static uint32_t ns_to_hclks(uint32_t sdram_clock, uint32_t ns) { return 1 + ((ns * 10000000U) / sdram_clock); };
 } // namespace SDRAMPeriphMath
 
 class SDRAMPeriph {
@@ -33,9 +33,9 @@ public:
 
 private:
 	const SDRAMConfig &defs;
-	uint32_t init();
 	void config_timing();
 	void start_refresh();
+	void do_test();
 	void init_gpio();
 	static uint32_t do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_t ram_start, const uint32_t ram_size);
 

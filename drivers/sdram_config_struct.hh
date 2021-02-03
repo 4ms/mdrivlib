@@ -78,5 +78,6 @@ struct SDRAMConfig {
 	SDRAMTimingConfig timing;
 	SDRAMArchConfig arch;
 	uint8_t connected_bank;
+	uint32_t fmc_kernel_clock_MHz;
 };
 

@@ -2,7 +2,8 @@
 #include "drivers/sdram.hh"
 
 SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &defs) noexcept
-	: defs{defs} {}
+	: defs{defs} {
+}
 
 TEST_CASE("SDRAM math tests") {
 

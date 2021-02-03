@@ -120,6 +120,8 @@ private:
 		return static_cast<uint32_t>(x);
 	}
 
-	auto GPIOPort(GPIO port_) const { return reinterpret_cast<GPIO_TypeDef *>(port_); }
+	auto GPIOPort(GPIO port_) const {
+		return reinterpret_cast<GPIO_TypeDef *>(port_);
+	}
 };
 
