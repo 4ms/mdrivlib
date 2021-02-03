@@ -10,9 +10,9 @@
 
 // To enter HS mode (>400kHz), master must send 0000 1XXX  on bus to all devices
 
-class ADC_Max11645 {
+class ADC_I2C_MAX11645 {
 public:
-	ADC_Max11645(I2CPeriph &i2c, const ADC_I2C_Config &conf)
+	ADC_I2C_MAX11645(I2CPeriph &i2c, const ADC_I2C_Config &conf)
 		: _conf(conf) {
 		//
 	}
