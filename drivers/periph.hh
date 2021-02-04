@@ -106,17 +106,18 @@ struct TIM {
 			return (IRQn_Type)(0);
 	}
 	static uint32_t max_freq(TIM_TypeDef *TIM) {
-		// Todo: get this to work on all arch
-		// APB2 --> divider = 1;
-		// APB1 --> divider = 2;
-		uint32_t divider;
+		uint32_t D2PPREx;
 		auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
 
-		// Todo: determine bus of this TIM (PB1, HB4, etc.)
-		// Then determine divider of that bus, based on RCC settings
+		// Todo: read D2PPREx from Clocks:: (D2PPRE1 or D2PPRE2)
+		if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
+			D2PPREx = 2;
+		else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
+			D2PPREx = 2; // (1 / D2PPRE2) * 2, where D2PPRE2 = 2 by default
+		else
+			D2PPREx = 2; // unknown, error?
 
-		divider = 2;
-		return HAL_RCC_GetHCLKFreq() / divider;
+		return (HAL_RCC_GetHCLKFreq() / D2PPREx) * 2; // The x2 is from CubeMX Clock Configuration graphical tab
 	}
 };
 } // namespace peripherals
