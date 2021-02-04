@@ -26,6 +26,7 @@ public:
 	Error read(uint16_t dev_address, uint8_t *data, uint16_t size);
 	Error read_IT(uint16_t dev_address, uint8_t *data, uint16_t size);
 	Error write(uint16_t address, uint8_t *data, uint16_t size);
+	Error write_IT(uint16_t address, uint8_t *data, uint16_t size);
 	void enable_IT(uint8_t pri1 = 2, uint8_t pri2 = 2);
 	void disable_IT();
 	void link_DMA_TX(DMA_HandleTypeDef *dmatx);

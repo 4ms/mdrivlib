@@ -9,9 +9,8 @@ struct I2CTimingConfig {
 						   // falling edge and SDA edge
 	uint8_t SCLH;		   // SCL high period = (SCLH+1) * tPRESC
 	uint8_t SCLL;		   // SCL low period = (SCLL+1) * tPRESC
-	constexpr uint32_t calc() const
-	{
-		return ((PRESC) << 24) | ((SCLDEL_SDADEL) << 16) | ((SCLH) << 8) | ((SCLL) << 0);
+	constexpr uint32_t calc() const {
+		return ((PRESC & 0xF0) << 24) | ((SCLDEL_SDADEL) << 16) | ((SCLH) << 8) | ((SCLL) << 0);
 	}
 };
 
