@@ -5,7 +5,7 @@
 // MixedRgbLed: each color element can have a different
 // LED driver (e.g. PWM, DAC, external chip)
 // Todo: use concepts to ensure LedT all have .set();
-template<typename RLedT, typename GLedT, typename BLedT>
+template<typename RLedT, typename GLedT, typename BLedT, unsigned UpdateRateHz = 1000>
 struct MixedRgbLed {
 
 	MixedRgbLed(RLedT r_LED, GLedT g_LED, BLedT b_LED)
@@ -25,14 +25,14 @@ struct MixedRgbLed {
 	}
 	// void set_solid(Color const &col) { solid_color_ = col; }
 
-	// freq is given in: secs * update_rate_Hz
-	void flash(Color const &c, uint32_t const flash_freq = 100) {
+	// actual frequency in secs: freq / update_rate_Hz
+	void flash_once(Color const &c, uint32_t const flash_freq = 100) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
 		flash_freq_ = flash_freq;
 	}
 
-	// freq is given in: secs * update_rate_Hz
+	// actual frequency in secs: freq / update_rate_Hz
 	void breathe(Color const &c, uint32_t const freq = 0x00FFFFFF) {
 		breathe_color_ = c;
 		fader_.set_frequency(freq);
@@ -77,7 +77,7 @@ private:
 	const RLedT r_;
 	const GLedT g_;
 	const BLedT b_;
-	TriangleOscillator<89478> fader_;
+	TriangleOscillator<UpdateRateHz> fader_;
 	Color background_color_ = Colors::off;
 	Color solid_color_ = Colors::off;
 	Color flash_color_ = Colors::white;
@@ -88,6 +88,6 @@ private:
 };
 
 //"Normal" RGB LED where each element has the same type of LED driver
-template<typename LedType>
-using RgbLed = MixedRgbLed<LedType, LedType, LedType>;
+template<typename LedType, unsigned UpdateRateHz = 1000>
+using RgbLed = MixedRgbLed<LedType, LedType, LedType, UpdateRateHz>;
 
