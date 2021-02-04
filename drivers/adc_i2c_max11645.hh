@@ -28,12 +28,9 @@ public:
 	};
 
 	auto send_config() {
-		// Todo: use another bitfield implementation, this one isn't type safe. ETL?
-		BitFieldBase<uint8_t> setup;
-		BitFieldBase<uint8_t> config;
 		// Todo: put these config/setup values in ADC_I2C_Config
-		_data[0] = setup.bitfield(Setup::SETUP, Setup::REF_USE_EXT, Setup::INT_CLK);
-		_data[1] = config.bitfield(Config::CONFIG, Config::SINGLE_ENDED, Config::SCAN_SEL_CHAN_ONCE);
+		_data[0] = Setup::SETUP | Setup::REF_USE_EXT | Setup::INT_CLK;
+		_data[1] = Config::CONFIG | Config::SINGLE_ENDED | Config::SCAN_SEL_CHAN_ONCE;
 		auto err = _i2c.write(DEVICE_ADDRESS, _data, 2);
 
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::WriteConfigFailed;
@@ -46,11 +43,8 @@ public:
 		if (chan != _cur_chan) {
 			_cur_chan = chan;
 
-			BitFieldBase<uint8_t> config;
-			_data[0] = config.bitfield(_cur_chan ? Config::SEL_CHAN_1 : Config::SEL_CHAN_0,
-									   Config::CONFIG,
-									   Config::SINGLE_ENDED,
-									   Config::SCAN_SEL_CHAN_ONCE);
+			_data[0] = (_cur_chan ? Config::SEL_CHAN_1 : Config::SEL_CHAN_0) | Config::CONFIG | Config::SINGLE_ENDED |
+					   Config::SCAN_SEL_CHAN_ONCE;
 			auto err = _i2c.write_IT(DEVICE_ADDRESS, _data, 1);
 			if (err != I2CPeriph::I2C_NO_ERR)
 				return Error::ReadChannelFailed;
@@ -60,16 +54,20 @@ public:
 
 	auto read_blocking() {
 		auto err = _i2c.read(DEVICE_ADDRESS, _data, 2);
-		last_reading[_cur_chan] = ((_data[0] & 0x0F) << 8) | _data[1];
-
+		collect_last_reading();
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadChannelFailed;
 	}
 
 	auto read() {
 		auto err = _i2c.read_IT(DEVICE_ADDRESS, _data, 2);
-		// Todo: read_IT_with_cb(ADDR, _data, 2, [=](){ last_reading[chan] = ((_data[0] & 0x0F) << 8) | _data[1]; });
+		// Idea: could be useful to do: read_IT_with_cb(ADDR, _data, 2, [=](){ collect_last_reading(); });
 
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadChannelFailed;
+	}
+
+	uint32_t collect_last_reading() {
+		last_reading[_cur_chan] = ((_data[0] & 0x0F) << 8) | _data[1];
+		return last_reading[_cur_chan];
 	}
 
 	uint32_t get_last_val() {
@@ -92,7 +90,7 @@ private:
 	static constexpr uint8_t DEVICE_ADDRESS_RAW = 0b0110110;
 	static constexpr uint8_t DEVICE_ADDRESS = DEVICE_ADDRESS_RAW << 1;
 	static constexpr uint8_t HS_MASTER_CODE = 0b00001111;
-	enum class Setup : uint8_t {
+	enum Setup : uint8_t {
 		SETUP = (1 << 7),
 		REF_USE_VDD = (0b00 << 5),
 		REF_USE_EXT = (0b01 << 5),
@@ -107,7 +105,7 @@ private:
 		RESET_CONFIG = (1 << 1),
 		_dont_care = (1 << 0),
 	};
-	enum class Config : uint8_t {
+	enum Config : uint8_t {
 		CONFIG = (0 << 7),
 		SCAN_UP_TO_SEL_CHAN = (0b00 << 5),
 		SCAN_SEL_CHAN_8_TIMES = (0b01 << 5),
