@@ -12,8 +12,8 @@ struct TimekeeperConfig {
 class Timekeeper {
 public:
 	Timekeeper();
-	Timekeeper(const TimekeeperConfig &config, std::function<void(void)> func);
-	void init(const TimekeeperConfig &config, std::function<void(void)> func);
+	Timekeeper(const TimekeeperConfig &config, std::function<void(void)> &&func);
+	void init(const TimekeeperConfig &config, std::function<void(void)> &&func);
 
 	void start();
 	void stop();
@@ -24,9 +24,10 @@ private:
 	bool is_running;
 	std::function<void(void)> task_func;
 
-	void set_periph(TIM_TypeDef *timx);
-	void set_timing(uint32_t period_ns, uint32_t priority1 = 3, uint32_t priority2 = 3);
-	void register_task();
+	void _set_periph(TIM_TypeDef *timx);
+	void _set_timing(uint32_t period_ns, uint32_t priority1 = 3, uint32_t priority2 = 3);
+	void _register_task();
+	void _init(const TimekeeperConfig &config);
 
 	bool tim_update_IT_is_set() const;
 	bool tim_update_IT_is_source() const;
