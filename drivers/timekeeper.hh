@@ -26,7 +26,7 @@ private:
 
 	void set_periph(TIM_TypeDef *timx);
 	void set_timing(uint32_t period_ns, uint32_t priority1 = 3, uint32_t priority2 = 3);
-	void register_task(std::function<void(void)> func);
+	void register_task();
 
 	bool tim_update_IT_is_set() const;
 	bool tim_update_IT_is_source() const;

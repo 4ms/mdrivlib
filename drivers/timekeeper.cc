@@ -9,8 +9,9 @@ Timekeeper::Timekeeper()
 
 void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> func) {
 	set_periph(config.TIMx);
+	// Todo: try std::move(func) and use &&func in parameters
 	task_func = func;
-	register_task(func);
+	register_task();
 	Clocks::TIM::enable(timx);
 	set_timing(config.period_ns, config.priority1, config.priority2);
 }
@@ -18,9 +19,10 @@ void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> 
 Timekeeper::Timekeeper(const TimekeeperConfig &config, std::function<void(void)> func)
 	: timx(config.TIMx)
 	, irqn(target::peripherals::TIM::IRQn(timx))
+	// Todo: try std::move(func) and use &&func in parameters
 	, task_func(func)
 	, is_running(false) {
-	register_task(func);
+	register_task();
 	Clocks::TIM::enable(timx);
 	set_timing(config.period_ns, config.priority1, config.priority2);
 }
@@ -72,8 +74,7 @@ void Timekeeper::set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pri
 	LL_TIM_EnableCounter(timx);
 }
 
-void Timekeeper::register_task(std::function<void(void)> func) {
-	task_func = func;
+void Timekeeper::register_task() {
 	InterruptManager::registerISR(irqn, [this]() {
 		if (tim_update_IT_is_set()) {
 			if (tim_update_IT_is_source()) {
