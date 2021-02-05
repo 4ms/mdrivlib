@@ -11,7 +11,7 @@ using regsize_t = uint32_t;
 // todo: Require AccessPolicyT has read() write() set() clear()
 template<typename AccessPolicyT, regsize_t address, regsize_t mask>
 struct RegisterBits {
-	static const regsize_t BusEnableBaseAddress = address;
+	// static const regsize_t BusEnableBaseAddress = address;
 	static regsize_t read() {
 		return AccessPolicyT::read(reinterpret_cast<volatile regsize_t *>(address), mask);
 	}

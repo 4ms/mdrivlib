@@ -95,19 +95,20 @@ public:
 		PinSpeed speed = PinSpeed::High,
 		PinOType otype = PinOType::PushPull);
 
-	// Pin(const PinNoInit &other,
-	// 	PinMode mode = PinMode::Alt,
-	// 	PinPull pull = PinPull::None,
-	// 	PinPolarity polarity = PinPolarity::Normal,
-	// 	PinSpeed speed = PinSpeed::High,
-	// 	PinOType otype = PinOType::PushPull);
+	Pin(const PinNoInit &other,
+		PinMode mode,
+		PinPull pull = PinPull::None,
+		PinPolarity polarity = PinPolarity::Normal,
+		PinSpeed speed = PinSpeed::High,
+		PinOType otype = PinOType::PushPull);
 
-	// void init(const PinNoInit &other,
-	// 		  PinMode mode = PinMode::Alt,
-	// 		  PinPull pull = PinPull::None,
-	// 		  PinPolarity polarity = PinPolarity::Normal,
-	// 		  PinSpeed speed = PinSpeed::High,
-	// 		  PinOType otype = PinOType::PushPull);
+	void init(const PinNoInit &other,
+			  PinMode mode,
+			  PinPull pull = PinPull::None,
+			  PinPolarity polarity = PinPolarity::Normal,
+			  PinSpeed speed = PinSpeed::High,
+			  PinOType otype = PinOType::PushPull);
+
 	void high() const;
 	void low() const;
 	void on() const;
@@ -135,5 +136,6 @@ private:
 	auto GPIOPort(GPIO port_) const {
 		return reinterpret_cast<GPIO_TypeDef *>(port_);
 	}
+	void _init(PinMode mode, uint8_t af, PinPull pull, PinSpeed speed, PinOType otype);
 };
 

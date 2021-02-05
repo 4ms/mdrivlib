@@ -83,6 +83,43 @@ using BDMA_P = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR)
 using I2C_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C1EN>;
 using I2C_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C2EN>;
 using I2C_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C3EN>;
+
+using SPI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI1EN>;
+using SPI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_SPI2EN>;
+using SPI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_SPI3EN>;
+using SPI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI4EN>;
+using SPI_5 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI5EN>;
+using SPI_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4ENR), RCC_APB4ENR_SPI6EN>;
+
+template<unsigned N>
+struct SPI {
+	using Reg = void;
+};
+template<>
+struct SPI<1> {
+	using Reg = SPI_1;
+};
+template<>
+struct SPI<2> {
+	using Reg = SPI_2;
+};
+template<>
+struct SPI<3> {
+	using Reg = SPI_3;
+};
+template<>
+struct SPI<4> {
+	using Reg = SPI_4;
+};
+template<>
+struct SPI<5> {
+	using Reg = SPI_5;
+};
+template<>
+struct SPI<6> {
+	using Reg = SPI_6;
+};
+
 } // namespace RCC_Control
 } // namespace stm32h7x5
 
