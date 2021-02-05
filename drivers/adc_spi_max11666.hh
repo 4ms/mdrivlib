@@ -36,13 +36,25 @@ struct SpiConfig {
 template<typename ConfT>
 class SpiPeriph {
 public:
-	static inline const uint32_t N = ConfT::PeriphNum;
+	static inline const unsigned N = ConfT::PeriphNum;
 
 	SpiPeriph(const ConfT &conf)
 		: _conf{conf} {
+		if constexpr (N == 1)
+			_spi = SPI1;
+		if constexpr (N == 2)
+			_spi = SPI2;
+		if constexpr (N == 3)
+			_spi = SPI3;
+		if constexpr (N == 4)
+			_spi = SPI4;
+		if constexpr (N == 5)
+			_spi = SPI5;
+		if constexpr (N == 6)
+			_spi = SPI6;
 	}
 
-	void init() {
+	void configure() {
 		disable();
 
 		Pin sclk{_conf.SCLK, PinMode::Alt};
@@ -57,18 +69,7 @@ public:
 
 		// Init SPI here: HAL_SPI_Init();
 		SPI_HandleTypeDef spih;
-		if constexpr (N == 1)
-			spih.Instance = SPI1;
-		if constexpr (N == 2)
-			spih.Instance = SPI2;
-		if constexpr (N == 3)
-			spih.Instance = SPI3;
-		if constexpr (N == 4)
-			spih.Instance = SPI4;
-		if constexpr (N == 5)
-			spih.Instance = SPI5;
-		if constexpr (N == 6)
-			spih.Instance = SPI6;
+		spih.Instance = _spi;
 		spih.Init.Mode = SPI_MODE_MASTER;
 		spih.Init.Direction = SPI_DIRECTION_2LINES;
 		spih.Init.DataSize = SPI_DATASIZE_16BIT;
@@ -88,7 +89,7 @@ public:
 		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;			   // right?
 		spih.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE; // right?
 		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;		   // what is this?
-		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;			   // what is this?
+		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE; // what is this? Example code says "Recommended"
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
 
 		HAL_SPI_Init(&spih);
@@ -100,48 +101,71 @@ public:
 		// else
 		//    target::SPI<N>::template CFG2<SPI_CFG2_SSOE>::clear();
 	}
+
+	template<unsigned M>
+	using IER = typename target::SPI<N>::template IER<M>;
+	template<unsigned M>
+	using CR1 = typename target::SPI<N>::template CR1<M>;
+	template<unsigned M>
+	using CR2 = typename target::SPI<N>::template CR2<M>;
+	template<unsigned M>
+	using SR = typename target::SPI<N>::template SR<M>;
+
 	void enable_RX_interrupt() {
-		target::SPI<N>::template IER<SPI_IER_RXPIE>::set();
+		IER<SPI_IER_RXPIE>::set();
+		// target::SPI<N>::template IER<SPI_IER_RXPIE>::set();
 	}
 	void disable_RX_interrupt() {
-		target::SPI<N>::template IER<SPI_IER_RXPIE>::clear();
+		IER<SPI_IER_RXPIE>::clear();
+		// target::SPI<N>::template IER<SPI_IER_RXPIE>::clear();
 	}
 	void enable_TX_interrupt() {
-		target::SPI<N>::template IER<SPI_IER_TXPIE>::set();
+		IER<SPI_IER_TXPIE>::set();
 	}
 	void disable_TX_interrupt() {
-		target::SPI<N>::template IER<SPI_IER_TXPIE>::clear();
+		IER<SPI_IER_TXPIE>::clear();
 	}
 	void enable_duplex_interrupt() {
-		target::SPI<N>::template IER<SPI_IER_DXPIE>::set();
+		IER<SPI_IER_DXPIE>::set();
 	}
 	void disable_duplex_interrupt() {
-		target::SPI<N>::template IER<SPI_IER_DXPIE>::clear();
+		IER<SPI_IER_DXPIE>::clear();
 	}
 	void enable() {
-		target::SPI<N>::template CR1<SPI_CR1_SPE>::set();
+		CR1<SPI_CR1_SPE>::set();
 	}
 	void disable() {
-		target::SPI<N>::template CR1<SPI_CR1_SPE>::clear();
+		CR1<SPI_CR1_SPE>::clear();
 	}
 	bool rx_packet_available() {
-		return target::SPI<N>::template SR<SPI_SR_RXP>::read() ? true : false;
+		return SR<SPI_SR_RXP>::read() ? true : false;
 	}
 	bool tx_space_available() {
-		return target::SPI<N>::template SR<SPI_SR_TXP>::read() ? true : false;
+		return SR<SPI_SR_TXP>::read() ? true : false;
 	}
 	bool duplex_space_available() {
-		return target::SPI<N>::template SR<SPI_SR_DXP>::read() ? true : false;
+		return SR<SPI_SR_DXP>::read() ? true : false;
 	}
-	void load_to_send(uint16_t data) {
-		// Todo: why does default template parameter not work here?
-		target::SPI<N>::template TXDR<0xFFFFFFFF>::write(data);
+	bool rx_fifo_not_empty() {
+		return SR<SPI_SR_RXWNE>::read() ? true : false;
 	}
-	void send() {
-		target::SPI<N>::template CR1<SPI_CR1_CSTART>::set();
+	int rx_fifo_frames_left() {
+		return SR<SPI_SR_RXPLVL>::read() >> SPI_SR_RXPLVL_Pos;
+	}
+	void set_tx_data_size(uint16_t num_packets) {
+		CR2<SPI_CR2_TSIZE>::write(num_packets);
+	}
+	void load_tx_data(uint16_t data0, uint16_t data1) {
+		target::SPI<N>::TXDR::write(data0 << 16 | data1);
+	}
+	void load_tx_data(uint32_t data) {
+		target::SPI<N>::TXDR::write(data);
+	}
+	void start_transfer() {
+		CR1<SPI_CR1_CSTART>::set();
 	}
 	uint16_t received_data() {
-		return target::SPI<N>::template RXDR<0x0000FFFF>::read();
+		return target::SPI<N>::RXDR::read();
 	}
 	void select(int chip_num) {
 		CS[chip_num].low();
@@ -150,11 +174,8 @@ public:
 		CS[chip_num].high();
 	}
 
-	// const uint32_t itflag;
-	// const uint32_t itsource;
-
 private:
-	// SPI_TypeDef *_spi;
+	SPI_TypeDef *_spi;
 	const ConfT &_conf;
 	Pin CS[ConfT::NumChips];
 };
@@ -169,39 +190,60 @@ struct AdcSpi_MAX11666 {
 	{
 		InterruptManager::registerISR(conf.IRQn, [this]() {
 			periph.unselect(cur_chip);
+
 			cur_chip = 1 - cur_chip;
 
 			periph.select(cur_chip);
 
-			while (periph.duplex_space_available()) {
-				periph.load_to_send(CONTINUE_READING_CH1);
-				val[cur_chan] = periph.received_data();
+			if (periph.duplex_space_available()) {
+				periph.load_tx_data(SWITCH_TO_CH1, CONTINUE_READING_CH1);
+				// periph.disable_TX_interrupt()... if we want to stop xfering here.
+				store_reading(periph.received_data());
+				// periph.disable_RX_interrupt()... if we want to stop xfering here.
+			} else if (periph.tx_space_available()) {
+				periph.load_tx_data(SWITCH_TO_CH1, CONTINUE_READING_CH1);
+			} else if (periph.rx_packet_available()) {
+				store_reading(periph.received_data());
 			}
+
+			// Todo: maybe we can use the EOT flag to switch chips or channels?
+			// if EOT is set, clear it, and clear TXTF and SUSP
+
+			// check for OVR flag, UDR flag, MODF, FRE
 		});
 
-		periph.init();
-		periph.enable_duplex_interrupt();
-		periph.enable_RX_interrupt();
-		periph.enable_TX_interrupt();
+		periph.configure();
+
 		auto pri = System::encode_nvic_priority(0, 1);
 		NVIC_SetPriority(conf.IRQn, pri);
 		NVIC_EnableIRQ(conf.IRQn);
-
-		periph.enable();
 	}
 	void start() {
-		cur_chip = 0;
-		periph.unselect(1 - cur_chip);
-		periph.load_to_send(SWITCH_TO_CH1);
-		periph.select(cur_chip);
-		periph.send();
+		cur_chip = 1;
+		// periph.unselect(1 - cur_chip);
+		// periph.select(cur_chip);
+
+		periph.set_tx_data_size(2);
+		periph.enable();
+
+		periph.enable_duplex_interrupt();
+		periph.enable_RX_interrupt();
+		periph.enable_TX_interrupt();
+
+		periph.start_transfer();
+	}
+
+	void store_reading(uint16_t reading) {
+		val[cur_chip * 2 + cur_chan] = reading;
+	}
+	void store_reading(int chip, int chan, uint16_t reading) {
+		val[chip * 2 + chan] = reading;
 	}
 
 	uint16_t get_val(int chan) {
 		return val[chan];
 	}
 	void advance_channel() {
-		// periph.send(SWITCH_TO_CH1);
 	}
 
 private:

@@ -40,11 +40,9 @@ struct SPI {
 	template<RegisterDataT Mask = 0xFFFFFFFF>
 	using IFCR = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, IFCR), Mask>;
 
-	template<RegisterDataT Mask = 0xFFFFFFFF>
-	using TXDR = RegisterBits<WriteOnly, SPI1_BASE + offsetof(SPI_TypeDef, TXDR), Mask>;
+	using TXDR = RegisterBits<WriteOnly, BASE + offsetof(SPI_TypeDef, TXDR), 0xFFFFFFFF>;
 
-	template<RegisterDataT Mask = 0xFFFFFFFF>
-	using RXDR = RegisterBits<ReadOnly, BASE + offsetof(SPI_TypeDef, RXDR), Mask>;
+	using RXDR = RegisterBits<ReadOnly, BASE + offsetof(SPI_TypeDef, RXDR), 0xFFFFFFFF>;
 
 	// CRCPOLY
 
