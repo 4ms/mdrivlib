@@ -1,4 +1,6 @@
 #pragma once
+#include "arch.hh"
+#include "rcc.hh"
 #include "spi_config_struct.hh"
 #include "spi_registers.hh"
 #include "util/math.hh"
