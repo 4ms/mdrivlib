@@ -1,16 +1,17 @@
 #pragma once
 #include "arch.hh"
+#include "filter.hh"
 #include "interrupt.hh"
-#include "pin.hh"
-#include "rcc.hh"
 #include "spi.hh"
 #include "spi_config_struct.hh"
 #include "system.hh"
 
-// Requires ConfT::PeriphNum and ConfT::NumChips
-// Todo handle >2 chips
-template<typename ConfT>
+// ConfT: Requires ConfT::PeriphNum and ConfT::NumChips
+// PostFilterT: Requires void add_val(T) and T val()
+template<typename ConfT, typename PostFilterT = NoFilter>
 struct AdcSpi_MAX11666 {
+	static constexpr unsigned NumChannelsPerChip = 2;
+
 	AdcSpi_MAX11666(const ConfT &conf)
 		: periph{conf}
 		, cur_chan{0}
@@ -24,10 +25,6 @@ struct AdcSpi_MAX11666 {
 				if (periph.rx_packet_available()) {
 					store_reading(periph.received_data());
 				}
-				// chip0, chan0: SWITCH_TO_CH2
-				// chip1, chan0: SWITCH_TO_CH2
-				// chip0, chan1: SWITCH_TO_CH1
-				// chip1, chan1: SWITCH_TO_CH1
 				advance_chip();
 				if (cur_chip == 0)
 					advance_channel();
@@ -49,8 +46,7 @@ struct AdcSpi_MAX11666 {
 	void init() {
 		cur_chip = 0;
 		cur_chan = 0;
-		periph.unselect(cur_chip);
-		periph.unselect(1 - cur_chip);
+		unselect_all_chips();
 
 		periph.set_tx_data_size(1);
 		periph.enable();
@@ -64,19 +60,20 @@ struct AdcSpi_MAX11666 {
 	}
 
 	void store_reading(uint16_t reading) {
-		val[cur_chip * 2 + cur_chan] = reading >> 2;
-	}
-	void store_reading(int chip, int chan, uint16_t reading) {
-		val[chip * 2 + chan] = reading >> 2;
+		postfilter[buffer_idx()].add_val(reading >> 2);
+		// val[buffer_idx()] = reading >> 2;
+		// val[cur_chip * 2 + cur_chan] = reading >> 2;
 	}
 
 	uint16_t get_val(int chan) {
-		return val[chan];
+		return postfilter[chan].val();
+		// return val[chan];
 	}
 
 private:
 	SpiPeriph<ConfT> periph;
-	uint16_t val[ConfT::NumChips * 2];
+	PostFilterT postfilter[ConfT::NumChips * NumChannelsPerChip];
+	// uint16_t val[ConfT::NumChips * 2];
 	unsigned cur_chan;
 	unsigned cur_chip;
 
@@ -96,17 +93,24 @@ private:
 		cur_chan = 1 - cur_chan;
 	}
 
+	void unselect_all_chips() {
+		auto tmp = cur_chip;
+		periph.unselect(cur_chip);
+		advance_chip();
+		while (cur_chip != tmp) {
+			periph.unselect(cur_chip);
+			advance_chip();
+		}
+	}
+
+	constexpr unsigned buffer_idx() const {
+		return cur_chip * 2 + cur_chan;
+	}
 	enum Max11666Commands {
 		SWITCH_TO_CH1 = 0x00FF,
 		CONTINUE_READING_CH1 = 0x0000,
 		SWITCH_TO_CH2 = 0xFF00,
 		CONTINUE_READING_CH2 = 0xFFFF,
 	};
-	// static constexpr uint32_t cmd_seq[4] = {
-	// 	SWITCH_TO_CH1,
-	// 	CONTINUE_READING_CH1,
-	// 	SWITCH_TO_CH2,
-	// 	CONTINUE_READING_CH2,
-	// };
 };
 
