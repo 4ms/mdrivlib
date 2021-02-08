@@ -1,6 +1,5 @@
 #pragma once
 #include "arch.hh"
-#include "filter.hh"
 #include "interrupt.hh"
 #include "spi.hh"
 #include "spi_config_struct.hh"
@@ -8,7 +7,7 @@
 
 // ConfT: Requires ConfT::PeriphNum and ConfT::NumChips
 // PostFilterT: Requires void add_val(T) and T val()
-template<typename ConfT, typename PostFilterT = NoFilter>
+template<typename ConfT, typename PostFilterT>
 struct AdcSpi_MAX11666 {
 	static constexpr unsigned NumChannelsPerChip = 2;
 
@@ -32,7 +31,7 @@ struct AdcSpi_MAX11666 {
 				periph.load_tx_data(cur_chan == 1 ? SWITCH_TO_CH1 : SWITCH_TO_CH2);
 				periph.start_transfer();
 			}
-			// check for OVR flag, UDR flag, MODF, FRE
+			// Todo: check for OVR flag, UDR flag, MODF, FRE
 		});
 
 		periph.configure();
