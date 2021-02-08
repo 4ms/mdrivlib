@@ -2,6 +2,7 @@
 #include "interrupt.hh"
 #include "pin.hh"
 
+// template<unsigned PERIPH_NUM, unsigned NUM_CHIPS = 1, typename CS0Pin, typename CS1Pin, ...>
 template<unsigned PERIPH_NUM, unsigned NUM_CHIPS = 1>
 struct SpiConfig {
 	static inline const unsigned PeriphNum = PERIPH_NUM;

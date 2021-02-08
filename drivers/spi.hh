@@ -64,7 +64,7 @@ public:
 		spih.Init.CLKPolarity = SPI_POLARITY_LOW;
 		spih.Init.CLKPhase = SPI_PHASE_1EDGE;
 		spih.Init.NSS = _use_hardware_SS ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
-		spih.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+		spih.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
 		// spih.Init.BaudRatePrescaler = (MathTools::Log2Int(_conf.clock_division) - 1) << 28;
 		spih.Init.FirstBit = SPI_FIRSTBIT_MSB;
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -162,10 +162,26 @@ public:
 	uint16_t received_data() {
 		return target::SPI<N>::RXDR::read();
 	}
+	// template<int chip_num>
+	// void select() {
+	// if constexpr (chip_num == 0)
+	// 	  ConfT::CS0::low();
+	// if constexpr (chip_num == 1)
+	// ... continue up to max chips (8? 16?)
+	// ...
+	// or: FPin<ConfT::template CS<chip_num>::port, ConfT::template CS<chip_num>.pin>::low();
+	// }
+	// template<int chip_num>
+	// void unselect() {
+	// ...see above
+	// }
 	void select(int chip_num) {
 		CS[chip_num].low();
+		// Todo: or just do CS[chip_num].port->BSRR = (1 << CS[chip_num].pin);
+		// GPIOG->BSRR = chip_num ? (1 << 26) : (1 << 28);
 	}
 	void unselect(int chip_num) {
+		// GPIOG->BSRR = chip_num ? (1 << 10) : (1 << 12);
 		CS[chip_num].high();
 	}
 

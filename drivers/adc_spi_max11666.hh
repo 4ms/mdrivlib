@@ -1,5 +1,6 @@
 #pragma once
 #include "arch.hh"
+#include "debug.hh"
 #include "interrupt.hh"
 #include "spi.hh"
 #include "spi_config_struct.hh"
@@ -16,7 +17,10 @@ struct AdcSpi_MAX11666 {
 		, cur_chan{0}
 		, cur_chip{0} //
 	{
+		// 863ns: un/select(cur_chip)
+		// 748ns: GPIOG->BSRR = cur_chip ? (1 << 10) : (1 << 12)
 		InterruptManager::registerISR(conf.IRQn, [this]() {
+			// Debug::Pin3::high();
 			if (periph.is_end_of_transfer()) {
 				periph.unselect(cur_chip);
 				periph.clear_EOT_flag();
@@ -31,6 +35,7 @@ struct AdcSpi_MAX11666 {
 				periph.load_tx_data(cur_chan == 1 ? SWITCH_TO_CH1 : SWITCH_TO_CH2);
 				periph.start_transfer();
 			}
+			// Debug::Pin3::low();
 			// Todo: check for OVR flag, UDR flag, MODF, FRE
 		});
 
@@ -60,19 +65,15 @@ struct AdcSpi_MAX11666 {
 
 	void store_reading(uint16_t reading) {
 		postfilter[buffer_idx()].add_val(reading >> 2);
-		// val[buffer_idx()] = reading >> 2;
-		// val[cur_chip * 2 + cur_chan] = reading >> 2;
 	}
 
 	uint16_t get_val(int chan) {
 		return postfilter[chan].val();
-		// return val[chan];
 	}
 
 private:
 	SpiPeriph<ConfT> periph;
 	PostFilterT postfilter[ConfT::NumChips * NumChannelsPerChip];
-	// uint16_t val[ConfT::NumChips * 2];
 	unsigned cur_chan;
 	unsigned cur_chip;
 
