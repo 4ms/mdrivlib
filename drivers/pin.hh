@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "drivers/register_access.hh"
 #include "stm32xx.h"
 
 enum class PinPolarity {
@@ -137,5 +138,29 @@ private:
 		return reinterpret_cast<GPIO_TypeDef *>(port_);
 	}
 	void _init(PinMode mode, uint8_t af, PinPull pull, PinSpeed speed, PinOType otype);
+};
+
+template<enum GPIO Gpio, uint16_t PinNum>
+using PinSetHigh = RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << PinNum)>;
+template<enum GPIO Gpio, uint16_t PinNum>
+using PinSetLow =
+	RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
+
+template<enum GPIO Gpio, uint16_t PinNum>
+struct FPin {
+
+	// using PinRead =
+
+	FPin() {
+		Pin init{Gpio, PinNum, PinMode::Output};
+	}
+	static PinSetLow<Gpio, PinNum> setlow;
+	static PinSetHigh<Gpio, PinNum> sethigh;
+	static void low() {
+		setlow.set();
+	}
+	static void high() {
+		sethigh.set();
+	}
 };
 
