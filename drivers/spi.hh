@@ -59,18 +59,20 @@ public:
 		if constexpr (N == 6)
 			spih.Instance = SPI6;
 		spih.Init.Mode = SPI_MODE_MASTER;
-		spih.Init.Direction = SPI_DIRECTION_2LINES;
-		spih.Init.DataSize = SPI_DATASIZE_16BIT;
+		spih.Init.Direction = _conf.data_dir == SpiDataDir::Duplex ? 0UL // SPI_DIRECTION_2LINES
+							: _conf.data_dir == SpiDataDir::TXOnly ? SPI_CFG2_COMM_0
+							: _conf.data_dir == SpiDataDir::RXOnly ? SPI_CFG2_COMM_1
+																   : SPI_CFG2_COMM;
+		spih.Init.DataSize = (_conf.data_size & 0x001F) - 1;
 		spih.Init.CLKPolarity = SPI_POLARITY_LOW;
 		spih.Init.CLKPhase = SPI_PHASE_1EDGE;
 		spih.Init.NSS = _use_hardware_SS ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
-		spih.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
-		// spih.Init.BaudRatePrescaler = (MathTools::Log2Int(_conf.clock_division) - 1) << 28;
+		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(_conf.clock_division) - 1) << 28;
 		spih.Init.FirstBit = SPI_FIRSTBIT_MSB;
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
 		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 		spih.Init.CRCPolynomial = 7;
-		spih.Init.NSSPMode = SPI_NSS_PULSE_DISABLE; // SPI_NSS_PULSE_ENABLE;
+		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE; // works with ADC SPI in DISABLE
 		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
 		spih.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
 		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
@@ -90,11 +92,9 @@ public:
 
 	void enable_RX_interrupt() {
 		IER<SPI_IER_RXPIE>::set();
-		// target::SPI<N>::template IER<SPI_IER_RXPIE>::set();
 	}
 	void disable_RX_interrupt() {
 		IER<SPI_IER_RXPIE>::clear();
-		// target::SPI<N>::template IER<SPI_IER_RXPIE>::clear();
 	}
 	void enable_TX_interrupt() {
 		IER<SPI_IER_TXPIE>::set();

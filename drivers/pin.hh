@@ -140,6 +140,8 @@ private:
 	void _init(PinMode mode, uint8_t af, PinPull pull, PinSpeed speed, PinOType otype);
 };
 
+// FPin: Fast Pin (output only for now)
+
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinSetHigh = RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << PinNum)>;
 template<enum GPIO Gpio, uint16_t PinNum>
