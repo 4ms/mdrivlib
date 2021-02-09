@@ -24,7 +24,7 @@ struct SpiConfig {
 	SpiDataDir data_dir;
 };
 
-struct DefaultSpiAdcConf {
+struct DefaultSpiConf {
 	static constexpr uint16_t PeriphNum = 1; // SPI1
 	static constexpr uint16_t NumChips = 1;
 	static constexpr uint16_t IRQn = SPI1_IRQn;
