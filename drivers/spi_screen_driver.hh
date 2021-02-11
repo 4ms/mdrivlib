@@ -3,6 +3,11 @@
 #include "spi.hh"
 #include "system.hh"
 
+// Todo: this is not necessarily an SPI screen driver, it's a general SPI driver that has a hi/low pin for each transfer
+// But we can extend this to utilize DMA:
+// transmit writes into a framebuffer
+// timer ISR executes refresh
+// Look into DMA2D? TouchGFX?
 template<typename ConfT, typename DCPinT>
 struct SpiScreenDriver {
 	SpiScreenDriver(const ConfT &conf)
@@ -35,7 +40,7 @@ protected:
 	enum PacketType { Cmd, Data };
 
 	template<PacketType ByteType>
-	void write(uint8_t byte) {
+	void transmit(uint8_t byte) {
 		while (!_ready) {
 		}
 		_ready = false;
