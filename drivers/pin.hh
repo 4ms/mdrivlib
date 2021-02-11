@@ -140,29 +140,47 @@ private:
 	void _init(PinMode mode, uint8_t af, PinPull pull, PinSpeed speed, PinOType otype);
 };
 
-// FPin: Fast Pin (output only for now)
+/////////////////////
+// FPin: Fast Pin
 
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinSetHigh = RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << PinNum)>;
+
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinSetLow =
 	RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
 
 template<enum GPIO Gpio, uint16_t PinNum>
+using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, IDR), (1UL << PinNum)>;
+
+template<enum GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output>
 struct FPin {
 
-	// using PinRead =
-
+	// Todo: do our own init here using RegisterBits, don't rely on Pin class
+	// Will still need to depend on RCC_Control class
 	FPin() {
-		Pin init{Gpio, PinNum, PinMode::Output};
+		Pin init{Gpio, PinNum, Mode};
 	}
-	static PinSetLow<Gpio, PinNum> setlow;
-	static PinSetHigh<Gpio, PinNum> sethigh;
+	FPin(PinPull pull, PinSpeed speed = PinSpeed::Low, PinOType otype = PinOType::OpenDrain) {
+		Pin init{Gpio, PinNum, Mode, 0, pull, PinPolarity::Normal, speed, otype};
+	}
+
 	static void low() {
-		setlow.set();
+		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set low");
+		_setlow.set();
 	}
 	static void high() {
-		sethigh.set();
+		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
+		_sethigh.set();
 	}
+	static bool read() {
+		static_assert(Mode == PinMode::Input, "Pin is not an intut, cannot read");
+		return _read.read();
+	}
+
+private:
+	static PinSetLow<Gpio, PinNum> _setlow;
+	static PinSetHigh<Gpio, PinNum> _sethigh;
+	static PinRead<Gpio, PinNum> _read;
 };
 

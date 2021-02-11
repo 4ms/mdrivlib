@@ -20,7 +20,7 @@ struct AdcSpi_MAX11666 {
 		// 863ns: un/select(cur_chip)
 		// 748ns: GPIOG->BSRR = cur_chip ? (1 << 10) : (1 << 12)
 		InterruptManager::registerISR(conf.IRQn, [this]() {
-			// Debug::Pin3::high();
+			Debug::Pin3::high();
 			if (periph.is_end_of_transfer()) {
 				periph.unselect(cur_chip);
 				periph.clear_EOT_flag();
@@ -35,7 +35,7 @@ struct AdcSpi_MAX11666 {
 				periph.load_tx_data(cur_chan == 1 ? SWITCH_TO_CH1 : SWITCH_TO_CH2);
 				periph.start_transfer();
 			}
-			// Debug::Pin3::low();
+			Debug::Pin3::low();
 			// Todo: check for OVR flag, UDR flag, MODF, FRE
 		});
 
