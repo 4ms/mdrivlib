@@ -19,27 +19,43 @@ public:
 	using SR = typename target::SPI<N>::template SR<M>;
 	template<unsigned M>
 	using IFCR = typename target::SPI<N>::template IFCR<M>;
+	template<unsigned M>
+	using CFG1 = typename target::SPI<N>::template CFG1<M>;
+	template<unsigned M>
+	using CFG2 = typename target::SPI<N>::template CFG2<M>;
 
-	SpiPeriph(const ConfT &conf)
-		: _conf{conf} {
+	SpiPeriph() {
 	}
 
 	void configure() {
 		disable();
 
-		Pin sclk{_conf.SCLK, PinMode::Alt};
-		Pin copi{_conf.COPI, PinMode::Alt};
-		Pin cipo{_conf.CIPO, PinMode::Alt};
+		Pin init_sclk{ConfT::SCLK, PinMode::Alt};
+		Pin init_copi{ConfT::COPI, PinMode::Alt};
+		Pin init_cipo{ConfT::CIPO, PinMode::Alt};
 
-		bool _use_hardware_SS = _conf.use_hardware_ss && (ConfT::NumChips == 1) && (_conf.CS[0].af > 0);
+		bool _use_hardware_SS = ConfT::use_hardware_ss && (ConfT::NumChips == 1) && (ConfT::CS0.af > 0);
 
-		if (_use_hardware_SS)
-			Pin nss{_conf.CS[0], PinMode::Alt};
-		else {
-			for (int i = 0; i < ConfT::NumChips; i++) {
-				CS[i].init(_conf.CS[i], PinMode::Output);
-				unselect(i);
+		if (_use_hardware_SS) {
+			Pin init_nss{ConfT::CS0, PinMode::Alt};
+			//    CFG2<SPI_CFG2_SSOE>::set();
+		} else {
+			//    CFG2<SPI_CFG2_SSOE>::clear();
+			Pin init_cs0{ConfT::CS0, PinMode::Output};
+			unselect<0>();
+			if constexpr (ConfT::NumChips > 1) {
+				Pin init_cs1{ConfT::CS1, PinMode::Output};
+				unselect<1>();
 			}
+			if constexpr (ConfT::NumChips > 2) {
+				Pin init_cs2{ConfT::CS2, PinMode::Output};
+				unselect<2>();
+			}
+			if constexpr (ConfT::NumChips > 3) {
+				Pin init_cs3{ConfT::CS3, PinMode::Output};
+				unselect<3>();
+			}
+			static_assert(ConfT::NumChips <= 4, "SpiPeriph only supports selecting 1-4 chips");
 		}
 
 		target::RCC_Control::SPI<N>::Reg::set();
@@ -59,15 +75,15 @@ public:
 		if constexpr (N == 6)
 			spih.Instance = SPI6;
 		spih.Init.Mode = SPI_MODE_MASTER;
-		spih.Init.Direction = _conf.data_dir == SpiDataDir::Duplex ? 0UL // SPI_DIRECTION_2LINES
-							: _conf.data_dir == SpiDataDir::TXOnly ? SPI_CFG2_COMM_0
-							: _conf.data_dir == SpiDataDir::RXOnly ? SPI_CFG2_COMM_1
-																   : SPI_CFG2_COMM;
-		spih.Init.DataSize = (_conf.data_size & 0x001F) - 1;
+		spih.Init.Direction = ConfT::data_dir == SpiDataDir::Duplex ? 0UL // SPI_DIRECTION_2LINES
+							: ConfT::data_dir == SpiDataDir::TXOnly ? SPI_CFG2_COMM_0
+							: ConfT::data_dir == SpiDataDir::RXOnly ? SPI_CFG2_COMM_1
+																	: SPI_CFG2_COMM;
+		spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
 		spih.Init.CLKPolarity = SPI_POLARITY_LOW;
 		spih.Init.CLKPhase = SPI_PHASE_1EDGE;
 		spih.Init.NSS = _use_hardware_SS ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
-		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(_conf.clock_division) - 1) << 28;
+		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << 28;
 		spih.Init.FirstBit = SPI_FIRSTBIT_MSB;
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
 		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -83,11 +99,6 @@ public:
 		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE; // what is this? Example code says "Recommended"
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
 		HAL_SPI_Init(&spih);
-
-		// if (ConfT::NumChips == 1 && conf.periph_controls_ss)
-		//    target::SPI<N>::template CFG2<SPI_CFG2_SSOE>::set();
-		// else
-		//    target::SPI<N>::template CFG2<SPI_CFG2_SSOE>::clear();
 	}
 
 	void enable_RX_interrupt() {
@@ -162,31 +173,54 @@ public:
 	uint16_t received_data() {
 		return target::SPI<N>::RXDR::read();
 	}
-	// template<int chip_num>
-	// void select() {
-	// if constexpr (chip_num == 0)
-	// 	  ConfT::CS0::low();
-	// if constexpr (chip_num == 1)
-	// ... continue up to max chips (8? 16?)
-	// ...
-	// or: FPin<ConfT::template CS<chip_num>::port, ConfT::template CS<chip_num>.pin>::low();
-	// }
-	// template<int chip_num>
-	// void unselect() {
-	// ...see above
-	// }
+
+	template<int chip_num>
+	void select() {
+		if constexpr (chip_num == 0)
+			FPin<ConfT::CS0.gpio, ConfT::CS0.pin, PinMode::Output>::low();
+		if constexpr (chip_num == 1)
+			FPin<ConfT::CS1.gpio, ConfT::CS1.pin, PinMode::Output>::low();
+		if constexpr (chip_num == 2)
+			FPin<ConfT::CS2.gpio, ConfT::CS2.pin, PinMode::Output>::low();
+		if constexpr (chip_num == 3)
+			FPin<ConfT::CS3.gpio, ConfT::CS3.pin, PinMode::Output>::low();
+	}
+	template<int chip_num>
+	void unselect() {
+		if constexpr (chip_num == 0)
+			FPin<ConfT::CS0.gpio, ConfT::CS0.pin, PinMode::Output>::high();
+		if constexpr (chip_num == 1)
+			FPin<ConfT::CS1.gpio, ConfT::CS1.pin, PinMode::Output>::high();
+		if constexpr (chip_num == 2)
+			FPin<ConfT::CS2.gpio, ConfT::CS2.pin, PinMode::Output>::high();
+		if constexpr (chip_num == 3)
+			FPin<ConfT::CS3.gpio, ConfT::CS3.pin, PinMode::Output>::high();
+	}
 	void select(int chip_num) {
-		CS[chip_num].low();
-		// Todo: or just do CS[chip_num].port->BSRR = (1 << CS[chip_num].pin);
-		// GPIOG->BSRR = chip_num ? (1 << 26) : (1 << 28);
+		if (chip_num == 0)
+			select<0>();
+		if (chip_num == 1)
+			select<1>();
+		if (chip_num == 2)
+			select<2>();
+		if (chip_num == 3)
+			select<3>();
 	}
 	void unselect(int chip_num) {
-		// GPIOG->BSRR = chip_num ? (1 << 10) : (1 << 12);
-		CS[chip_num].high();
+		if (chip_num == 0)
+			unselect<0>();
+		if (chip_num == 1)
+			unselect<1>();
+		if (chip_num == 2)
+			unselect<2>();
+		if (chip_num == 3)
+			unselect<3>();
 	}
 
 private:
-	const ConfT &_conf;
-	Pin CS[ConfT::NumChips];
+	FPin<ConfT::CS0.gpio, ConfT::CS0.pin> CS0;
+	FPin<ConfT::CS1.gpio, ConfT::CS1.pin> CS1;
+	FPin<ConfT::CS2.gpio, ConfT::CS2.pin> CS2;
+	FPin<ConfT::CS3.gpio, ConfT::CS3.pin> CS3;
 };
 // end spi.hh

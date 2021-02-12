@@ -6,17 +6,13 @@
 #include "spi_config_struct.hh"
 #include "system.hh"
 
-// ConfT: Requires ConfT::PeriphNum and ConfT::NumChips
+// ConfT: Required to be derived from DefaultSpiConf
 // PostFilterT: Requires void add_val(T) and T val()
 template<typename ConfT, typename PostFilterT>
 struct AdcSpi_MAX11666 {
 	static constexpr unsigned NumChannelsPerChip = 2;
 
-	AdcSpi_MAX11666(const ConfT &conf)
-		: periph{conf}
-		, cur_chan{0}
-		, cur_chip{0} //
-	{
+	AdcSpi_MAX11666() {
 		// 863ns: un/select(cur_chip)
 		// 748ns: GPIOG->BSRR = cur_chip ? (1 << 10) : (1 << 12)o
 		// /256: at 81kHz: each channel = 20kHz, with OS=16 1.26kHz @ 16bit
@@ -30,7 +26,7 @@ struct AdcSpi_MAX11666 {
 		// Then run SPI DMA in duplex mode for 16 packets: 8 with CH1 selected, 8 with CH2 selected.
 		// Only one ISR at the end of this 16-packet run (could use FIFO, instead of DMA)
 		// ISR toggles select pin and repeats
-		InterruptManager::registerISR(conf.IRQn, [this]() {
+		InterruptManager::registerISR(ConfT::IRQn, [this]() {
 			Debug::Pin3::high();
 			if (periph.is_end_of_transfer()) {
 				periph.unselect(cur_chip);
@@ -52,9 +48,9 @@ struct AdcSpi_MAX11666 {
 
 		periph.configure();
 
-		auto pri = System::encode_nvic_priority(conf.priority1, conf.priority2);
-		NVIC_SetPriority(conf.IRQn, pri);
-		NVIC_EnableIRQ(conf.IRQn);
+		auto pri = System::encode_nvic_priority(ConfT::priority1, ConfT::priority2);
+		NVIC_SetPriority(ConfT::IRQn, pri);
+		NVIC_EnableIRQ(ConfT::IRQn);
 
 		init();
 	}
@@ -85,8 +81,8 @@ struct AdcSpi_MAX11666 {
 private:
 	SpiPeriph<ConfT> periph;
 	PostFilterT postfilter[ConfT::NumChips * NumChannelsPerChip];
-	unsigned cur_chan;
-	unsigned cur_chip;
+	unsigned cur_chan = 0;
+	unsigned cur_chip = 0;
 
 	void advance_chip() {
 		if constexpr (ConfT::NumChips == 1)

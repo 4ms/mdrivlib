@@ -8,12 +8,12 @@
 // transmit writes into a framebuffer
 // timer ISR executes refresh
 // Look into DMA2D? TouchGFX?
-template<typename ConfT, typename DCPinT>
+
+template<typename ConfT>
 struct SpiScreenDriver {
-	SpiScreenDriver(const ConfT &conf)
-		: spi{conf}
-		, _ready(true) {
-		InterruptManager::registerISR(conf.IRQn, [this]() {
+	SpiScreenDriver()
+		: _ready(true) {
+		InterruptManager::registerISR(ConfT::ScreenSpiConf::IRQn, [this]() {
 			if (spi.is_end_of_transfer()) {
 				spi.clear_EOT_flag();
 				spi.clear_TXTF_flag();
@@ -22,9 +22,9 @@ struct SpiScreenDriver {
 		});
 
 		spi.configure();
-		auto pri = System::encode_nvic_priority(conf.priority1, conf.priority2);
-		NVIC_SetPriority(conf.IRQn, pri);
-		NVIC_EnableIRQ(conf.IRQn);
+		auto pri = System::encode_nvic_priority(ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2);
+		NVIC_SetPriority(ConfT::ScreenSpiConf::IRQn, pri);
+		NVIC_EnableIRQ(ConfT::ScreenSpiConf::IRQn);
 
 		spi.set_tx_data_size(1);
 		spi.enable();
@@ -32,8 +32,8 @@ struct SpiScreenDriver {
 	}
 
 private:
-	SpiPeriph<ConfT> spi;
-	DCPinT dcpin;
+	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
+	typename ConfT::DCPin dcpin;
 	volatile bool _ready;
 
 protected:
