@@ -18,7 +18,18 @@ struct AdcSpi_MAX11666 {
 		, cur_chip{0} //
 	{
 		// 863ns: un/select(cur_chip)
-		// 748ns: GPIOG->BSRR = cur_chip ? (1 << 10) : (1 << 12)
+		// 748ns: GPIOG->BSRR = cur_chip ? (1 << 10) : (1 << 12)o
+		// /256: at 81kHz: each channel = 20kHz, with OS=16 1.26kHz @ 16bit
+		// /128: at 145kHz: 13% load: each channel = 36kHz, OS=16 2.2kHz @ 16bit
+		// /64: at 250kHz: 22% load: each channel = 62kHz, OS=16 4kHz @ 16bit
+
+		// Idea: create 4 lambdas (global linkage) each has no branching
+		// and set the next lambda at the end of the ISR (will this actually save cycles?)
+
+		// Todo: use hardware NSS, and use ch2sel pin to mux the NSS output to chip 1 or chip 2
+		// Then run SPI DMA in duplex mode for 16 packets: 8 with CH1 selected, 8 with CH2 selected.
+		// Only one ISR at the end of this 16-packet run (could use FIFO, instead of DMA)
+		// ISR toggles select pin and repeats
 		InterruptManager::registerISR(conf.IRQn, [this]() {
 			Debug::Pin3::high();
 			if (periph.is_end_of_transfer()) {
