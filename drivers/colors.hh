@@ -74,8 +74,8 @@ private:
 };
 
 struct Colors {
-	// greyscale
 	static constexpr Color off = Color(0, 0, 0);
+	static constexpr Color black = Color(0, 0, 0);
 	static constexpr Color grey = Color(127, 127, 127);
 	static constexpr Color white = Color(255, 255, 255);
 

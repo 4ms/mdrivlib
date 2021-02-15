@@ -5,6 +5,8 @@
 #include "spi_registers.hh"
 #include "util/math.hh"
 
+// namespace mdrivlib {
+// namespace stm32h7x5 {
 template<typename ConfT>
 class SpiPeriph {
 public:
@@ -34,9 +36,11 @@ public:
 		Pin init_copi{ConfT::COPI, PinMode::Alt};
 		Pin init_cipo{ConfT::CIPO, PinMode::Alt};
 
-		bool _use_hardware_SS = ConfT::use_hardware_ss && (ConfT::NumChips == 1) && (ConfT::CS0.af > 0);
+		static_assert(!ConfT::use_hardware_ss ||
+						  (ConfT::use_hardware_ss && (ConfT::NumChips == 1) && (ConfT::CS0.af > 0)),
+					  "Hardware SS only supported when NumChips = 1, and pin AF > 0");
 
-		if (_use_hardware_SS) {
+		if (ConfT::use_hardware_ss) {
 			Pin init_nss{ConfT::CS0, PinMode::Alt};
 			//    CFG2<SPI_CFG2_SSOE>::set();
 		} else {
@@ -82,15 +86,18 @@ public:
 		spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
 		spih.Init.CLKPolarity = SPI_POLARITY_LOW;
 		spih.Init.CLKPhase = SPI_PHASE_1EDGE;
-		spih.Init.NSS = _use_hardware_SS ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
-		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << 28;
+		spih.Init.NSS = ConfT::use_hardware_ss ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
+		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos;
+		// CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
 		spih.Init.FirstBit = SPI_FIRSTBIT_MSB;
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
 		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 		spih.Init.CRCPolynomial = 7;
-		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE; // works with ADC SPI in DISABLE
+		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
 		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-		spih.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
+		// SSOP
+		spih.Init.FifoThreshold = (ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos; // SPI_FIFO_THRESHOLD_01DATA;
+		// CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold -1)<< SPI_CFG1_FTHLV_Pos);
 		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;			   // right?
@@ -101,6 +108,13 @@ public:
 		HAL_SPI_Init(&spih);
 	}
 
+	void enable() {
+		CR1<SPI_CR1_SPE>::set();
+	}
+	void disable() {
+		CR1<SPI_CR1_SPE>::clear();
+	}
+	// Interrupts
 	void enable_RX_interrupt() {
 		IER<SPI_IER_RXPIE>::set();
 	}
@@ -125,12 +139,13 @@ public:
 	void disable_end_of_xfer_interrupt() {
 		IER<SPI_IER_EOTIE>::clear();
 	}
-	void enable() {
-		CR1<SPI_CR1_SPE>::set();
+	void clear_EOT_flag() {
+		IFCR<SPI_IFCR_EOTC>::set();
 	}
-	void disable() {
-		CR1<SPI_CR1_SPE>::clear();
+	void clear_TXTF_flag() { // transmission transfer filled
+		IFCR<SPI_IFCR_TXTFC>::set();
 	}
+	// Status flags
 	bool rx_packet_available() {
 		return SR<SPI_SR_RXP>::read() ? true : false;
 	}
@@ -146,20 +161,18 @@ public:
 	bool is_tx_complete() {
 		return SR<SPI_SR_TXC>::read() ? true : false;
 	}
-	void clear_EOT_flag() {
-		IFCR<SPI_IFCR_EOTC>::set();
-	}
-	void clear_TXTF_flag() { // transmission transfer filled
-		IFCR<SPI_IFCR_TXTFC>::set();
-	}
 	bool rx_fifo_not_empty() {
 		return SR<SPI_SR_RXWNE>::read() ? true : false;
 	}
 	int rx_fifo_frames_left() {
 		return SR<SPI_SR_RXPLVL>::read() >> SPI_SR_RXPLVL_Pos;
 	}
+	// TX conditions
 	void set_tx_data_size(uint16_t num_packets) {
 		CR2<SPI_CR2_TSIZE>::write(num_packets);
+	}
+	void set_fifo_threshold(uint8_t num_bytes) {
+		CFG1<SPI_CFG1_FTHLV>::write((num_bytes - 1) << SPI_CFG1_FTHLV_Pos);
 	}
 	void load_tx_data(uint16_t data0, uint16_t data1) {
 		target::SPI<N>::TXDR::write(data0 << 16 | data1);

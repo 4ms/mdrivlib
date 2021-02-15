@@ -35,21 +35,69 @@ private:
 	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
 	typename ConfT::DCPin dcpin;
 	volatile bool _ready;
+	// uint32_t _data_ctr;
+	void wait_until_ready() {
+		while (!_ready) {
+		}
+		_ready = false;
+	}
 
 protected:
 	enum PacketType { Cmd, Data };
 
-	template<PacketType ByteType>
+	template<PacketType MessageType>
 	void transmit(uint8_t byte) {
-		while (!_ready) {
-		}
-		_ready = false;
-		if constexpr (ByteType == Cmd)
+		wait_until_ready();
+		spi.set_tx_data_size(1);
+		if constexpr (MessageType == Cmd)
 			dcpin.low();
-		if constexpr (ByteType == Data)
+		if constexpr (MessageType == Data)
 			dcpin.high();
 		spi.load_tx_data(byte);
 		spi.start_transfer();
+	}
+
+	void transmit_data_16(uint16_t halfword) {
+		wait_until_ready();
+		spi.set_tx_data_size(2);
+		dcpin.high();
+		spi.load_tx_data(halfword);
+		spi.start_transfer();
+	}
+
+	void transmit_data_32(uint32_t word) {
+		wait_until_ready();
+		spi.set_tx_data_size(4);
+		dcpin.high();
+		spi.load_tx_data(word);
+		spi.start_transfer();
+	}
+
+	// Todo: does it help if we set TSIZE to how many bytes we actually want to send?
+	void begin_open_data_transmission(uint8_t fifo_size) {
+		while (!spi.tx_space_available())
+			;
+		spi.set_tx_data_size(0);
+		spi.set_fifo_threshold(fifo_size);
+		dcpin.high();
+		spi.start_transfer();
+		// spi.disable_end_of_xfer_interrupt(); ??
+		// spi.clear_TXTF_flag(); //??
+	}
+	void transmit_open_data16(uint16_t halfword) {
+		while (!spi.tx_space_available())
+			;
+		spi.load_tx_data(halfword);
+	}
+	void transmit_open_data32(uint32_t word) {
+		while (!spi.tx_space_available())
+			;
+		spi.load_tx_data(word);
+	}
+	void end_open_data_transmission() {
+		// flush TX FIFO?
+		// spi.start_transfer();
+		// spi.enable_end_of_xfer_interrupt(); ??
 	}
 };
 
