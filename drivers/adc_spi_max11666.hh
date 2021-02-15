@@ -31,7 +31,7 @@ private:
 		cur_chan = 0;
 		unselect_all_chips();
 
-		periph.set_tx_data_size(1);
+		periph.set_tx_message_size(1);
 		periph.enable();
 	}
 

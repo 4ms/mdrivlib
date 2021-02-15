@@ -26,7 +26,7 @@ struct SpiScreenDriver {
 		NVIC_SetPriority(ConfT::ScreenSpiConf::IRQn, pri);
 		NVIC_EnableIRQ(ConfT::ScreenSpiConf::IRQn);
 
-		spi.set_tx_data_size(1);
+		spi.set_tx_message_size(1);
 		spi.enable();
 		spi.enable_end_of_xfer_interrupt();
 	}
@@ -48,7 +48,9 @@ protected:
 	template<PacketType MessageType>
 	void transmit(uint8_t byte) {
 		wait_until_ready();
-		spi.set_tx_data_size(1);
+		spi.disable();
+		spi.set_tx_message_size(1);
+		spi.enable();
 		if constexpr (MessageType == Cmd)
 			dcpin.low();
 		if constexpr (MessageType == Data)
@@ -59,17 +61,33 @@ protected:
 
 	void transmit_data_16(uint16_t halfword) {
 		wait_until_ready();
-		spi.set_tx_data_size(2);
+		spi.disable();
+		spi.set_tx_message_size(2);
+		spi.enable();
 		dcpin.high();
-		spi.load_tx_data(halfword);
+		spi.load_tx_data(((halfword & 0xFF) << 8) | (halfword >> 8));
+		spi.start_transfer();
+	}
+
+	void transmit_data_16(uint16_t halfword1, uint16_t halfword2) {
+		wait_until_ready();
+		spi.disable();
+		spi.set_tx_message_size(4);
+		spi.enable();
+		dcpin.high();
+		spi.load_tx_data(((halfword2 & 0x00FF) << 24) | ((halfword2 & 0xFF00) << 16) | ((halfword1 & 0x00FF) << 8) |
+						 (halfword1 >> 8));
 		spi.start_transfer();
 	}
 
 	void transmit_data_32(uint32_t word) {
 		wait_until_ready();
-		spi.set_tx_data_size(4);
+		spi.disable();
+		spi.set_tx_message_size(4);
+		spi.enable();
 		dcpin.high();
-		spi.load_tx_data(word);
+		spi.load_tx_data(((word & 0x000000FF) << 24) | ((word & 0x0000FF00) << 16) | ((word & 0x00FF0000) << 8) |
+						 (word >> 24));
 		spi.start_transfer();
 	}
 
@@ -77,7 +95,7 @@ protected:
 	void begin_open_data_transmission(uint8_t fifo_size) {
 		while (!spi.tx_space_available())
 			;
-		spi.set_tx_data_size(0);
+		spi.set_tx_message_size(0);
 		spi.set_fifo_threshold(fifo_size);
 		dcpin.high();
 		spi.start_transfer();

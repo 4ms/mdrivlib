@@ -89,7 +89,7 @@ public:
 		spih.Init.NSS = ConfT::use_hardware_ss ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
 		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos;
 		// CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
-		spih.Init.FirstBit = SPI_FIRSTBIT_MSB;
+		spih.Init.FirstBit = ConfT::LSBfirst ? SPI_FIRSTBIT_LSB : SPI_FIRSTBIT_MSB;
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
 		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 		spih.Init.CRCPolynomial = 7;
@@ -100,8 +100,8 @@ public:
 		// CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold -1)<< SPI_CFG1_FTHLV_Pos);
 		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;			   // right?
-		spih.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE; // right?
+		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_02CYCLE;			   // right?
+		spih.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_02CYCLE; // right?
 		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;		   // what is this?
 		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE; // what is this? Example code says "Recommended"
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
@@ -168,8 +168,11 @@ public:
 		return SR<SPI_SR_RXPLVL>::read() >> SPI_SR_RXPLVL_Pos;
 	}
 	// TX conditions
-	void set_tx_data_size(uint16_t num_packets) {
+	void set_tx_message_size(uint16_t num_packets) {
 		CR2<SPI_CR2_TSIZE>::write(num_packets);
+	}
+	void set_data_size(uint8_t data_size) {
+		CFG1<SPI_CFG1_DSIZE>::write((data_size - 1) << SPI_CFG1_DSIZE_Pos);
 	}
 	void set_fifo_threshold(uint8_t num_bytes) {
 		CFG1<SPI_CFG1_FTHLV>::write((num_bytes - 1) << SPI_CFG1_FTHLV_Pos);
