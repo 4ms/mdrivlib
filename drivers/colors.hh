@@ -10,11 +10,18 @@ struct Color {
 	explicit constexpr Color(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0)
 		: r_(r)
 		, g_(g)
-		, b_(b) {}
+		, b_(b) {
+	}
 
-	constexpr uint8_t red() const { return r_; }
-	constexpr uint8_t green() const { return g_; }
-	constexpr uint8_t blue() const { return b_; }
+	constexpr uint8_t red() const {
+		return r_;
+	}
+	constexpr uint8_t green() const {
+		return g_;
+	}
+	constexpr uint8_t blue() const {
+		return b_;
+	}
 
 	const Color operator+(Color const that) const {
 		return Color(__UQADD8(r_, that.r_), __UQADD8(g_, that.g_), __UQADD8(b_, that.b_));
@@ -58,6 +65,10 @@ struct Color {
 		return Color((r_ * adj.r) >> 7, (g_ * adj.g) >> 7, (b_ * adj.b) >> 7);
 	}
 
+	constexpr const uint16_t Rgb565() const {
+		return ((r_ & 0b11111000) << 8) | ((g_ & 0b11111100) << 3) | ((b_ >> 3));
+	}
+
 private:
 	uint8_t r_, g_, b_;
 };
@@ -77,3 +88,4 @@ struct Colors {
 	static constexpr Color purple = Color(255, 0, 255);
 	static constexpr Color pink = Color(200, 0, 100);
 };
+
