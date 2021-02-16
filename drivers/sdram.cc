@@ -197,15 +197,6 @@ uint32_t SDRAMPeriph::do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_
 	for (uint32_t i = 0; i < (ram_size / test_val_size); i++) {
 		// wait_until_ready();
 		uint32_t testval = mapfunc(i);
-
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
 		*((uint32_t *)addr) = testval;
 
 		addr += test_val_size;
@@ -213,14 +204,6 @@ uint32_t SDRAMPeriph::do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_
 
 	addr = ram_start;
 	for (uint32_t i = 0; i < (ram_size / test_val_size); i++) {
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
-		// __asm("nop;");
 		uint32_t readval = *((uint32_t *)addr);
 
 		uint32_t expectedval = mapfunc(i);
