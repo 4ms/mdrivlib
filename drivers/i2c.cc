@@ -223,6 +223,9 @@ void I2CPeriph::i2c_event_handler() {
 
 void I2CPeriph::i2c_error_handler() {
 	HAL_I2C_ER_IRQHandler(&hal_i2c_);
+	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE) {
+		HAL_I2C_Init(&hal_i2c_);
+}
 }
 
 void I2CPeriph::link_DMA_TX(DMA_HandleTypeDef *dmatx) {
