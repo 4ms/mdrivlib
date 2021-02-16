@@ -2,6 +2,7 @@
 #include "interrupt.hh"
 #include "spi.hh"
 #include "system.hh"
+#include "util/math.hh"
 
 // Todo: this is not necessarily an SPI screen driver, it's a general SPI driver that has a hi/low pin for each transfer
 // But we can extend this to utilize DMA:
@@ -65,7 +66,7 @@ protected:
 		spi.set_tx_message_size(2);
 		spi.enable();
 		dcpin.high();
-		spi.load_tx_data(((halfword & 0xFF) << 8) | (halfword >> 8));
+		spi.load_tx_data(halfword);
 		spi.start_transfer();
 	}
 
@@ -75,8 +76,7 @@ protected:
 		spi.set_tx_message_size(4);
 		spi.enable();
 		dcpin.high();
-		spi.load_tx_data(((halfword2 & 0x00FF) << 24) | ((halfword2 & 0xFF00) << 16) | ((halfword1 & 0x00FF) << 8) |
-						 (halfword1 >> 8));
+		spi.load_tx_data(MathTools::swap_bytes_and_combine(halfword2, halfword1));
 		spi.start_transfer();
 	}
 
@@ -86,8 +86,7 @@ protected:
 		spi.set_tx_message_size(4);
 		spi.enable();
 		dcpin.high();
-		spi.load_tx_data(((word & 0x000000FF) << 24) | ((word & 0x0000FF00) << 16) | ((word & 0x00FF0000) << 8) |
-						 (word >> 24));
+		spi.load_tx_data(MathTools::swap_bytes32(word));
 		spi.start_transfer();
 	}
 

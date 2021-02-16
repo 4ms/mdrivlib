@@ -73,8 +73,10 @@ static const uint8_t generic_st7789[] =  {
     ST77XX::RASET  , 4,              //  6: Row addr set, 4 args, no delay:
       0x00,
       0,             				//     YSTART = 0
-      320>>8,
-      320&0xFF, 			 		//     YEND = 320
+      //320>>8,
+	  0,
+	  240,
+      //320&0xFF, 			 		//     YEND = 320
     ST77XX::INVON  ,   ST77XX::ST_CMD_DELAY, //  7: hack
       10,
     ST77XX::NORON  ,   ST77XX::ST_CMD_DELAY, //  8: Normal display on, no args, w/delay
