@@ -54,7 +54,7 @@ public:
 	}
 
 	void start() {
-		Debug::Pin2::high();
+		// Debug::Pin2::high();
 		if (periph.is_end_of_transfer()) {
 			unselect_cur_chip();
 			periph.clear_EOT_flag();
@@ -67,7 +67,7 @@ public:
 		select_cur_chip();
 		periph.load_tx_data(cur_chan == 1 ? SWITCH_TO_CH1 : SWITCH_TO_CH2);
 		periph.start_transfer();
-		Debug::Pin2::low();
+		// Debug::Pin2::low();
 	}
 
 	void store_reading(uint16_t reading) {

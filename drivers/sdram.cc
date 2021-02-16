@@ -243,5 +243,6 @@ void SDRAMPeriph::do_test() {
 		__BKPT();
 	if (elapsed > 540) {
 		__BKPT();
-	}
+	} else
+		__BKPT();
 }

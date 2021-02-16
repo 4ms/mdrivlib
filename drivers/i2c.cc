@@ -192,11 +192,11 @@ I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingCon
 	if (HAL_I2C_Init(&hal_i2c_) != HAL_OK)
 		return I2C_INIT_ERR;
 
-	// if (HAL_I2CEx_ConfigAnalogFilter(&i2c_, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-	// 	return I2C_INIT_ERR;
+	if (HAL_I2CEx_ConfigAnalogFilter(&hal_i2c_, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+		return I2C_INIT_ERR;
 
-	// if (HAL_I2CEx_ConfigDigitalFilter(&i2c_, 0) != HAL_OK)
-	// 	return I2C_INIT_ERR;
+	if (HAL_I2CEx_ConfigDigitalFilter(&hal_i2c_, 0) != HAL_OK)
+		return I2C_INIT_ERR;
 
 	already_init = true;
 	return I2C_NO_ERR;
