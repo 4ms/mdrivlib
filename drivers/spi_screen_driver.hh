@@ -123,9 +123,6 @@ protected:
 		spi.clear_TXTF_flag();
 		_ready = true;
 		spi.enable_end_of_xfer_interrupt();
-		// flush TX FIFO?
-		// spi.start_transfer();
-		// spi.enable_end_of_xfer_interrupt(); ??
 	}
 };
 
