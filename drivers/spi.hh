@@ -100,10 +100,10 @@ public:
 		// CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold -1)<< SPI_CFG1_FTHLV_Pos);
 		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_02CYCLE;			   // right?
-		spih.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_02CYCLE; // right?
-		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;		   // what is this?
-		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE; // what is this? Example code says "Recommended"
+		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+		spih.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE; // what is this?
+		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
 		HAL_SPI_Init(&spih);
 	}
