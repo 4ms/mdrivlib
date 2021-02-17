@@ -3,6 +3,7 @@
 #include "rcc.hh"
 #include "register_access.hh"
 #include "stm32xx.h"
+#include "syscfg.hh"
 #include "system.hh"
 
 namespace mdrivlib
@@ -10,7 +11,6 @@ namespace mdrivlib
 namespace stm32h7x5
 {
 struct I2C {
-	using SYSCFG_FMP = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, PMCR), 0, 7>;
 
 	static void init(const I2CConfig &defs) {
 		// if (calc_clock_kHz(defs.timing) > 800000UL)
@@ -225,7 +225,7 @@ void I2CPeriph::i2c_error_handler() {
 	HAL_I2C_ER_IRQHandler(&hal_i2c_);
 	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE) {
 		HAL_I2C_Init(&hal_i2c_);
-}
+	}
 }
 
 void I2CPeriph::link_DMA_TX(DMA_HandleTypeDef *dmatx) {
