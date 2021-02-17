@@ -19,4 +19,6 @@ struct I2CConfig {
 	PinNoInit SCL;
 	PinNoInit SDA;
 	I2CTimingConfig timing;
+	unsigned priority1;
+	unsigned priority2;
 };

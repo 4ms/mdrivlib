@@ -4,40 +4,23 @@
 #include "system.hh"
 #include "util/math.hh"
 
-// Todo: this is not necessarily an SPI screen driver, it's a general SPI driver that has a hi/low pin for each transfer
-// But we can extend this to utilize DMA:
-// transmit writes into a framebuffer
-// timer ISR executes refresh
-// Look into DMA2D with TouchGFX
-
 template<typename ConfT>
-struct SpiScreenDriver {
-	SpiScreenDriver()
+struct SpiTransferDriver {
+	SpiTransferDriver()
 		: _ready(true) {
-		InterruptManager::registerISR(ConfT::ScreenSpiConf::IRQn, [this]() {
-			if (spi.is_end_of_transfer()) {
-				spi.clear_EOT_flag();
-				spi.clear_TXTF_flag();
-				_ready = true;
-			}
-		});
 
 		spi.disable();
 		spi.configure();
-		auto pri = System::encode_nvic_priority(ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2);
-		NVIC_SetPriority(ConfT::ScreenSpiConf::IRQn, pri);
-		NVIC_EnableIRQ(ConfT::ScreenSpiConf::IRQn);
 
 		spi.set_tx_message_size(1);
 		spi.enable();
-		spi.enable_end_of_xfer_interrupt();
 	}
 
 private:
-	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
-	typename ConfT::DCPin dcpin;
+	SpiPeriph<typename ConfT::SpiConf> spi;
+	typename ConfT::AuxPin dcpin;
+
 	volatile bool _ready;
-	// uint32_t _data_ctr;
 	void wait_until_ready() {
 		while (!_ready) {
 		}
@@ -46,6 +29,20 @@ private:
 
 protected:
 	enum PacketType { Cmd, Data };
+
+	void enable_ISR() {
+		InterruptManager::registerISR(ConfT::SpiConf::IRQn, [this]() {
+			if (spi.is_end_of_transfer()) {
+				spi.clear_EOT_flag();
+				spi.clear_TXTF_flag();
+				_ready = true;
+			}
+		});
+		auto pri = System::encode_nvic_priority(ConfT::SpiConf::priority1, ConfT::SpiConf::priority2);
+		NVIC_SetPriority(ConfT::SpiConf::IRQn, pri);
+		NVIC_EnableIRQ(ConfT::SpiConf::IRQn);
+		spi.enable_end_of_xfer_interrupt();
+	}
 
 	template<PacketType MessageType>
 	void transmit(uint8_t byte) {
