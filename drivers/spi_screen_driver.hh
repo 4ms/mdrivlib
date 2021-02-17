@@ -94,8 +94,10 @@ protected:
 	void begin_open_data_transmission(uint8_t fifo_size) {
 		while (!spi.tx_space_available())
 			;
+		spi.disable();
 		spi.set_tx_message_size(0);
 		spi.set_fifo_threshold(fifo_size);
+		spi.enable();
 		dcpin.high();
 		spi.start_transfer();
 		// spi.disable_end_of_xfer_interrupt(); ??
