@@ -22,6 +22,7 @@ struct SpiScreenDriver {
 			}
 		});
 
+		spi.disable();
 		spi.configure();
 		auto pri = System::encode_nvic_priority(ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2);
 		NVIC_SetPriority(ConfT::ScreenSpiConf::IRQn, pri);
@@ -70,7 +71,7 @@ protected:
 		spi.start_transfer();
 	}
 
-	void transmit_data_16(uint16_t halfword1, uint16_t halfword2) {
+	void transmit_data_32(uint16_t halfword1, uint16_t halfword2) {
 		wait_until_ready();
 		spi.disable();
 		spi.set_tx_message_size(4);
@@ -90,18 +91,18 @@ protected:
 		spi.start_transfer();
 	}
 
-	// Todo: does it help if we set TSIZE to how many bytes we actually want to send?
 	void begin_open_data_transmission(uint8_t fifo_size) {
+		wait_until_ready();
 		while (!spi.tx_space_available())
 			;
 		spi.disable();
 		spi.set_tx_message_size(0);
 		spi.set_fifo_threshold(fifo_size);
+		spi.disable_end_of_xfer_interrupt();
+		spi.clear_TXTF_flag();
 		spi.enable();
 		dcpin.high();
 		spi.start_transfer();
-		// spi.disable_end_of_xfer_interrupt(); ??
-		// spi.clear_TXTF_flag(); //??
 	}
 	void transmit_open_data16(uint16_t halfword) {
 		while (!spi.tx_space_available())
@@ -114,6 +115,14 @@ protected:
 		spi.load_tx_data(word);
 	}
 	void end_open_data_transmission() {
+		spi.disable();
+		spi.set_tx_message_size(1);
+		spi.set_fifo_threshold(1);
+		spi.enable();
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+		_ready = true;
+		spi.enable_end_of_xfer_interrupt();
 		// flush TX FIFO?
 		// spi.start_transfer();
 		// spi.enable_end_of_xfer_interrupt(); ??
