@@ -4,6 +4,14 @@
 #include "system.hh"
 #include "util/math.hh"
 
+// Todo: make this an arch-specific wrapper around a chip's SPI peripheral
+// Come up with a general interface:
+// send_blocking()
+// register_transfer_complete_ISR(func) //or just do it ourselves
+// send_with_ISR(uint32_t size, DataPacketT *data)
+// register_dma_xfer_complete_ISR(func) //or just do it ourselves
+// send_with_DMA(uint32_t size, DataPacketT *data)
+
 template<typename ConfT>
 struct SpiTransferDriver {
 	SpiTransferDriver()
