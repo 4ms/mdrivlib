@@ -9,6 +9,7 @@ struct DefaultSpiTransferConf {
 		static constexpr bool use_hardware_ss = true;
 		static constexpr SpiDataDir data_dir = SpiDataDir::TXOnly;
 	};
+	static constexpr uint32_t NumChannelsPerChip = 2;
 	using AuxPin = FPin<GPIO::A, 0>;
 };
 

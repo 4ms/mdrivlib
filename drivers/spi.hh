@@ -8,7 +8,7 @@
 // namespace mdrivlib {
 // namespace stm32h7x5 {
 template<typename ConfT>
-class SpiPeriph {
+struct SpiPeriph {
 public:
 	static inline const unsigned N = ConfT::PeriphNum;
 	template<unsigned M>
@@ -89,6 +89,7 @@ public:
 		spih.Init.NSS = ConfT::use_hardware_ss ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
 		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos;
 		// CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
+
 		spih.Init.FirstBit = ConfT::LSBfirst ? SPI_FIRSTBIT_LSB : SPI_FIRSTBIT_MSB;
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
 		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -96,12 +97,16 @@ public:
 		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
 		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
 		// SSOP
+
 		spih.Init.FifoThreshold = (ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos; // SPI_FIFO_THRESHOLD_01DATA;
 		// CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold -1)<< SPI_CFG1_FTHLV_Pos);
+
 		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-		spih.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+		spih.Init.MasterInterDataIdleness = (ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos;
+		// CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos);
+
 		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE; // what is this?
 		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;

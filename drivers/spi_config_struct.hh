@@ -22,6 +22,8 @@ struct DefaultSpiConf {
 	static constexpr uint16_t data_size = 16;
 	static constexpr SpiDataDir data_dir = SpiDataDir::Duplex;
 
+	static constexpr uint32_t NumClocksToggleSSInterData = 0;
+
 	static constexpr uint8_t FifoThreshold = 1;
 };
 
