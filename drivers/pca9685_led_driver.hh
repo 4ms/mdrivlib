@@ -7,6 +7,8 @@
 #include "led_driver.hh"
 #include "stm32xx.h"
 
+namespace mdrivlib
+{
 // Todo: the DMa drivers inherits from non-dma driver? Or else remove all non-DMA commands from DMA drivr
 class PCA9685DmaDriver : public ILedDmaDriver {
 public:
@@ -113,4 +115,4 @@ private:
 	const static inline uint32_t I2C_BASE_ADDRESS = 0b10000000;
 	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
-
+} // namespace mdrivlib

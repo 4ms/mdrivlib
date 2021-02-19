@@ -10,6 +10,7 @@ namespace mdrivlib
 {
 namespace stm32h7x5
 {
+// Todo: move to i2c_target.hh ?
 struct I2C {
 
 	static void init(const I2CConfig &defs) {
@@ -43,11 +44,10 @@ struct I2C {
 	}
 };
 } // namespace stm32h7x5
-} // namespace mdrivlib
 
-const uint32_t _I2C_FLAG_TIMEOUT = 1;
-const uint32_t _I2C_LONG_TIMEOUT = 30;
-const uint32_t _I2C_VLONG_TIMEOUT = 10000;
+constexpr uint32_t _I2C_FLAG_TIMEOUT = 1;
+constexpr uint32_t _I2C_LONG_TIMEOUT = 30;
+constexpr uint32_t _I2C_VLONG_TIMEOUT = 10000;
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
 	HAL_StatusTypeDef err;
@@ -235,4 +235,5 @@ void I2CPeriph::link_DMA_TX(DMA_HandleTypeDef *dmatx) {
 void I2CPeriph::link_DMA_RX(DMA_HandleTypeDef *dmarx) {
 	__HAL_LINKDMA(&hal_i2c_, hdmarx, *dmarx);
 }
+} // namespace mdrivlib
 

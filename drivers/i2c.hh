@@ -4,6 +4,8 @@
 #include "pin.hh"
 #include <stdint.h>
 
+namespace mdrivlib
+{
 class I2CPeriph {
 public:
 	enum Error { I2C_NO_ERR, I2C_INIT_ERR, I2C_ALREADY_INIT, I2C_XMIT_ERR };
@@ -49,3 +51,4 @@ private:
 		return _init_periph(periph, I2CTimingConfig{.PRESC = 0x50, .SCLDEL_SDADEL = 0x70, .SCLH = 0x75, .SCLL = 0xB1});
 	}
 };
+} // namespace mdrivlib

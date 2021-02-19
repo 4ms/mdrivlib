@@ -29,6 +29,8 @@
 #include "codec_WM8731.hh"
 #include "codec_WM8731_registers.h"
 
+namespace mdrivlib
+{
 using namespace _CodecWM8731;
 
 uint16_t default_codec_init_data[] = {
@@ -37,7 +39,7 @@ uint16_t default_codec_init_data[] = {
 	HPVOL_0dB, // Reg 02: Left Headphone out
 	HPVOL_0dB, // Reg 03: Right Headphone out
 	(MUTEMIC   // Reg 04: Analog Audio Path Control (maximum attenuation on sidetone, sidetone disabled, DAC selected,
-			 // Mute Mic, no bypass)
+			   // Mute Mic, no bypass)
 	 | INSEL_line | DACSEL | SIDEATT_neg6dB),
 	(DEEMPH_disable // Reg 05: Digital Audio Path Control: HPF, De-emp at 48kHz on DAC, do not soft mute dac
 	 | ADCHPFEnable),
@@ -136,4 +138,5 @@ DMA_HandleTypeDef *CodecWM8731::get_rx_dmahandle() {
 DMA_HandleTypeDef *CodecWM8731::get_tx_dmahandle() {
 	return sai_.get_tx_dmahandle();
 }
+} // namespace mdrivlib
 

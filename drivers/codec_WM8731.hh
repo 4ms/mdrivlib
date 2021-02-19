@@ -33,6 +33,9 @@
 #include "sai.hh"
 #include <stdint.h>
 
+namespace mdrivlib
+{
+
 class CodecWM8731 : public ICodec {
 public:
 	enum Error {
@@ -78,4 +81,4 @@ private:
 	// const static inline uint32_t I2C_BASE_ADDRESS = 0b10000000;
 	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
-
+} // namespace mdrivlib

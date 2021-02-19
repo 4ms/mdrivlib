@@ -1,5 +1,7 @@
 #include "pca9685_led_driver.hh"
 
+namespace mdrivlib
+{
 PCA9685DmaDriver::PCA9685DmaDriver(I2CPeriph &i2c,
 								   uint32_t num_chips,
 								   const DMA_Config &dma_defs,
@@ -177,3 +179,4 @@ uint8_t PCA9685DmaDriver::get_chip_num(uint8_t rgb_led_id) {
 uint32_t *const PCA9685DmaDriver::get_buf_addr(const uint32_t chip_num, const uint32_t led_num) {
 	return &(dma_.frame_buffer[chip_num * kNumLedsPerChip + led_num]);
 }
+} // namespace mdrivlib

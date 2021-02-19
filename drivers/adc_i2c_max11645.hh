@@ -11,7 +11,8 @@
 // tACQ takes 12 clock cycles ==> 206kHz fSCL
 
 // To enter HS mode (>400kHz), master must send 0000 1XXX  on bus to all devices
-
+namespace mdrivlib
+{
 class ADC_I2C_MAX11645 {
 public:
 	ADC_I2C_MAX11645(I2CPeriph &i2c, const ADC_I2C_Config &conf)
@@ -118,4 +119,4 @@ private:
 		DIFFERENTIAL = (0 << 0)
 	};
 };
-
+} // namespace mdrivlib

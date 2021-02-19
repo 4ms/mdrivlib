@@ -1,6 +1,8 @@
 #include "interrupt.hh"
 #include "pca9685_led_driver.hh"
 
+namespace mdrivlib
+{
 PCA9685DmaDriver::DMADriver::DMADriver(PCA9685DmaDriver &parent,
 									   const DMA_Config &dma_defs,
 									   PCA9685DmaDriver::FrameBuffer &frame_buf)
@@ -93,4 +95,4 @@ void PCA9685DmaDriver::DMADriver::write_current_frame_to_chip() {
 	if (err != I2CPeriph::Error::I2C_NO_ERR)
 		driver_.led_error_ = LEDDriverError::DMA_XMIT_ERR;
 }
-
+} // namespace mdrivlib
