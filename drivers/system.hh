@@ -91,6 +91,20 @@ struct Clocks {
 			else if (I2Cx == I2C3)
 				target::RCC_Control::I2C_3::clear();
 		}
+		static void force_reset(I2C_TypeDef *I2Cx) {
+			if (I2Cx == nullptr) {
+				return;
+			} else if (I2Cx == I2C1) {
+				target::RCC_Reset::I2C_1::set();
+				target::RCC_Reset::I2C_1::clear();
+			} else if (I2Cx == I2C2) {
+				target::RCC_Reset::I2C_2::set();
+				target::RCC_Reset::I2C_2::clear();
+			} else if (I2Cx == I2C3) {
+				target::RCC_Reset::I2C_3::set();
+				target::RCC_Reset::I2C_3::clear();
+			}
+		}
 	};
 
 	struct SAI {
