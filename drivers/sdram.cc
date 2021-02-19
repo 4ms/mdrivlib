@@ -5,7 +5,7 @@
 #include "rcc.hh"
 #include "stm32xx.h"
 
-// #define SDRAM_DO_TEST
+#define SDRAM_DO_TEST
 
 SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
 	: status(HAL_ERROR)
@@ -226,6 +226,7 @@ void SDRAMPeriph::do_test() {
 		__BKPT();
 	if (elapsed > 540) {
 		__BKPT();
-	} else
-		__BKPT();
+	}
+	// else
+	// 	__BKPT();
 }
