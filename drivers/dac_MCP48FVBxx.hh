@@ -14,48 +14,30 @@ struct DacSpi_MCP48FVBxx {
 
 	DacSpi_MCP48FVBxx() {
 		latch.high();
-		// Pin cs1{ConfT::SpiConf::CS1, PinMode::Output};
-		// cs1.high();
-		// spi.spi.disable();
-		// spi.spi.configure();
-		// spi.spi.set_tx_message_size(0);
-
-		// auto pri = System::encode_nvic_priority(SpiConf::priority1, SpiConf::priority2);
-		// NVIC_SetPriority(SpiConf::IRQn, pri);
-		// NVIC_EnableIRQ(SpiConf::IRQn);
 	}
 
 	void init() {
 		driver.init();
 		configure_dac_registers();
 		driver.begin_open_data_transmission(1);
-		// Todo: allow for synchonization between channels
-		// Write both DACs on a chip, setting an ISR to fire when done.
-		// Use the TXC ISR to latch, and then switch CS
 		latch.low();
 	}
 	void configure_dac_registers() {
-		driver.select_chip(0);
-		driver.begin_open_transmission();
-		driver.transmit(make_packet(VREF, WRITE, VrefB_PinUnbuffered | VrefA_PinUnbuffered));
-		driver.transmit(make_packet(POWER, WRITE, PowerA_On | PowerB_On));
-		driver.transmit(make_packet(GAINSTATUS, WRITE, GainB_1x | GainA_1x));
-		driver.wait_until_xfer_complete();
-		driver.unselect_chip(0);
-
-		driver.select_chip(1);
-		driver.begin_open_transmission();
-		driver.transmit(make_packet(VREF, WRITE, VrefB_PinUnbuffered | VrefA_PinUnbuffered));
-		driver.transmit(make_packet(POWER, WRITE, PowerA_On | PowerB_On));
-		driver.transmit(make_packet(GAINSTATUS, WRITE, GainB_1x | GainA_1x));
-		driver.wait_until_xfer_complete();
-		driver.unselect_chip(1);
+		for (int i = 0; i < ConfT::SpiConf::NumChips; i++) {
+			driver.select_chip(i);
+			driver.begin_open_transmission();
+			driver.transmit(make_packet(VREF, WRITE, VrefB_PinUnbuffered | VrefA_PinUnbuffered));
+			driver.transmit(make_packet(POWER, WRITE, PowerA_On | PowerB_On));
+			driver.transmit(make_packet(GAINSTATUS, WRITE, GainB_1x | GainA_1x));
+			driver.wait_until_xfer_complete();
+			driver.unselect_chip(i);
+		}
 	}
 
 	void set_output_blocking(uint32_t chip, uint32_t val) {
+		latch.high();
 		driver.select_chip(chip);
 		driver.begin_open_transmission();
-		// latch.high();
 		driver.transmit(make_packet(DACVALUE0, WRITE, (val >> 12) & 0xFFF));
 		driver.transmit(make_packet(DACVALUE1, WRITE, val & 0xFFF));
 		driver.wait_until_xfer_complete();
@@ -63,17 +45,20 @@ struct DacSpi_MCP48FVBxx {
 		driver.unselect_chip(chip);
 	}
 
-	void start() {
-		//
+	void prepare_xfer(uint32_t chip, uint32_t val) {
+		driver.select_chip(chip);
+		driver.transmit(make_packet(DACVALUE0, WRITE, (val >> 12) & 0xFFF));
+		driver.transmit(make_packet(DACVALUE1, WRITE, val & 0xFFF));
 	}
 
-	// void transmit(uint32_t word) {
-	// 	while (!spi.tx_space_available())
-	// 		;
-	// 	spi.load_tx_data(word);
-	// }
+	void do_xfer() {
+		driver.begin_open_transmission();
+	}
 
-	/// SpiPeriph<SpiConf> spi;
+	void end_xfer(uint32_t chip) {
+		driver.unselect_chip(chip);
+	}
+
 	SpiTransferDriver<ConfT> driver;
 	typename ConfT::AuxPin latch;
 
