@@ -30,6 +30,7 @@ struct AdcSpi_MAX11666 {
 private:
 	void _init() {
 		cur_chan = 0;
+		driver.spi.disable();
 		driver.spi.set_tx_message_size(1); // Todo: set to 0 after working as-is
 		// driver.init();
 		driver.spi.enable();
@@ -37,9 +38,6 @@ private:
 
 public:
 	void start_circular_mode() {
-		// auto pri = System::encode_nvic_priority(ConfT::priority1, ConfT::priority2);
-		// NVIC_SetPriority(ConfT::IRQn, pri);
-		// NVIC_EnableIRQ(ConfT::IRQn);
 		driver.spi.enable_end_of_xfer_interrupt();
 		InterruptManager::registerISR(ConfT::IRQn, ConfT::priority1, ConfT::priority2, [this]() {
 			start();
@@ -48,7 +46,6 @@ public:
 	}
 
 	void start() {
-		driver.spi.end_open_transmission();
 		if (driver.spi.is_end_of_transfer()) {
 			driver.unselect_cur_chip();
 			driver.spi.clear_EOT_flag();
