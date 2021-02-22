@@ -66,6 +66,8 @@ public:
 	void begin_open_transmission() {
 		spi.start_transfer();
 	}
+
+	// Todo is this needed?
 	void begin_open_data_transmission(uint8_t fifo_size) {
 		wait_until_ready();
 		spi.disable();

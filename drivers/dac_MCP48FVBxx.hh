@@ -18,22 +18,12 @@ struct DacSpi_MCP48FVBxx {
 
 	void init() {
 		driver.init();
-		configure_dac_registers();
+		_configure_dac_registers();
 		driver.begin_open_data_transmission(1);
 		latch.low();
 	}
-	void configure_dac_registers() {
-		for (int i = 0; i < ConfT::SpiConf::NumChips; i++) {
-			driver.select_chip(i);
-			driver.begin_open_transmission();
-			driver.transmit(make_packet(VREF, WRITE, VrefB_PinUnbuffered | VrefA_PinUnbuffered));
-			driver.transmit(make_packet(POWER, WRITE, PowerA_On | PowerB_On));
-			driver.transmit(make_packet(GAINSTATUS, WRITE, GainB_1x | GainA_1x));
-			driver.wait_until_xfer_complete();
-			driver.unselect_chip(i);
-		}
-	}
 
+public:
 	void set_output_blocking(uint32_t chip, uint32_t val) {
 		latch.high();
 		driver.select_chip(chip);
@@ -62,6 +52,7 @@ struct DacSpi_MCP48FVBxx {
 	SpiTransferDriver<ConfT> driver;
 	typename ConfT::AuxPin latch;
 
+private:
 	enum Register : uint8_t {
 		DACVALUE0 = 0x00 << 3,
 		DACVALUE1 = 0x01 << 3,
@@ -106,6 +97,17 @@ struct DacSpi_MCP48FVBxx {
 	}
 	constexpr uint32_t make_packet(Register r, Command c, uint16_t data) {
 		return (make_command(r, c) << 16) | data;
+	}
+	void _configure_dac_registers() {
+		for (int i = 0; i < ConfT::SpiConf::NumChips; i++) {
+			driver.select_chip(i);
+			driver.begin_open_transmission();
+			driver.transmit(make_packet(VREF, WRITE, VrefB_PinUnbuffered | VrefA_PinUnbuffered));
+			driver.transmit(make_packet(POWER, WRITE, PowerA_On | PowerB_On));
+			driver.transmit(make_packet(GAINSTATUS, WRITE, GainB_1x | GainA_1x));
+			driver.wait_until_xfer_complete();
+			driver.unselect_chip(i);
+		}
 	}
 };
 
