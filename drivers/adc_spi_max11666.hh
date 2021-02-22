@@ -30,34 +30,31 @@ struct AdcSpi_MAX11666 {
 private:
 	void _init() {
 		cur_chan = 0;
-		driver.spi.disable();
-		driver.spi.set_tx_message_size(1); // Todo: set to 0 after working as-is
-		// driver.init();
-		driver.spi.enable();
+		driver.init();
 	}
 
 public:
 	void start_circular_mode() {
-		driver.spi.enable_end_of_xfer_interrupt();
+		driver.enable_fixed_size_interrupt();
 		InterruptManager::registerISR(ConfT::IRQn, ConfT::priority1, ConfT::priority2, [this]() {
-			start();
+			read_and_switch_channels();
 			// Todo: check for OVR flag, UDR flag, MODF, FRE
 		});
 	}
 
 	void start() {
-		if (driver.spi.is_end_of_transfer()) {
-			driver.unselect_cur_chip();
-			driver.spi.clear_EOT_flag();
-			driver.spi.clear_TXTF_flag();
-			if (driver.spi.rx_packet_available()) {
-				store_reading(driver.spi.received_data());
-			}
-			advance_chip_and_channel();
-		}
 		driver.select_cur_chip();
 		driver.transmit(cur_chan == 1 ? SWITCH_TO_CH1 : SWITCH_TO_CH2);
 		driver.begin_open_transmission();
+	}
+
+	void read_and_switch_channels() {
+		if (driver.is_rx_packet_available()) {
+			driver.unselect_cur_chip();
+			store_reading(driver.received_data());
+			advance_chip_and_channel();
+		}
+		start();
 	}
 
 	void store_reading(uint16_t reading) {

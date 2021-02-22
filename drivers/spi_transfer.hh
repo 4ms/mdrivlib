@@ -28,31 +28,17 @@ struct SpiTransferDriver {
 		unselect_all_chips();
 		spi.disable();
 		spi.configure();
+
+		// Default to disable fixed-size transfers using End Of Transfer ISR
 		spi.set_tx_message_size(0);
 		spi.enable();
 	}
 
-public: /*private:*/
+private:
 	SpiPeriph<SpiConfT> spi;
 	uint32_t _cur_chip = 0;
 
 public:
-	// // is this needed?
-	// void enable_EOT_ISR() {
-	// 	InterruptManager::registerISR(SpiConfT::IRQn, [this]() {
-	// 		if (spi.is_end_of_transfer()) {
-	// 			spi.clear_EOT_flag();
-	// 			spi.clear_TXTF_flag();
-	// 			_ready = true;
-	// 		}
-	// 	});
-	// 	_ready = true;
-	// 	auto pri = System::encode_nvic_priority(SpiConfT::priority1, SpiConfT::priority2);
-	// 	NVIC_SetPriority(SpiConfT::IRQn, pri);
-	// 	NVIC_EnableIRQ(SpiConfT::IRQn);
-	// 	spi.enable_end_of_xfer_interrupt();
-	// }
-
 	void init() {
 		spi.disable();
 		spi.clear_TXTF_flag(); // needed?
@@ -60,30 +46,48 @@ public:
 	}
 
 	void transmit_blocking(uint32_t word) {
-		wait_until_ready_to_tx();
-		// spi.disable();
-		// spi.set_fifo_threshold(1);
-		// spi.enable();
-		spi.load_tx_data(word);
-		spi.start_transfer();
+		transmit_when_ready(word);
+		begin_open_transmission();
 		wait_until_tx_complete();
 	}
+
+	//
+	// Open transmission: tx without specifing a number of packets
+	//
 
 	void begin_open_transmission() {
 		spi.start_transfer();
 	}
+	void end_open_data_transmission() {
+	}
 
-	// Remove this?
-	/*
-	void begin_open_data_transmission(uint8_t fifo_size) {
-		wait_until_ready();
+	//
+	// Fixed size transmission: tx with a known number of packets
+	//
+
+	void begin_fixed_size_transmission(uint32_t num_packets) {
 		spi.disable();
-		spi.set_fifo_threshold(fifo_size);
-		spi.clear_TXTF_flag(); // needed?
+		spi.set_tx_message_size(num_packets);
 		spi.enable();
 		spi.start_transfer();
-	}*/
+	}
+	bool is_fixed_size_tx_complete() {
+		return spi.is_end_of_transfer();
+	}
+	void enable_fixed_size_interrupt() {
+		spi.enable_end_of_xfer_interrupt();
+	}
+	void disable_fixed_size_interrupt() {
+		spi.disable_end_of_xfer_interrupt();
+	}
+	void end_fixed_size_transmission() {
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+	}
 
+	//
+	// Transmit
+	//
 	void transmit_when_ready(uint32_t word) {
 		wait_until_ready_to_tx();
 		spi.load_tx_data(word);
@@ -91,7 +95,6 @@ public:
 	void transmit(uint32_t word) {
 		spi.load_tx_data(word);
 	}
-
 	bool is_tx_complete() {
 		return spi.is_tx_complete();
 	}
@@ -107,13 +110,19 @@ public:
 			;
 	}
 
-	void end_open_data_transmission() {
-		// needed?
-		spi.disable();
-		spi.clear_EOT_flag();
-		spi.clear_TXTF_flag();
-		spi.enable();
+	//
+	// Receive
+	//
+	uint32_t received_data() {
+		return spi.received_data();
 	}
+	bool is_rx_packet_available() {
+		return spi.rx_packet_available();
+	}
+
+	//
+	// Chip selection
+	//
 
 	uint32_t cur_chip() const {
 		return _cur_chip;
@@ -144,7 +153,6 @@ public:
 		if constexpr (SpiConfT::use_hardware_ss == false)
 			spi.template unselect<chip>();
 	}
-
 	void select_cur_chip() {
 		if constexpr (SpiConfT::use_hardware_ss == true)
 			return;
@@ -157,7 +165,6 @@ public:
 		if constexpr (SpiConfT::use_hardware_ss == false)
 			spi.unselect(_cur_chip);
 	}
-
 	void unselect_all_chips() {
 		auto tmp = _cur_chip;
 		do {
@@ -166,6 +173,9 @@ public:
 		} while (_cur_chip != tmp);
 	}
 
+	// Select next chip. Steps through sequentially: CS0 -> CS1 -> CS2 -> CS3 -> CS0
+	// Loops back to CS0 when it hits SpiConfT::NumChips.
+	// It's safe to call even if there only one chip (will be optimized out)
 	void advance_chip() {
 		if constexpr (SpiConfT::NumChips == 1)
 			return;
