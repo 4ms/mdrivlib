@@ -23,6 +23,7 @@ struct DefaultSpiConf {
 	static constexpr uint16_t data_size = 16;
 	static constexpr SpiDataDir data_dir = SpiDataDir::Duplex;
 
+	// SPI Mode 00 = false, false
 	static constexpr bool clock_high_when_idle = false;
 	static constexpr bool second_clk_transition_captures_data = false;
 

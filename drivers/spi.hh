@@ -80,39 +80,39 @@ public:
 			spih.Instance = SPI6;
 
 		spih.Init.Mode = SPI_MODE_MASTER;
-		// if constexpr (ConfT::is_controller)
-		// 	CFG2<SPI_CFG2_MASTER>::set();
-		// else
-		// 	CFG2<SPI_CFG2_MASTER>::clear();
+		if constexpr (ConfT::is_controller)
+			CFG2<SPI_CFG2_MASTER>::set();
+		else
+			CFG2<SPI_CFG2_MASTER>::clear();
 
 		spih.Init.Direction = ConfT::data_dir == SpiDataDir::Duplex ? 0UL // SPI_DIRECTION_2LINES
 							: ConfT::data_dir == SpiDataDir::TXOnly ? SPI_CFG2_COMM_0
 							: ConfT::data_dir == SpiDataDir::RXOnly ? SPI_CFG2_COMM_1
 																	: SPI_CFG2_COMM;
-		// if constexpr (ConfT::data_dir == SpiDataDir::Duplex)
-		// 	CFG2<SPI_CFG2_COMM>::write(0);
-		// if constexpr (ConfT::data_dir == SpiDataDir::TXOnly)
-		// 	CFG2<SPI_CFG2_COMM>::write(0b01 << SPI_CFG2_COMM_Pos);
-		// if constexpr (ConfT::data_dir == SpiDataDir::RXOnly)
-		// 	CFG2<SPI_CFG2_COMM>::write(0b10 << SPI_CFG2_COMM_Pos);
-		// if constexpr (ConfT::data_dir == SpiDataDir::HalfDuplex)
-		// 	CFG2<SPI_CFG2_COMM>::write(0b11 << SPI_CFG2_COMM_Pos);
+		if constexpr (ConfT::data_dir == SpiDataDir::Duplex)
+			CFG2<SPI_CFG2_COMM>::write(0);
+		if constexpr (ConfT::data_dir == SpiDataDir::TXOnly)
+			CFG2<SPI_CFG2_COMM>::write(0b01 << SPI_CFG2_COMM_Pos);
+		if constexpr (ConfT::data_dir == SpiDataDir::RXOnly)
+			CFG2<SPI_CFG2_COMM>::write(0b10 << SPI_CFG2_COMM_Pos);
+		if constexpr (ConfT::data_dir == SpiDataDir::HalfDuplex)
+			CFG2<SPI_CFG2_COMM>::write(0b11 << SPI_CFG2_COMM_Pos);
 
-		spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
-		// set_data_size(ConfT::data_size);
+		// spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
+		set_data_size(ConfT::data_size);
 		// or: CFG1<SPI_CFG1_DSIZE>::write((ConfT::data_size - 1) << SPI_CFG1_DSIZE_Pos);
 
 		spih.Init.CLKPolarity = SPI_POLARITY_LOW;
-		// if constexpr(ConfT::clock_high_when_idle)
-		// CFG2<SPI_CFG2_CPOL>::set();
-		// else
-		// CFG2<SPI_CFG2_CPOL>::clear();
+		if constexpr (ConfT::clock_high_when_idle)
+			CFG2<SPI_CFG2_CPOL>::set();
+		else
+			CFG2<SPI_CFG2_CPOL>::clear();
 
 		spih.Init.CLKPhase = SPI_PHASE_1EDGE;
-		// if constexpr(ConfT::second_clk_transition_captures_data)
-		// CFG2<SPI_CFG2_CPHA>::set();
-		// else
-		// CFG2<SPI_CFG2_CPHA>::clear();
+		if constexpr (ConfT::second_clk_transition_captures_data)
+			CFG2<SPI_CFG2_CPHA>::set();
+		else
+			CFG2<SPI_CFG2_CPHA>::clear();
 
 		spih.Init.NSS = ConfT::use_hardware_ss ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
 		if constexpr (ConfT::use_hardware_ss) {
@@ -227,6 +227,12 @@ public:
 		target::SPI<N>::TXDR::write(data0 << 16 | data1);
 	}
 	void load_tx_data(uint32_t data) {
+		// Todo: Do we need to have variable-sized writes?
+		// if constexpr (ConfT::data_size == 16)
+		// 	target::SPI<N>::TXDR_16::write((uint16_t)data);
+		// if constexpr (ConfT::data_size == 8)
+		// 	target::SPI<N>::TXDR_8::write((uint8_t)data);
+		// if constexpr (ConfT::data_size > 16)
 		target::SPI<N>::TXDR::write(data);
 	}
 	void start_transfer() {
@@ -250,6 +256,7 @@ public:
 
 	void enable_auto_suspend() {
 		if constexpr (ConfT::data_dir != SpiDataDir::TXOnly && ConfT::is_controller) {
+			// Todo
 		}
 	}
 
