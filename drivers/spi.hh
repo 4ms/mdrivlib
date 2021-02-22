@@ -25,6 +25,8 @@ public:
 	using CFG1 = typename target::SPI<N>::template CFG1<M>;
 	template<unsigned M>
 	using CFG2 = typename target::SPI<N>::template CFG2<M>;
+	template<unsigned M>
+	using CRCPOLY = typename target::SPI<N>::template CRCPOLY<M>;
 
 	SpiPeriph() {
 	}
@@ -80,6 +82,7 @@ public:
 			spih.Instance = SPI6;
 
 		spih.Init.Mode = SPI_MODE_MASTER;
+
 		if constexpr (ConfT::is_controller)
 			CFG2<SPI_CFG2_MASTER>::set();
 		else
@@ -98,7 +101,7 @@ public:
 		if constexpr (ConfT::data_dir == SpiDataDir::HalfDuplex)
 			CFG2<SPI_CFG2_COMM>::write(0b11 << SPI_CFG2_COMM_Pos);
 
-		// spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
+		spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
 		set_data_size(ConfT::data_size);
 		// or: CFG1<SPI_CFG1_DSIZE>::write((ConfT::data_size - 1) << SPI_CFG1_DSIZE_Pos);
 
@@ -115,43 +118,78 @@ public:
 			CFG2<SPI_CFG2_CPHA>::clear();
 
 		spih.Init.NSS = ConfT::use_hardware_ss ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
+		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
 		if constexpr (ConfT::use_hardware_ss) {
 			CFG2<SPI_CFG2_SSOE>::set();
 			CFG2<SPI_CFG2_SSM>::clear();
+			if constexpr (ConfT::pulse_hardware_ss)
+				CFG2<SPI_CFG2_SSOM>::set();
+			else
+				CFG2<SPI_CFG2_SSOM>::clear();
 		} else {
 			CFG2<SPI_CFG2_SSOE>::clear();
 			CFG2<SPI_CFG2_SSM>::set();
 		}
 
+		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
+		if constexpr (ConfT::SS_active_high)
+			CFG2<SPI_CFG2_SSIOP>::set();
+		else
+			CFG2<SPI_CFG2_SSIOP>::clear();
+
 		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos;
-		// CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
+		CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
 
 		spih.Init.FirstBit = ConfT::LSBfirst ? SPI_FIRSTBIT_LSB : SPI_FIRSTBIT_MSB;
-		// if constexpr (ConfT::LSBfirst)
-		// 	CFG2<SPI_CFG2_LSBFRST>::set();
-		// else
-		// 	CFG2<SPI_CFG2_LSBFRST>::clear();
+		if constexpr (ConfT::LSBfirst)
+			CFG2<SPI_CFG2_LSBFRST>::set();
+		else
+			CFG2<SPI_CFG2_LSBFRST>::clear();
 
 		spih.Init.TIMode = SPI_TIMODE_DISABLE;
+		// Todo: make configurable
+		CFG2<SPI_CFG2_SP>::write(0);
+
 		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 		spih.Init.CRCPolynomial = 7;
-		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-		// SSOP
-
-		spih.Init.FifoThreshold = (ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos; // SPI_FIFO_THRESHOLD_01DATA;
-		// CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold -1)<< SPI_CFG1_FTHLV_Pos);
-
 		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
 		spih.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-		spih.Init.MasterInterDataIdleness = (ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos;
-		// CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos);
+		if constexpr (ConfT::EnableCRC) {
+			CFG1<SPI_CFG1_CRCEN>::set();
+			CFG1<SPI_CFG1_CRCSIZE>::write(ConfT::CRCSize);
+			CRCPOLY<SPI_CRCPOLY_CRCPOLY>::write(ConfT::CRCPoly);
+			// Todo: make configurable
+			CR1<SPI_CR1_TCRCINI>::clear();
+			// Todo: make configurable
+			CR1<SPI_CR1_RCRCINI>::clear();
+		} else
+			CFG1<SPI_CFG1_CRCEN>::clear();
 
-		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE; // what is this?
+		spih.Init.FifoThreshold = (ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos; // SPI_FIFO_THRESHOLD_01DATA;
+		CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos);
+
+		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
+		CFG2<SPI_CFG2_MSSI>::write((ConfT::NumClocksDelayBeforeData & SPI_CFG2_MSSI_Msk) << SPI_CFG2_MSSI_Pos);
+
+		spih.Init.MasterInterDataIdleness = (ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos;
+		CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos);
+
+		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
+		// Todo: make configurable
+		CR1<SPI_CR1_MASRX>::clear();
+
 		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;
+		// Todo: make configurable
+		CFG2<SPI_CFG2_AFCNTR>::set();
+
+		// Todo: make configurable
+		// CR1<SPI_CR1_IOLOCK>::set();
+
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
-		HAL_SPI_Init(&spih);
+		// Todo: make configurable
+		CFG2<SPI_CFG2_IOSWP>::clear();
+
+		// HAL_SPI_Init(&spih);
 	}
 
 	void enable() {
@@ -256,7 +294,7 @@ public:
 
 	void enable_auto_suspend() {
 		if constexpr (ConfT::data_dir != SpiDataDir::TXOnly && ConfT::is_controller) {
-			// Todo
+			CR1<SPI_CR1_MASRX>::set();
 		}
 	}
 

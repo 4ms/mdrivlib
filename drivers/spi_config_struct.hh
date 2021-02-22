@@ -26,8 +26,15 @@ struct DefaultSpiConf {
 	// SPI Mode 00 = false, false
 	static constexpr bool clock_high_when_idle = false;
 	static constexpr bool second_clk_transition_captures_data = false;
+	static constexpr bool SS_active_high = false;
+	static constexpr bool pulse_hardware_ss = false;
+
+	static constexpr bool EnableCRC = false;
+	static constexpr uint16_t CRCSize = 0;
+	static constexpr uint32_t CRCPoly = 0;
 
 	static constexpr uint32_t NumClocksToggleSSInterData = 0;
+	static constexpr uint32_t NumClocksDelayBeforeData = 0;
 
 	static constexpr uint8_t FifoThreshold = 1;
 };
