@@ -83,11 +83,6 @@ public:
 
 		spih.Init.Mode = SPI_MODE_MASTER;
 
-		if constexpr (ConfT::is_controller)
-			CFG2<SPI_CFG2_MASTER>::set();
-		else
-			CFG2<SPI_CFG2_MASTER>::clear();
-
 		spih.Init.Direction = ConfT::data_dir == SpiDataDir::Duplex ? 0UL // SPI_DIRECTION_2LINES
 							: ConfT::data_dir == SpiDataDir::TXOnly ? SPI_CFG2_COMM_0
 							: ConfT::data_dir == SpiDataDir::RXOnly ? SPI_CFG2_COMM_1
@@ -122,6 +117,7 @@ public:
 		if constexpr (ConfT::use_hardware_ss) {
 			CFG2<SPI_CFG2_SSOE>::set();
 			CFG2<SPI_CFG2_SSM>::clear();
+			// CFG2<SPI_CFG2_SSOM>::write(ConfT::pulse_hardware_ss ? SPI_CFG2_SSOM : 0);
 			if constexpr (ConfT::pulse_hardware_ss)
 				CFG2<SPI_CFG2_SSOM>::set();
 			else
@@ -130,6 +126,11 @@ public:
 			CFG2<SPI_CFG2_SSOE>::clear();
 			CFG2<SPI_CFG2_SSM>::set();
 		}
+
+		if constexpr (!ConfT::use_hardware_ss && !ConfT::SS_active_high && ConfT::is_controller)
+			CR1<SPI_CR1_SSI>::set();
+		else
+			CR1<SPI_CR1_SSI>::clear();
 
 		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
 		if constexpr (ConfT::SS_active_high)
@@ -183,13 +184,16 @@ public:
 		CFG2<SPI_CFG2_AFCNTR>::set();
 
 		// Todo: make configurable
-		// CR1<SPI_CR1_IOLOCK>::set();
+		CR1<SPI_CR1_IOLOCK>::clear();
 
 		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
 		// Todo: make configurable
 		CFG2<SPI_CFG2_IOSWP>::clear();
 
-		// HAL_SPI_Init(&spih);
+		if constexpr (ConfT::is_controller)
+			CFG2<SPI_CFG2_MASTER>::set();
+		else
+			CFG2<SPI_CFG2_MASTER>::clear();
 	}
 
 	void enable() {
