@@ -19,7 +19,7 @@ struct DacSpi_MCP48FVBxx {
 	void init() {
 		driver.init();
 		configure_dac_registers();
-		driver.begin_open_data_transmission(1);
+		driver.begin_open_transmission();
 		latch.low();
 	}
 	void configure_dac_registers() {
@@ -29,7 +29,8 @@ struct DacSpi_MCP48FVBxx {
 			driver.transmit(make_packet(VREF, WRITE, VrefB_PinUnbuffered | VrefA_PinUnbuffered));
 			driver.transmit(make_packet(POWER, WRITE, PowerA_On | PowerB_On));
 			driver.transmit(make_packet(GAINSTATUS, WRITE, GainB_1x | GainA_1x));
-			driver.wait_until_xfer_complete();
+			// could be: queue_transmission(...); start_transmission()
+			driver.wait_until_tx_complete();
 			driver.unselect_chip(i);
 		}
 	}
@@ -59,7 +60,7 @@ struct DacSpi_MCP48FVBxx {
 		driver.unselect_chip(chip);
 	}
 
-	SpiTransferDriver<ConfT> driver;
+	SpiTransferDriver<typename ConfT::SpiConf> driver;
 	typename ConfT::AuxPin latch;
 
 	enum Register : uint8_t {
