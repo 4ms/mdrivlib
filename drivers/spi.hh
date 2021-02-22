@@ -126,6 +126,7 @@ public:
 			CFG2<SPI_CFG2_LSBFRST>::clear();
 
 		// Todo: make configurable
+		// TI Mode
 		CFG2<SPI_CFG2_SP>::write(0);
 
 		if constexpr (ConfT::EnableCRC) {
