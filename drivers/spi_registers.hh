@@ -44,15 +44,20 @@ struct SPI {
 
 	using RXDR = RegisterBits<ReadOnly, BASE + offsetof(SPI_TypeDef, RXDR), 0xFFFFFFFF>;
 
-	// CRCPOLY
+	template<RegisterDataT Mask = 0xFFFFFFFF>
+	using CRCPOLY = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, CRCPOLY), Mask>;
 
-	// TXCRC
+	template<RegisterDataT Mask = 0xFFFFFFFF>
+	using TXCRC = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, TXCRC), Mask>;
 
-	// RXCRC
+	template<RegisterDataT Mask = 0xFFFFFFFF>
+	using RXCRC = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, RXCRC), Mask>;
 
-	// UDRDR
+	template<RegisterDataT Mask = 0xFFFFFFFF>
+	using UDRDR = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, UDRDR), Mask>;
 
-	// I2SCFGR
+	template<RegisterDataT Mask = 0xFFFFFFFF>
+	using I2SCFGR = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, I2SCFGR), Mask>;
 };
 } // namespace stm32h7x5
 } // namespace mdrivlib

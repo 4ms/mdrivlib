@@ -8,6 +8,7 @@ using IRQType = IRQn_Type;
 using IRQType = uint32_t;
 #endif
 
+#include "system.hh"
 #include <functional>
 
 // Interrupt class
@@ -29,7 +30,13 @@ public:
 		ISRs[irqnum] = std::move(func);
 	}
 
-	// static inline void callISR(IRQType irqnum) { ISRs[irqnum](); }
+	static void registerISR(IRQType irqnum, unsigned priority1, unsigned priority2, ISRType &&func) {
+		auto pri = System::encode_nvic_priority(priority1, priority2);
+		NVIC_SetPriority(irqnum, pri);
+		NVIC_EnableIRQ(irqnum);
+		ISRs[irqnum] = std::move(func);
+	}
+
 	static inline void callISR(uint32_t irqnum) {
 		ISRs[irqnum]();
 	}

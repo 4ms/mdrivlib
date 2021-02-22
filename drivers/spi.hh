@@ -25,6 +25,8 @@ public:
 	using CFG1 = typename target::SPI<N>::template CFG1<M>;
 	template<unsigned M>
 	using CFG2 = typename target::SPI<N>::template CFG2<M>;
+	template<unsigned M>
+	using CRCPOLY = typename target::SPI<N>::template CRCPOLY<M>;
 
 	SpiPeriph() {
 	}
@@ -42,9 +44,7 @@ public:
 
 		if (ConfT::use_hardware_ss) {
 			Pin init_nss{ConfT::CS0, PinMode::Alt};
-			//    CFG2<SPI_CFG2_SSOE>::set();
 		} else {
-			//    CFG2<SPI_CFG2_SSOE>::clear();
 			Pin init_cs0{ConfT::CS0, PinMode::Output};
 			unselect<0>();
 			if constexpr (ConfT::NumChips > 1) {
@@ -64,94 +64,95 @@ public:
 
 		target::RCC_Control::SPI<N>::Reg::set();
 
-		// Todo: use our registers
-		SPI_HandleTypeDef spih;
-		if constexpr (N == 1)
-			spih.Instance = SPI1;
-		if constexpr (N == 2)
-			spih.Instance = SPI2;
-		if constexpr (N == 3)
-			spih.Instance = SPI3;
-		if constexpr (N == 4)
-			spih.Instance = SPI4;
-		if constexpr (N == 5)
-			spih.Instance = SPI5;
-		if constexpr (N == 6)
-			spih.Instance = SPI6;
+		// Todo: make configurable
+		CR1<SPI_CR1_IOLOCK>::clear();
 
-		spih.Init.Mode = SPI_MODE_MASTER;
-		// if constexpr (ConfT::is_controller)
-		// 	CFG2<SPI_CFG2_MASTER>::set();
-		// else
-		// 	CFG2<SPI_CFG2_MASTER>::clear();
+		if constexpr (ConfT::data_dir == SpiDataDir::Duplex)
+			CFG2<SPI_CFG2_COMM>::write(0);
+		if constexpr (ConfT::data_dir == SpiDataDir::TXOnly)
+			CFG2<SPI_CFG2_COMM>::write(0b01 << SPI_CFG2_COMM_Pos);
+		if constexpr (ConfT::data_dir == SpiDataDir::RXOnly)
+			CFG2<SPI_CFG2_COMM>::write(0b10 << SPI_CFG2_COMM_Pos);
+		if constexpr (ConfT::data_dir == SpiDataDir::HalfDuplex)
+			CFG2<SPI_CFG2_COMM>::write(0b11 << SPI_CFG2_COMM_Pos);
 
-		spih.Init.Direction = ConfT::data_dir == SpiDataDir::Duplex ? 0UL // SPI_DIRECTION_2LINES
-							: ConfT::data_dir == SpiDataDir::TXOnly ? SPI_CFG2_COMM_0
-							: ConfT::data_dir == SpiDataDir::RXOnly ? SPI_CFG2_COMM_1
-																	: SPI_CFG2_COMM;
-		// if constexpr (ConfT::data_dir == SpiDataDir::Duplex)
-		// 	CFG2<SPI_CFG2_COMM>::write(0);
-		// if constexpr (ConfT::data_dir == SpiDataDir::TXOnly)
-		// 	CFG2<SPI_CFG2_COMM>::write(0b01 << SPI_CFG2_COMM_Pos);
-		// if constexpr (ConfT::data_dir == SpiDataDir::RXOnly)
-		// 	CFG2<SPI_CFG2_COMM>::write(0b10 << SPI_CFG2_COMM_Pos);
-		// if constexpr (ConfT::data_dir == SpiDataDir::HalfDuplex)
-		// 	CFG2<SPI_CFG2_COMM>::write(0b11 << SPI_CFG2_COMM_Pos);
-
-		spih.Init.DataSize = (ConfT::data_size & 0x001F) - 1;
-		// set_data_size(ConfT::data_size);
+		set_data_size(ConfT::data_size);
 		// or: CFG1<SPI_CFG1_DSIZE>::write((ConfT::data_size - 1) << SPI_CFG1_DSIZE_Pos);
 
-		spih.Init.CLKPolarity = SPI_POLARITY_LOW;
-		// if constexpr(ConfT::clock_high_when_idle)
-		// CFG2<SPI_CFG2_CPOL>::set();
-		// else
-		// CFG2<SPI_CFG2_CPOL>::clear();
+		if constexpr (ConfT::clock_high_when_idle)
+			CFG2<SPI_CFG2_CPOL>::set();
+		else
+			CFG2<SPI_CFG2_CPOL>::clear();
 
-		spih.Init.CLKPhase = SPI_PHASE_1EDGE;
-		// if constexpr(ConfT::second_clk_transition_captures_data)
-		// CFG2<SPI_CFG2_CPHA>::set();
-		// else
-		// CFG2<SPI_CFG2_CPHA>::clear();
+		if constexpr (ConfT::second_clk_transition_captures_data)
+			CFG2<SPI_CFG2_CPHA>::set();
+		else
+			CFG2<SPI_CFG2_CPHA>::clear();
 
-		spih.Init.NSS = ConfT::use_hardware_ss ? SPI_NSS_HARD_OUTPUT : SPI_NSS_SOFT;
 		if constexpr (ConfT::use_hardware_ss) {
 			CFG2<SPI_CFG2_SSOE>::set();
 			CFG2<SPI_CFG2_SSM>::clear();
+			// CFG2<SPI_CFG2_SSOM>::write(ConfT::pulse_hardware_ss ? SPI_CFG2_SSOM : 0);
+			if constexpr (ConfT::pulse_hardware_ss)
+				CFG2<SPI_CFG2_SSOM>::set();
+			else
+				CFG2<SPI_CFG2_SSOM>::clear();
 		} else {
 			CFG2<SPI_CFG2_SSOE>::clear();
 			CFG2<SPI_CFG2_SSM>::set();
 		}
 
-		spih.Init.BaudRatePrescaler = (MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos;
-		// CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
+		if constexpr (!ConfT::use_hardware_ss && !ConfT::SS_active_high && ConfT::is_controller)
+			CR1<SPI_CR1_SSI>::set();
+		else
+			CR1<SPI_CR1_SSI>::clear();
 
-		spih.Init.FirstBit = ConfT::LSBfirst ? SPI_FIRSTBIT_LSB : SPI_FIRSTBIT_MSB;
-		// if constexpr (ConfT::LSBfirst)
-		// 	CFG2<SPI_CFG2_LSBFRST>::set();
-		// else
-		// 	CFG2<SPI_CFG2_LSBFRST>::clear();
+		if constexpr (ConfT::SS_active_high)
+			CFG2<SPI_CFG2_SSIOP>::set();
+		else
+			CFG2<SPI_CFG2_SSIOP>::clear();
 
-		spih.Init.TIMode = SPI_TIMODE_DISABLE;
-		spih.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-		spih.Init.CRCPolynomial = 7;
-		spih.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-		spih.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-		// SSOP
+		// FixMe: This must be set/cleared AFTER CR1_SSI is set/cleared. Why?
+		if constexpr (ConfT::is_controller)
+			CFG2<SPI_CFG2_MASTER>::set();
+		else
+			CFG2<SPI_CFG2_MASTER>::clear();
 
-		spih.Init.FifoThreshold = (ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos; // SPI_FIFO_THRESHOLD_01DATA;
-		// CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold -1)<< SPI_CFG1_FTHLV_Pos);
+		CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
 
-		spih.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-		spih.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-		spih.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-		spih.Init.MasterInterDataIdleness = (ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos;
-		// CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos);
+		if constexpr (ConfT::LSBfirst)
+			CFG2<SPI_CFG2_LSBFRST>::set();
+		else
+			CFG2<SPI_CFG2_LSBFRST>::clear();
 
-		spih.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE; // what is this?
-		spih.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;
-		spih.Init.IOSwap = SPI_IO_SWAP_DISABLE;
-		HAL_SPI_Init(&spih);
+		// Todo: make configurable
+		CFG2<SPI_CFG2_SP>::write(0);
+
+		if constexpr (ConfT::EnableCRC) {
+			CFG1<SPI_CFG1_CRCEN>::set();
+			CFG1<SPI_CFG1_CRCSIZE>::write(ConfT::CRCSize);
+			CRCPOLY<SPI_CRCPOLY_CRCPOLY>::write(ConfT::CRCPoly);
+			// Todo: make configurable
+			CR1<SPI_CR1_TCRCINI>::clear();
+			// Todo: make configurable
+			CR1<SPI_CR1_RCRCINI>::clear();
+		} else
+			CFG1<SPI_CFG1_CRCEN>::clear();
+
+		CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos);
+
+		CFG2<SPI_CFG2_MSSI>::write((ConfT::NumClocksDelayBeforeData & SPI_CFG2_MSSI_Msk) << SPI_CFG2_MSSI_Pos);
+
+		CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos);
+
+		// Todo: make configurable
+		CR1<SPI_CR1_MASRX>::clear();
+
+		// Todo: make configurable
+		CFG2<SPI_CFG2_AFCNTR>::set();
+
+		// Todo: make configurable
+		CFG2<SPI_CFG2_IOSWP>::clear();
 	}
 
 	void enable() {
@@ -227,6 +228,12 @@ public:
 		target::SPI<N>::TXDR::write(data0 << 16 | data1);
 	}
 	void load_tx_data(uint32_t data) {
+		// Todo: Do we need to have variable-sized writes?
+		// if constexpr (ConfT::data_size == 16)
+		// 	target::SPI<N>::TXDR_16::write((uint16_t)data);
+		// if constexpr (ConfT::data_size == 8)
+		// 	target::SPI<N>::TXDR_8::write((uint8_t)data);
+		// if constexpr (ConfT::data_size > 16)
 		target::SPI<N>::TXDR::write(data);
 	}
 	void start_transfer() {
@@ -250,6 +257,7 @@ public:
 
 	void enable_auto_suspend() {
 		if constexpr (ConfT::data_dir != SpiDataDir::TXOnly && ConfT::is_controller) {
+			CR1<SPI_CR1_MASRX>::set();
 		}
 	}
 
