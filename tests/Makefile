@@ -22,11 +22,12 @@ BUILDDIR = build
 CXXFLAGS = 	-Wall \
 		 	-std=gnu++2a \
 			-stdlib=libc++ \
-			-include tests/stubs/stm32/fake_gpio.h \
-			-I$(DOCTEST_DIR) \
-			-I$(TEST_DIR) \
+			-include $(TEST_DIR)/stubs/stm32/fake_gpio.h \
+			-include $(TEST_DIR)/stubs/system.hh \
 			-I$(TEST_DIR)/stubs \
 			-I$(TEST_DIR)/stubs/stm32 \
+			-I$(DOCTEST_DIR) \
+			-I$(TEST_DIR) \
 			-I. \
 			-I../stm32/cmsis/include \
 			-I../stm32/device/include \

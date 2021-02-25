@@ -1,14 +1,15 @@
 #pragma once
 
-#if defined(STM32F7) || defined(STM32H7) || defined(STM32F4) || defined(STM32MP1)
 #include "stm32xx.h"
 using IRQType = IRQn_Type;
+
+// FixMe: how to get around this ugly PP stuff?
+#ifdef TESTPROJECT
+#include "stubs/system.hh"
 #else
-#include <cstdint>
-using IRQType = uint32_t;
+#include "system.hh"
 #endif
 
-#include "system.hh"
 #include <functional>
 
 // Interrupt class

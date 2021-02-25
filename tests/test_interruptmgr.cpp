@@ -1,17 +1,30 @@
 #include "doctest.h"
-#undef STM32H7
-#undef STM32F7
-#undef STM32F4
+// #undef STM32H7
+// #undef STM32F7
+// #undef STM32F4
 #include "drivers/interrupt.hh"
-using IRQType = uint32_t;
+//#include "stm32xx.h"
+// using IRQType = uint32_t;
 
 static int g_state = 0;
 
-static void some_func(int some_arg) { g_state = some_arg; }
+static void some_func(int some_arg) {
+	g_state = some_arg;
+}
+
+static IRQType irqmap[7] = {
+	ADC_IRQn,
+	CEC_IRQn,
+	COMP_IRQn,
+	CRS_IRQn,
+	ECC_IRQn,
+	DCMI_IRQn,
+	FPU_IRQn,
+};
 
 static void register_a_local_lamba(uint32_t testIRQnum, uint32_t state_value) {
 	auto isrfunc = [state_value = state_value]() { some_func(state_value); };
-	InterruptManager::registerISR(testIRQnum, isrfunc);
+	InterruptManager::registerISR(irqmap[testIRQnum], isrfunc);
 }
 
 TEST_CASE("InterruptManager Tests") {
@@ -22,21 +35,21 @@ TEST_CASE("InterruptManager Tests") {
 		unsigned testIRQnum = 5;
 
 		Interrupt myint{
-			testIRQnum,
-			[&]() { some_func(222222); },
+			irqmap[testIRQnum],
+			[]() { some_func(222222); },
 		};
 
 		CHECK_EQ(0, g_state);
-		InterruptManager::callISR(testIRQnum);
+		InterruptManager::callISR(irqmap[testIRQnum]);
 		CHECK_EQ(222222, g_state);
 	}
 
 	SUBCASE("interrupt_tests, static_init") {
 		unsigned testIRQnum = 5;
-		InterruptManager::registerISR(testIRQnum, []() { some_func(33333); });
+		InterruptManager::registerISR(irqmap[testIRQnum], []() { some_func(33333); });
 
 		CHECK_EQ(0, g_state);
-		InterruptManager::callISR(testIRQnum);
+		InterruptManager::callISR(irqmap[testIRQnum]);
 		CHECK_EQ(33333, g_state);
 	}
 
@@ -46,7 +59,7 @@ TEST_CASE("InterruptManager Tests") {
 		register_a_local_lamba(testIRQnum, 4444);
 
 		CHECK_EQ(0, g_state);
-		InterruptManager::callISR(testIRQnum);
+		InterruptManager::callISR(irqmap[testIRQnum]);
 		CHECK_EQ(4444, g_state);
 	}
 }
