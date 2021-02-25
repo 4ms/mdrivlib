@@ -1,4 +1,6 @@
 #pragma once
+#include "stm32xx.h"
+#include <cstdint>
 
 namespace mdrivlib
 {
@@ -9,7 +11,13 @@ public:
 		init();
 	}
 	void init() {
-		DWT->CTRL = DWT->CTRL | DWT_CTRL_CYCCNTENA_Msk;
+		if (DWT->CTRL & DWT_CTRL_NOCYCCNT_Msk)
+			__BKPT();
+		else {
+			DWT->CTRL = DWT->CTRL & ~DWT_CTRL_CYCCNTENA_Msk;
+			DWT->CTRL = DWT->CTRL | DWT_CTRL_CYCCNTENA_Msk;
+			DWT->CTRL = DWT->CTRL | DWT_CTRL_PCSAMPLENA_Msk;
+		}
 	}
 
 	void start_measurement() {
@@ -19,7 +27,7 @@ public:
 	}
 
 	void end_measurement() {
-		uint32_t _measured_tm = read_cycle_count() - _start_tm;
+		_measured_tm = read_cycle_count() - _start_tm;
 	}
 
 	uint32_t get_last_measurement_raw() {
@@ -30,10 +38,10 @@ public:
 		return _period;
 	}
 
-	float get_last_measurement_load_decimal() {
+	float get_last_measurement_load_float() {
 		if (_period == 0)
 			return 0;
-		return _measured_tm / _period;
+		return (float)_measured_tm / (float)_period;
 	}
 
 	uint32_t get_last_measurement_load_percent() {
@@ -46,7 +54,7 @@ private:
 	uint32_t _last_start_tm = 0;
 	uint32_t _start_tm = 0;
 	uint32_t _measured_tm = 0;
-	uint32_t _period = 1;
+	uint32_t _period = 0;
 
 	uint32_t read_cycle_count() {
 		return DWT->CYCCNT;
