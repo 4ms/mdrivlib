@@ -11,5 +11,4 @@ CompileFlags:
 		"-DSTM32H7",
 		"-DSTM32H755xx",
 		"-DCORE_CM7",
-		"-DTESTPROJECT"
 	]
