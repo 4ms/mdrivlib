@@ -80,8 +80,10 @@ struct Colors {
 	static constexpr Color white = Color(255, 255, 255);
 
 	static constexpr Color red = Color(255, 0, 0);
-	static constexpr Color orange = Color(255, 200, 0);
-	static constexpr Color pink = Color(255, 127, 0);
+	static constexpr Color pink = Color(0xFF, 0x69, 0xB4);
+	static constexpr Color pale_pink = Color(255, 200, 200);
+	static constexpr Color tangerine = Color(255, 200, 0);
+	static constexpr Color orange = Color(255, 127, 0);
 	static constexpr Color yellow = Color(255, 255, 0);
 	static constexpr Color green = Color(0, 255, 0);
 	static constexpr Color cyan = Color(0, 255, 255);

@@ -67,7 +67,7 @@ protected:
 		spi.set_tx_message_size(2);
 		spi.enable();
 		dcpin.high();
-		spi.load_tx_data(halfword);
+		spi.load_tx_data(MathTools::swap_bytes16(halfword));
 		spi.start_transfer();
 	}
 
@@ -112,7 +112,7 @@ protected:
 	void transmit_open_data32(uint32_t word) {
 		while (!spi.tx_space_available())
 			;
-		spi.load_tx_data(word);
+		spi.load_tx_data(MathTools::swap_bytes32(word));
 	}
 	void end_open_data_transmission() {
 		spi.disable();
