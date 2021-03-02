@@ -64,10 +64,11 @@ $(BUILDDIR)/%.o: %.cpp
 	@$(CXX) -c $(DEPFLAGS) $(CXXFLAGS) $< -o $@
 
 tests: $(BUILDDIR)/runtests
-	$(BUILDDIR)/runtests
+	@$(BUILDDIR)/runtests
 
 $(BUILDDIR)/runtests: $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
+	$(info Linking...)
+	@$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
 
 $(DOCTESTHEADER_DIR)/doctest.h:
 	wget https://raw.githubusercontent.com/onqtam/doctest/master/doctest/doctest.h -P $(DOCTESTHEADER_DIR)/
