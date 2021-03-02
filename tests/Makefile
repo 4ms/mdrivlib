@@ -3,7 +3,7 @@
 
 TEST_DIR ?= tests
 
-DOCTEST_DIR = $(TEST_DIR)
+DOCTESTHEADER_DIR = $(TEST_DIR)
 TEST_SOURCES = $(TEST_DIR)/doctest.cc
 TEST_SOURCES += $(wildcard $(TEST_DIR)/*_test.cc)
 TEST_SOURCES += $(wildcard $(TEST_DIR)/*_test.cpp)
@@ -17,8 +17,6 @@ TEST_SOURCES += drivers/rotary.cc
 
 BUILDDIR = $(TEST_DIR)/build
 
-CXX = clang++
-
 CXXFLAGS = 	-Wall \
 		 	-std=gnu++2a \
 			-stdlib=libc++ \
@@ -26,7 +24,7 @@ CXXFLAGS = 	-Wall \
 			-include $(TEST_DIR)/stubs/system.hh \
 			-I$(TEST_DIR)/stubs \
 			-I$(TEST_DIR)/stubs/stm32 \
-			-I$(DOCTEST_DIR) \
+			-I$(DOCTESTHEADER_DIR) \
 			-I$(TEST_DIR) \
 			-I. \
 			-I../stm32/cmsis/include \
@@ -38,16 +36,17 @@ CXXFLAGS = 	-Wall \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \
 
+### Boilerplate below here:
+
+CXX = clang++
 LDFLAGS = -lstdc++
-
 OBJECTS   = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(TEST_SOURCES))))
-
 DEPDIR := $(BUILDDIR)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$(basename $<).d
 
 .PHONY: all tests clean
 
-all: tests
+all: $(DOCTESTHEADER_DIR)/doctest.h tests
 
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
@@ -64,12 +63,14 @@ $(BUILDDIR)/%.o: %.cpp
 	$(info Building $<)
 	@$(CXX) -c $(DEPFLAGS) $(CXXFLAGS) $< -o $@
 
-
 tests: $(BUILDDIR)/runtests
 	$(BUILDDIR)/runtests
 
 $(BUILDDIR)/runtests: $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
+
+$(DOCTESTHEADER_DIR)/doctest.h:
+	wget https://raw.githubusercontent.com/onqtam/doctest/master/doctest/doctest.h -P $(DOCTESTHEADER_DIR)/
 
 clean:
 	rm -rf $(BUILDDIR)
@@ -80,18 +81,4 @@ DEPFILES := $(addprefix $(DEPDIR)/, $(addsuffix .d, $(basename $(TEST_SOURCES)))
 $(DEPFILES):
 
 include $(wildcard $(DEPFILES))
-
-#tests: $(BUILDDIR)/runtests
-#	$(BUILDDIR)/runtests
-
-##Todo: build test sources individually into .o files, and use -MM -MF -MMD to check dependencies
-#$(BUILDDIR)/runtests: $(TEST_SOURCES) $(DOCTEST_DIR)/doctest.h FORCE
-#	@mkdir -p $(@D)
-#	clang++ $(CXXFLAGS) $(TEST_SOURCES) -o $(BUILDDIR)/runtests
-
-#$(DOCTEST_DIR)/doctest.h:
-#	wget https://raw.githubusercontent.com/onqtam/doctest/master/doctest/doctest.h -P $(DOCTEST_DIR)/
-
-#clean:
-#	rm -rf $(BUILDDIR)
 
