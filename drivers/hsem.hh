@@ -22,3 +22,9 @@ struct HSEM_ {
 };
 } // namespace stm32h7x5
 } // namespace mdrivlib
+
+class HWSemaphore {
+	template<uint32_t SemaphoreID>
+	static void set() {
+	}
+};
