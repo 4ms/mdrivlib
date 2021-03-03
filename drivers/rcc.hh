@@ -3,6 +3,9 @@
 #include "stm32xx.h"
 #include <variant>
 
+// Todo: consider splitting namespaces up into separate files and #ifdef #include them in:
+//#if defined(STM32H7x5) //or better: #if defined(MDRIVLIB_TARGET_STM32H7X5) //defined in arch.hh
+//#include "target/stm32h7x5/rcc.h"
 namespace mdrivlib
 {
 
@@ -185,7 +188,17 @@ using SPI_5 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR)
 using SPI_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTR), RCC_APB4RSTR_SPI6RST>;
 
 } // namespace RCC_Reset
+
+namespace RCC_Clocks
+{
+using CR = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), 0xFFFFFFFF>;
+using D1CKREADY = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), RCC_CR_D1CKRDY>;
+using D2CKREADY = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), RCC_CR_D2CKRDY>;
+
+} // namespace RCC_Clocks
 } // namespace stm32h7x5
+
+///////////////////
 
 namespace stm32f7xx
 {
