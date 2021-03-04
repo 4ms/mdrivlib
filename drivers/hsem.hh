@@ -33,9 +33,9 @@ struct HWSemaphore {
 		// One-step lock:
 		// Read Lock Semaphore with HSEM_CR_COREID_CURRENT
 		// If COREID matches HSEM_CR_COREID_CURRENT:
-		//     if PROCID = 0, then return LockedOK
-		// 	   else return SameCoreAlreadyLocked
-		// else: return OtherCoreAlreadyLocked
+		//     if PROCID = 0, then return SetOk
+		// 	   else return SetOk (SameCoreAlreadyLocked)
+		// else: return AlreadySet
 		return (HSEM->RLR[SemaphoreID] != (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? AlreadySet : SetOk;
 	}
 
