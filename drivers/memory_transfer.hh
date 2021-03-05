@@ -1,5 +1,6 @@
 #pragma once
 #include "arch.hh"
+#include "interrupt.hh"
 #include "rcc.hh"
 #include "stm32xx.h"
 #include <cstddef>
@@ -8,7 +9,14 @@ struct MemoryTransfer {
 	MDMA_HandleTypeDef hmdma;
 
 	template<typename CallbackT>
-	void start(void *dst, const void *src, size_t sz, CallbackT callback) {
+	void registerCallback(CallbackT callback) {
+		InterruptManager::registerISR(MDMA_IRQn, 1, 1, [&]() {
+			HAL_MDMA_IRQHandler(&hmdma);
+			callback();
+		});
+	}
+
+	void start(void *dst, const void *src, size_t sz) {
 		target::RCC_Control::MDMA_::set();
 
 		hmdma.Instance = MDMA_Channel0;
@@ -30,12 +38,8 @@ struct MemoryTransfer {
 		if (err != HAL_OK)
 			__BKPT();
 
-		err = HAL_MDMA_Start(&hmdma, reinterpret_cast<uint32_t>(src), reinterpret_cast<uint32_t>(dst), sz, 1);
-
-		err = HAL_MDMA_PollForTransfer(&hmdma, HAL_MDMA_BUFFER_TRANSFER, 1000);
+		err = HAL_MDMA_Start_IT(&hmdma, reinterpret_cast<uint32_t>(src), reinterpret_cast<uint32_t>(dst), sz, 1);
 		if (err != HAL_OK)
 			__BKPT();
-
-		callback();
 	}
 };
