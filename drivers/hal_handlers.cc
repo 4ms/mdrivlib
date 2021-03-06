@@ -104,6 +104,9 @@ __attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *fram
 	// executing exception or 0 if the processor is in Thread mode
 	const bool faulted_from_exception = ((frame->xpsr & 0xFF) != 0);
 
+	// Force a breakpoint here
+	__BKPT();
+
 	if (faulted_from_exception || non_usage_fault_occurred) {
 		// For any fault within an ISR or non-usage faults let's reboot the system
 		volatile uint32_t *aircr = (volatile uint32_t *)0xE000ED0C;
