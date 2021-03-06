@@ -3,8 +3,7 @@
 extern void recover_from_task_fault(void);
 
 extern "C" {
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
 	HAL_IncTick();
 }
 
@@ -22,8 +21,7 @@ void SysTick_Handler(void)
 		}                                                                                                              \
 	} while (0)
 
-void HardFault_Handler()
-{
+void HardFault_Handler() {
 	HARDFAULT_HANDLING_ASM();
 }
 
@@ -38,8 +36,7 @@ typedef struct __attribute__((packed)) ContextStateFrame {
 	uint32_t xpsr;
 } sContextStateFrame;
 
-__attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *frame)
-{
+__attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *frame) {
 	// https://interrupt.memfault.com/blog/cortex-m-fault-debug
 	// HALT_IF_DEBUGGING();
 	volatile uint32_t mmfar = SCB->MMFAR;
@@ -115,7 +112,6 @@ __attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *fram
 		} // should be unreachable
 	}
 
-
 	// If it's just a usage fault, let's "recover"
 	// Clear any faults from the CFSR
 	volatile uint32_t *cfsr_ptr = (volatile uint32_t *)0xE000ED28;
@@ -134,43 +130,35 @@ __attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *fram
 }
 //
 // void assert_failed(const char* file, uint32_t line) { while (1); }
-void NMI_Handler()
-{
+void NMI_Handler() {
 	while (1)
 		;
 }
-void MemManage_Handler()
-{
+void MemManage_Handler() {
 	while (1)
 		;
 }
-void BusFault_Handler()
-{
+void BusFault_Handler() {
 	while (1)
 		;
 }
-void UsageFault_Handler()
-{
+void UsageFault_Handler() {
 	while (1)
 		;
 }
-void SVC_Handler()
-{
+void SVC_Handler() {
 	while (1)
 		;
 }
-void DebugMon_Handler()
-{
+void DebugMon_Handler() {
 	while (1)
 		;
 }
-void PendSV_Handler()
-{
+void PendSV_Handler() {
 	while (1)
 		;
 }
-void __cxa_pure_virtual()
-{
+void __cxa_pure_virtual() {
 	while (1)
 		;
 }
