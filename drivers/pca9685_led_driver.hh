@@ -16,7 +16,7 @@ public:
 	constexpr static int kNumRGBLEDsPerChip = 5;
 
 	// returns the address within the frame buffer of the requested led and chip
-	static constexpr const uint32_t *get_buf_addr(const uint32_t *frame_buf, uint32_t chip_num, uint32_t led_num) {
+	static constexpr uint32_t *get_buf_addr(uint32_t *frame_buf, uint32_t chip_num, uint32_t led_num) {
 		return &(frame_buf[chip_num * kNumLedsPerChip + led_num]);
 	}
 
