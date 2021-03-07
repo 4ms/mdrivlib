@@ -11,28 +11,27 @@ struct MemoryTransfer {
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
 
-	// template<typename CallbackT>
-	// void registerCallback(CallbackT &&callback) {
-	// 	InterruptManager::registerISR(MDMA_IRQn, 1, 1, [=]() {
-	// 		if ((MDMA_Channel0->CISR & MDMA_CISR_BRTIF) && (MDMA_Channel0->CCR & MDMA_CCR_BRTIE)) {
-	// 			MDMA_Channel0->CIFCR = MDMA_CIFCR_CBRTIF;
-	// 		}
+	template<typename CallbackT>
+	void registerCallback(CallbackT &&callback) {
+		InterruptManager::registerISR(MDMA_IRQn, 0, 0, [=]() {
+			if ((MDMA_Channel0->CISR & MDMA_CISR_BRTIF) && (MDMA_Channel0->CCR & MDMA_CCR_BRTIE)) {
+				MDMA_Channel0->CIFCR = MDMA_CIFCR_CBRTIF;
+			}
 
-	// 		if ((MDMA_Channel0->CISR & MDMA_CISR_BTIF) && (MDMA_Channel0->CCR & MDMA_CCR_BTIE)) {
-	// 			MDMA_Channel0->CIFCR = MDMA_CIFCR_CBTIF;
-	// 		}
+			if ((MDMA_Channel0->CISR & MDMA_CISR_BTIF) && (MDMA_Channel0->CCR & MDMA_CCR_BTIE)) {
+				MDMA_Channel0->CIFCR = MDMA_CIFCR_CBTIF;
+			}
 
-	// 		if ((MDMA_Channel0->CISR & MDMA_CISR_CTCIF) && (MDMA_Channel0->CCR & MDMA_CCR_CTCIE)) {
-	// 			MDMA_Channel0->CIFCR = MDMA_CIFCR_CCTCIF;
-	// 			callback();
-	// 		}
+			if ((MDMA_Channel0->CISR & MDMA_CISR_CTCIF) && (MDMA_Channel0->CCR & MDMA_CCR_CTCIE)) {
+				MDMA_Channel0->CIFCR = MDMA_CIFCR_CCTCIF;
+			}
 
-	// 		if ((MDMA_Channel0->CISR & MDMA_CISR_TCIF) && (MDMA_Channel0->CCR & MDMA_CCR_TCIE)) {
-	// 			MDMA_Channel0->CIFCR = MDMA_CIFCR_CLTCIF;
-	// 			// callback();
-	// 		}
-	// 	});
-	// }
+			if ((MDMA_Channel0->CISR & MDMA_CISR_TCIF) && (MDMA_Channel0->CCR & MDMA_CCR_TCIE)) {
+				MDMA_Channel0->CIFCR = MDMA_CIFCR_CLTCIF;
+				callback();
+			}
+		});
+	}
 
 	struct MDMA0 {
 		static constexpr uint32_t CBNDTR_Base = MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CBNDTR);
@@ -115,9 +114,9 @@ struct MemoryTransfer {
 		MDMA0::Enable::set();
 
 		// Debug point:
-		if (MDMA0::RequestIsActive::read())
-			while (1)
-				;
+		// if (MDMA0::RequestIsActive::read())
+		// 	while (1)
+		// 		;
 		MDMA0::SWRequest::set();
 	}
 
