@@ -25,11 +25,13 @@ struct HSEM_ {
 } // namespace mdrivlib
 
 struct HWSemaphore {
+	HWSemaphore() = delete;
+
 	enum Results { LockedOk, LockFailed, SameCoreAlreadyLocked, OtherCoreAlreadyLocked };
 	enum SetResults { SetOk, AlreadySet, SameCoreAlreadySet, OtherCoreAlreadySet };
 
 	template<uint32_t SemaphoreID>
-	static SetResults set() {
+	static SetResults lock() {
 		// One-step lock:
 		// Read Lock Semaphore with HSEM_CR_COREID_CURRENT
 		// If COREID matches HSEM_CR_COREID_CURRENT:
@@ -43,11 +45,13 @@ struct HWSemaphore {
 	static Results set(uint32_t processID) {
 		// Two-step lock:
 		HSEM->R[SemaphoreID] = HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID;
-		return (HSEM->R[SemaphoreID] != (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID)) ? LockFailed : LockedOk;
+		return (HSEM->R[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID)) ? LockedOk : LockFailed;
+		// write LOCK | CORE | processID
+		// read back, if it's what we wrote then return LockedOK
 	}
 
 	template<uint32_t SemaphoreID>
-	static void clear() {
+	static void unlock() {
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT;
 	}
 
@@ -59,5 +63,29 @@ struct HWSemaphore {
 	template<uint32_t SemaphoreID>
 	static bool is_locked() {
 		return HSEM->R[SemaphoreID] & HSEM_R_LOCK;
+	}
+
+	template<uint32_t SemaphoreID>
+	static void enable_ISR() {
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
+			HSEM->C1IER = HSEM->C1IER | (1 << SemaphoreID);
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
+			HSEM->C2IER = HSEM->C2IER | (1 << SemaphoreID);
+	}
+
+	template<uint32_t SemaphoreID>
+	static void disable_ISR() {
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
+			HSEM->C1IER = HSEM->C1IER & ~(1 << SemaphoreID);
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
+			HSEM->C2IER = HSEM->C2IER & ~(1 << SemaphoreID);
+	}
+
+	template<uint32_t SemaphoreID>
+	static void clear_ISR() {
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
+			HSEM->C1ICR = 1 << SemaphoreID;
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
+			HSEM->C2ICR = 1 << SemaphoreID;
 	}
 };
