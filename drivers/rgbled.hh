@@ -29,7 +29,7 @@ struct MixedRgbLed {
 	void flash_once(Color const &c, uint32_t const flash_freq) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
-		flash_freq_ = flash_freq;
+		flash_rate_ = flash_freq;
 	}
 
 	// void breathe(Color const &c, const uint32_t freq) {
@@ -65,18 +65,27 @@ struct MixedRgbLed {
 		b_.set(col.blue() * brightness);
 	}
 
+	void update_oscillators() {
+		fader_.update();
+		if (flash_phase_ > flash_rate_)
+			flash_phase_ -= flash_rate_;
+		else
+			flash_phase_ = 0;
+	}
+
 	// Todo: don't waste cycles updating if nothing's changed
 	void update_animation() {
+		update_oscillators();
 		Color c = background_color_;
 		// if (solid_color_ != Colors::off) c = solid_color_;
-		c = c.blend(breathe_color_, fader_.Process());
+		c = c.blend(breathe_color_, fader_.val());
 		c = c.blend(flash_color_, flash_phase_);
 		// c = c.adjust(color_cal_);
 		set_color(c);
-		if (flash_phase_ > flash_freq_)
-			flash_phase_ -= flash_freq_;
-		else
-			flash_phase_ = 0;
+		// if (flash_phase_ > flash_freq_)
+		// 	flash_phase_ -= flash_freq_;
+		// else
+		// 	flash_phase_ = 0;
 	}
 
 private:
@@ -88,7 +97,7 @@ private:
 	Color solid_color_ = Colors::off;
 	Color flash_color_ = Colors::white;
 	Color breathe_color_ = Colors::red;
-	uint32_t flash_freq_ = 100;
+	uint32_t flash_rate_ = 100;
 	uint32_t flash_phase_ = 0;
 	//    Color::Adjustment& color_cal_;
 };
