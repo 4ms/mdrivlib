@@ -26,6 +26,7 @@ struct MemoryTransfer {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CCTCIF;
 			}
 
+			// Todo: check if size>127bytes (multi-buffer block), the right ISR is set
 			if ((MDMA_Channel0->CISR & MDMA_CISR_TCIF) && (MDMA_Channel0->CCR & MDMA_CCR_TCIE)) {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CLTCIF;
 				callback();
@@ -43,11 +44,18 @@ struct MemoryTransfer {
 		static constexpr uint32_t CCR_Base = MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CCR);
 		using Enable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_EN_Pos, 1>;
 		using SWRequest = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_SWRQ_Pos, 1>;
-		using TransferErrISREnable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_TEIE_Pos, 1>;
 		using BufferTransferComplISREnable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_TCIE_Pos, 1>;
 		using BlockTransferComplISREnable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_BTIE_Pos, 1>;
 		using BlockRepeatTransferComplISREnable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_BRTIE_Pos, 1>;
 		using ChannelTransferComplISREnable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_CTCIE_Pos, 1>;
+		using TransferErrISREnable = RegisterSection<ReadWrite, CCR_Base, MDMA_CCR_TEIE_Pos, 1>;
+
+		static constexpr uint32_t CIFCR_Base = MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CIFCR);
+		using BufferTransferComplISRClear = RegisterSection<ReadWrite, CIFCR_Base, MDMA_CIFCR_CLTCIF_Pos, 1>;
+		using BlockTransferComplISRClear = RegisterSection<ReadWrite, CCR_Base, MDMA_CIFCR_CBTIF_Pos, 1>;
+		using BlockRepeatTransferComplISRClear = RegisterSection<ReadWrite, CCR_Base, MDMA_CIFCR_CBRTIF_Pos, 1>;
+		using ChannelTransferComplISRClear = RegisterSection<ReadWrite, CCR_Base, MDMA_CIFCR_CCTCIF_Pos, 1>;
+		using TransferErrISRClear = RegisterSection<ReadWrite, CIFCR_Base, MDMA_CIFCR_CTEIF_Pos, 1>;
 
 		using DstAddr = RegisterBits<ReadWrite, MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CDAR), 0xFFFFFFFF>;
 		using SrcAddr = RegisterBits<ReadWrite, MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CSAR), 0xFFFFFFFF>;
@@ -96,15 +104,20 @@ struct MemoryTransfer {
 		MDMA0::Enable::clear();
 		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
 		MDMA0::BlockRepeatCount::write(0);
-		MDMA_Channel0->CIFCR =
-			MDMA_CIFCR_CBRTIF | MDMA_CIFCR_CTEIF | MDMA_CIFCR_CCTCIF | MDMA_CIFCR_CLTCIF | MDMA_CIFCR_CBTIF;
+		MDMA0::BufferTransferComplISRClear::set();
+		MDMA0::BlockTransferComplISRClear::set();
+		MDMA0::BlockRepeatTransferComplISRClear::set();
+		MDMA0::ChannelTransferComplISRClear::set();
+		MDMA0::TransferErrISRClear::set();
 
 		_set_addrs();
 		_set_addr_bus_bits();
 
-		// Todo: check if size>127bytes (multi-buffer block), the right ISR is set
-		MDMA_Channel0->CCR =
-			MDMA_Channel0->CCR | MDMA_CCR_TEIE | MDMA_CCR_TCIE | MDMA_CCR_BTIE; // | MDMA_CCR_BRTIE | MDMA_CCR_CTCIE;
+		MDMA0::TransferErrISREnable::set();
+		MDMA0::BufferTransferComplISREnable::set();
+		MDMA0::BlockTransferComplISREnable::set();
+		// MDMA0::BlockRepeatTransferComplISREnable::set();
+		// MDMA0::ChannelTransferComplISREnable::set();
 	}
 
 	void start_transfer() {
