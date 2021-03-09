@@ -27,27 +27,25 @@ struct HSEM_ {
 struct HWSemaphore {
 	HWSemaphore() = delete;
 
-	enum Results { LockedOk, LockFailed, SameCoreAlreadyLocked, OtherCoreAlreadyLocked };
-	enum SetResults { SetOk, AlreadySet, SameCoreAlreadySet, OtherCoreAlreadySet };
+	enum Results { LockFailed = 0, LockedOk = 1 }; //, SameCoreAlreadyLocked, OtherCoreAlreadyLocked };
+	// enum SetResults { SetOk, AlreadySet, SameCoreAlreadySet, OtherCoreAlreadySet };
 
 	template<uint32_t SemaphoreID>
-	static SetResults lock() {
+	static Results lock() {
 		// One-step lock:
 		// Read Lock Semaphore with HSEM_CR_COREID_CURRENT
 		// If COREID matches HSEM_CR_COREID_CURRENT:
-		//     if PROCID = 0, then return SetOk
+		//     if PROCID = 0, then return LockedOk
 		// 	   else return SetOk (SameCoreAlreadyLocked)
-		// else: return AlreadySet
-		return (HSEM->RLR[SemaphoreID] != (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? AlreadySet : SetOk;
+		// else: return LockFailed
+		return (HSEM->RLR[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? LockedOk : LockFailed;
 	}
 
 	template<uint32_t SemaphoreID>
-	static Results set(uint32_t processID) {
+	static Results lock(uint32_t processID) {
 		// Two-step lock:
 		HSEM->R[SemaphoreID] = HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID;
 		return (HSEM->R[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID)) ? LockedOk : LockFailed;
-		// write LOCK | CORE | processID
-		// read back, if it's what we wrote then return LockedOK
 	}
 
 	template<uint32_t SemaphoreID>
@@ -56,7 +54,7 @@ struct HWSemaphore {
 	}
 
 	template<uint32_t SemaphoreID>
-	static void clear(uint32_t processID) {
+	static void unlock(uint32_t processID) {
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT | processID;
 	}
 
@@ -87,5 +85,14 @@ struct HWSemaphore {
 			HSEM->C1ICR = 1 << SemaphoreID;
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
 			HSEM->C2ICR = 1 << SemaphoreID;
+	}
+
+	// aka: is_status_after_masking_pending()
+	template<uint32_t SemaphoreID>
+	static bool is_ISR_triggered_and_enabled() {
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
+			return HSEM->C1MISR & (1 << SemaphoreID);
+		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
+			return HSEM->C2MISR & (1 << SemaphoreID);
 	}
 };
