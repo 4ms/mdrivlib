@@ -24,46 +24,46 @@ struct HSEM_ {
 } // namespace stm32h7x5
 } // namespace mdrivlib
 
+enum class HWSemaphoreFlag {
+	LockFailed = 0,
+	LockedOk = 1,
+	// AlreadySet, SameCoreAlreadySet, OtherCoreAlreadySet
+};
+template<uint32_t SemaphoreID>
 struct HWSemaphore {
 	HWSemaphore() = delete;
 
-	enum Results { LockFailed = 0, LockedOk = 1 }; //, SameCoreAlreadyLocked, OtherCoreAlreadyLocked };
-	// enum SetResults { SetOk, AlreadySet, SameCoreAlreadySet, OtherCoreAlreadySet };
-
-	template<uint32_t SemaphoreID>
-	static Results lock() {
+	static HWSemaphoreFlag lock() {
 		// One-step lock:
 		// Read Lock Semaphore with HSEM_CR_COREID_CURRENT
 		// If COREID matches HSEM_CR_COREID_CURRENT:
 		//     if PROCID = 0, then return LockedOk
 		// 	   else return SetOk (SameCoreAlreadyLocked)
 		// else: return LockFailed
-		return (HSEM->RLR[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? LockedOk : LockFailed;
+		return (HSEM->RLR[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? HWSemaphoreFlag::LockedOk
+																				  : HWSemaphoreFlag::LockFailed;
 	}
 
-	template<uint32_t SemaphoreID>
-	static Results lock(uint32_t processID) {
+	static HWSemaphoreFlag lock(uint32_t processID) {
 		// Two-step lock:
 		HSEM->R[SemaphoreID] = HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID;
-		return (HSEM->R[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID)) ? LockedOk : LockFailed;
+		return (HSEM->R[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID))
+				 ? HWSemaphoreFlag::LockedOk
+				 : HWSemaphoreFlag::LockFailed;
 	}
 
-	template<uint32_t SemaphoreID>
 	static void unlock() {
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT;
 	}
 
-	template<uint32_t SemaphoreID>
 	static void unlock(uint32_t processID) {
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT | processID;
 	}
 
-	template<uint32_t SemaphoreID>
 	static bool is_locked() {
 		return HSEM->R[SemaphoreID] & HSEM_R_LOCK;
 	}
 
-	template<uint32_t SemaphoreID>
 	static void enable_ISR() {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
 			HSEM->C1IER = HSEM->C1IER | (1 << SemaphoreID);
@@ -71,7 +71,6 @@ struct HWSemaphore {
 			HSEM->C2IER = HSEM->C2IER | (1 << SemaphoreID);
 	}
 
-	template<uint32_t SemaphoreID>
 	static void disable_ISR() {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
 			HSEM->C1IER = HSEM->C1IER & ~(1 << SemaphoreID);
@@ -79,7 +78,6 @@ struct HWSemaphore {
 			HSEM->C2IER = HSEM->C2IER & ~(1 << SemaphoreID);
 	}
 
-	template<uint32_t SemaphoreID>
 	static void clear_ISR() {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
 			HSEM->C1ICR = 1 << SemaphoreID;
@@ -88,7 +86,6 @@ struct HWSemaphore {
 	}
 
 	// aka: is_status_after_masking_pending()
-	template<uint32_t SemaphoreID>
 	static bool is_ISR_triggered_and_enabled() {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
 			return HSEM->C1MISR & (1 << SemaphoreID);
