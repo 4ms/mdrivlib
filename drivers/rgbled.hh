@@ -82,10 +82,6 @@ struct MixedRgbLed {
 		c = c.blend(flash_color_, flash_phase_);
 		// c = c.adjust(color_cal_);
 		set_color(c);
-		// if (flash_phase_ > flash_freq_)
-		// 	flash_phase_ -= flash_freq_;
-		// else
-		// 	flash_phase_ = 0;
 	}
 
 private:
