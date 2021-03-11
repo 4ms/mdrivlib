@@ -47,7 +47,9 @@ private:
 
 		disable();
 
-		uint32_t log2_region_size = MathTools::Log2Int(region_size) - 1;
+		uint32_t log2_region_size = MathTools::Log2Int(region_size);
+		if (MathTools::is_power_of_2(region_size))
+			log2_region_size--;	
 
 		MPU->RNR = region_id;
 		MPU->RBAR = baseaddr;
