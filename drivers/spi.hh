@@ -118,7 +118,11 @@ public:
 		else
 			CFG2<SPI_CFG2_MASTER>::clear();
 
-		CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
+		if constexpr (ConfT::clock_division < 2)
+			CFG1<SPI_CFG1_MBR>::write(0b000 << SPI_CFG1_MBR_Pos);
+		else if constexpr (ConfT::clock_division > 256)
+			CFG1<SPI_CFG1_MBR>::write(0b111 << SPI_CFG1_MBR_Pos);
+		else
 			CFG1<SPI_CFG1_MBR>::write((MathTools::log2_floor(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
 
 		if constexpr (ConfT::LSBfirst)
