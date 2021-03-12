@@ -119,6 +119,7 @@ public:
 			CFG2<SPI_CFG2_MASTER>::clear();
 
 		CFG1<SPI_CFG1_MBR>::write((MathTools::Log2Int(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
+			CFG1<SPI_CFG1_MBR>::write((MathTools::log2_floor(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
 
 		if constexpr (ConfT::LSBfirst)
 			CFG2<SPI_CFG2_LSBFRST>::set();

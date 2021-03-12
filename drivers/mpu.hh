@@ -47,7 +47,7 @@ private:
 
 		disable();
 
-		uint32_t log2_region_size = MathTools::Log2Int(region_size);
+		uint32_t log2_region_size = MathTools::log2_floor(region_size);
 		if (MathTools::is_power_of_2(region_size))
 			log2_region_size--;	
 
