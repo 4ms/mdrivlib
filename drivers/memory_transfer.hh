@@ -5,6 +5,7 @@
 #include "stm32xx.h"
 #include <cstddef>
 
+// Todo: template on channel#
 struct MemoryTransfer {
 	MDMA_HandleTypeDef hmdma;
 	uint32_t _src_addr;
@@ -24,12 +25,12 @@ struct MemoryTransfer {
 
 			if ((MDMA_Channel0->CISR & MDMA_CISR_CTCIF) && (MDMA_Channel0->CCR & MDMA_CCR_CTCIE)) {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CCTCIF;
+				callback();
 			}
 
 			// Todo: check if size>127bytes (multi-buffer block), the right ISR is set
 			if ((MDMA_Channel0->CISR & MDMA_CISR_TCIF) && (MDMA_Channel0->CCR & MDMA_CCR_TCIE)) {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CLTCIF;
-				callback();
 			}
 		});
 	}
@@ -76,30 +77,30 @@ struct MemoryTransfer {
 		target::RCC_Control::MDMA_::set();
 
 		// Todo: use the registers Luke!
-		hmdma.Instance = MDMA_Channel0;
-		hmdma.Init.Request = MDMA_REQUEST_SW;
-		hmdma.Init.TransferTriggerMode = MDMA_BUFFER_TRANSFER;
-		hmdma.Init.Priority = MDMA_PRIORITY_MEDIUM;
-		hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-		hmdma.Init.SourceInc = MDMA_SRC_INC_WORD;
-		hmdma.Init.DestinationInc = MDMA_DEST_INC_WORD;
-		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_WORD;
-		hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_WORD;
-		hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
-		hmdma.Init.BufferTransferLength = _transfer_size;
-		hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
-		hmdma.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
-		hmdma.Init.SourceBlockAddressOffset = 0;
-		hmdma.Init.DestBlockAddressOffset = 0;
-		hmdma.XferBufferCpltCallback = NULL;
-		hmdma.XferBlockCpltCallback = NULL;
-		hmdma.XferRepeatBlockCpltCallback = NULL;
-		hmdma.XferCpltCallback = NULL;
-		hmdma.XferAbortCallback = NULL;
-		hmdma.XferErrorCallback = NULL;
-		auto err = HAL_MDMA_Init(&hmdma);
-		if (err != HAL_OK)
-			__BKPT();
+		// hmdma.Instance = MDMA_Channel0;
+		// hmdma.Init.Request = MDMA_REQUEST_SW;
+		// hmdma.Init.TransferTriggerMode = MDMA_BUFFER_TRANSFER;
+		// hmdma.Init.Priority = MDMA_PRIORITY_MEDIUM;
+		// hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+		// hmdma.Init.SourceInc = MDMA_SRC_INC_WORD;
+		// hmdma.Init.DestinationInc = MDMA_DEST_INC_WORD;
+		// hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_WORD;
+		// hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_WORD;
+		// hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
+		// hmdma.Init.BufferTransferLength = _transfer_size;
+		// hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
+		// hmdma.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
+		// hmdma.Init.SourceBlockAddressOffset = 0;
+		// hmdma.Init.DestBlockAddressOffset = 0;
+		// hmdma.XferBufferCpltCallback = NULL;
+		// hmdma.XferBlockCpltCallback = NULL;
+		// hmdma.XferRepeatBlockCpltCallback = NULL;
+		// hmdma.XferCpltCallback = NULL;
+		// hmdma.XferAbortCallback = NULL;
+		// hmdma.XferErrorCallback = NULL;
+		// auto err = HAL_MDMA_Init(&hmdma);
+		// if (err != HAL_OK)
+		// 	__BKPT();
 
 		MDMA0::Enable::clear();
 		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
@@ -117,7 +118,7 @@ struct MemoryTransfer {
 		MDMA0::BufferTransferComplISREnable::set();
 		MDMA0::BlockTransferComplISREnable::set();
 		// MDMA0::BlockRepeatTransferComplISREnable::set();
-		// MDMA0::ChannelTransferComplISREnable::set();
+		MDMA0::ChannelTransferComplISREnable::set();
 	}
 
 	void repeat_transfer_new_dst(void *dst) {
