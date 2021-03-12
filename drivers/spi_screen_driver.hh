@@ -189,17 +189,20 @@ struct DmaSpiScreenDriver {
 	}
 
 	void start_dma_transfer(uint32_t src, uint32_t sz) {
-		spi.enable_tx_dma();
-		// if (sz <= 0xFFFF) {
-		// 	spi.set_tx_message_size(sz);
-		// 	spi.set_tx_message_reload_size(0);
-		// } else if (sz <= (0xFFFF * 2)) {
-		// 	spi.set_tx_message_size(0xFFFF);
-		// 	spi.set_tx_message_reload_size(sz - 0xFFFF);
-		// } else
-		// 	return; // Todo: handle transfers > 128kB by setting up an ISR on TSERF that sets the reload size again
+		spi.disable();
 		uint32_t dst = spi.get_tx_datareg_addr();
 		HAL_DMA_Start(&hdma_spi6_tx, src, dst, sz);
+		if (sz <= 0xFFFF) {
+			spi.set_tx_message_size(sz);
+			spi.set_tx_message_reload_size(0);
+		} else if (sz <= (0xFFFF * 2)) {
+			spi.set_tx_message_size(0xFFFF);
+			spi.set_tx_message_reload_size(sz - 0xFFFF);
+		} else
+			return; // Todo: handle transfers > 128k packets by setting up an ISR on TSERF that sets the reload size again
+		spi.enable_tx_dma();
+		spi.enable();
+		spi.start_transfer();
 	}
 
 private:
