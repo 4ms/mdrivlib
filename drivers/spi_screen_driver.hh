@@ -104,16 +104,25 @@ protected:
 		dcpin.high();
 		spi.start_transfer();
 	}
+
 	void transmit_open_data16(uint16_t halfword) {
 		while (!spi.tx_space_available())
 			;
 		spi.load_tx_data(halfword);
 	}
+
+	void transmit_open_data32(uint16_t halfword1, uint16_t halfword2) {
+		while (!spi.tx_space_available())
+			;
+		spi.load_tx_data(MathTools::swap_bytes_and_combine(halfword2, halfword1));
+	}
+
 	void transmit_open_data32(uint32_t word) {
 		while (!spi.tx_space_available())
 			;
 		spi.load_tx_data(MathTools::swap_bytes32(word));
 	}
+
 	void end_open_data_transmission() {
 		spi.disable();
 		spi.set_tx_message_size(1);
@@ -125,4 +134,3 @@ protected:
 		spi.enable_end_of_xfer_interrupt();
 	}
 };
-
