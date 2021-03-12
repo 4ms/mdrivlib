@@ -1,4 +1,5 @@
 #pragma once
+#include "dma_config_struct.hh"
 #include "interrupt.hh"
 #include "spi.hh"
 #include "system.hh"
@@ -14,18 +15,17 @@ template<typename ConfT>
 struct SpiScreenDriver {
 	SpiScreenDriver()
 		: _ready(true) {
-		InterruptManager::registerISR(ConfT::ScreenSpiConf::IRQn, [this]() {
-			if (spi.is_end_of_transfer()) {
-				spi.clear_EOT_flag();
-				spi.clear_TXTF_flag();
-				_ready = true;
-			}
-		});
+		InterruptManager::registerISR(ConfT::ScreenSpiConf::IRQn,
+			ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2,  [this]() {
+				if (spi.is_end_of_transfer()) {
+					spi.clear_EOT_flag();
+					spi.clear_TXTF_flag();
+					_ready = true;
+				}
+			});
 
 		spi.disable();
 		spi.configure();
-		auto pri = System::encode_nvic_priority(ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2);
-		NVIC_SetPriority(ConfT::ScreenSpiConf::IRQn, pri);
 		NVIC_EnableIRQ(ConfT::ScreenSpiConf::IRQn);
 
 		spi.set_tx_message_size(1);
@@ -133,4 +133,40 @@ protected:
 		_ready = true;
 		spi.enable_end_of_xfer_interrupt();
 	}
+};
+
+template<typename ConfT>
+struct DmaSpiScreenDriver {
+
+	DmaSpiScreenDriver(BDMA_Config &conf) {
+		target::RCC_Control::BDMA_P::set();
+
+		dma_tc_flag_index = dma_get_TC_flag_index(conf.stream);
+		dma_te_flag_index = dma_get_TE_flag_index(conf.stream);
+		dma_isr_reg = dma_get_ISR_reg(conf.stream);
+		dma_ifcr_reg = dma_get_IFCR_reg(conf.stream);
+
+		InterruptManager::registerISR(conf.IRQn, conf.pri, conf.subpri, [&]() {
+			if (*dma_isr_reg & dma_tc_flag_index) {
+				*dma_ifcr_reg = dma_tc_flag_index;
+			}
+			if (*dma_isr_reg & dma_te_flag_index) {
+				*dma_ifcr_reg = dma_te_flag_index;
+				// Error: debug breakpoint or logging here
+			}
+		});
+		// HAL_NVIC_EnableIRQ(conf.IRQn);
+	}
+
+	void init() {
+	}
+
+private:
+	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
+	typename ConfT::DCPin dcpin;
+
+	volatile uint32_t *dma_ifcr_reg;
+	volatile uint32_t *dma_isr_reg;
+	uint32_t dma_tc_flag_index;
+	uint32_t dma_te_flag_index;
 };

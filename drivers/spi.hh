@@ -198,6 +198,7 @@ public:
 	void clear_TXTF_flag() { // transmission transfer filled
 		IFCR<SPI_IFCR_TXTFC>::set();
 	}
+
 	// Status flags
 	bool rx_packet_available() {
 		return SR<SPI_SR_RXP>::read() ? true : false;
@@ -220,6 +221,7 @@ public:
 	int rx_fifo_frames_left() {
 		return SR<SPI_SR_RXPLVL>::read() >> SPI_SR_RXPLVL_Pos;
 	}
+
 	// TX conditions
 	void set_tx_message_size(uint16_t num_packets) {
 		CR2<SPI_CR2_TSIZE>::write(num_packets);

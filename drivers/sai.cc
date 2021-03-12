@@ -259,18 +259,18 @@ void SaiPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::funct
 void SaiPeriph::start() {
 	IRQn_Type _irqn;
 	if (saidef_.mode == SaiConfig::RXMaster) {
-		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_rx);
-		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_rx);
-		dma_te_flag_index = __HAL_DMA_GET_TE_FLAG_INDEX(&hdma_rx);
-		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_rx.stream);
-		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_rx.stream);
+		dma_tc_flag_index = dma_get_TC_flag_index(hdma_rx.Instance);
+		dma_ht_flag_index = dma_get_HT_flag_index(hdma_rx.Instance);
+		dma_te_flag_index = dma_get_TE_flag_index(hdma_rx.Instance);
+		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_rx.stream);
+		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_rx.stream);
 		_irqn = rx_irqn;
 	} else {
-		dma_tc_flag_index = __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_tx);
-		dma_ht_flag_index = __HAL_DMA_GET_HT_FLAG_INDEX(&hdma_tx);
-		dma_te_flag_index = __HAL_DMA_GET_TE_FLAG_INDEX(&hdma_tx);
-		dma_isr_reg = __HAL_DMA_GET_ISR(saidef_.dma_init_tx.stream);
-		dma_ifcr_reg = __HAL_DMA_GET_IFCR(saidef_.dma_init_tx.stream);
+		dma_tc_flag_index = dma_get_TC_flag_index(hdma_tx.Instance);
+		dma_ht_flag_index = dma_get_HT_flag_index(hdma_tx.Instance);
+		dma_te_flag_index = dma_get_TE_flag_index(hdma_tx.Instance);
+		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_tx.stream);
+		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
 		_irqn = tx_irqn;
 	}
 
@@ -304,4 +304,3 @@ void SaiPeriph::stop() {
 	HAL_NVIC_DisableIRQ(tx_irqn);
 	HAL_NVIC_DisableIRQ(rx_irqn);
 }
-
