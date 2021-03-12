@@ -1,7 +1,9 @@
 #pragma once
 #include "arch.hh"
+#include "drivers/interrupt.hh"
 #include "register_access.hh"
 #include "stm32xx.h"
+#include <functional>
 
 namespace mdrivlib
 {
@@ -34,12 +36,6 @@ struct HWSemaphore {
 	HWSemaphore() = delete;
 
 	static HWSemaphoreFlag lock() {
-		// One-step lock:
-		// Read Lock Semaphore with HSEM_CR_COREID_CURRENT
-		// If COREID matches HSEM_CR_COREID_CURRENT:
-		//     if PROCID = 0, then return LockedOk
-		// 	   else return SetOk (SameCoreAlreadyLocked)
-		// else: return LockFailed
 		return (HSEM->RLR[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? HWSemaphoreFlag::LockedOk
 																				  : HWSemaphoreFlag::LockFailed;
 	}
@@ -64,14 +60,14 @@ struct HWSemaphore {
 		return HSEM->R[SemaphoreID] & HSEM_R_LOCK;
 	}
 
-	static void enable_ISR() {
+	static void enable_channel_ISR() {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
 			HSEM->C1IER = HSEM->C1IER | (1 << SemaphoreID);
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
 			HSEM->C2IER = HSEM->C2IER | (1 << SemaphoreID);
 	}
 
-	static void disable_ISR() {
+	static void disable_channel_ISR() {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU1)
 			HSEM->C1IER = HSEM->C1IER & ~(1 << SemaphoreID);
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
@@ -92,4 +88,62 @@ struct HWSemaphore {
 		if constexpr (HSEM_CR_COREID_CURRENT == HSEM_CR_COREID_CPU2)
 			return HSEM->C2MISR & (1 << SemaphoreID);
 	}
+};
+
+struct HWSemaphoreGlobalBase {
+	using CallbackT = std::function<void(void)>;
+
+	template<unsigned SemaphoreID>
+	static void register_channel_ISR(CallbackT &&func) {
+		funcs[SemaphoreID] = std::move(func);
+	}
+
+	static void enable_all_handlers(IRQn_Type irqn) {
+		InterruptManager::registerISR(irqn, 0, 0, [&]() {
+			handle_isr<0>();
+			handle_isr<1>();
+			handle_isr<2>();
+			handle_isr<3>();
+			handle_isr<4>();
+			handle_isr<5>();
+			handle_isr<6>();
+			handle_isr<7>();
+			handle_isr<8>();
+			handle_isr<9>();
+			handle_isr<10>();
+			handle_isr<11>();
+			handle_isr<12>();
+			handle_isr<13>();
+			handle_isr<14>();
+			handle_isr<15>();
+			handle_isr<16>();
+			handle_isr<17>();
+			handle_isr<18>();
+			handle_isr<19>();
+			handle_isr<20>();
+			handle_isr<21>();
+			handle_isr<22>();
+			handle_isr<23>();
+			handle_isr<24>();
+			handle_isr<25>();
+			handle_isr<26>();
+			handle_isr<27>();
+			handle_isr<28>();
+			handle_isr<29>();
+			handle_isr<30>();
+			handle_isr<31>();
+		});
+	}
+
+	template<unsigned SemaphoreID>
+	static void handle_isr() {
+		if (HWSemaphore<0>::is_ISR_triggered_and_enabled()) {
+			if (funcs[0])
+				funcs[0]();
+			HWSemaphore<0>::clear_ISR();
+			return;
+		}
+	}
+
+	static inline CallbackT funcs[32];
 };
