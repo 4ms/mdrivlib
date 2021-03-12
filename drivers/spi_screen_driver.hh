@@ -15,8 +15,8 @@ template<typename ConfT>
 struct SpiScreenDriver {
 	SpiScreenDriver()
 		: _ready(true) {
-		InterruptManager::registerISR(ConfT::ScreenSpiConf::IRQn,
-			ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2,  [this]() {
+		InterruptManager::registerISR(
+			ConfT::ScreenSpiConf::IRQn, ConfT::ScreenSpiConf::priority1, ConfT::ScreenSpiConf::priority2, [this]() {
 				if (spi.is_end_of_transfer()) {
 					spi.clear_EOT_flag();
 					spi.clear_TXTF_flag();
