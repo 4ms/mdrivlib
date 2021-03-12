@@ -137,10 +137,10 @@ struct HWSemaphoreGlobalBase {
 
 	template<unsigned SemaphoreID>
 	static void handle_isr() {
-		if (HWSemaphore<0>::is_ISR_triggered_and_enabled()) {
-			if (funcs[0])
-				funcs[0]();
-			HWSemaphore<0>::clear_ISR();
+		if (HWSemaphore<SemaphoreID>::is_ISR_triggered_and_enabled()) {
+			if (funcs[SemaphoreID])
+				funcs[SemaphoreID]();
+			HWSemaphore<SemaphoreID>::clear_ISR();
 			return;
 		}
 	}
