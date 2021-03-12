@@ -199,6 +199,13 @@ public:
 		IFCR<SPI_IFCR_TXTFC>::set();
 	}
 
+	void enable_tx_dma() {
+		CFG1<SPI_CFG1_TXDMAEN>::set();
+	}
+	uint32_t get_tx_datareg_addr() {
+		return reinterpret_cast<uint32_t>(target::SPI<N>::TXDR::BaseAddress);
+	}
+
 	// Status flags
 	bool rx_packet_available() {
 		return SR<SPI_SR_RXP>::read() ? true : false;
@@ -225,6 +232,9 @@ public:
 	// TX conditions
 	void set_tx_message_size(uint16_t num_packets) {
 		CR2<SPI_CR2_TSIZE>::write(num_packets);
+	}
+	void set_tx_message_reload_size(uint16_t num_packets) {
+		CR2<SPI_CR2_TSER>::write(num_packets);
 	}
 	void set_data_size(uint8_t data_size) {
 		CFG1<SPI_CFG1_DSIZE>::write((data_size - 1) << SPI_CFG1_DSIZE_Pos);

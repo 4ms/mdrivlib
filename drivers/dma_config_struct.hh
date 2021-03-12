@@ -32,6 +32,15 @@ struct BDMA_Config {
 	// bool continuous;
 };
 
+struct BDMA_Conf {
+	static constexpr unsigned BDMAx = 0;
+	static constexpr unsigned StreamNum = 0;
+	static constexpr unsigned RequestNum = 0; 
+	static constexpr IRQn_Type IRQn = HardFault_IRQn;
+	static constexpr uint32_t pri = 0;
+	static constexpr uint32_t subpri = 0;
+};
+
 // Todo: this should be in some dma manager class
 
 #if defined(BDMA)

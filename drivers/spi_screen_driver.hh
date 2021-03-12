@@ -138,15 +138,39 @@ protected:
 template<typename ConfT>
 struct DmaSpiScreenDriver {
 
-	DmaSpiScreenDriver(BDMA_Config &conf) {
+	DmaSpiScreenDriver() {
 		target::RCC_Control::BDMA_P::set();
+	}
 
-		dma_tc_flag_index = dma_get_TC_flag_index(conf.stream);
-		dma_te_flag_index = dma_get_TE_flag_index(conf.stream);
-		dma_isr_reg = dma_get_ISR_reg(conf.stream);
-		dma_ifcr_reg = dma_get_IFCR_reg(conf.stream);
+	void init_dma() {
+		BDMA_Channel_TypeDef *stream;
+		if constexpr (ConfT::BDMAConf::StreamNum == 2)
+			stream = BDMA_Channel2;
 
-		InterruptManager::registerISR(conf.IRQn, conf.pri, conf.subpri, [&]() {
+		hdma_spi6_tx.Instance = stream;
+		hdma_spi6_tx.Init.Request = ConfT::BDMAConf::RequestNum;
+		hdma_spi6_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+		hdma_spi6_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+		hdma_spi6_tx.Init.MemInc = DMA_MINC_ENABLE;
+		hdma_spi6_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_spi6_tx.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+		hdma_spi6_tx.Init.Mode = DMA_NORMAL;
+		hdma_spi6_tx.Init.Priority = DMA_PRIORITY_LOW;
+		if (HAL_DMA_Init(&hdma_spi6_tx) != HAL_OK) {
+			__BKPT();
+		}
+
+		// #define __HAL_LINKDMA(__HANDLE__, __PPP_DMA_FIELD__, __DMA_HANDLE__)               \
+//                         do{                                                      \
+//                               (__HANDLE__)->__PPP_DMA_FIELD__ = &(__DMA_HANDLE__); \
+//                               (__DMA_HANDLE__).Parent = (__HANDLE__);
+
+		dma_tc_flag_index = dma_get_TC_flag_index(stream);
+		dma_te_flag_index = dma_get_TE_flag_index(stream);
+		dma_isr_reg = dma_get_ISR_reg(stream);
+		dma_ifcr_reg = dma_get_IFCR_reg(stream);
+
+		InterruptManager::registerISR(ConfT::BDMAConf::IRQn, ConfT::BDMAConf::pri, ConfT::BDMAConf::subpri, [&]() {
 			if (*dma_isr_reg & dma_tc_flag_index) {
 				*dma_ifcr_reg = dma_tc_flag_index;
 			}
@@ -155,10 +179,27 @@ struct DmaSpiScreenDriver {
 				// Error: debug breakpoint or logging here
 			}
 		});
-		// HAL_NVIC_EnableIRQ(conf.IRQn);
+		HAL_NVIC_DisableIRQ(ConfT::BDMAConf::IRQn);
 	}
 
 	void init() {
+		spi.configure();
+		init_dma();
+		spi.enable();
+	}
+
+	void start_dma_transfer(uint32_t src, uint32_t sz) {
+		spi.enable_tx_dma();
+		// if (sz <= 0xFFFF) {
+		// 	spi.set_tx_message_size(sz);
+		// 	spi.set_tx_message_reload_size(0);
+		// } else if (sz <= (0xFFFF * 2)) {
+		// 	spi.set_tx_message_size(0xFFFF);
+		// 	spi.set_tx_message_reload_size(sz - 0xFFFF);
+		// } else
+		// 	return; // Todo: handle transfers > 128kB by setting up an ISR on TSERF that sets the reload size again
+		uint32_t dst = spi.get_tx_datareg_addr();
+		HAL_DMA_Start(&hdma_spi6_tx, src, dst, sz);
 	}
 
 private:
@@ -169,4 +210,6 @@ private:
 	volatile uint32_t *dma_isr_reg;
 	uint32_t dma_tc_flag_index;
 	uint32_t dma_te_flag_index;
+
+	DMA_HandleTypeDef hdma_spi6_tx;
 };
