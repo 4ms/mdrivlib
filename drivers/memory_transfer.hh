@@ -120,12 +120,20 @@ struct MemoryTransfer {
 		// MDMA0::ChannelTransferComplISREnable::set();
 	}
 
+	void repeat_transfer_new_dst(void *dst) {
+		MDMA0::Enable::clear();
+		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
+		_dst_addr = reinterpret_cast<uint32_t>(dst);
+		_set_addrs();
+		MDMA0::Enable::set();
+		MDMA0::SWRequest::set();
+	}
+
 	void start_transfer() {
 		MDMA0::Enable::clear();
 		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
 		_set_addrs();
 		MDMA0::Enable::set();
-
 		// Debug point:
 		// if (MDMA0::RequestIsActive::read())
 		// 	while (1)
