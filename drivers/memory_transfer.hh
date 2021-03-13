@@ -14,7 +14,7 @@ struct MemoryTransfer {
 
 	template<typename CallbackT>
 	void registerCallback(CallbackT &&callback) {
-		InterruptManager::registerISR(MDMA_IRQn, 0, 0, [=]() {
+		InterruptManager::registerISR(MDMA_IRQn, 2, 2, [=]() {
 			if ((MDMA_Channel0->CISR & MDMA_CISR_BRTIF) && (MDMA_Channel0->CCR & MDMA_CCR_BRTIE)) {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CBRTIF;
 			}
@@ -45,9 +45,61 @@ struct MemoryTransfer {
 
 		target::RCC_Control::MDMA_::set();
 
+		// Todo: use the registers Luke!
+		hmdma.Instance = MDMA_Channel0;
+		hmdma.Init.Request = MDMA_REQUEST_SW;
+		hmdma.Init.TransferTriggerMode = MDMA_BLOCK_TRANSFER; // MDMA_BUFFER_TRANSFER;
+		hmdma.Init.Priority = MDMA_PRIORITY_LOW;
+		hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+		hmdma.Init.SourceInc = MDMA_SRC_INC_WORD;
+		hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE; // MDMA_DEST_INC_WORD;
+		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_WORD;
+		hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE; // WORD;
+		hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
+		hmdma.Init.BufferTransferLength = _transfer_size;
+		hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
+		hmdma.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
+		hmdma.Init.SourceBlockAddressOffset = 0;
+		hmdma.Init.DestBlockAddressOffset = 0;
+		hmdma.XferBufferCpltCallback = NULL;
+		hmdma.XferBlockCpltCallback = NULL;
+		hmdma.XferRepeatBlockCpltCallback = NULL;
+		hmdma.XferCpltCallback = NULL;
+		hmdma.XferAbortCallback = NULL;
+		hmdma.XferErrorCallback = NULL;
+		auto err = HAL_MDMA_Init(&hmdma);
+		if (err != HAL_OK)
+			__BKPT();
+
+		//CTCR: D3FC 0222
+		//SINC b10
+		//DINC 0
+		//SSIZE 0b10
+		//DSIZE 0
+		//SINCOS 0b10
+		//DINCOS 0
+		//SBUSRT= DBURST = 0b000
+		//TLEN = 0b111 1111
+		//PKE = 1
+		//PAM = 0b00
+		//TRGM = 0b01
+		//BWM = 1
+		
 		MDMA0::Enable::clear();
 		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
 		MDMA0::BlockRepeatCount::write(0);
+
+		// MDMA0::SrcIncDir::write(MDMA0::Up);
+		// MDMA0::SrcIncAmount::write(MDMA0::Byte);
+		// MDMA0::DstIncDir::write(MDMA0::DoNotInc);
+		// MDMA0::SrcSize::write(MDMA0::Byte);
+		// MDMA0::DstSize::write(MDMA0::Byte);
+		// MDMA0::TransferLength::write(sz >= 128 ? 127 : sz - 1);
+		// if (sz > 127)
+		// 	MDMA0::TriggerMode::write(0b01); // Block transfer
+		// else
+		// 	MDMA0::TriggerMode::write(0b00); // Buffer transfer
+
 		MDMA0::BufferTransferComplISRClear::set();
 		MDMA0::BlockTransferComplISRClear::set();
 		MDMA0::BlockRepeatTransferComplISRClear::set();
@@ -121,6 +173,26 @@ private:
 		using BlockRepeatTransferComplISRClear = RegisterSection<ReadWrite, CCR_Base, MDMA_CIFCR_CBRTIF_Pos, 1>;
 		using ChannelTransferComplISRClear = RegisterSection<ReadWrite, CCR_Base, MDMA_CIFCR_CCTCIF_Pos, 1>;
 		using TransferErrISRClear = RegisterSection<ReadWrite, CIFCR_Base, MDMA_CIFCR_CTEIF_Pos, 1>;
+
+		static constexpr uint32_t CTCR_Base = MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CTCR);
+		using BufferableWriteMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_BWM_Pos, 1>;
+		using SWRequestMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_SWRM_Pos, 1>;
+		using TriggerMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_TRGM_Pos, 2>;
+		using PaddingAlignmentMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_PAM_Pos, 2>;
+		using PackEnable = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_PKE_Pos, 1>;
+		using TransferLength = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_TLEN_Pos, 7>;
+		using DstBurst = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_DBURST_Pos, 3>;
+		using SrcBurst = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_SBURST_Pos, 3>;
+
+		enum Sizes { Byte = 0b00, HalfWord = 0b01, Word = 0b10, DoubleWord = 0b11 };
+		using DstIncAmount = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_DINCOS_Pos, 2>;
+		using SrcIncAmount = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_SINCOS_Pos, 2>;
+		using DstSize = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_DSIZE_Pos, 2>;
+		using SrcSize = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_SSIZE_Pos, 2>;
+
+		enum Directions { DoNotInc = 0b00, Up = 0b10, Down = 0b11 };
+		using DstIncDir = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_DINC_Pos, 2>;
+		using SrcIncDir = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_SINC_Pos, 2>;
 
 		using DstAddr = RegisterBits<ReadWrite, MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CDAR), 0xFFFFFFFF>;
 		using SrcAddr = RegisterBits<ReadWrite, MDMA_Channel0_BASE + offsetof(MDMA_Channel_TypeDef, CSAR), 0xFFFFFFFF>;
