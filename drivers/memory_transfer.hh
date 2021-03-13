@@ -51,9 +51,9 @@ struct MemoryTransfer {
 		hmdma.Init.TransferTriggerMode = MDMA_BLOCK_TRANSFER; // MDMA_BUFFER_TRANSFER;
 		hmdma.Init.Priority = MDMA_PRIORITY_LOW;
 		hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-		hmdma.Init.SourceInc = MDMA_SRC_INC_WORD;
+		hmdma.Init.SourceInc = MDMA_SRC_INC_BYTE;//WORD;
 		hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE; // MDMA_DEST_INC_WORD;
-		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_WORD;
+		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_BYTE; //WORD
 		hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE; // WORD;
 		hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
 		hmdma.Init.BufferTransferLength = _transfer_size;

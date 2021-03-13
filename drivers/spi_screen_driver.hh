@@ -142,7 +142,7 @@ struct DmaSpiScreenDriver {
 	enum PacketType { Cmd, Data };
 
 	DmaSpiScreenDriver() {
-		target::RCC_Control::BDMA_P::set();
+		// target::RCC_Control::BDMA_P::set();
 	}
 
 	void init() {
@@ -169,15 +169,15 @@ struct DmaSpiScreenDriver {
 
 	template<PacketType MessageType>
 	void transmit_blocking(uint8_t byte) {
-		while (!spi.tx_space_available())
-			;
 		// while (!spi.is_end_of_transfer());
 		// while (!spi.is_tx_complete());
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
 		spi.disable();
-		disable_IT_mode(); // get rid of this if we dont use IT anywhere
+		// disable_IT_mode(); // get rid of this if we dont use IT anywhere
 		spi.set_tx_message_size(1);
-		// spi.set_fifo_threshold(fifo_size);
-		// spi.disable_end_of_xfer_interrupt();
+		spi.set_fifo_threshold(1);
+		spi.disable_end_of_xfer_interrupt();
 		spi.enable();
 		if constexpr (MessageType == Cmd)
 			dcpin.low();
@@ -185,17 +185,20 @@ struct DmaSpiScreenDriver {
 			dcpin.high();
 		spi.start_transfer();
 		spi.load_tx_data(byte);
+		while (!spi.tx_space_available())
+			;
 	}
 
 	template<PacketType MessageType>
 	void transmit_blocking(uint16_t halfword1, uint16_t halfword2) {
-		while (!spi.tx_space_available())
-			;
 		// while (!spi.is_end_of_transfer());
 		// while (!spi.is_tx_complete());
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
 		spi.disable();
-		disable_IT_mode(); // get rid of this if we dont use IT anywhere
+		// disable_IT_mode(); // get rid of this if we dont use IT anywhere
 		spi.set_tx_message_size(4);
+		// spi.set_fifo_threshold(4);
 		spi.enable();
 		if constexpr (MessageType == Cmd)
 			dcpin.low();
@@ -203,6 +206,8 @@ struct DmaSpiScreenDriver {
 			dcpin.high();
 		spi.load_tx_data(MathTools::swap_bytes_and_combine(halfword2, halfword1));
 		spi.start_transfer();
+		while (!spi.tx_space_available())
+			;
 	}
 
 	void start_dma_transfer(uint32_t src, uint32_t sz, std::function<void(void)> &&cb) {
@@ -216,10 +221,19 @@ struct DmaSpiScreenDriver {
 		mdma.registerCallback([&]() { callback(); });
 	}
 
+	//@50MHz SCLK:
+	// 1.45ms is xferred (for waht should be half a frame)
+	// 1bit  = 0.020us
+	// 1byte = 0.160us
+	// 240*240*2 / 2 =57600B = 9.216ms @ 50MHz
+	// and it does look like 1.45/9.216 = 15.7% of the screen is drawn (with garbage)
 	void start_dma_transfer(uint32_t src, uint32_t sz) {
 		spi.disable();
 		uint32_t dst = spi.get_tx_datareg_addr();
 
+		//sz is indeed 57600
+		//dst is indeed TXDR
+		//src is indeed 0x24000000
 		mdma.config_transfer((void *)dst, (void *)src, sz);
 
 		if (sz <= 0xFFFF) {
