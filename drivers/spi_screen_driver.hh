@@ -194,7 +194,6 @@ struct DmaSpiScreenDriver {
 	enum PacketType { Cmd, Data };
 
 	DmaSpiScreenDriver() {
-		init();
 	}
 
 	void init() {
