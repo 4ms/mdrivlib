@@ -7,6 +7,58 @@
 #include "system.hh"
 #include "util/math.hh"
 
+template<typename ConfT>
+struct SpiScreenDriver2 {
+	SpiScreenDriver2() {
+		spi.disable();
+		spi.configure();
+
+		spi.set_tx_message_size(1);
+		spi.enable();
+	}
+
+private:
+	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
+	typename ConfT::DCPin dcpin;
+
+	void wait_until_ready() {
+		while (!spi.is_tx_complete())
+			;
+	}
+
+protected:
+	// Blocking Mode:
+	enum PacketType { Cmd, Data };
+
+	template<PacketType MessageType>
+	void transmit(uint8_t byte) {
+		spi.disable();
+		spi.set_tx_message_size(1);
+		spi.enable();
+		if constexpr (MessageType == Cmd)
+			dcpin.low();
+		if constexpr (MessageType == Data)
+			dcpin.high();
+		spi.load_tx_data(byte);
+		spi.start_transfer();
+		wait_until_ready();
+		// spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+	}
+
+	void transmit_data_32(uint16_t halfword1, uint16_t halfword2) {
+		spi.disable();
+		spi.set_tx_message_size(4);
+		spi.enable();
+		dcpin.high();
+		spi.load_tx_data(MathTools::swap_bytes_and_combine(halfword2, halfword1));
+		spi.start_transfer();
+		wait_until_ready();
+		// spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+	}
+};
+
 // Todo: this is not necessarily an SPI screen driver, it's a general SPI driver that has a hi/low pin for each transfer
 // and it's blocking mode only
 template<typename ConfT>
@@ -142,37 +194,19 @@ struct DmaSpiScreenDriver {
 	enum PacketType { Cmd, Data };
 
 	DmaSpiScreenDriver() {
+		init();
 		// target::RCC_Control::BDMA_P::set();
 	}
 
 	void init() {
 		spi.disable();
 		spi.configure();
+		spi.set_tx_message_size(1); // not needed?
 		spi.enable();
 	}
 
-	// Todo: remove this, and IT stuff if transmit_blocking works
 	template<PacketType MessageType>
-	void transmit_blocking_with_IT(uint8_t byte) {
-		wait_until_ready();
-		spi.disable();
-		spi.set_tx_message_size(1);
-		spi.enable();
-		spi.enable_IT_mode();
-		if constexpr (MessageType == Cmd)
-			dcpin.low();
-		if constexpr (MessageType == Data)
-			dcpin.high();
-		spi.load_tx_data(byte);
-		spi.start_transfer();
-	}
-
-	template<PacketType MessageType>
-	void transmit_blocking(uint8_t byte) {
-		// while (!spi.is_end_of_transfer());
-		// while (!spi.is_tx_complete());
-		spi.clear_EOT_flag();
-		spi.clear_TXTF_flag();
+	void transmit(uint8_t byte) {
 		spi.disable();
 		// disable_IT_mode(); // get rid of this if we dont use IT anywhere
 		spi.set_tx_message_size(1);
@@ -185,16 +219,18 @@ struct DmaSpiScreenDriver {
 			dcpin.high();
 		spi.start_transfer();
 		spi.load_tx_data(byte);
-		while (!spi.tx_space_available())
+		while (!spi.is_tx_complete())
 			;
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+	}
+
+	void transmit_data_32(uint16_t halfword1, uint16_t halfword2) {
+		transmit_blocking<Data>(halfword1, halfword2);
 	}
 
 	template<PacketType MessageType>
 	void transmit_blocking(uint16_t halfword1, uint16_t halfword2) {
-		// while (!spi.is_end_of_transfer());
-		// while (!spi.is_tx_complete());
-		spi.clear_EOT_flag();
-		spi.clear_TXTF_flag();
 		spi.disable();
 		// disable_IT_mode(); // get rid of this if we dont use IT anywhere
 		spi.set_tx_message_size(4);
@@ -206,8 +242,10 @@ struct DmaSpiScreenDriver {
 			dcpin.high();
 		spi.load_tx_data(MathTools::swap_bytes_and_combine(halfword2, halfword1));
 		spi.start_transfer();
-		while (!spi.tx_space_available())
+		while (!spi.is_tx_complete())
 			;
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
 	}
 
 	void start_dma_transfer(uint32_t src, uint32_t sz, std::function<void(void)> &&cb) {
