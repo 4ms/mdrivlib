@@ -51,10 +51,10 @@ struct MemoryTransfer {
 		hmdma.Init.TransferTriggerMode = MDMA_BLOCK_TRANSFER; // MDMA_BUFFER_TRANSFER;
 		hmdma.Init.Priority = MDMA_PRIORITY_LOW;
 		hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-		hmdma.Init.SourceInc = MDMA_SRC_INC_BYTE;//WORD;
-		hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE; // MDMA_DEST_INC_WORD;
-		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_BYTE; //WORD
-		hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE; // WORD;
+		hmdma.Init.SourceInc = MDMA_SRC_INC_BYTE;			// WORD;
+		hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE;	// MDMA_DEST_INC_WORD;
+		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_BYTE; // WORD
+		hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE;	// WORD;
 		hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
 		hmdma.Init.BufferTransferLength = _transfer_size;
 		hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
@@ -67,38 +67,46 @@ struct MemoryTransfer {
 		hmdma.XferCpltCallback = NULL;
 		hmdma.XferAbortCallback = NULL;
 		hmdma.XferErrorCallback = NULL;
-		auto err = HAL_MDMA_Init(&hmdma);
-		if (err != HAL_OK)
-			__BKPT();
+		// auto err = HAL_MDMA_Init(&hmdma);
+		// if (err != HAL_OK)
+		// 	__BKPT();
 
-		//CTCR: D3FC 0222
-		//SINC b10
-		//DINC 0
-		//SSIZE 0b10
-		//DSIZE 0
-		//SINCOS 0b10
-		//DINCOS 0
-		//SBUSRT= DBURST = 0b000
-		//TLEN = 0b111 1111
-		//PKE = 1
-		//PAM = 0b00
-		//TRGM = 0b01
-		//BWM = 1
-		
+		// With WORD for Src
+		// CTCR: D3FC 0222
+		// SINC b10
+		// DINC 0
+		// SSIZE 0b10
+		// DSIZE 0
+		// SINCOS 0b10
+		// DINCOS 0
+		// SBUSRT= DBURST = 0b000
+		// TLEN = 0b111 1111
+		// PKE = 1
+		// PAM = 0b00
+		// TRGM = 0b01
+		// BWM = 1
+
+		// Try BWM = 0: when 0, transfer is ~3ms, screen shows more filled
+		// Try TransferLength = 64 (or less to match SPI FIFO size), 32:same
 		MDMA0::Enable::clear();
 		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
 		MDMA0::BlockRepeatCount::write(0);
 
-		// MDMA0::SrcIncDir::write(MDMA0::Up);
-		// MDMA0::SrcIncAmount::write(MDMA0::Byte);
-		// MDMA0::DstIncDir::write(MDMA0::DoNotInc);
-		// MDMA0::SrcSize::write(MDMA0::Byte);
-		// MDMA0::DstSize::write(MDMA0::Byte);
+		MDMA0::SrcSize::write(MDMA0::Word);
+		MDMA0::SrcIncDir::write(MDMA0::Up);
+		MDMA0::SrcIncAmount::write(MDMA0::Word);
+		MDMA0::DstSize::write(MDMA0::Byte);
+		MDMA0::DstIncDir::write(MDMA0::DoNotInc);
+		MDMA0::DstIncAmount::write(MDMA0::Word);
 		// MDMA0::TransferLength::write(sz >= 128 ? 127 : sz - 1);
-		// if (sz > 127)
-		// 	MDMA0::TriggerMode::write(0b01); // Block transfer
-		// else
-		// 	MDMA0::TriggerMode::write(0b00); // Buffer transfer
+		MDMA0::TransferLength::write(31);
+		if (sz > 127)
+			MDMA0::TriggerMode::write(0b01); // Block transfer
+		else
+			MDMA0::TriggerMode::write(0b00); // Buffer transfer
+		MDMA0::PaddingAlignmentMode::write(0b00);
+		MDMA0::PackEnable::set();
+		MDMA0::BufferableWriteMode::clear();
 
 		MDMA0::BufferTransferComplISRClear::set();
 		MDMA0::BlockTransferComplISRClear::set();

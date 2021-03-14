@@ -225,15 +225,15 @@ struct DmaSpiScreenDriver {
 	// 1.45ms is xferred (for waht should be half a frame)
 	// 1bit  = 0.020us
 	// 1byte = 0.160us
-	// 240*240*2 / 2 =57600B = 9.216ms @ 50MHz
+	// half-frame = 240*240*2 / 2 =57600B = 9.216ms @ 50MHz
 	// and it does look like 1.45/9.216 = 15.7% of the screen is drawn (with garbage)
 	void start_dma_transfer(uint32_t src, uint32_t sz) {
 		spi.disable();
 		uint32_t dst = spi.get_tx_datareg_addr();
 
-		//sz is indeed 57600
-		//dst is indeed TXDR
-		//src is indeed 0x24000000
+		// sz is indeed 57600
+		// dst is indeed TXDR
+		// src is indeed 0x24000000
 		mdma.config_transfer((void *)dst, (void *)src, sz);
 
 		if (sz <= 0xFFFF) {
