@@ -206,7 +206,7 @@ struct DmaSpiScreenDriver {
 	}
 
 	template<PacketType MessageType>
-	void transmit(uint8_t byte) {
+	void transmit_blocking(uint8_t byte) {
 		spi.disable();
 		// disable_IT_mode(); // get rid of this if we dont use IT anywhere
 		spi.set_tx_message_size(1);
@@ -223,10 +223,6 @@ struct DmaSpiScreenDriver {
 			;
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
-	}
-
-	void transmit_data_32(uint16_t halfword1, uint16_t halfword2) {
-		transmit_blocking<Data>(halfword1, halfword2);
 	}
 
 	template<PacketType MessageType>
