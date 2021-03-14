@@ -195,7 +195,6 @@ struct DmaSpiScreenDriver {
 
 	DmaSpiScreenDriver() {
 		init();
-		// target::RCC_Control::BDMA_P::set();
 	}
 
 	void init() {
@@ -280,7 +279,8 @@ struct DmaSpiScreenDriver {
 			return; // Todo: handle transfers > 128k packets by setting up an ISR on TSERF that sets the reload size
 
 		dcpin.high();
-		disable_IT_mode();
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
 		spi.enable_tx_dma();
 		spi.enable();
 		spi.start_transfer();
@@ -298,23 +298,6 @@ private:
 				}
 			});
 		NVIC_EnableIRQ(ConfT::ScreenSpiConf::IRQn);
-	}
-
-	void enable_IT_mode() {
-		init_txc_interrupt();
-
-		spi.clear_EOT_flag();
-		spi.clear_TXTF_flag();
-		_ready = true;
-		spi.enable_end_of_xfer_interrupt();
-	}
-
-	void disable_IT_mode() {
-		// spi.clear_EOT_flag();
-		spi.clear_TXTF_flag();
-		NVIC_DisableIRQ(ConfT::ScreenSpiConf::IRQn);
-		spi.disable_end_of_xfer_interrupt();
-		_ready = true;
 	}
 
 private:
