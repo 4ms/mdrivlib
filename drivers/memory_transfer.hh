@@ -50,27 +50,27 @@ struct MemoryTransfer {
 		target::RCC_Control::MDMA_::set();
 
 		// Todo: use the registers Luke!
-		hmdma.Instance = MDMA_Channel0;
-		hmdma.Init.Request = MDMA_REQUEST_SW;
-		hmdma.Init.TransferTriggerMode = MDMA_BLOCK_TRANSFER; // MDMA_BUFFER_TRANSFER;
-		hmdma.Init.Priority = MDMA_PRIORITY_LOW;
-		hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-		hmdma.Init.SourceInc = MDMA_SRC_INC_BYTE;			// WORD;
-		hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE;	// MDMA_DEST_INC_WORD;
-		hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_BYTE; // WORD
-		hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE;	// WORD;
-		hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
-		hmdma.Init.BufferTransferLength = _transfer_size;
-		hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
-		hmdma.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
-		hmdma.Init.SourceBlockAddressOffset = 0;
-		hmdma.Init.DestBlockAddressOffset = 0;
-		hmdma.XferBufferCpltCallback = NULL;
-		hmdma.XferBlockCpltCallback = NULL;
-		hmdma.XferRepeatBlockCpltCallback = NULL;
-		hmdma.XferCpltCallback = NULL;
-		hmdma.XferAbortCallback = NULL;
-		hmdma.XferErrorCallback = NULL;
+		// hmdma.Instance = MDMA_Channel0;
+		// hmdma.Init.Request = MDMA_REQUEST_SW;
+		// hmdma.Init.TransferTriggerMode = MDMA_BLOCK_TRANSFER; // MDMA_BUFFER_TRANSFER;
+		// hmdma.Init.Priority = MDMA_PRIORITY_LOW;
+		// hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+		// hmdma.Init.SourceInc = MDMA_SRC_INC_BYTE;			// WORD;
+		// hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE;	// MDMA_DEST_INC_WORD;
+		// hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_BYTE; // WORD
+		// hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE;	// WORD;
+		// hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
+		// hmdma.Init.BufferTransferLength = _transfer_size;
+		// hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
+		// hmdma.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
+		// hmdma.Init.SourceBlockAddressOffset = 0;
+		// hmdma.Init.DestBlockAddressOffset = 0;
+		// hmdma.XferBufferCpltCallback = NULL;
+		// hmdma.XferBlockCpltCallback = NULL;
+		// hmdma.XferRepeatBlockCpltCallback = NULL;
+		// hmdma.XferCpltCallback = NULL;
+		// hmdma.XferAbortCallback = NULL;
+		// hmdma.XferErrorCallback = NULL;
 		// auto err = HAL_MDMA_Init(&hmdma);
 		// if (err != HAL_OK)
 		// 	__BKPT();
