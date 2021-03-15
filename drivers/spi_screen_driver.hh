@@ -268,11 +268,10 @@ private:
 	std::function<void(void)> callback;
 
 	MemoryTransfer mdma;
-	BDMATransfer<typename ConfT::BDMAConf> bdma;
+	target::BDMATransfer<typename ConfT::BDMAConf> bdma;
 
 	volatile uint32_t *dma_ifcr_reg;
 	volatile uint32_t *dma_isr_reg;
 	uint32_t dma_tc_flag_index;
 	uint32_t dma_te_flag_index;
-
 };
