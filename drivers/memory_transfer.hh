@@ -1,5 +1,6 @@
 #pragma once
 #include "arch.hh"
+#include "debug.hh" //FixMe: remove when done debugging (not an mdrivlib file!)
 #include "interrupt.hh"
 #include "rcc.hh"
 #include "stm32xx.h"
@@ -26,7 +27,7 @@ struct MemoryTransfer {
 			if ((MDMA_Channel0->CISR & MDMA_CISR_CTCIF) && (MDMA_Channel0->CCR & MDMA_CCR_CTCIE)) {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CCTCIF;
 				// M2P large buffers (64kB):
-				callback();
+				Debug::Pin1::low();
 			}
 
 			// Todo: check if size>127bytes (multi-buffer block), the right ISR is set
@@ -34,6 +35,9 @@ struct MemoryTransfer {
 				MDMA_Channel0->CIFCR = MDMA_CIFCR_CLTCIF;
 				// M2M small buffers:
 				// callback();
+				Debug::Pin2::high();
+				callback();
+				Debug::Pin2::low();
 			}
 		});
 	}
@@ -92,14 +96,14 @@ struct MemoryTransfer {
 		MDMA0::BlockNumDataBytesToXfer::write(_transfer_size);
 		MDMA0::BlockRepeatCount::write(0);
 
-		MDMA0::SrcSize::write(MDMA0::Word);
+		MDMA0::SrcSize::write(MDMA0::Byte);
 		MDMA0::SrcIncDir::write(MDMA0::Up);
-		MDMA0::SrcIncAmount::write(MDMA0::Word);
+		MDMA0::SrcIncAmount::write(MDMA0::Byte);
 		MDMA0::DstSize::write(MDMA0::Byte);
 		MDMA0::DstIncDir::write(MDMA0::DoNotInc);
-		MDMA0::DstIncAmount::write(MDMA0::Word);
-		// MDMA0::TransferLength::write(sz >= 128 ? 127 : sz - 1);
-		MDMA0::TransferLength::write(31);
+		MDMA0::DstIncAmount::write(MDMA0::Byte);
+		MDMA0::TransferLength::write(sz >= 128 ? 127 : sz - 1);
+		// MDMA0::TransferLength::write(7);
 		if (sz > 127)
 			MDMA0::TriggerMode::write(0b01); // Block transfer
 		else
