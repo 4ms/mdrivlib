@@ -155,6 +155,8 @@ struct DmaSpiScreenDriver {
 	template<PacketType MessageType>
 	void transmit_blocking(uint8_t byte) {
 		spi.disable();
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
 		spi.set_tx_message_size(1);
 		spi.set_fifo_threshold(1);
 		spi.disable_end_of_xfer_interrupt();
@@ -174,6 +176,8 @@ struct DmaSpiScreenDriver {
 	template<PacketType MessageType>
 	void transmit_blocking(uint16_t halfword1, uint16_t halfword2) {
 		spi.disable();
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
 		spi.set_tx_message_size(4);
 		spi.enable();
 		if constexpr (MessageType == Cmd)

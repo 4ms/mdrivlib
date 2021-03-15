@@ -13,6 +13,9 @@ namespace stm32h7x5
 {
 template<typename ConfT>
 struct BDMATransfer {
+	// Todo: use a callback with 1 argument for HT mode: 0 = first half, 1=second half
+	static_assert(ConfT::half_transfer_interrupt_enable == false, "Half Transfer is not supported yet :(");
+
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
@@ -21,10 +24,10 @@ struct BDMATransfer {
 	volatile uint32_t *dma_ifcr_reg;
 	volatile uint32_t *dma_isr_reg;
 	uint32_t dma_tc_flag_index;
+	uint32_t dma_ht_flag_index;
 	uint32_t dma_te_flag_index;
 
 	DMAMUX_Channel_TypeDef *dmamux_chan;
-	// DMA_HandleTypeDef hdma_spi6_tx;
 
 	BDMATransfer() {
 		target::RCC_Control::BDMA_P::set();
@@ -64,6 +67,7 @@ struct BDMATransfer {
 
 		dma_tc_flag_index = dma_get_TC_flag_index(stream);
 		dma_te_flag_index = dma_get_TE_flag_index(stream);
+		dma_te_flag_index = dma_get_HT_flag_index(stream);
 		dma_isr_reg = dma_get_ISR_reg(stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
 	}
@@ -74,7 +78,16 @@ struct BDMATransfer {
 		InterruptManager::registerISR(ConfT::IRQn, ConfT::pri, ConfT::subpri, [=]() {
 			if (*dma_isr_reg & dma_tc_flag_index) {
 				*dma_ifcr_reg = dma_tc_flag_index;
+				if constexpr (ConfT::half_transfer_interrupt_enable)
+					callback(1);
+				else
 				callback();
+			}
+			if constexpr (ConfT::half_transfer_interrupt_enable) {
+				if (*dma_isr_reg & dma_ht_flag_index) {
+					*dma_ifcr_reg = dma_ht_flag_index;
+					callback(0);
+				}
 			}
 			if (*dma_isr_reg & dma_te_flag_index) {
 				*dma_ifcr_reg = dma_te_flag_index;
@@ -87,20 +100,6 @@ struct BDMATransfer {
 		_transfer_size = (sz > 0xFFFF) ? 0xFFFF : sz;
 		_src_addr = src;
 		_dst_addr = dst;
-
-		// Todo: use the registers Luke!
-		// hdma_spi6_tx.Instance = stream;
-		// hdma_spi6_tx.Init.Request = ConfT::RequestNum;
-		// hdma_spi6_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-		// hdma_spi6_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-		// hdma_spi6_tx.Init.MemInc = DMA_MINC_ENABLE;
-		// hdma_spi6_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-		// hdma_spi6_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-		// hdma_spi6_tx.Init.Mode = DMA_NORMAL;
-		// hdma_spi6_tx.Init.Priority = DMA_PRIORITY_LOW;
-		// if (HAL_DMA_Init(&hdma_spi6_tx) != HAL_OK) {
-		// 	__BKPT();
-		// }
 
 		BDMA_::ClearGlobalISRFlag::set();
 		BDMA_::ClearHalfTransferComplISRFlag::set();
@@ -180,7 +179,6 @@ struct BDMATransfer {
 
 		stream->CNDTR = _transfer_size;
 		stream->CCR |= BDMA_CCR_EN;
-		// HAL_DMA_Start_IT(&hdma_spi6_tx, _src_addr, _dst_addr, _transfer_size);
 	}
 
 	uint32_t get_transfer_size() {
