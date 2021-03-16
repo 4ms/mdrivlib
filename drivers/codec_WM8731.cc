@@ -122,8 +122,8 @@ CodecWM8731::Error CodecWM8731::_write_register(uint8_t reg_address, uint16_t re
 	uint8_t Byte2 = reg_value & 0xFF;
 	uint8_t data[2] = {Byte1, Byte2};
 
-	// auto err = i2c_.write(CODEC_ADDRESS, data, 2);
-	auto err = I2CPeriph::I2C_INIT_ERR;
+	auto err = i2c_.write(CODEC_ADDRESS, data, 2);
+	// auto err = I2CPeriph::I2C_INIT_ERR;
 
 	// auto err = i2c_.mem_write(CODEC_ADDRESS, Byte1, REGISTER_ADDR_SIZE, &Byte2, 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
