@@ -1,4 +1,5 @@
 #include "timekeeper.hh"
+#include "arch.hh"
 #include "interrupt.hh"
 #include "stm32xx.h"
 #include "tim.hh"
@@ -40,28 +41,39 @@ void Timekeeper::_set_periph(TIM_TypeDef *TIMx) {
 	irqn = target::peripherals::TIM::IRQn(timx);
 }
 
-// Todo: Support 32-bit timers. Right now it runs 32-bit timers in 16-bit mode
+// Todo: Test this!
 void Timekeeper::_set_timing(uint32_t period_ns, uint32_t priority1, uint32_t priority2) {
-	uint32_t sysfreq_Hz = target::peripherals::TIM::max_freq(timx);
-	float sysfreq_ns = 1000000000.f / sysfreq_Hz;
+	const uint32_t periph_num = target::peripherals::TIM::to_num(timx);
+	const uint32_t max_period = target::peripherals::TIM::max_period(periph_num);
+	const uint32_t max_prescaler = target::peripherals::TIM::max_prescaler(periph_num);
+	const uint32_t max_clockdivider = target::peripherals::TIM::max_clockdivider(periph_num);
+	const uint32_t sysfreq_Hz = target::peripherals::TIM::max_freq(timx);
+	const float sysfreq_ns = 1000000000.f / sysfreq_Hz;
+
 	uint32_t period_clocks = period_ns / sysfreq_ns;
 
 	uint32_t prescaler = 0;
-	while ((period_clocks / (prescaler + 1)) > 65535) {
+	while ((period_clocks / (prescaler + 1)) > max_period) {
 		prescaler++;
 	}
 	period_clocks = period_clocks / (prescaler + 1);
 
 	uint32_t clock_division = 0;
-	while ((prescaler / (clock_division + 1) > 255)) {
-		clock_division++;
+	while ((prescaler / (clock_division + 1) > max_prescaler)) {
+		auto next_clock_division = target::peripherals::TIM::next_allowed_clockdivision(periph_num, clock_division);
+		if (next_clock_division == clock_division)
+			break;
+		clock_division = next_clock_division;
 	}
 	prescaler = prescaler / (clock_division + 1);
 
-	if (clock_division > 255) {
-		period_clocks = 65535;
-		prescaler = 255;
-		clock_division = 255;
+	if (prescaler > max_prescaler) {
+		prescaler = max_prescaler;
+	}
+	if (clock_division > max_clockdivider) {
+		period_clocks = max_period;
+		prescaler = max_prescaler;
+		clock_division = max_clockdivider;
 	}
 
 	auto pri = System::encode_nvic_priority(priority1, priority2);
@@ -78,7 +90,6 @@ void Timekeeper::_register_task() {
 	InterruptManager::registerISR(irqn, [this]() {
 		if (tim_update_IT_is_set()) {
 			if (tim_update_IT_is_source()) {
-				// Todo: what is the cost of std::function operator bool
 				if (is_running && task_func)
 					task_func();
 			}

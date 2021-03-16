@@ -40,7 +40,7 @@ struct TIM {
 			return 2;
 		else if (TIMx == TIM3)
 			return 3;
-		else if (TIMx == TIM5)
+		else if (TIMx == TIM4)
 			return 4;
 		else if (TIMx == TIM5)
 			return 5;
@@ -119,6 +119,22 @@ struct TIM {
 
 		return (HAL_RCC_GetHCLKFreq() / D2PPREx) * 2; // The x2 is from CubeMX Clock Configuration graphical tab
 	}
+	static constexpr uint32_t max_period(unsigned tim_periph_num) {
+		if (tim_periph_num == 2 || tim_periph_num == 5)
+			return 0xFFFFFFFF;
+		return 65535;
+	}
+	static constexpr uint32_t max_prescaler(unsigned tim_periph_num) {
+		return 65535;
+	}
+	static constexpr uint32_t max_clockdivider(unsigned tim_periph_num) {
+		// if (tim_periph_num == 1)
+		// 	return 255;
+		return 1; // can only be 1, 2, or 4.
+	}
+	static constexpr uint32_t next_allowed_clockdivision(uint32_t tim_periph_num, uint32_t clock_division) {
+		return clock_division + 1;
+	}
 };
 } // namespace peripherals
 } // namespace stm32h7x5
@@ -141,6 +157,20 @@ struct TIM {
 			divider = 1; // unknown, error?
 		return HAL_RCC_GetHCLKFreq() / divider;
 	}
+	static constexpr uint32_t max_period(unsigned tim_periph_num) {
+		return 65535;
+	}
+	static constexpr uint32_t max_prescaler(unsigned tim_periph_num) {
+		return 255;
+	}
+	static constexpr uint32_t max_clockdivider(unsigned tim_periph_num) {
+		// if (tim_periph_num == 1)
+		// 	return 255;
+		return 255;
+	}
+	static constexpr uint32_t next_allowed_clockdivision(uint32_t tim_periph_num, uint32_t clock_division) {
+		return clock_division + 1;
+	}
 };
 
 } // namespace peripherals
@@ -148,4 +178,3 @@ struct TIM {
 } // namespace stm32f7xx
 
 } // namespace mdrivlib
-
