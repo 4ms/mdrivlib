@@ -58,7 +58,7 @@ public:
 	}
 
 	void store_reading(uint16_t reading) {
-		postfilter[buffer_idx()].add_val(reading >> 2);
+		postfilter[buffer_idx()].add_val((reading >> 2) & 0xFFF);
 	}
 
 	uint16_t get_val(int chan) {
