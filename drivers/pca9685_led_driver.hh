@@ -30,6 +30,7 @@ public:
 	uint8_t get_red_led_element_id(uint8_t rgb_led_id);
 	uint8_t get_chip_num(uint8_t rgb_led_id);
 	LEDDriverError write_chip(uint16_t chip_num);
+	LEDDriverError write_partial_chip(uint16_t chip_num, uint8_t num_bits);
 
 protected:
 	I2CPeriph &i2c_periph_;

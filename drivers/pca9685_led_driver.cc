@@ -31,6 +31,16 @@ void PCA9685Driver::start_it_mode() {
 	i2c_periph_.enable_IT(2, 2);
 }
 
+LEDDriverError PCA9685Driver::write_partial_chip(uint16_t chip_num, uint8_t num_leds) {
+	uint16_t driverAddr = I2C_BASE_ADDRESS | (chip_num << 1);
+	auto err = i2c_periph_.mem_write_IT(
+		driverAddr, REG_LED0, REGISTER_ADDR_SIZE, reinterpret_cast<uint8_t *>(frame_buf_), num_leds * 4); 
+	if (err != I2CPeriph::I2C_NO_ERR)
+		return LEDDriverError::I2C_XMIT_TIMEOUT;
+
+	return LEDDriverError::None;
+}
+
 LEDDriverError PCA9685Driver::write_chip(uint16_t chip_num) {
 
 	uint16_t driverAddr = I2C_BASE_ADDRESS | (chip_num << 1);
