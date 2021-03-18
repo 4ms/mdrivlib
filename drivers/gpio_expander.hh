@@ -7,7 +7,7 @@
 namespace mdrivlib
 {
 struct GPIO_expander_conf {
-	uint32_t addr;
+	uint8_t addr;
 	Pin int_pin;
 	IRQType IRQn;
 	enum PinDirection { Output = 0, Input = 1 };
@@ -19,13 +19,15 @@ struct GPIOExpander {
 
 	GPIOExpander(I2CPeriph &i2c, const GPIO_expander_conf &conf)
 		: _conf{conf}
-		, _device_addr{conf.addr << 1}
+		, _device_addr(conf.addr << 1)
 		, _i2c{i2c} {
 	}
 
 	void init() {
-		_i2c.write(_conf.addr );
+		_data[0] = InputPort0;
+		_i2c.write(_device_addr, _data, 1);
 	}
+
 	void start_ISR() {
 		// Create an EXTI interrupt to respond to chip telling us there's a pin change
 		// InterruptManager::registerISR(_conf.IRQn, [this]() { read_pins(); });
