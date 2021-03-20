@@ -1,15 +1,6 @@
 #include "doctest.h"
 #include "drivers/colors.hh"
 #include <stdio.h>
-uint16_t blend(const uint16_t color1, const uint16_t color2, const float f_alpha) {
-	const uint8_t alpha = f_alpha * 255.f;
-	// printf("alpha=%d\n", alpha);
-	Color c1{color1};
-	Color c2{color2};
-	printf("c1.r,g,b = %d, %d, %d\n", c1.red(), c1.green(), c1.blue());
-	printf("c2.r,g,b = %d, %d, %d\n", c2.red(), c2.green(), c2.blue());
-	return c1.blend(c2, alpha).Rgb565();
-}
 
 TEST_CASE("Rgb565 conversion tests") {
 	// Using online rgb565 color picker
@@ -55,11 +46,11 @@ TEST_CASE("Rgb565 conversion tests") {
 	}
 
 	SUBCASE("Blending Rgb565") {
-		CHECK(blend(black565, white565, 0.5f) == greyish565);
-		CHECK(blend(red565, green565, 0.25f) == mandarian565);
-		CHECK(blend(red565, green565, 0.f) == red565);
-		CHECK(blend(red565, green565, 1.f) == green565);
-		CHECK(blend(green565, red565, 1.f) == red565);
-		CHECK(blend(green565, red565, 0.f) == green565);
+		CHECK(Color::blend(black565, white565, 0.5f) == greyish565);
+		CHECK(Color::blend(red565, green565, 0.25f) == mandarian565);
+		CHECK(Color::blend(red565, green565, 0.f) == red565);
+		CHECK(Color::blend(red565, green565, 1.f) == green565);
+		CHECK(Color::blend(green565, red565, 1.f) == red565);
+		CHECK(Color::blend(green565, red565, 0.f) == green565);
 	}
 }

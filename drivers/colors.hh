@@ -45,21 +45,29 @@ struct Color {
 		return *this;
 	}
 
+	// Todo: unit tests
 	constexpr Color blend(Color const that) const {
 		return Color((r_ >> 1) + (that.r_ >> 1), (g_ >> 1) + (that.g_ >> 1), (b_ >> 1) + (that.b_ >> 1));
 	}
 
-	// Todo: faster blend, no division
 	constexpr const Color blend(Color const that, uint8_t const phase) const {
-		return Color((r_ * (255 - phase) + that.r_ * phase) / 255,	//>> 8,
-					 (g_ * (255 - phase) + that.g_ * phase) / 255,	//>> 8,
-					 (b_ * (255 - phase) + that.b_ * phase) / 255); //>> 8);
+		uint16_t out_r = that.r_ * phase + r_ * (255 - phase);
+		uint16_t out_g = that.g_ * phase + g_ * (255 - phase);
+		uint16_t out_b = that.b_ * phase + b_ * (255 - phase);
+		out_r = out_r + 1 + (out_r >> 8);
+		out_g = out_g + 1 + (out_g >> 8);
+		out_b = out_b + 1 + (out_b >> 8);
+		return Color(out_r >> 8, out_g >> 8, out_b >> 8);
 	}
+
+	// Todo: unit tests
 	constexpr const Color blend(Color const that, uint32_t const phase) const {
 		return Color((r_ * (256 - (phase >> 24)) + that.r_ * (phase >> 24)) >> 8,
 					 (g_ * (256 - (phase >> 24)) + that.g_ * (phase >> 24)) >> 8,
 					 (b_ * (256 - (phase >> 24)) + that.b_ * (phase >> 24)) >> 8);
 	}
+
+	// Todo: unit tests
 	constexpr const Color blend(Color const that, float const phase) const {
 		return Color((r_ * (1.0f - phase) + that.r_ * phase),
 					 (g_ * (1.0f - phase) + that.g_ * phase),
@@ -69,6 +77,7 @@ struct Color {
 		return this->r_ != that.r_ || this->g_ != that.g_ || this->b_ != that.b_;
 	}
 
+	// Todo: unit tests
 	constexpr const Color adjust(Adjustment const adj) const {
 		return Color((r_ * adj.r) >> 7, (g_ * adj.g) >> 7, (b_ * adj.b) >> 7);
 	}
@@ -77,11 +86,36 @@ struct Color {
 		return ((r_ & 0b11111000) << 8) | ((g_ & 0b11111100) << 3) | ((b_ >> 3));
 	}
 
-	static constexpr uint16_t blend(const uint16_t color1, const uint16_t color2, const float f_alpha) {
+	// Todo: unit tests
+	static constexpr uint16_t slow_blend(const uint16_t color1, const uint16_t color2, const float f_alpha) {
 		const uint8_t alpha = f_alpha * 255.f;
 		Color c1{color1};
 		Color c2{color2};
 		return c1.blend(c2, alpha).Rgb565();
+	}
+
+	static constexpr uint16_t MASK_RB = 63519;		 // 0b1111100000011111
+	static constexpr uint16_t MASK_G = 2016;		 // 0b0000011111100000
+	static constexpr uint32_t MASK_MUL_RB = 4065216; // 0b1111100000011111000000
+	static constexpr uint32_t MASK_MUL_G = 129024;	 // 0b0000011111100000000000
+
+	static constexpr uint16_t blend(const uint16_t rgb565_col1, const uint16_t rgb565_col2, const float f_alpha) {
+		return Color::blend(rgb565_col1, rgb565_col2, static_cast<uint8_t>(f_alpha * 255));
+	}
+
+	static constexpr uint16_t blend(const uint16_t rgb565_col1, const uint16_t rgb565_col2, const uint8_t alpha) {
+		// uint8_t b = (alpha + 2) >> 2;
+		// uint8_t a = 64 - b;
+		// return (uint16_t)(
+		// 	(((a * (uint32_t)(rgb565_col1 & MASK_RB) + b * (uint32_t)(rgb565_col2 & MASK_RB)) & MASK_MUL_RB) |
+		// 	 ((a * (rgb565_col1 & MASK_G) + b * (rgb565_col2 & MASK_G)) & MASK_MUL_G)) >>
+		// 	6);
+
+		uint8_t _alpha = (alpha + 4) >> 3;
+		uint32_t bg = (rgb565_col1 | (rgb565_col1 << 16)) & 0b00000111111000001111100000011111;
+		uint32_t fg = (rgb565_col2 | (rgb565_col2 << 16)) & 0b00000111111000001111100000011111;
+		uint32_t result = ((((fg - bg) * _alpha) >> 5) + bg) & 0b00000111111000001111100000011111;
+		return (uint16_t)((result >> 16) | result);
 	}
 
 private:
