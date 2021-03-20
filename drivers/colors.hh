@@ -70,10 +70,6 @@ struct Color {
 	}
 
 	constexpr const Color adjust(Adjustment const adj) const {
-		// uint16_t ra = r_ * adj.r;
-		// uint16_t rg = g_ * adj.g;
-		// uint16_t rb = b_ * adj.b;
-		// return Color(ra >> 7, rg >> 7, rb >> 7);
 		return Color((r_ * adj.r) >> 7, (g_ * adj.g) >> 7, (b_ * adj.b) >> 7);
 	}
 
