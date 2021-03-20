@@ -1,6 +1,11 @@
 #pragma once
 #include "stm32xx.h"
 
+#if (defined(__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1))
+#else
+#define __UQADD8(x, y) ((x) + (y))
+#endif
+
 struct Color {
 	// Todo: measure how much slower it is to use floats for Adjustment.r/b/g
 	struct Adjustment {
@@ -11,6 +16,12 @@ struct Color {
 		: r_(r)
 		, g_(g)
 		, b_(b) {
+	}
+
+	constexpr Color(uint16_t rgb565)
+		: r_((rgb565 & 0xf800) >> 8)
+		, g_((rgb565 & 0x07e0) >> 3)
+		, b_((rgb565 & 0x001f) << 3) {
 	}
 
 	constexpr uint8_t red() const {
@@ -38,10 +49,11 @@ struct Color {
 		return Color((r_ >> 1) + (that.r_ >> 1), (g_ >> 1) + (that.g_ >> 1), (b_ >> 1) + (that.b_ >> 1));
 	}
 
+	// Todo: faster blend, no division
 	constexpr const Color blend(Color const that, uint8_t const phase) const {
-		return Color((r_ * (256 - phase) + that.r_ * phase) >> 8,
-					 (g_ * (256 - phase) + that.g_ * phase) >> 8,
-					 (b_ * (256 - phase) + that.b_ * phase) >> 8);
+		return Color((r_ * (255 - phase) + that.r_ * phase) / 255,	//>> 8,
+					 (g_ * (255 - phase) + that.g_ * phase) / 255,	//>> 8,
+					 (b_ * (255 - phase) + that.b_ * phase) / 255); //>> 8);
 	}
 	constexpr const Color blend(Color const that, uint32_t const phase) const {
 		return Color((r_ * (256 - (phase >> 24)) + that.r_ * (phase >> 24)) >> 8,
@@ -69,6 +81,13 @@ struct Color {
 		return ((r_ & 0b11111000) << 8) | ((g_ & 0b11111100) << 3) | ((b_ >> 3));
 	}
 
+	static constexpr uint16_t blend(const uint16_t color1, const uint16_t color2, const float f_alpha) {
+		const uint8_t alpha = f_alpha * 255.f;
+		Color c1{color1};
+		Color c2{color2};
+		return c1.blend(c2, alpha).Rgb565();
+	}
+
 private:
 	uint8_t r_, g_, b_;
 };
@@ -91,4 +110,3 @@ struct Colors {
 	static constexpr Color purple = Color(255, 0, 255);
 	static constexpr Color magenta = Color(200, 0, 100);
 };
-
