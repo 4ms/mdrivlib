@@ -73,6 +73,7 @@ struct Color {
 					 (g_ * (1.0f - phase) + that.g_ * phase),
 					 (b_ * (1.0f - phase) + that.b_ * phase));
 	}
+
 	constexpr const bool operator!=(Color const that) {
 		return this->r_ != that.r_ || this->g_ != that.g_ || this->b_ != that.b_;
 	}
@@ -94,23 +95,11 @@ struct Color {
 		return c1.blend(c2, alpha).Rgb565();
 	}
 
-	static constexpr uint16_t MASK_RB = 63519;		 // 0b1111100000011111
-	static constexpr uint16_t MASK_G = 2016;		 // 0b0000011111100000
-	static constexpr uint32_t MASK_MUL_RB = 4065216; // 0b1111100000011111000000
-	static constexpr uint32_t MASK_MUL_G = 129024;	 // 0b0000011111100000000000
-
 	static constexpr uint16_t blend(const uint16_t rgb565_col1, const uint16_t rgb565_col2, const float f_alpha) {
 		return Color::blend(rgb565_col1, rgb565_col2, static_cast<uint8_t>(f_alpha * 255));
 	}
 
 	static constexpr uint16_t blend(const uint16_t rgb565_col1, const uint16_t rgb565_col2, const uint8_t alpha) {
-		// uint8_t b = (alpha + 2) >> 2;
-		// uint8_t a = 64 - b;
-		// return (uint16_t)(
-		// 	(((a * (uint32_t)(rgb565_col1 & MASK_RB) + b * (uint32_t)(rgb565_col2 & MASK_RB)) & MASK_MUL_RB) |
-		// 	 ((a * (rgb565_col1 & MASK_G) + b * (rgb565_col2 & MASK_G)) & MASK_MUL_G)) >>
-		// 	6);
-
 		uint8_t _alpha = (alpha + 4) >> 3;
 		uint32_t bg = (rgb565_col1 | (rgb565_col1 << 16)) & 0b00000111111000001111100000011111;
 		uint32_t fg = (rgb565_col2 | (rgb565_col2 << 16)) & 0b00000111111000001111100000011111;
