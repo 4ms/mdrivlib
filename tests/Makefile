@@ -43,6 +43,7 @@ LDFLAGS = -lstdc++
 OBJECTS   = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(TEST_SOURCES))))
 DEPDIR := $(BUILDDIR)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$(basename $<).d
+TMPFILE = $(BUILDDIR)/runtests.out
 
 .PHONY: all tests clean
 
@@ -64,7 +65,7 @@ $(BUILDDIR)/%.o: %.cpp
 	@$(CXX) -c $(DEPFLAGS) $(CXXFLAGS) $< -o $@
 
 tests: $(BUILDDIR)/runtests
-	@$(BUILDDIR)/runtests
+	@$(BUILDDIR)/runtests --out=$(TMPFILE) && echo "[√] Unit tests passed: $(notdir $(PWD))" || cat $(TMPFILE)
 
 $(BUILDDIR)/runtests: $(OBJECTS)
 	$(info Linking...)
