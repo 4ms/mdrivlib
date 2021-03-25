@@ -1,6 +1,8 @@
 // Todo: include the specific CMSIS file, e.g. stm32h745xx.h. This avoids needing to include stm32xx_hal.h (and
 // hal_conf.h, which includes all _hal.h and _ll.h). If a file needs to include hal, it can do so specificly
-#pragma once
+#ifndef STM32XX_H_INCLUDE_ONCE
+#define STM32XX_H_INCLUDE_ONCE
+
 #ifdef STM32F7
 #include "stm32f7xx.h"
 #else
@@ -137,3 +139,4 @@
 #define SPI6 nullptr
 #endif
 
+#endif //#ifndef STM32XX_H_INCLUDE_ONCE

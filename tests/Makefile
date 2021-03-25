@@ -30,6 +30,7 @@ CXXFLAGS = 	-Wall \
 			-I../stm32/cmsis/include \
 			-I../stm32/device/include \
 			-I../stm32/periph/include \
+			-I../../../shared \
 			-DSTM32H7 \
 			-DSTM32H755xx \
 			-DCORE_CM7 \
