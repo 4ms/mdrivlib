@@ -88,7 +88,7 @@ private:
 	uint8_t _data[2];
 	unsigned _cur_chan = 0;
 
-	static constexpr uint8_t DEVICE_ADDRESS_RAW = 0b0110110;
+	static constexpr uint8_t DEVICE_ADDRESS_RAW = 0b0110110; // 0x36 unshifted, 0x6C/D shifted
 	static constexpr uint8_t DEVICE_ADDRESS = DEVICE_ADDRESS_RAW << 1;
 	static constexpr uint8_t HS_MASTER_CODE = 0b00001111;
 	enum Setup : uint8_t {

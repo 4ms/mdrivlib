@@ -44,7 +44,7 @@ protected:
 	constexpr static inline uint32_t REG_MODE1 = 0x00;
 	constexpr static inline uint32_t REG_MODE2 = 0x01;
 	constexpr static inline uint32_t REG_LED0 = 0x06;
-	constexpr static inline uint32_t I2C_BASE_ADDRESS = 0b10000000;
+	constexpr static inline uint32_t I2C_BASE_ADDRESS = 0b10000000; // 0x40 unshifted, 0x80/1 shifted
 	constexpr static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
 
