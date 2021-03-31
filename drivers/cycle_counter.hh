@@ -4,19 +4,19 @@
 
 namespace mdrivlib
 {
+// namespace stm32h7x5 { //Todo: is this universal or target-specific?
 
 class CycleCounter {
 public:
 	CycleCounter() {
 		init();
 	}
+
 	void init() {
-		if (DWT->CTRL & DWT_CTRL_NOCYCCNT_Msk)
-			__BKPT();
-		else {
-			DWT->CTRL = DWT->CTRL & ~DWT_CTRL_CYCCNTENA_Msk;
-			DWT->CTRL = DWT->CTRL | DWT_CTRL_CYCCNTENA_Msk;
-			DWT->CTRL = DWT->CTRL | DWT_CTRL_PCSAMPLENA_Msk;
+		if (!(DWT->CTRL & DWT_CTRL_NOCYCCNT_Msk)) {
+			CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+			DWT->LAR = 0xC5ACCE55;
+			DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 		}
 	}
 
