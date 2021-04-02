@@ -75,13 +75,13 @@ struct BDMATransfer {
 	template<typename CallbackT>
 	void register_callback(CallbackT &&callback) {
 		HAL_NVIC_DisableIRQ(ConfT::IRQn);
-		InterruptManager::registerISR(ConfT::IRQn, ConfT::pri, ConfT::subpri, [=]() {
+		InterruptManager::registerISR(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback, this]() {
 			if (*dma_isr_reg & dma_tc_flag_index) {
 				*dma_ifcr_reg = dma_tc_flag_index;
 				if constexpr (ConfT::half_transfer_interrupt_enable)
 					callback(1);
 				else
-				callback();
+					callback();
 			}
 			if constexpr (ConfT::half_transfer_interrupt_enable) {
 				if (*dma_isr_reg & dma_ht_flag_index) {
