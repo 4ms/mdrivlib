@@ -1,5 +1,5 @@
 #pragma once
-#include "stm32xx.h"
+#include <cstdint>
 
 #if (defined(__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1))
 #else
