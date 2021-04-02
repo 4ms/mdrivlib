@@ -1,6 +1,6 @@
 #pragma once
-#include "colors.hh"
 #include "oscs.hh"
+#include "util/colors.hh"
 
 // MixedRgbLed: each color element can have a different
 // LED driver (e.g. PWM, DAC, external chip)
@@ -101,4 +101,3 @@ private:
 //"Normal" RGB LED where each element has the same type of LED driver
 template<typename LedType, unsigned UpdateRateHz = 1000>
 using RgbLed = MixedRgbLed<LedType, LedType, LedType, UpdateRateHz>;
-
