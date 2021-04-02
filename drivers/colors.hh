@@ -2,6 +2,7 @@
 #include <cstdint>
 
 #if (defined(__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1))
+#include "stm32xx.h"
 #else
 #define __UQADD8(x, y) ((x) + (y))
 #endif
