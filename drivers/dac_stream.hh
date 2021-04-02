@@ -29,3 +29,24 @@ struct DacStream : DACType {
 	static inline BufferT dac_buffer[NumChips];
 	uint32_t cur_chip = 0;
 };
+
+template<typename PinT, typename BufferT>
+struct GPIOStream {
+	GPIOStream() {
+		state_buffer.set_head(state_buffer.capacity() / 2);
+	}
+
+	void queue_sample(bool val) {
+		state_buffer.put(val ? 1 : 0);
+	}
+
+	void output_next() {
+		if (state_buffer.get())
+			PinT::high();
+		else
+			PinT::low();
+	}
+
+	BufferT state_buffer;
+	PinT init_pin;
+};
