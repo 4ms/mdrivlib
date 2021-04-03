@@ -26,7 +26,7 @@ struct DMA2DTransfer {
 	}
 
 	void
-	fillrect_rgb565(uint32_t starting_addr, uint16_t width, uint16_t height, uint16_t screen_width, uint16_t color) {
+	fillrect_rgb565(uintptr_t starting_addr, uint16_t width, uint16_t height, uint16_t screen_width, uint16_t color) {
 		DMA2D->NLR = height | (width << DMA2D_NLR_PL_Pos);
 		DMA2D->OOR = screen_width - width;
 		DMA2D->OMAR = starting_addr;
