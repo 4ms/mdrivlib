@@ -1,7 +1,7 @@
 .equ MODE_FIQ, 0x11
 .equ MODE_IRQ, 0x12
 .equ MODE_SVC, 0x13
-/* .equ UART4_TDR, 0x40010028 */
+.equ UART4_TDR, 0x40010028
 
 .section .vector_table, "x"
 .global _Reset
@@ -80,7 +80,7 @@ bss_loop:
 	mov r5, #66
 	str r5, [r4]
 
-    bl __libc_init_array
+    /* bl __libc_init_array */
 
 	/* UART: print 'C' */
 	mov r5, #67
