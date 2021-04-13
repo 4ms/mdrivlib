@@ -51,6 +51,13 @@ struct GPIO {
 			return (*_reg) & get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
 	}
 };
+
+/*
+s/#define RCC_\(.\{-}\)EN\s\+RCC_\1EN_Msk.*$/using \1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_typeDef, \1),
+\1EN>;/
+*/
+// using MP_AHB2ENSETR_ADC12 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_typeDef, MP_AHB2ENSETR_ADC12),
+// MP_AHB2ENSETR_ADC12EN>;
 /*
 using ADC_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR), RCC_AHB1ENR_ADC12EN>;
 using ADC_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR), RCC_AHB1ENR_ADC12EN>;
