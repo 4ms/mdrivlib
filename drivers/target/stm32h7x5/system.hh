@@ -1,7 +1,7 @@
 #pragma once
-#include "periph.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/periph.hh"
+#include "drivers/rcc.hh"
+#include "drivers/stm32xx.h"
 
 // Todo: refactor to use CMSIS header intead of HAL (RCC_OscInitTypeDef, etc)
 namespace mdrivlib

@@ -1,4 +1,5 @@
 #include "sai.hh"
+#include "clocks.hh"
 #include "interrupt.hh"
 #include "stm32xx.h"
 #include "system.hh"

@@ -1,4 +1,5 @@
 #include "i2c.hh"
+#include "clocks.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
 #include "register_access.hh"

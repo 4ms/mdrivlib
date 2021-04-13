@@ -56,7 +56,7 @@ namespace mdrivlib
 namespace stm32h7x5
 {
 constexpr bool TARGET_FOUND = true;
-constexpr auto TYPE = SupportedTargets::stm32mp1;
+constexpr auto TYPE = SupportedTargets::stm32h7x5;
 } // namespace stm32h7x5
 } // namespace mdrivlib
 namespace target = mdrivlib::stm32h7x5;

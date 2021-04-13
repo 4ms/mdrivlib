@@ -1,4 +1,5 @@
 #include "pca9685_led_driver_dma.hh"
+#include "clocks.hh"
 #include "dma_config_struct.hh"
 #include "interrupt.hh"
 
