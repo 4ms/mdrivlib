@@ -119,4 +119,3 @@ struct ReadWrite : ReadOnly {
 		*address = *address & ~mask;
 	}
 };
-

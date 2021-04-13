@@ -103,4 +103,3 @@ void Pin::set_alt(uint8_t af) {
 void Pin::set_otype(PinOType otype) {
 	LL_GPIO_SetPinOutputType(GPIOPort(port_), pin_, HALParam(otype));
 }
-

@@ -51,6 +51,7 @@ enum class PinOType : uint32_t {
 	OpenDrain = LL_GPIO_OUTPUT_OPENDRAIN,
 };
 
+// GPIOx_BASE are defined in the CMSIS header that's included from stm32xx.h
 enum class GPIO : uint32_t {
 	A = GPIOA_BASE,
 	B = GPIOB_BASE,
@@ -68,6 +69,9 @@ enum class GPIO : uint32_t {
 #endif
 #ifdef GPIOK_BASE
 	K = GPIOK_BASE,
+#endif
+#ifdef GPIOZ_BASE
+	Z = GPIOZ_BASE,
 #endif
 };
 
@@ -183,4 +187,3 @@ private:
 	static PinSetHigh<Gpio, PinNum> _sethigh;
 	static PinRead<Gpio, PinNum> _read;
 };
-
