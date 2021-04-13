@@ -76,9 +76,8 @@ void Timekeeper::_set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pr
 		clock_division = max_clockdivider;
 	}
 
-	auto pri = System::encode_nvic_priority(priority1, priority2);
-	NVIC_SetPriority(irqn, pri);
-	NVIC_EnableIRQ(irqn);
+	target::System::set_irq_priority(irqn, priority1, priority2);
+	target::System::enable_irq(irqn);
 
 	TIMPeriph::init_periph(timx, period_clocks, prescaler, clock_division);
 

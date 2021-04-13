@@ -32,11 +32,10 @@ public:
 	}
 
 	static void registerISR(IRQType irqnum, unsigned priority1, unsigned priority2, ISRType &&func) {
-		NVIC_DisableIRQ(irqnum);
-		auto pri = System::encode_nvic_priority(priority1, priority2);
-		NVIC_SetPriority(irqnum, pri);
+		target::System::disable_irq(irqnum);
+		target::System::set_irq_priority(irqnum, priority1, priority2);
 		ISRs[irqnum] = std::move(func);
-		NVIC_EnableIRQ(irqnum);
+		target::System::enable_irq(irqnum);
 	}
 
 	static inline void callISR(uint32_t irqnum) {

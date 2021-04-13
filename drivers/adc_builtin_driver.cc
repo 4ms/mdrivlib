@@ -183,9 +183,8 @@ void AdcPeriph<p>::init_dma(const DMA_LL_Config &dma_defs, uint16_t *dma_buffer)
 
 template<AdcPeriphNum p>
 void AdcPeriph<p>::enable_DMA_IT() {
-	auto pri = System::encode_nvic_priority(DMA_IRQ_pri, DMA_IRQ_subpri);
-	NVIC_SetPriority(DMA_IRQn, pri);
-	NVIC_EnableIRQ(DMA_IRQn);
+	target::System::set_irq_priority(DMA_IRQn, DMA_IRQ_pri, DMA_IRQ_subpri);
+	target::System::enable_irq(DMA_IRQn);
 }
 
 template<AdcPeriphNum p>
