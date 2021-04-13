@@ -6,7 +6,9 @@ namespace mdrivlib
 {
 namespace stm32mp1
 {
-
+namespace core_a7
+{
+// Todo: if both cores share same data, then put it in _rcc_common.hh and #include it for both
 namespace RCC_Control
 {
 using RegisterDataT = uint32_t;
@@ -217,5 +219,6 @@ using D2CKREADY = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), 
 */
 } // namespace RCC_Clocks
 
+} // namespace core_a7
 } // namespace stm32mp1
 } // namespace mdrivlib
