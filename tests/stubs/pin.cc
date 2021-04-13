@@ -14,7 +14,9 @@ static FakeGPIO fake_port(GPIO port) {
 		: port==GPIO::F ? FakeGPIO::F
 		: port==GPIO::G ? FakeGPIO::G
 		: port==GPIO::H ? FakeGPIO::H
+#ifdef GPIOI
 		: port==GPIO::I ? FakeGPIO::I
+#endif
 #ifdef GPIOJ
 		: port==GPIO::J ? FakeGPIO::J
 #endif
@@ -35,13 +37,19 @@ Pin::Pin(GPIO port,
 		 PinOType otype)
 	: port_(port)
 	, pin_(pin)
-	, polarity_(polarity) {}
+	, polarity_(polarity) {
+}
 
-void Pin::high() const {}
-void Pin::low() const {}
-void Pin::on() const {}
-void Pin::off() const {}
-void Pin::set_to(uint32_t v) {}
+void Pin::high() const {
+}
+void Pin::low() const {
+}
+void Pin::on() const {
+}
+void Pin::off() const {
+}
+void Pin::set_to(uint32_t v) {
+}
 
 bool Pin::read_raw() {
 	bool state = read_fake_pin(fake_port(port_), pin_);
@@ -60,9 +68,13 @@ uint8_t Pin::is_on() {
 	}
 }
 
-void Pin::set_mode(PinMode mode) {}
-void Pin::set_speed(PinSpeed speed) {}
-void Pin::set_pull(PinPull pull) {}
-void Pin::set_alt(uint8_t af) {}
-void Pin::set_otype(PinOType otype) {}
-
+void Pin::set_mode(PinMode mode) {
+}
+void Pin::set_speed(PinSpeed speed) {
+}
+void Pin::set_pull(PinPull pull) {
+}
+void Pin::set_alt(uint8_t af) {
+}
+void Pin::set_otype(PinOType otype) {
+}

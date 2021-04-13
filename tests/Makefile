@@ -31,11 +31,11 @@ CXXFLAGS = 	-Wall \
 			-I../stm32/device/include \
 			-I../stm32/periph/include \
 			-I../../../shared \
-			-DSTM32H7 \
-			-DSTM32H755xx \
-			-DCORE_CM7 \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \
+			# -DSTM32H7 \
+			# -DSTM32H755xx \
+			# -DCORE_CM7 \
 
 ### Boilerplate below here:
 
