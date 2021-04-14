@@ -1,4 +1,5 @@
-#include "i2c.hh"
+#pragma once
+#include "drivers/i2c.hh"
 #include "syscfg.hh"
 namespace mdrivlib {
 namespace stm32h7x5 {

@@ -7,6 +7,8 @@
 #include "spi_transfer.hh"
 #include "spi_transfer_config_struct.hh"
 
+namespace mdrivlib
+{
 template<typename ConfT>
 struct DacSpi_MCP48FVBxx {
 	using SpiConf = typename ConfT::SpiConf;
@@ -122,4 +124,4 @@ private:
 		}
 	}
 };
-
+} // namespace mdrivlib

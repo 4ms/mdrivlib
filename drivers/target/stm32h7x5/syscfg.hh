@@ -1,17 +1,14 @@
 #pragma once
-#include "register_access.hh"
-#include "stm32xx.h"
+#include "drivers/register_access.hh"
+#include "drivers/stm32xx.h"
 
-namespace mdrivlib
-{
+namespace mdrivlib {
 
-namespace stm32h7x5
-{
+namespace stm32h7x5 {
 
 using SYSCFG_FMP = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, PMCR), 0, 7>;
 
-namespace SYSCFG_EXTI
-{
+namespace SYSCFG_EXTI {
 using Pin0 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 0, 3>;
 using Pin1 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 4, 3>;
 using Pin2 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 8, 3>;

@@ -8,7 +8,8 @@ CompileFlags:
 		"-Ilib/mdrivlib/tests/stubs/stm32",
 		"-std=gnu++2a",
 		"--target=arm-none-eabi",
-		"-DSTM32MP1",
-		"-DSTM32MP157Cxx",
-		"-DCORE_CA7",
+		"-DSTM32H7",
+		"-DSTM32H7x5",
+		"-DSTM32H755xx",
+		"-DCORE_CM7",
 	]

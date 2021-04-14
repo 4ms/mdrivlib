@@ -20,7 +20,8 @@
 // These allow for container of this to flip aux gpio pins etc: (data/cmd, dac latch, etc):
 
 // transmit_blocking
-
+namespace mdrivlib
+{
 template<typename SpiConfT>
 struct SpiTransferDriver {
 
@@ -189,4 +190,4 @@ public:
 		}
 	}
 };
-
+} // namespace mdrivlib
