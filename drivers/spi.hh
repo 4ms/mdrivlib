@@ -5,8 +5,8 @@
 #include "spi_registers.hh"
 #include "util/math.hh"
 
-// namespace mdrivlib {
-// namespace stm32h7x5 {
+namespace mdrivlib
+{
 template<typename ConfT>
 struct SpiPeriph {
 public:
@@ -60,7 +60,7 @@ public:
 				Pin init_cs3{ConfT::CS3, PinMode::Output};
 				unselect<3>();
 			}
-			static_assert(ConfT::NumChips <= 4, "SpiPeriph only supports selecting 1-4 chips");
+			static_assert(ConfT::NumChips <= 4, "mdrivlib::SpiPeriph only supports selecting 1-4 chips");
 		}
 
 		target::RCC_Enable::SPI<N>::set();
@@ -329,4 +329,4 @@ private:
 	FPin<ConfT::CS2.gpio, ConfT::CS2.pin> CS2;
 	FPin<ConfT::CS3.gpio, ConfT::CS3.pin> CS3;
 };
-// end spi.hh
+} // namespace mdrivlib
