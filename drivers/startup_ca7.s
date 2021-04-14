@@ -1,3 +1,8 @@
+.syntax unified
+.cpu cortex-a7
+/* .fpu softvfp */
+/* .thumb */
+
 .equ MODE_FIQ, 0x11
 .equ MODE_IRQ, 0x12
 .equ MODE_SVC, 0x13
@@ -19,9 +24,9 @@ _Reset:
 .section .text
 Reset_Handler:
 	/* UART: print 'A' */
-	ldr r1, =UART4_TDR
+	ldr r4, =UART4_TDR
 	mov r0, #65
-	str r0, [r1]
+	str r0, [r4]
 
     /* FIQ stack */
     msr cpsr_c, MODE_FIQ
@@ -80,12 +85,14 @@ bss_loop:
 	mov r5, #66
 	str r5, [r4]
 
-    /* bl __libc_init_array */
+init_static_ctors:
+    bl __libc_init_array
 
 	/* UART: print 'C' */
 	mov r5, #67
 	str r5, [r4]
 
+run_main:
     bl main
     b Abort_Exception
 
