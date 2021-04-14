@@ -10,33 +10,7 @@ namespace core_a7 {
 namespace RCC_Enable {
 using RegisterDataT = uint32_t;
 
-/*
-Convert to reg bits format:
-:s/\v#define RCC_(.{-}ENSETR)_([^ ]{-})EN[^_] /using \2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, \1),
-RCC_\1_\2EN>;\r\0
-
-Copy generated lines to a new file
-:%sort
-/^using
-yG
-:new rcc_snipped.h
-p
-
-Prepend MC to lines containing MC_
-:,$s/\v(.*MC_).*$/MC\0/
-
-Move these to the bottom and remove MC marker
-:%sort
-...etc
-,$s/^MCu/u/
-
-
-
-Rename Low Power ones XYZ1_LP_ to LP_XYZ1_
-'<,'>s/\vusing (.{-})LP_/using LP_\1_/
-Sort these and put in a different file
-*/
-
+// Auto-generated:
 using ADC12_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_AHB2ENSETR), RCC_MP_AHB2ENSETR_ADC12EN>;
 using ADFSDM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_APB2ENSETR), RCC_MP_APB2ENSETR_ADFSDMEN>;
 using BKPSRAM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_AHB5ENSETR), RCC_MP_AHB5ENSETR_BKPSRAMEN>;
@@ -151,6 +125,19 @@ using USBO_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_AHB2EN
 using USBPHY_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_APB4ENSETR), RCC_MP_APB4ENSETR_USBPHYEN>;
 using VREF_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_APB3ENSETR), RCC_MP_APB3ENSETR_VREFEN>;
 
+// Aliases:
+
+using ADC1_ = ADC12_;
+using ADC2_ = ADC12_;
+
+// Blanks:
+
+using ADC3_ = NonexistantRegister;
+using BDMA_ = NonexistantRegister;
+using TIM9_ = NonexistantRegister;
+using TIM10_ = NonexistantRegister;
+using TIM11_ = NonexistantRegister;
+
 // special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 struct GPIO {
   static inline volatile RegisterDataT *const _reg = &(RCC->MC_AHB4ENSETR);
@@ -187,66 +174,121 @@ template <unsigned N> using SPI = typename std::variant_alternative_t<N - 1, SPI
 } // namespace RCC_Enable
 
 namespace RCC_Reset {
-/*
-using GPIO_A = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOARST>;
-using GPIO_B = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOBRST>;
-using GPIO_C = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOCRST>;
-using GPIO_D = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIODRST>;
-using GPIO_E = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOERST>;
-using GPIO_F = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOFRST>;
-using GPIO_G = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOGRST>;
-using GPIO_H = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOHRST>;
-using GPIO_I = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOIRST>;
-using GPIO_J = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOJRST>;
-
-using ADC_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1RSTR), RCC_AHB1RSTR_ADC12RST>;
-using ADC_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1RSTR), RCC_AHB1RSTR_ADC12RST>;
-using ADC_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_ADC3RST>;
-
-using SYSCFG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTR), RCC_APB4RSTR_SYSCFGRST>;
-
-using HSEM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_HSEMRST>;
-
-using SAI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_SAI1RST>;
-using SAI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_SAI2RST>;
-using SAI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_SAI3RST>;
-using SAI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB4RSTR_SAI4RST>;
-
-using TIM_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_TIM1RST>;
-using TIM_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM2RST>;
-using TIM_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM3RST>;
-using TIM_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM4RST>;
-using TIM_5 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM5RST>;
-using TIM_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM6RST>;
-using TIM_7 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM7RST>;
-using TIM_8 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_TIM8RST>;
-using TIM_9 = NonexistantRegister;
-using TIM_10 = NonexistantRegister;
-using TIM_11 = NonexistantRegister;
-using TIM_12 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM12RST>;
-using TIM_13 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM13RST>;
-using TIM_14 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_TIM14RST>;
-using TIM_15 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_TIM15RST>;
-using TIM_16 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_TIM16RST>;
-using TIM_17 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_TIM17RST>;
-
-using DMA_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1RSTR), RCC_AHB1RSTR_DMA1RST>;
-using DMA_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1RSTR), RCC_AHB1RSTR_DMA2RST>;
-using BDMA_P = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_BDMARST>;
-using MDMA_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTR), RCC_AHB3RSTR_MDMARST>;
-
-using I2C_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_I2C1RST>;
-using I2C_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_I2C2RST>;
-using I2C_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_I2C3RST>;
-
-using SPI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_SPI1RST>;
-using SPI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_SPI2RST>;
-using SPI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LRSTR), RCC_APB1LRSTR_SPI3RST>;
-using SPI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_SPI4RST>;
-using SPI_5 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_SPI5RST>;
-using SPI_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTR), RCC_APB4RSTR_SPI6RST>;
-
-*/
+// Auto-generated:
+// Todo: Fix commented-out lines
+using ADC12_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTSETR), RCC_AHB2RSTSETR_ADC12RST>;
+// using ADFSDM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_ADFSDMRST>;
+// using BKPSRAM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB5RSTSETR), RCC_AHB5RSTSETR_BKPSRAMRST>;
+// using BSEC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_BSECRST>;
+using CEC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_CECRST>;
+using CRC1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_CRC1RST>;
+using CRC2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_CRC2RST>;
+using CRYP1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB5RSTSETR), RCC_AHB5RSTSETR_CRYP1RST>;
+using CRYP2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_CRYP2RST>;
+using DAC12_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_DAC12RST>;
+using DCMI_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_DCMIRST>;
+using DDRPERFM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTSETR), RCC_APB4RSTSETR_DDRPERFMRST>;
+using DFSDM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_DFSDMRST>;
+using DMA1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTSETR), RCC_AHB2RSTSETR_DMA1RST>;
+using DMA2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTSETR), RCC_AHB2RSTSETR_DMA2RST>;
+using DMAMUX_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTSETR), RCC_AHB2RSTSETR_DMAMUXRST>;
+using DSI_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTSETR), RCC_APB4RSTSETR_DSIRST>;
+using DTS_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_DTSRST>;
+// using ETHCK_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_ETHCKRST>;
+using ETHMAC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_ETHMACRST>;
+// using ETHRX_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_ETHRXRST>;
+// using ETHSTP_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6LPRSTSETR), RCC_AHB6LPRSTSETR_ETHSTPRST>;
+// using ETHTX_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_ETHTXRST>;
+using FDCAN_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_FDCANRST>;
+using FMC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_FMCRST>;
+using GPIOA_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOARST>;
+using GPIOB_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOBRST>;
+using GPIOC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOCRST>;
+using GPIOD_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIODRST>;
+using GPIOE_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOERST>;
+using GPIOF_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOFRST>;
+using GPIOG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOGRST>;
+using GPIOH_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOHRST>;
+using GPIOI_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOIRST>;
+using GPIOJ_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOJRST>;
+using GPIOK_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTSETR), RCC_AHB4RSTSETR_GPIOKRST>;
+using GPIOZ_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB5RSTSETR), RCC_AHB5RSTSETR_GPIOZRST>;
+using GPU_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_GPURST>;
+using HASH1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB5RSTSETR), RCC_AHB5RSTSETR_HASH1RST>;
+using HASH2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_HASH2RST>;
+// using HDP_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_HDPRST>;
+using HSEM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_HSEMRST>;
+using I2C1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_I2C1RST>;
+using I2C2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_I2C2RST>;
+using I2C3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_I2C3RST>;
+using I2C4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_I2C4RST>;
+using I2C5_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_I2C5RST>;
+using I2C6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_I2C6RST>;
+using IPCC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_IPCCRST>;
+// using IWDG1APB_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_IWDG1APBRST>;
+// using IWDG2APB_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTSETR), RCC_APB4RSTSETR_IWDG2APBRST>;
+using LPTIM1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_LPTIM1RST>;
+using LPTIM2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_LPTIM2RST>;
+using LPTIM3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_LPTIM3RST>;
+using LPTIM4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_LPTIM4RST>;
+using LPTIM5_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_LPTIM5RST>;
+using LTDC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTSETR), RCC_APB4RSTSETR_LTDCRST>;
+using MDIOS_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_MDIOSRST>;
+// using MDMA_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_MDMARST>;
+using MDMA_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, TZAHB6RSTSETR), RCC_TZAHB6RSTSETR_MDMARST>;
+using QSPI_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_QSPIRST>;
+// using RETRAM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MLAHBRSTSETR), RCC_MLAHBRSTSETR_RETRAMRST>;
+using RNG1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB5RSTSETR), RCC_AHB5RSTSETR_RNG1RST>;
+using RNG2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTSETR), RCC_AHB3RSTSETR_RNG2RST>;
+// using RTCAPB_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_RTCAPBRST>;
+using SAI1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_SAI1RST>;
+using SAI2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_SAI2RST>;
+using SAI3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_SAI3RST>;
+using SAI4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_SAI4RST>;
+using SDMMC1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_SDMMC1RST>;
+using SDMMC2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_SDMMC2RST>;
+using SDMMC3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTSETR), RCC_AHB2RSTSETR_SDMMC3RST>;
+using SPDIF_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_SPDIFRST>;
+using SPI1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_SPI1RST>;
+using SPI2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_SPI2RST>;
+using SPI3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_SPI3RST>;
+using SPI4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_SPI4RST>;
+using SPI5_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_SPI5RST>;
+using SPI6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_SPI6RST>;
+// using STGENROSTP_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4LPRSTSETR), RCC_APB4LPRSTSETR_STGENROSTPRST>;
+// using STGENRO_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTSETR), RCC_APB4RSTSETR_STGENRORST>;
+// using STGRSTSTP_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5LPRSTSETR), RCC_APB5LPRSTSETR_STGRSTSTPRST>;
+using STGEN_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_STGENRST>;
+using SYSCFG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_SYSCFGRST>;
+using TIM1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_TIM1RST>;
+using TIM2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM2RST>;
+using TIM3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM3RST>;
+using TIM4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM4RST>;
+using TIM5_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM5RST>;
+using TIM6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM6RST>;
+using TIM7_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM7RST>;
+using TIM8_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_TIM8RST>;
+using TIM12_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM12RST>;
+using TIM13_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM13RST>;
+using TIM14_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_TIM14RST>;
+using TIM15_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_TIM15RST>;
+using TIM16_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_TIM16RST>;
+using TIM17_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_TIM17RST>;
+// using TZC1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_TZC1RST>;
+// using TZC2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_TZC2RST>;
+// using TZPC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_TZPCRST>;
+using UART4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_UART4RST>;
+using UART5_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_UART5RST>;
+using UART7_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_UART7RST>;
+using UART8_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_UART8RST>;
+using USART1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB5RSTSETR), RCC_APB5RSTSETR_USART1RST>;
+using USART2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_USART2RST>;
+using USART3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTSETR), RCC_APB1RSTSETR_USART3RST>;
+using USART6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTSETR), RCC_APB2RSTSETR_USART6RST>;
+using USBH_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB6RSTSETR), RCC_AHB6RSTSETR_USBHRST>;
+using USBO_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTSETR), RCC_AHB2RSTSETR_USBORST>;
+using USBPHY_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTSETR), RCC_APB4RSTSETR_USBPHYRST>;
+using VREF_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB3RSTSETR), RCC_APB3RSTSETR_VREFRST>;
 } // namespace RCC_Reset
 
 namespace RCC_Clocks {

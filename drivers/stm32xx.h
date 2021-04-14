@@ -29,7 +29,7 @@
 	"Please #define STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile. Other targets are not yet supported."
 #endif
 
-// Peripheral names not defined in CMSIS header will be set to nullptr
+// Peripheral names not defined in CMSIS header will be set to nullptr or 0
 
 #ifndef ADC1
 #define ADC1 nullptr
@@ -140,6 +140,10 @@
 #endif
 #ifndef SPI6
 #define SPI6 nullptr
+#endif
+
+#ifndef BDMA
+#define BDMA 0
 #endif
 
 #endif //#ifndef STM32XX_H_INCLUDE_ONCE
