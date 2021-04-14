@@ -30,7 +30,7 @@ struct BDMATransfer {
 	DMAMUX_Channel_TypeDef *dmamux_chan;
 
 	BDMATransfer() {
-		target::RCC_Control::BDMA_P::set();
+		target::RCC_Enable::BDMA_P::set();
 
 		if constexpr (ConfT::StreamNum == 0) {
 			stream = BDMA_Channel0;

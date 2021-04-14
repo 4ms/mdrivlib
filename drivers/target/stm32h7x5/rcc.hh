@@ -3,13 +3,10 @@
 #include "drivers/stm32xx.h"
 #include <variant>
 
-namespace mdrivlib
-{
-namespace stm32h7x5
-{
+namespace mdrivlib {
+namespace stm32h7x5 {
 
-namespace RCC_Control
-{
+namespace RCC_Enable {
 using RegisterDataT = uint32_t;
 
 using GPIO_A = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOAEN>;
@@ -24,22 +21,18 @@ using GPIO_I = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR)
 using GPIO_J = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_GPIOJEN>;
 // special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 struct GPIO {
-	static inline volatile RegisterDataT *const _reg = &(RCC->AHB4ENR);
+  static inline volatile RegisterDataT *const _reg = &(RCC->AHB4ENR);
 
-	static uint32_t get_gpio_bit(RegisterDataT periph) {
-		return 1 << ((periph & 0x00003C00) >> 10);
-	}
-	static void enable(GPIO_TypeDef *periph) {
-		*_reg = *_reg | get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
-		[[maybe_unused]] bool delay_after_enabling = is_enabled(periph);
-	}
-	static void disable(GPIO_TypeDef *periph) {
-		*_reg = *_reg & ~get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
-		[[maybe_unused]] bool delay_after_disabling = is_enabled(periph);
-	}
-	static bool is_enabled(GPIO_TypeDef *periph) {
-		return (*_reg) & get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
-	}
+  static uint32_t get_gpio_bit(RegisterDataT periph) { return 1 << ((periph & 0x00003C00) >> 10); }
+  static void enable(GPIO_TypeDef *periph) {
+    *_reg = *_reg | get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
+    [[maybe_unused]] bool delay_after_enabling = is_enabled(periph);
+  }
+  static void disable(GPIO_TypeDef *periph) {
+    *_reg = *_reg & ~get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
+    [[maybe_unused]] bool delay_after_disabling = is_enabled(periph);
+  }
+  static bool is_enabled(GPIO_TypeDef *periph) { return (*_reg) & get_gpio_bit(reinterpret_cast<RegisterDataT>(periph)); }
 };
 
 using ADC_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1ENR), RCC_AHB1ENR_ADC12EN>;
@@ -52,10 +45,10 @@ using SYSCFG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4ENR
 
 using HSEM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4ENR), RCC_AHB4ENR_HSEMEN>;
 
-using SAI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI1EN>;
-using SAI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI2EN>;
-using SAI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI3EN>;
-using SAI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB4ENR_SAI4EN>;
+using SAI1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI1EN>;
+using SAI2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI2EN>;
+using SAI3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SAI3EN>;
+using SAI4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB4ENR_SAI4EN>;
 
 // Todo: this is just here for _attic/templatized_conf_idea.hh
 using SAI_variant = std::variant<SAI_1, SAI_2, SAI_3, SAI_4>;
@@ -89,46 +82,22 @@ using I2C_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR)
 using I2C_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C2EN>;
 using I2C_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_I2C3EN>;
 
-using SPI_1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI1EN>;
-using SPI_2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_SPI2EN>;
-using SPI_3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_SPI3EN>;
-using SPI_4 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI4EN>;
-using SPI_5 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI5EN>;
-using SPI_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4ENR), RCC_APB4ENR_SPI6EN>;
+using SPI1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI1EN>;
+using SPI2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_SPI2EN>;
+using SPI3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1LENR), RCC_APB1LENR_SPI3EN>;
+using SPI4_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI4EN>;
+using SPI5_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_SPI5EN>;
+using SPI6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4ENR), RCC_APB4ENR_SPI6EN>;
 
-template<unsigned N>
-struct SPI {
-	using Reg = void;
-};
-template<>
-struct SPI<1> {
-	using Reg = SPI_1;
-};
-template<>
-struct SPI<2> {
-	using Reg = SPI_2;
-};
-template<>
-struct SPI<3> {
-	using Reg = SPI_3;
-};
-template<>
-struct SPI<4> {
-	using Reg = SPI_4;
-};
-template<>
-struct SPI<5> {
-	using Reg = SPI_5;
-};
-template<>
-struct SPI<6> {
-	using Reg = SPI_6;
-};
+using SAI_variant = std::variant<SAI1_, SAI2_, SAI3_, SAI4_>;
+template <unsigned N> using SAI = typename std::variant_alternative_t<N - 1, SAI_variant>;
 
-} // namespace RCC_Control
+using SPI_variant = std::variant<SPI1_, SPI2_, SPI3_, SPI4_, SPI5_, SPI6_>;
+template <unsigned N> using SPI = typename std::variant_alternative_t<N - 1, SPI_variant>;
 
-namespace RCC_Reset
-{
+} // namespace RCC_Enable
+
+namespace RCC_Reset {
 //
 using GPIO_A = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOARST>;
 using GPIO_B = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB4RSTR), RCC_AHB4RSTR_GPIOBRST>;
@@ -190,8 +159,7 @@ using SPI_6 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB4RSTR)
 
 } // namespace RCC_Reset
 
-namespace RCC_Clocks
-{
+namespace RCC_Clocks {
 using CR = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), 0xFFFFFFFF>;
 using D1CKREADY = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), RCC_CR_D1CKRDY>;
 using D2CKREADY = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CR), RCC_CR_D2CKRDY>;

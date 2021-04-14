@@ -20,7 +20,7 @@ struct I2C {
 	}
 	static void enable_fast_mode_plus(const I2CConfig &defs) {
 		// H7x5 requires enabling FMP in SYSCFG, as well as specific pins, see RM0399 Rev 3, p. 587 (SYSCFG)
-		target::RCC_Control::SYSCFG_::set();
+		target::RCC_Enable::SYSCFG_::set();
 
 		auto tmp = SYSCFG_FMP::read();
 		if (defs.I2Cx == I2C1)

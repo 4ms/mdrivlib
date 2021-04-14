@@ -161,7 +161,7 @@ template<enum GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output>
 struct FPin {
 
 	// Todo: do our own init here using RegisterBits, don't rely on Pin class
-	// Will still need to depend on RCC_Control class
+	// Will still need to depend on RCC_Enable class
 	FPin() {
 		Pin init{Gpio, PinNum, Mode};
 	}

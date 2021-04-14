@@ -2,15 +2,12 @@
 #include "register_access.hh"
 #include "stm32xx.h"
 
-namespace mdrivlib
-{
-namespace stm32f4xx
-{
-namespace RCC_Control
-{
+namespace mdrivlib {
+namespace stm32f4xx {
+namespace RCC_Enable {
 // Todo: Can we just copy F7 values?
 using RegisterDataT = uint32_t;
-} // namespace RCC_Control
+} // namespace RCC_Enable
 } // namespace stm32f4xx
 // stm32f746xx.h:
 

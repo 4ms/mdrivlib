@@ -11,6 +11,7 @@ template<typename ConfT>
 struct SpiPeriph {
 public:
 	static inline const unsigned N = ConfT::PeriphNum;
+
 	template<unsigned M>
 	using IER = typename target::SPI<N>::template IER<M>;
 	template<unsigned M>
@@ -62,7 +63,7 @@ public:
 			static_assert(ConfT::NumChips <= 4, "SpiPeriph only supports selecting 1-4 chips");
 		}
 
-		target::RCC_Control::SPI<N>::Reg::set();
+		target::RCC_Enable::SPI<N>::set();
 
 		// Todo: make configurable
 		CR1<SPI_CR1_IOLOCK>::clear();

@@ -13,7 +13,7 @@ struct DMA2DTransfer {
 	static volatile inline bool is_dma2d_done;
 
 	void init() {
-		target::RCC_Control::DMA2D_::set();
+		target::RCC_Enable::DMA2D_::set();
 		target::System::disable_irq(DMA2D_IRQn);
 		InterruptManager::registerISR(DMA2D_IRQn, [&]() {
 			DMA2D->IFCR = DMA2D->IFCR | DMA2D_IFCR_CTCIF;
