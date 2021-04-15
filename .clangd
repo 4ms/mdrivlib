@@ -1,4 +1,6 @@
 ---
+If:
+	PathMatch: [".*H7.*"]
 CompileFlags:
 	Add: [
 		"-Ilib/mdrivlib",
@@ -12,4 +14,21 @@ CompileFlags:
 		"-DSTM32H7x5",
 		"-DSTM32H755xx",
 		"-DCORE_CM7",
+	]
+
+---
+If:
+	PathMatch: [".*MP1.*"]
+CompileFlags:
+	Add: [
+		"-Ilib/mdrivlib",
+		"-Ilib/mdrivlib/drivers",
+		"-Ilib/mdrivlib/tests",
+		"-Ilib/mdrivlib/tests/stubs",
+		"-Ilib/mdrivlib/tests/stubs/stm32",
+		"-std=gnu++2a",
+		"--target=arm-none-eabi",
+		"-DSTM32MP1",
+		"-DSTM32MP157Cxx",
+		"-DCORE_CA7",
 	]
