@@ -1,18 +1,11 @@
 #include "i2c.hh"
 #include "clocks.hh"
+#include "i2c_target.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
 #include "register_access.hh"
 #include "stm32xx.h"
 #include "system.hh"
-
-#if defined(STM32H7x5)
-#include "target/stm32h7x5/i2c.hh"
-#endif
-
-#if defined(STM32MP1)
-#include "target/stm32mp1/i2c.hh"
-#endif
 
 namespace mdrivlib
 {

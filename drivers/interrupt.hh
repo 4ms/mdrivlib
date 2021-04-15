@@ -7,7 +7,8 @@ using IRQType = IRQn_Type;
 #ifdef TESTPROJECT
 #include "stubs/system.hh"
 #else
-#include "drivers/system.hh"
+#include "arch.hh"
+#include "system.hh"
 #endif
 
 #include <functional>
