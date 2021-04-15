@@ -27,9 +27,8 @@ constexpr auto TYPE = SupportedTargets::stm32mp1_ca7;
 } // namespace stm32mp1
 } // namespace mdrivlib
 namespace target = mdrivlib::stm32mp1::core_a7;
-#endif
 
-#if defined(STM32MP1) && defined(CORE_CM4)
+#elif defined(STM32MP1) && defined(CORE_CM4)
 namespace mdrivlib
 {
 namespace stm32mp1
@@ -42,12 +41,11 @@ constexpr auto TYPE = SupportedTargets::stm32mp1_cm4;
 } // namespace stm32mp1
 } // namespace mdrivlib
 namespace target = mdrivlib::stm32mp1::core_m4;
-#endif
 
 //
 // STM32H745 and STM32H755
 //
-#if defined(STM32H745xx) || defined(STM32H755xx)
+#elif defined(STM32H745xx) || defined(STM32H755xx)
 #ifndef STM32H7x5
 #define STM32H7x5
 #endif
@@ -60,12 +58,11 @@ constexpr auto TYPE = SupportedTargets::stm32h7x5;
 } // namespace stm32h7x5
 } // namespace mdrivlib
 namespace target = mdrivlib::stm32h7x5;
-#endif
 
 //
 // STM32F746
 //
-#if defined(STM32F746xx)
+#elif defined(STM32F746xx)
 namespace mdrivlib
 {
 namespace stm32f7xx
