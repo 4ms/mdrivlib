@@ -1,5 +1,5 @@
-#include "pinchange.hh"
-#include "interrupt.hh"
+#include "drivers/pinchange.hh"
+#include "drivers/interrupt.hh"
 #include "rcc.hh"
 #include "syscfg.hh"
 
