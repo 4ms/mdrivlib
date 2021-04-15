@@ -29,6 +29,8 @@
 #include "adc_builtin_driver.hh"
 #include "stm32xx.h"
 
+namespace mdrivlib
+{
 template class AdcPeriph<AdcPeriphNum::_1>;
 template class AdcPeriph<AdcPeriphNum::_2>;
 template class AdcPeriph<AdcPeriphNum::_3>;
@@ -197,3 +199,4 @@ void AdcPeriph<p>::start_adc() {
 	LL_ADC_REG_StartConversion(get_ADC_base(p));
 #endif
 }
+} // namespace mdrivlib

@@ -5,6 +5,8 @@
 #include "stm32xx.h"
 #include "tim.hh"
 
+namespace mdrivlib
+{
 Timekeeper::Timekeeper()
 	: is_running(false) {
 }
@@ -107,6 +109,7 @@ bool Timekeeper::tim_update_IT_is_source() const {
 void Timekeeper::tim_update_IT_clear() const {
 	LL_TIM_ClearFlag_UPDATE(timx);
 }
+} // namespace mdrivlib
 
 // Todo: allows doubling-up on the IRQs that have two TIM UP on a single IRQ.
 // e.g.: TIM1/TIM10, and TIM8/TIM13 share an ISR

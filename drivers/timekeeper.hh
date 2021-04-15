@@ -2,6 +2,8 @@
 #include "system.hh"
 #include <functional>
 
+namespace mdrivlib
+{
 struct TimekeeperConfig {
 	TIM_TypeDef *TIMx;
 	uint32_t period_ns;
@@ -33,4 +35,4 @@ private:
 	bool tim_update_IT_is_source() const;
 	void tim_update_IT_clear() const;
 };
-
+} // namespace mdrivlib

@@ -4,6 +4,8 @@
 #include "stm32xx.h"
 #include "system.hh"
 
+namespace mdrivlib
+{
 DMA_HandleTypeDef *SaiPeriph::get_rx_dmahandle() {
 	return &hdma_rx;
 }
@@ -305,3 +307,4 @@ void SaiPeriph::stop() {
 	HAL_NVIC_DisableIRQ(tx_irqn);
 	HAL_NVIC_DisableIRQ(rx_irqn);
 }
+} // namespace mdrivlib
