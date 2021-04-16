@@ -87,6 +87,7 @@ bss_loop:
 
 init_static_ctors:
     bl __libc_init_array
+	bl SystemInit
 
 	/* UART: print 'C' */
 	mov r5, #67
