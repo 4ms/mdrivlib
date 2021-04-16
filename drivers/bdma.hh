@@ -1,6 +1,5 @@
 #pragma once
 #include "arch.hh"
-#include "debug.hh" //FixMe: remove when done debugging (not an mdrivlib file!)
 #include "dma_config_struct.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
