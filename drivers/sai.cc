@@ -42,12 +42,12 @@ SaiPeriph::Error SaiPeriph::init() {
 	__HAL_SAI_ENABLE(&hsai_tx);
 
 	tx_irqn = saidef_.dma_init_tx.IRQn;
-	HAL_NVIC_SetPriority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
-	HAL_NVIC_DisableIRQ(tx_irqn);
+	target::System::set_irq_priority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
+	target::System::disable_irq(tx_irqn);
 
 	rx_irqn = saidef_.dma_init_rx.IRQn;
-	HAL_NVIC_SetPriority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
-	HAL_NVIC_DisableIRQ(rx_irqn);
+	target::System::set_irq_priority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
+	target::System::disable_irq(rx_irqn);
 
 	return SAI_NO_ERR;
 }
@@ -295,16 +295,16 @@ void SaiPeriph::start() {
 	});
 
 	if (saidef_.mode == SaiConfig::RXMaster)
-		HAL_NVIC_EnableIRQ(rx_irqn);
+		target::System::enable_irq(rx_irqn);
 	else
-		HAL_NVIC_EnableIRQ(tx_irqn);
+		target::System::enable_irq(tx_irqn);
 
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
 }
 
 void SaiPeriph::stop() {
-	HAL_NVIC_DisableIRQ(tx_irqn);
-	HAL_NVIC_DisableIRQ(rx_irqn);
+	target::System::disable_irq(tx_irqn);
+	target::System::disable_irq(rx_irqn);
 }
 } // namespace mdrivlib

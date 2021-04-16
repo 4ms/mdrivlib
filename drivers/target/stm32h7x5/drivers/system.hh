@@ -26,9 +26,9 @@ struct System {
 		RCC_OscInitTypeDef osc_def_ = osc_def;
 		HAL_RCC_OscConfig(&osc_def_);
 
-#ifdef STM32F7
-		HAL_PWREx_EnableOverDrive();
-#endif
+		// #ifdef STM32F7
+		// 		HAL_PWREx_EnableOverDrive();
+		// #endif
 
 		RCC_ClkInitTypeDef clk_def_ = clk_def;
 		HAL_RCC_ClockConfig(&clk_def_, FLASH_LATENCY_7);
