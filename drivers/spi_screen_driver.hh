@@ -7,6 +7,9 @@
 #include "system.hh"
 #include "util/math.hh"
 
+namespace mdrivlib
+{
+
 template<typename ConfT>
 struct DmaSpiScreenDriver {
 	enum PacketType { Cmd, Data };
@@ -148,3 +151,4 @@ private:
 	uint32_t dma_tc_flag_index;
 	uint32_t dma_te_flag_index;
 };
+} // namespace mdrivlib

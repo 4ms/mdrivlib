@@ -143,7 +143,10 @@
 #endif
 
 #ifndef BDMA
+#undef HAS_BDMA
 #define BDMA 0
+#else
+#define HAS_BDMA
 #endif
 
 #endif //#ifndef STM32XX_H_INCLUDE_ONCE

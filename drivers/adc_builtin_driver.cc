@@ -27,7 +27,9 @@
  * -----------------------------------------------------------------------------
  */
 #include "adc_builtin_driver.hh"
+#include "arch.hh"
 #include "stm32xx.h"
+#include "system.hh"
 
 namespace mdrivlib
 {
