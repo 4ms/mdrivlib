@@ -14,12 +14,12 @@
 _Reset:
     b Reset_Handler
     b Abort_Exception /* 0x4  Undefined Instruction */
-    b . /* 0x8  Software Interrupt */
+    b SVC_Handler /* Software Interrupt */
     b Abort_Exception  /* 0xC  Prefetch Abort */
     b Abort_Exception /* 0x10 Data Abort */
     b . /* 0x14 Reserved */
-    b . /* 0x18 IRQ */
-    b . /* 0x1C FIQ */
+    b IRQ_Handler /* 0x18 IRQ */
+    b FIQ_Handler /* 0x1C FIQ */
 
 .section .text
 Reset_Handler:
@@ -27,6 +27,9 @@ Reset_Handler:
 	ldr r4, =UART4_TDR
 	mov r0, #65
 	str r0, [r4]
+
+    /* Supervisor mode */
+    msr cpsr_c, MODE_SVC
 
 	CPSID   if 										/* Mask Interrupts */
 
@@ -38,6 +41,10 @@ Reset_Handler:
 	BIC     R0, R0, #(0x1 << 13)                    /* Clear V bit 13 to disable hivecs*/
 	MCR     p15, 0, R0, c1, c0, 0                   /* Write value back to CP15 System Control register*/
 	ISB                                             
+
+	// Set Vector Base Address Register (VBAR) to point to this application's vector table
+	LDR    R0, =0xC2000040
+	MCR    p15, 0, R0, c12, c0, 0
 
     /* FIQ stack */
     msr cpsr_c, MODE_FIQ
@@ -108,5 +115,6 @@ run_main:
     b Abort_Exception
 
 Abort_Exception:
-    swi 0xFF
+	b .
+    /*swi 0xFF*/
 
