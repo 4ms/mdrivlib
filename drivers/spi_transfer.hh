@@ -1,25 +1,12 @@
 #pragma once
-#include "interrupt.hh"
 #include "spi.hh"
 #include "spi_transfer_config_struct.hh"
 #include "system.hh"
 #include "util/math.hh"
 
 // Arch-specific wrapper around a chip's SPI peripheral, handling multi-chip buses.
-// Tx-only..  but may be extended for full duplex or rx-only
-
-// init()
-// send_blocking()
-
-//???
-// register_transfer_complete_ISR(func) //or just do it ourselves
-// send_with_ISR(uint32_t size, DataPacketT *data)
-// register_dma_xfer_complete_ISR(func) //or just do it ourselves
-// send_with_DMA(uint32_t size, DataPacketT *data)
-
-// These allow for container of this to flip aux gpio pins etc: (data/cmd, dac latch, etc):
-
-// transmit_blocking
+// Note: to use the enable_fixed_size_interrupt() method you must enable the ISR outside of this driver.
+// Note: The parent object of this is responsible for controlling any aux gpio pins: (data/cmd, dac latch, etc):
 namespace mdrivlib
 {
 template<typename SpiConfT>

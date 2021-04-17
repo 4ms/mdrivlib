@@ -1,7 +1,5 @@
 #pragma once
 #include "arch.hh"
-// #include "debug.hh"
-#include "interrupt.hh"
 #include "rcc.hh"
 #include "spi.hh"
 #include "spi_transfer.hh"
