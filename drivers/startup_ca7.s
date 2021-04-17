@@ -28,9 +28,6 @@ Reset_Handler:
 	mov r0, #65
 	str r0, [r4]
 
-    /* Supervisor mode */
-    msr cpsr_c, MODE_SVC
-
 	CPSID   if 										/* Mask Interrupts */
 
 	MRC     p15, 0, R0, c1, c0, 0                   /* Read CP15 System Control register*/
