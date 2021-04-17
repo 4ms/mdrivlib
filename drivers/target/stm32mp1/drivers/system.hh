@@ -1,4 +1,5 @@
 #pragma once
+#include "irq_ctrl.h"
 #include "stm32xx.h"
 
 // Todo: refactor to use CMSIS header intead of HAL (RCC_OscInitTypeDef, etc)
@@ -22,11 +23,12 @@ struct System {
 	}
 
 	static void disable_irq(IRQn_Type irqn) {
-		GIC_DisableIRQ(irqn);
+		IRQ_Disable(irqn);
 	}
 
 	static void enable_irq(IRQn_Type irqn) {
-		GIC_EnableIRQ(irqn);
+		auto status = IRQ_SetMode((IRQn_ID_t)irqn, IRQ_MODE_TRIG_EDGE | IRQ_MODE_CPU_ALL | IRQ_MODE_TYPE_IRQ);
+		IRQ_Enable(irqn);
 	}
 };
 } // namespace core_a7
