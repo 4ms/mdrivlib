@@ -3,12 +3,15 @@ CompileFlags:
 		"-I../shared",
 		"-Ilib/mdrivlib",
 		"-Ilib/mdrivlib/drivers",
+		"-Ilib/cmsis-device/stm32mp157c/include",
+		"-Ilib/stm32-hal/stm32mp1/include",
+		"-Ilib/cmsis/Core_A/Include",
 		"-std=gnu++2a",
 		"--target=arm-none-eabi",
 	]
 ---
 If:
-	PathMatch: [".*H7.*"]
+	PathMatch: [".*h7.*"]
 CompileFlags:
 	Add: [
 		"-DSTM32H7",
@@ -25,13 +28,14 @@ CompileFlags:
 
 ---
 If:
-	PathMatch: [".*MP1.*"]
+	PathMatch: [".*MP1.*", ".*mp1.*"]
 CompileFlags:
 	Add: [
 		"-DSTM32MP1",
 		"-DSTM32MP157Cxx",
 		"-DCORE_CA7",
 		"-Ilib/mdrivlib/drivers/target/stm32mp1",
+		"-Isrc/a7",
 	]
 	Remove: [
 		"-DSTM32H7",
