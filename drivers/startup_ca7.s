@@ -28,6 +28,17 @@ Reset_Handler:
 	mov r0, #65
 	str r0, [r4]
 
+	CPSID   if 										/* Mask Interrupts */
+
+	MRC     p15, 0, R0, c1, c0, 0                   /* Read CP15 System Control register*/
+	BIC     R0, R0, #(0x1 << 12)                    /* Clear I bit 12 to disable I Cache*/
+	BIC     R0, R0, #(0x1 <<  2)                    /* Clear C bit  2 to disable D Cache*/
+	BIC     R0, R0, #0x1                            /* Clear M bit  0 to disable MMU*/
+	BIC     R0, R0, #(0x1 << 11)                    /* Clear Z bit 11 to disable branch prediction*/
+	BIC     R0, R0, #(0x1 << 13)                    /* Clear V bit 13 to disable hivecs*/
+	MCR     p15, 0, R0, c1, c0, 0                   /* Write value back to CP15 System Control register*/
+	ISB                                             
+
     /* FIQ stack */
     msr cpsr_c, MODE_FIQ
     ldr r1, =_fiq_stack_start
@@ -85,9 +96,8 @@ bss_loop:
 	mov r5, #66
 	str r5, [r4]
 
-init_static_ctors:
-    bl __libc_init_array
 	bl SystemInit
+    bl __libc_init_array
 
 	/* UART: print 'C' */
 	mov r5, #67
