@@ -145,10 +145,10 @@ using TIM11_ = NonexistantRegister;
 
 // special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 struct GPIO {
-	static inline volatile RegisterDataT *const _reg = &(RCC->MC_AHB4ENSETR);
+	static inline volatile RegisterDataT *const _reg = &(RCC->MP_AHB4ENSETR);
 
 	static uint32_t get_gpio_bit(RegisterDataT periph) {
-		return 1 << ((periph & 0x00003C00) >> 10);
+		return 1 << (((periph >> 12) - 2) & 0b1111);
 	}
 	static void enable(GPIO_TypeDef *periph) {
 		if (periph == GPIOZ)
