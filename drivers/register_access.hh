@@ -7,11 +7,12 @@
 
 using regsize_t = uint32_t;
 
-// Bits in register specified by mask
+// RegisterBits<>: Bits in register specified by mask
 // todo: Require AccessPolicyT has read() write() set() clear()
 template<typename AccessPolicyT, regsize_t address, regsize_t mask>
 struct RegisterBits {
 	static const regsize_t BaseAddress = address;
+	static const regsize_t Mask = mask;
 
 	static regsize_t read() {
 		return AccessPolicyT::read(reinterpret_cast<volatile regsize_t *>(address), mask);
@@ -27,6 +28,8 @@ struct RegisterBits {
 	}
 };
 
+// target::RCC_Reset::SAI4_::set();
+// target::RCC_Reset_Release::SAI4_::set();
 // Null register (periph does not exist)
 struct NonexistantRegister {
 	static regsize_t read() {
@@ -40,7 +43,7 @@ struct NonexistantRegister {
 	}
 };
 
-// Bits in register specified by offset and width
+// RegisterSection<>: Bits in register specified by offset and width
 template<regsize_t width>
 struct generate_unshifted_mask_t {
 	enum { value = (generate_unshifted_mask_t<width - 1>::value << 1) | 1 };
@@ -117,5 +120,17 @@ struct ReadWrite : ReadOnly {
 	}
 	static void clear(volatile regsize_t *address, regsize_t mask) {
 		*address = *address & ~mask;
+	}
+};
+
+// RegisterDualSetClear<>: set() sets the Set bit(s), clear() sets the Clear bit(s).
+// Access to Set/Clear is always WriteOnly.
+template<regsize_t SetAddress, regsize_t SetMask, regsize_t ClearAddress, regsize_t ClearMask>
+struct RegisterDualSetClear {
+	static void set() {
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(SetAddress), SetMask);
+	}
+	static void clear() {
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(ClearAddress), ClearMask);
 	}
 };
