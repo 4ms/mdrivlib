@@ -17,8 +17,7 @@ DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() {
 SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
-	target::RCC_Reset::SAI4_::set();
-	target::RCC_Reset_Release::SAI4_::set();
+	Clocks::SAI::reset(saidef_.sai);
 	Clocks::SAI::enable(saidef_.sai);
 
 	Clocks::DMA::enable(saidef_.dma_init_rx.DMAx);
