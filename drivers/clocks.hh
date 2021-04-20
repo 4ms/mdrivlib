@@ -124,6 +124,23 @@ struct SAI {
 		else if (SAIx == SAI4)
 			target::RCC_Enable::SAI4_::clear();
 	}
+	static void reset(SAI_TypeDef *SAIx) {
+		if (SAIx == nullptr) {
+			return;
+		} else if (SAIx == SAI1) {
+			target::RCC_Reset::SAI1_::set();
+			target::RCC_Reset::SAI1_::clear();
+		} else if (SAIx == SAI2) {
+			target::RCC_Reset::SAI2_::set();
+			target::RCC_Reset::SAI2_::clear();
+		} else if (SAIx == SAI3) {
+			target::RCC_Reset::SAI3_::set();
+			target::RCC_Reset::SAI3_::clear();
+		} else if (SAIx == SAI4) {
+			target::RCC_Reset::SAI4_::set();
+			target::RCC_Reset::SAI4_::clear();
+		}
+	}
 };
 
 struct TIM {
