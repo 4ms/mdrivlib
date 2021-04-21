@@ -62,6 +62,12 @@ struct DMA {
 	}
 };
 
+struct DMAMUX {
+	static void enable() {
+		target::RCC_Enable::DMAMUX_::set();
+	}
+};
+
 struct I2C {
 	static void enable(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr)

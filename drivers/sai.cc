@@ -22,7 +22,7 @@ SaiPeriph::Error SaiPeriph::init() {
 
 	Clocks::DMA::enable(saidef_.dma_init_rx.DMAx);
 	Clocks::DMA::enable(saidef_.dma_init_tx.DMAx);
-	target::RCC_Enable::DMAMUX_::set();
+	Clocks::DMAMUX::enable();
 
 	{
 		// Todo: swap order: always init slave first
