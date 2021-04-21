@@ -60,6 +60,9 @@ CodecWM8731::CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef)
 	: i2c_(i2c)
 	, sai_{saidef}
 	, samplerate_{saidef.samplerate} {
+}
+
+void CodecWM8731::init() {
 	init_at_samplerate(samplerate_);
 	sai_.init();
 }
