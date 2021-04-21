@@ -287,10 +287,11 @@ void SaiPeriph::start() {
 		}
 	});
 
+	target::System::enable_irq(_irqn);
 	// if (saidef_.mode == SaiConfig::RXMaster)
-	target::System::enable_irq(rx_irqn);
+	// target::System::enable_irq(rx_irqn);
 	// else
-	target::System::enable_irq(tx_irqn);
+	// target::System::enable_irq(tx_irqn);
 
 	// HAL_SAI_Transmit(&hsai_tx, tx_buf_ptr_, block_size_, 0x100);
 	// HAL_SAI_Receive(&hsai_rx, rx_buf_ptr_, block_size_, 0x100);

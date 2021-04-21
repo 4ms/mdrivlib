@@ -27,7 +27,8 @@ struct System {
 	}
 
 	static void enable_irq(IRQn_Type irqn) {
-		auto status = IRQ_SetMode((IRQn_ID_t)irqn, IRQ_MODE_TRIG_EDGE | IRQ_MODE_CPU_ALL | IRQ_MODE_TYPE_IRQ);
+		auto status =
+			IRQ_SetMode((IRQn_ID_t)irqn, IRQ_MODE_TRIG_EDGE_BOTH | IRQ_MODE_CPU_0 /*ALL*/ | IRQ_MODE_TYPE_IRQ);
 		IRQ_Enable(irqn);
 	}
 };
