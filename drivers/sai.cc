@@ -22,6 +22,8 @@ SaiPeriph::Error SaiPeriph::init() {
 
 	Clocks::DMA::enable(saidef_.dma_init_rx.DMAx);
 	Clocks::DMA::enable(saidef_.dma_init_tx.DMAx);
+	target::RCC_Enable::DMAMUX_::set();
+
 	{
 		// Todo: swap order: always init slave first
 		_config_tx_sai();
@@ -285,10 +287,13 @@ void SaiPeriph::start() {
 		}
 	});
 
-	if (saidef_.mode == SaiConfig::RXMaster)
-		target::System::enable_irq(rx_irqn);
-	else
-		target::System::enable_irq(tx_irqn);
+	// if (saidef_.mode == SaiConfig::RXMaster)
+	target::System::enable_irq(rx_irqn);
+	// else
+	target::System::enable_irq(tx_irqn);
+
+	// HAL_SAI_Transmit(&hsai_tx, tx_buf_ptr_, block_size_, 0x100);
+	// HAL_SAI_Receive(&hsai_rx, rx_buf_ptr_, block_size_, 0x100);
 
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
