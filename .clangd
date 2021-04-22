@@ -1,47 +1,7 @@
 CompileFlags:
 	Add: [
-		"-I../shared",
-		"-Ilib/mdrivlib",
-		"-Ilib/mdrivlib/drivers",
-		"-Ilib/cmsis-device/stm32mp157c/include",
-		"-Ilib/stm32-hal/stm32mp1/include",
-		"-Ilib/cmsis/Core_A/Include",
 		"-std=gnu++2a",
 		"--target=arm-none-eabi",
-	]
----
-If:
-	PathMatch: [".*h7.*"]
-CompileFlags:
-	Add: [
-		"-DSTM32H7",
-		"-DSTM32H7x5",
-		"-DSTM32H755xx",
-		"-DCORE_CM7",
-		"-Ilib/mdrivlib/drivers/target/stm32h7x5",
-	]
-	Remove: [
-		"-DSTM32MP1",
-		"-DSTM32MP157Cxx",
-		"-DCORE_CA7",
-	]
-
----
-If:
-	PathMatch: [".*MP1.*", ".*mp1.*"]
-CompileFlags:
-	Add: [
-		"-DSTM32MP1",
-		"-DSTM32MP157Cxx",
-		"-DCORE_CA7",
-		"-Ilib/mdrivlib/drivers/target/stm32mp1",
-		"-Isrc/a7",
-	]
-	Remove: [
-		"-DSTM32H7",
-		"-DSTM32H7x5",
-		"-DSTM32H755xx",
-		"-DCORE_CM7",
 	]
 ---
 If:
