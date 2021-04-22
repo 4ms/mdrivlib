@@ -12,7 +12,8 @@ void __attribute__((interrupt)) SVC_Handler() {
 
 void __attribute__((interrupt)) IRQ_Handler() {
 	IRQn_ID_t irqn = IRQ_GetActiveIRQ();
-	ISRHandler(irqn);
+	if (irqn < 255)
+		ISRHandler(irqn);
 	IRQ_EndOfInterrupt(irqn);
 }
 

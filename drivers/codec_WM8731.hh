@@ -57,6 +57,7 @@ public:
 
 	CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef);
 
+	virtual void init();
 	virtual void start();
 	virtual uint32_t get_samplerate();
 	virtual void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
