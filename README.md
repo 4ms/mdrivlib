@@ -29,14 +29,37 @@ This is a work in progress, the API is in flux. Contributions, feedback, and iss
 
 ## Status of Drivers:
 
-Peripheral drivers:
+STM32 Internal Peripheral Drivers:
 
 | Peripheral | HAL      | Config | Notes |
-|:-----------|----------|--------|-------|
-| adc        | LL       | (todo) | Circular DMA only. F7 only. |
-| i2c        | STM32-HAL| const  | Blocking, IT, DMA modes |
-| mpu        | CMSIS    |  -     | For disabling D-Cache on a memory region, Cortex-M only|
-| rcc        | CMSIS
+|:-----------|:---------|:-------|:------|
+| adc        | STM32-LL | template params | Circular DMA mode. F7/H7 only. Todo: split off target-specific code |
+| i2c        | STM32-HAL| config struct | Blocking, IT, DMA modes |
+| mpu        | CMSIS    |  -     	| For disabling D-Cache on a memory region, Cortex-M only|
+| rcc        | CMSIS    |  -     | Safer wrapper over raw register access |
+| sai        |          |        |  |
+| bdma       |          |        |  |
+| mdma       |          |        |  |
+
+
+External Chip Drivers:
+
+| Peripheral | Config | Notes |
+|:-----------|:-------|:------|
+| adc (i2c max11645) | config struct | Blocking and IT mode |
+| adc (spi max11666) | constexpr config struct | Heavily optimized. Takes FilterType template param |
+| codec (i2s/i2c wm8731) | config struct | Virtual class, ties I2C init with SAI+DMA init. Todo: make template class|
+
+High-level (target-agnostic) helpers:
+
+| Peripheral | Config | Notes |
+|:-----------|:-------|:------|
+| Clocks     |     -  | enable/disable/reset peripheral clocks (via RCC)|
+| AnalogIn   | template params | Generic class to combine multi-channel ADC Source with post-filtering. WIP |
+| CycleCounter | -   | Measures cycles spent between a start and stop point |
+
+
+
 
 
   * `adc_builtin_driver.cc`: `AdcPeriph` and `AdcChan`.
