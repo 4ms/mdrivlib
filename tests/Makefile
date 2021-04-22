@@ -27,9 +27,11 @@ CXXFLAGS = 	-Wall \
 			-I$(DOCTESTHEADER_DIR) \
 			-I$(TEST_DIR) \
 			-I. \
-			-I../stm32/cmsis/include \
-			-I../stm32/device/include \
-			-I../stm32/periph/include \
+			-Idrivers \
+			-Idrivers/target/stm32h7x5 \
+			-Idrivers/target/stm32h7x5/drivers \
+			-I../cmsis-device/stm32h7x5/include \
+			-I../stm32-hal/stm32h7x5/include \
 			-I../../../shared \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \
