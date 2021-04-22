@@ -5,7 +5,7 @@
 enum SpiDataDir { Duplex, TXOnly, RXOnly, HalfDuplex };
 
 struct DefaultSpiConf {
-	static constexpr uint16_t PeriphNum = 1; // SPI1
+	static constexpr uint16_t PeriphNum = 1; // 1 ==> SPI1, 2 ==> SPI2, etc
 	static constexpr uint16_t NumChips = 1;
 	static constexpr bool is_controller = true; // aka "master"
 	static constexpr IRQType IRQn = SPI1_IRQn;
@@ -26,6 +26,7 @@ struct DefaultSpiConf {
 	// SPI Mode 00 = false, false
 	static constexpr bool clock_high_when_idle = false;
 	static constexpr bool second_clk_transition_captures_data = false;
+
 	static constexpr bool SS_active_high = false;
 	static constexpr bool pulse_hardware_ss = false;
 
@@ -38,4 +39,3 @@ struct DefaultSpiConf {
 
 	static constexpr uint8_t FifoThreshold = 1;
 };
-
