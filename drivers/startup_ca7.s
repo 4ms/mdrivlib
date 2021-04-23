@@ -6,6 +6,10 @@
 .equ MODE_FIQ, 0x11
 .equ MODE_IRQ, 0x12
 .equ MODE_SVC, 0x13
+.equ MODE_ABT, 0x17
+.equ MODE_UND, 0x1B
+.equ MODE_SYS, 0x1F
+
 .equ UART4_TDR, 0x40010028
 
 .section .vector_table, "x"
@@ -13,22 +17,30 @@
 .global _start
 _Reset:
     b Reset_Handler
-    b Abort_Exception /* 0x4  Undefined Instruction */
+    b Undef_Handler /* 0x4  Undefined Instruction */
     b SVC_Handler /* Software Interrupt */
-    b Abort_Exception  /* 0xC  Prefetch Abort */
-    b Abort_Exception /* 0x10 Data Abort */
+    b PAbt_Handler  /* 0xC  Prefetch Abort */
+    b DAbt_Handler /* 0x10 Data Abort */
     b . /* 0x14 Reserved */
     b IRQ_Handler /* 0x18 IRQ */
     b FIQ_Handler /* 0x1C FIQ */
 
 .section .text
 Reset_Handler:
-	/* UART: print 'A' */
-	ldr r4, =UART4_TDR
+	CPSID   if 										/* Mask Interrupts */
+
+													/* Put any cores other than 0 to sleep */
+	MRC     p15, 0, R0, c0, c0, 5             		/* Read MPIDR */
+	ANDS    R0, R0, #3                        
+goToSleep:                                
+	WFINE                                     
+	BNE     goToSleep                         
+
+	
+	ldr r4, =UART4_TDR 								/* UART: print 'A' */
 	mov r0, #65
 	str r0, [r4]
 
-	CPSID   if 										/* Mask Interrupts */
 
 	MRC     p15, 0, R0, c1, c0, 0                   /* Read CP15 System Control register*/
 	BIC     R0, R0, #(0x1 << 12)                    /* Clear I bit 12 to disable I Cache*/
@@ -38,6 +50,10 @@ Reset_Handler:
 	BIC     R0, R0, #(0x1 << 13)                    /* Clear V bit 13 to disable hivecs*/
 	MCR     p15, 0, R0, c1, c0, 0                   /* Write value back to CP15 System Control register*/
 	ISB                                             
+													/* Configure ACTLR */
+	MRC     p15, 0, r0, c1, c0, 1                   /* Read CP15 Auxiliary Control Register */
+	ORR     r0, r0, #(1 <<  1)                      /* Enable L2 prefetch hint (UNK/WI since r4p1) */
+	MCR     p15, 0, r0, c1, c0, 1                   /* Write CP15 Auxiliary Control Register */
 
 	// Set Vector Base Address Register (VBAR) to point to this application's vector table
 	LDR    R0, =0xC2000040
@@ -107,11 +123,22 @@ bss_loop:
 	mov r5, #67
 	str r5, [r4]
 
+		
+	CPSIE  if 									/* Unmask interrupts */
+
 run_main:
     bl main
     b Abort_Exception
 
 Abort_Exception:
 	b .
-    /*swi 0xFF*/
+
+Undef_Handler:
+	b .
+
+PAbt_Handler:
+	b .
+
+DAbt_Handler:
+	b .
 
