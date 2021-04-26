@@ -1,6 +1,6 @@
 #pragma once
+#include "drivers/stm32xx.h"
 #include "irq_ctrl.h"
-#include "stm32xx.h"
 
 // Todo: refactor to use CMSIS header intead of HAL (RCC_OscInitTypeDef, etc)
 namespace mdrivlib

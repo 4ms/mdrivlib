@@ -1,6 +1,6 @@
 #pragma once
-#include "oscs.hh"
 #include "util/colors.hh"
+#include "util/oscs.hh"
 
 // MixedRgbLed: each color element can have a different
 // LED driver (e.g. PWM, DAC, external chip)
