@@ -64,13 +64,13 @@ void SaiPeriph::_config_rx_sai() {
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		hsai_rx.Init.AudioMode = SAI_MODEMASTER_RX;
 		hsai_rx.Init.Synchro = SAI_ASYNCHRONOUS;
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 #endif
 	} else {
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 #endif
 	}
@@ -82,7 +82,7 @@ void SaiPeriph::_config_rx_sai() {
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_rx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_rx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_rx.Init.PdmInit.Activation = DISABLE;
 #endif
@@ -98,13 +98,13 @@ void SaiPeriph::_config_tx_sai() {
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
 		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 #endif
 	} else {
 		hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
 		hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 #endif
 	}
@@ -116,7 +116,7 @@ void SaiPeriph::_config_tx_sai() {
 	hsai_tx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_tx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_tx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_tx.Init.PdmInit.Activation = DISABLE;
 #endif
@@ -134,7 +134,7 @@ SaiPeriph::Error SaiPeriph::_init_sai_protocol() {
 }
 
 void SaiPeriph::_config_rx_dma() {
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hdma_rx.Init.Request = saidef_.dma_init_rx.channel;
 #elif defined(STM32F7)
 	hdma_rx.Init.Channel = saidef_.dma_init_rx.channel;
@@ -158,7 +158,7 @@ void SaiPeriph::_config_rx_dma() {
 }
 
 void SaiPeriph::_config_tx_dma() {
-#if defined(STM32H7) || defined(STM32MP1)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hdma_tx.Init.Request = saidef_.dma_init_tx.channel;
 #elif defined(STM32F7)
 	hdma_tx.Init.Channel = saidef_.dma_init_tx.channel;
