@@ -6,7 +6,7 @@ namespace mdrivlib
 {
 namespace stm32mp1
 {
-namespace core_ca7
+namespace core_a7
 {
 
 namespace EXTI_
@@ -40,16 +40,54 @@ constexpr uint8_t PortI = 8;
 constexpr uint8_t PortJ = 9;
 constexpr uint8_t PortK = 10;
 constexpr uint8_t PortZ = 11;
+
+// Rising/Falling edge trigger selection:
+using RTSR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RTSR1), 0x0001FFFF>;
+using RTSR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RTSR2), 0x0>; // not used in MP1
+using RTSR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RTSR3), (0b11 << 9) | (1 << 4) | (0b11 << 1)>;
+using FTSR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FTSR1), 0x0001FFFF>;
+using FTSR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FTSR2), 0x0>; // not used in MP1
+using FTSR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FTSR3), (0b11 << 9) | (1 << 4) | (0b11 << 1)>;
+
+// Interrupt and Event enables for Core 1 and Core 2:
+using C1IMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C1IMR1), 0xFFFFFFFF>;
+using C1IMR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C1IMR2), 0xFFFFFFFF>;
+using C1IMR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C1IMR3), 0xFFFFFFFF>;
+using C2IMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2IMR1), 0xFFFFFFFF>;
+using C2EMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2EMR1), 0xFFFFFFFF>;
+using C2IMR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2IMR2), 0xFFFFFFFF>;
+using C2EMR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2EMR2), 0xFFFFFFFF>;
+using C2IMR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2IMR3), 0xFFFFFFFF>;
+using C2EMR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2EMR3), 0xFFFFFFFF>;
+
+// Rising/Falling trigger pending (read, then write 1 to clear)
+using RPR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RPR1), 0x0001FFFF>;
+using RPR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RPR2), 0x0>; // not used in MP1
+using RPR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RPR3), (0b11 << 9) | (1 << 4) | (0b11 << 1)>;
+using FPR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FPR1), 0x0001FFFF>;
+using FPR2 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FPR2), 0x0>; // not used in MP1
+using FPR3 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FPR3), (0b11 << 9) | (1 << 4) | (0b11 << 1)>;
+
+// Rising edge and falling edge trigger selection for GPIO pins:
+template<uint32_t PinNum>
+using PinRisingTrig = RegisterBits<ReadWrite, RTSR1::BaseAddress, (1 << PinNum)>;
+
+template<uint32_t PinNum>
+using PinFallingTrig = RegisterBits<ReadWrite, FTSR1::BaseAddress, (1 << PinNum)>;
+
+template<uint32_t PinNum>
+using PinRisingTrigPending = RegisterBits<ReadWrite, RPR1::BaseAddress, (1 << PinNum)>;
+
+template<uint32_t PinNum>
+using PinFallingTrigPending = RegisterBits<ReadWrite, FPR1::BaseAddress, (1 << PinNum)>;
+
+template<uint32_t PinNum>
+using Core1PinInterruptMask = RegisterBits<ReadWrite, C1IMR1::BaseAddress, (1 << PinNum)>;
+
+template<uint32_t PinNum>
+using Core2PinInterruptMask = RegisterBits<ReadWrite, C2IMR1::BaseAddress, (1 << PinNum)>;
 } // namespace EXTI_
 
-using EXTI_C1IMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C1IMR1), 0xFFFFFFFF>;
-using EXTI_C2IMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2IMR1), 0xFFFFFFFF>;
-using EXTI_C2EMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, C2EMR1), 0xFFFFFFFF>;
-using EXTI_RTSR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, RTSR1), 0xFFFFFFFF>;
-using EXTI_FTSR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, FTSR1), 0xFFFFFFFF>;
-
-// using EXTI_PR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, PR1), 0xFFFFFFFF>;
-
-} // namespace core_ca7
+} // namespace core_a7
 } // namespace stm32mp1
 } // namespace mdrivlib
