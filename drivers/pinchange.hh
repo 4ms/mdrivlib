@@ -17,21 +17,12 @@ public:
 	PinChangeInterrupt();
 	PinChangeInterrupt(const PinChangeConfig &config, std::function<void(void)> &&func);
 	void init(const PinChangeConfig &config, std::function<void(void)> &&func);
-	void _init(const PinChangeConfig &config);
 
 	void start();
 	void stop();
 
 private:
 	uint32_t _pin;
+	void _init(const PinChangeConfig &config);
 	std::function<void(void)> task_func;
-
-	IRQn_Type irqn;
-	bool is_running;
-
-	void _register_task();
-	bool tim_update_IT_is_set() const;
-	bool tim_update_IT_is_source() const;
-	void tim_update_IT_clear() const;
 };
-
