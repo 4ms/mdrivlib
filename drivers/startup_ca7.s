@@ -91,6 +91,9 @@ stack_loop:
     strlt r0, [r1], #4
     blt stack_loop
 
+	msr cpsr_c, MODE_SYS
+	ldr sp, =_user_stack_end
+
     /* Start copying data */
     ldr r0, =_text_end
     ldr r1, =_data_start
@@ -123,7 +126,6 @@ bss_loop:
 	mov r5, #67
 	str r5, [r4]
 
-		
 	CPSIE  if 									/* Unmask interrupts */
 
 run_main:
