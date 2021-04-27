@@ -1,7 +1,7 @@
 #include "drivers/pinchange.hh"
+#include "drivers/exti.hh"
 #include "drivers/interrupt.hh"
 #include "rcc.hh"
-#include "syscfg.hh"
 
 PinChangeInterrupt::PinChangeInterrupt() {
 }
@@ -20,47 +20,47 @@ void PinChangeInterrupt::init(const PinChangeConfig &config, std::function<void(
 
 void PinChangeInterrupt::_init(const PinChangeConfig &config) {
 	target::RCC_Enable::SYSCFG_::set();
-	auto port = config.port == GPIO::A ? target::SYSCFG_EXTI::PortA
-			  : config.port == GPIO::B ? target::SYSCFG_EXTI::PortB
-			  : config.port == GPIO::C ? target::SYSCFG_EXTI::PortC
-			  : config.port == GPIO::D ? target::SYSCFG_EXTI::PortD
-			  : config.port == GPIO::E ? target::SYSCFG_EXTI::PortE
-			  : config.port == GPIO::F ? target::SYSCFG_EXTI::PortF
-			  : config.port == GPIO::G ? target::SYSCFG_EXTI::PortG
-			  : config.port == GPIO::H ? target::SYSCFG_EXTI::PortH
-			  : config.port == GPIO::I ? target::SYSCFG_EXTI::PortI
-			  : config.port == GPIO::J ? target::SYSCFG_EXTI::PortJ
-									   : target::SYSCFG_EXTI::PortK;
+	auto port = config.port == GPIO::A ? target::EXTI_::PortA
+			  : config.port == GPIO::B ? target::EXTI_::PortB
+			  : config.port == GPIO::C ? target::EXTI_::PortC
+			  : config.port == GPIO::D ? target::EXTI_::PortD
+			  : config.port == GPIO::E ? target::EXTI_::PortE
+			  : config.port == GPIO::F ? target::EXTI_::PortF
+			  : config.port == GPIO::G ? target::EXTI_::PortG
+			  : config.port == GPIO::H ? target::EXTI_::PortH
+			  : config.port == GPIO::I ? target::EXTI_::PortI
+			  : config.port == GPIO::J ? target::EXTI_::PortJ
+									   : target::EXTI_::PortK;
 	if (config.pin == 1)
-		target::SYSCFG_EXTI::Pin1::write(port);
+		target::EXTI_::Pin1::write(port);
 	if (config.pin == 2)
-		target::SYSCFG_EXTI::Pin2::write(port);
+		target::EXTI_::Pin2::write(port);
 	if (config.pin == 3)
-		target::SYSCFG_EXTI::Pin3::write(port);
+		target::EXTI_::Pin3::write(port);
 	if (config.pin == 4)
-		target::SYSCFG_EXTI::Pin4::write(port);
+		target::EXTI_::Pin4::write(port);
 	if (config.pin == 5)
-		target::SYSCFG_EXTI::Pin5::write(port);
+		target::EXTI_::Pin5::write(port);
 	if (config.pin == 6)
-		target::SYSCFG_EXTI::Pin6::write(port);
+		target::EXTI_::Pin6::write(port);
 	if (config.pin == 7)
-		target::SYSCFG_EXTI::Pin7::write(port);
+		target::EXTI_::Pin7::write(port);
 	if (config.pin == 8)
-		target::SYSCFG_EXTI::Pin8::write(port);
+		target::EXTI_::Pin8::write(port);
 	if (config.pin == 9)
-		target::SYSCFG_EXTI::Pin9::write(port);
+		target::EXTI_::Pin9::write(port);
 	if (config.pin == 10)
-		target::SYSCFG_EXTI::Pin10::write(port);
+		target::EXTI_::Pin10::write(port);
 	if (config.pin == 11)
-		target::SYSCFG_EXTI::Pin11::write(port);
+		target::EXTI_::Pin11::write(port);
 	if (config.pin == 12)
-		target::SYSCFG_EXTI::Pin12::write(port);
+		target::EXTI_::Pin12::write(port);
 	if (config.pin == 13)
-		target::SYSCFG_EXTI::Pin13::write(port);
+		target::EXTI_::Pin13::write(port);
 	if (config.pin == 14)
-		target::SYSCFG_EXTI::Pin14::write(port);
+		target::EXTI_::Pin14::write(port);
 	if (config.pin == 15)
-		target::SYSCFG_EXTI::Pin15::write(port);
+		target::EXTI_::Pin15::write(port);
 
 	// Todo: use set/clear, so we need target::EXTI_::RTSR_Pin<4>
 	if (config.on_rising_edge)
