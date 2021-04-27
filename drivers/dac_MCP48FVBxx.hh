@@ -42,7 +42,7 @@ public:
 		driver.begin_open_transmission();
 		driver.transmit(make_packet(DACVALUE0, WRITE, (val >> 12) & 0xFFF));
 		driver.transmit(make_packet(DACVALUE1, WRITE, val & 0xFFF));
-		driver.wait_until_xfer_complete();
+		driver.wait_until_tx_complete();
 		latch.low();
 		driver.unselect_chip(chip);
 	}
