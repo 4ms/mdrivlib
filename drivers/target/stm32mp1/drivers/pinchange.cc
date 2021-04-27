@@ -1,7 +1,7 @@
 #include "drivers/pinchange.hh"
 #include "drivers/interrupt.hh"
+#include "exti.hh"
 #include "rcc.hh"
-// #include "syscfg.hh"
 
 PinChangeInterrupt::PinChangeInterrupt() {
 }
@@ -19,7 +19,7 @@ void PinChangeInterrupt::init(const PinChangeConfig &config, std::function<void(
 }
 
 void PinChangeInterrupt::_init(const PinChangeConfig &config) {
-	target::RCC_Enable::SYSCFG_::set();
+	// target::RCC_Enable::EXTI_::set();
 	// auto port = config.port == GPIO::A ? target::SYSCFG_EXTI::PortA
 	// 		  : config.port == GPIO::B ? target::SYSCFG_EXTI::PortB
 	// 		  : config.port == GPIO::C ? target::SYSCFG_EXTI::PortC
