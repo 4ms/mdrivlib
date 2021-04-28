@@ -3,19 +3,17 @@
 #include "rcc.hh"
 #include "stm32xx.h"
 
-// Todo: refactor to use CMSIS header intead of HAL (RCC_OscInitTypeDef, etc)
 namespace mdrivlib
 {
 namespace stm32f7xx
 {
 struct System {
-	System() {
-	}
-
 	static void SetVectorTable(uint32_t reset_address) {
 		SCB->VTOR = reset_address & (uint32_t)0x1FFFFF80;
 	}
+};
 
+struct SystemClocks {
 	static void init_clocks(const RCC_OscInitTypeDef &osc_def,
 							const RCC_ClkInitTypeDef &clk_def,
 							const RCC_PeriphCLKInitTypeDef &pclk_def,
@@ -26,9 +24,7 @@ struct System {
 		RCC_OscInitTypeDef osc_def_ = osc_def;
 		HAL_RCC_OscConfig(&osc_def_);
 
-#ifdef STM32F7
 		HAL_PWREx_EnableOverDrive();
-#endif
 
 		RCC_ClkInitTypeDef clk_def_ = clk_def;
 		HAL_RCC_ClockConfig(&clk_def_, FLASH_LATENCY_7);
@@ -47,7 +43,9 @@ struct System {
 		__HAL_RCC_SYSCFG_CLK_ENABLE();
 		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 	}
+};
 
+struct InterruptControl {
 	static void set_irq_priority(IRQn_Type irqn, uint32_t pri1, uint32_t pri2) {
 		auto pri = NVIC_EncodePriority(NVIC_GetPriorityGrouping(), pri1, pri2);
 		NVIC_SetPriority(irqn, pri);
