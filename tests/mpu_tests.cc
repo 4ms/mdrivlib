@@ -2,7 +2,7 @@
 #include "doctest.h"
 #include "stubs/scb_fake.hh"
 #include "stubs/mpu_fake.hh"
-#include "drivers/target/stm32h7x5/drivers/mpu.hh"
+#include "target/stm32h7x5/drivers/mpu.hh"
 // clang-format on
 
 static void reset_MPU() {
