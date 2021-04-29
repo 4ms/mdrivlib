@@ -1,7 +1,5 @@
 .syntax unified
 .cpu cortex-a7
-/* .fpu softvfp */
-/* .thumb */
 
 .equ MODE_FIQ, 0x11
 .equ MODE_IRQ, 0x12
@@ -151,14 +149,18 @@ DAbt_Handler:
 	b .
 
 IRQ_Handler:
-	sub lr, lr, #4
-
-	srsdb sp!, MODE_SYS 	// Save LR_irq and SPSR_irq onto the System mode stack, and update SP_sys
+	sub lr, lr, #4 			// LR = addr of *next* instr to execute; subtract 4 so we return to instr that was about to be executed
+	srsdb sp!, MODE_SYS 	// Save LR_irq and SPSR_irq onto the System mode stack, (decrement SP_sys)
 
 	cps MODE_SYS 		 	// Switch to system mode
 
 	//PUSH {r0-r3, r12} 	// Store remaining AAPCS registers on the System mode stack
 	push {r0-r3, r12, lr} 	// ZZ: Store remaining AAPCS registers on the System mode stack
+
+	mov r3, #0x5000 
+	movt r3, #0x5000  		// Debug::Pin1 = GPIOD = 0x50005000
+	mov r0, #64 			// Pin 6  
+	str r0, [r3, #24] 		// BSRR reg: Bit set
 
 	//
 	cps MODE_SVC 			// ZZ: Use SVC mode stack instead of USR/SYS, so ISR has plenty of stack available
@@ -189,9 +191,8 @@ IRQ_Handler:
 
 	cpsid i 				// Disable interrupts while we exit
 
-							// ZZ: Decrement nesting count
 	ldr r2, =_svc_nested_isr_count
-	ldr r0, [r2]
+	ldr r0, [r2] 			// ZZ: Decrement nesting count
 	sub r0, r0, #1
 	str r0, [r2]
 
@@ -202,9 +203,15 @@ IRQ_Handler:
 	pop {r2, r3} 			// ZZ: Restore previous stack pointer
 	add sp, sp, r3  		// ZZ: Restore previous stack pointer
 
-	cps #MODE_SYS
+	cps MODE_SYS
+
+	mov r3, #0x5000 
+	movt r3, #0x5000  		// Debug::Pin1 = GPIOD = 0x50005000
+	mov r0, #0x400000 		// Pin 6 Reset
+	str r0, [r3, #24] 		// BSRR reg
+
 	pop {r0-r3, r12, lr}
-	rfeia sp!
+	rfeia sp! 				// Return to address on stack, and pop SPSR (which contains the bit which enables IRQs)
 	
 
 
