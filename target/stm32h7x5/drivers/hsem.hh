@@ -1,5 +1,5 @@
 #pragma once
-#include "drivers/interrupt.hh"
+#include "interrupt.hh"
 #include "register_access.hh"
 #include "stm32xx.h"
 #include <functional>
