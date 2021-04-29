@@ -1,4 +1,5 @@
 #pragma once
+#include "drivers/arch.hh"
 #include "drivers/hsem.hh"
 #include "drivers/interrupt.hh"
 #include "drivers/pinchange.hh"
@@ -90,5 +91,10 @@ static inline void test_nesting_isr() {
 		TestPin2::low();
 		TestPin2::high();
 	}
+
+	target::System::disable_irq(TestSemaphoreIRQn);
+	HWSemaphore<TestSemaphoreID>::disable_channel_ISR();
+	HWSemaphore<TestSemaphoreID>::clear_ISR();
+	pcint.stop();
 }
 } // namespace mdrivlib
