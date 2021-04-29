@@ -47,11 +47,10 @@ static inline void test_nesting_isr() {
 	// which triggers the high-priority ISR from within it
 	InterruptManager::registerISR(TestSemaphoreIRQn, 3, 3, [&]() {
 		if (HWSemaphore<TestSemaphoreID>::is_ISR_triggered_and_enabled()) {
-			TestPin0::high();
 			for (int i = 0; i < 800; i++) {
 				if (i == 50)
-					TestPin3::high();
-				Debug::red_LED1::low();
+					TestPin3::high(); // Trigger higher priority ISR
+				TestPin0::high();
 			}
 			TestPin0::low();
 			HWSemaphore<TestSemaphoreID>::clear_ISR();
@@ -76,7 +75,6 @@ static inline void test_nesting_isr() {
 	};
 	pcint.init(pcconf, []() {
 		TestPin1::high();
-		Debug::red_LED2::low();
 		TestPin1::low();
 	});
 	// Enable interrupt
@@ -89,7 +87,9 @@ static inline void test_nesting_isr() {
 	int i = 1000000;
 	while (i--) {
 		TestPin2::low();
+		HAL_Delay(100);
 		TestPin2::high();
+		HAL_Delay(100);
 	}
 
 	target::System::disable_irq(TestSemaphoreIRQn);
