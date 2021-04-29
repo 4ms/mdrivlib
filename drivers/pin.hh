@@ -159,6 +159,8 @@ using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GP
 
 template<enum GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output>
 struct FPin {
+	static constexpr auto Gpio_v = Gpio;
+	static constexpr auto PinNum_v = PinNum;
 
 	// Todo: do our own init here using RegisterBits, don't rely on Pin class
 	// Will still need to depend on RCC_Enable class
