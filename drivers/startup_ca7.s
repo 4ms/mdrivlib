@@ -154,7 +154,7 @@ IRQ_Handler:
 	sub lr, lr, #4
 
 	//SRSDB sp!, MODE_SYS 	// Save LR_irq and SPSR_irq onto the System mode stack, and update SP_sys
-	srsdb MODE_SYS 		// ??ZZ: Save LR_irq and SPSR_irq onto the System mode stack 
+	srsdb sp!, MODE_SYS 		// ??ZZ: Save LR_irq and SPSR_irq onto the System mode stack 
 
 	cps MODE_SYS 		 	// Switch to system mode
 
