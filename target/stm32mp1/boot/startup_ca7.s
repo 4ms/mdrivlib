@@ -61,8 +61,8 @@ goToSleep:
     msr cpsr_c, MODE_FIQ
     ldr r1, =_fiq_stack_start
     ldr sp, =_fiq_stack_end
-    movw r0, #0xFEFE
-    movt r0, #0xFEFE
+    movw r0, #0xFEFF
+    movt r0, #0xFEFF
 
 fiq_loop:
     cmp r1, sp
@@ -73,6 +73,8 @@ fiq_loop:
     msr cpsr_c, MODE_IRQ
     ldr r1, =_irq_stack_start
     ldr sp, =_irq_stack_end
+    movw r0, #0xF1F1
+    movt r0, #0xF1F1
 
 irq_loop:
     cmp r1, sp
@@ -83,6 +85,8 @@ irq_loop:
     msr cpsr_c, MODE_SVC
     ldr r1, =_svc_stack_start
     ldr sp, =_svc_stack_end
+    movw r0, #0xF5F5
+    movt r0, #0xF5F5
 
 svc_loop:
     cmp r1, sp
@@ -96,8 +100,15 @@ svc_loop:
 
 													// USER and SYS mode stack
 	msr cpsr_c, MODE_SYS
+    ldr r1, =_user_stack_start
 	ldr sp, =_user_stack_end
+    movw r0, #0xF0F0
+    movt r0, #0xF0F0
 
+usrsys_loop:
+    cmp r1, sp
+    strlt r0, [r1], #4
+    blt usrsys_loop
     												// Copying initialization values (.data)
     ldr r0, =_text_end
     ldr r1, =_data_start
