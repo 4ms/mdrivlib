@@ -9,13 +9,13 @@ void __attribute__((interrupt)) SVC_Handler() {
 	__BKPT();
 }
 
-void __attribute__((interrupt)) IRQ_Handler() {
+void __attribute__((interrupt)) __attribute__((section(".irqhandler"))) IRQ_Handler() {
 	asm volatile(
 		".equ MODE_SYS, 0x1F  			\n"
 		".equ GICCPU_BASE_low, 0x2000 	\n"
 		".equ GICCPU_BASE_high, 0xA002 	\n"
-		".equ GICC_HPPIR_offset, 24   	\n"
-		".equ GICC_IAR_offset, 12  		\n"
+		// ".equ GICC_HPPIR_offset, 24   	\n"
+		// ".equ GICC_IAR_offset, 12		\n"
 		"sub lr, lr, #4 				\n" // LR = addr of *next* instr to execute; subtract 4 so we return to instr
 											// that was about to be executed
 		"srsdb sp!, MODE_SYS 			\n" // Save LR_irq and SPSR_irq onto the System mode stack, (decrement SP_sys)
@@ -27,8 +27,8 @@ void __attribute__((interrupt)) IRQ_Handler() {
 
 		"mov r3, #GICCPU_BASE_low		\n" // (this block used to be 'bl IRQ_GetActiveIRQ'
 		"movt r3, #GICCPU_BASE_high		\n" // Load address of the GIC CPU Interface
-		"ldr r2, [r3, #GIC_HPPIR_offset]\n" // Get Highest Pending Interrupt number
-		"ldr r2, [r3, #GIC_IAR_offset]	\n" // Acknowledge it with a read to the Interrupt Acknowledge Register
+		"ldr r2, [r3, #24] 				\n" // Get Highest Pending Interrupt number
+		"ldr r2, [r3, #12]				\n" // Acknowledge it with a read to the Interrupt Acknowledge Register
 		"uxth r0, r2 					\n" // Unpack it... why?
 		"dsb sy							\n" // Data barrier (why?)
 
