@@ -1,6 +1,5 @@
 #pragma once
 #include "dma_config_struct.hh"
-#include "drivers/bdma.hh"
 #include "drivers/memory_transfer.hh"
 #include "interrupt.hh"
 #include "spi.hh"
@@ -10,7 +9,7 @@
 namespace mdrivlib
 {
 
-template<typename ConfT>
+template<typename ConfT, typename DmaTransferT>
 struct DmaSpiScreenDriver {
 	enum PacketType { Cmd, Data };
 
@@ -64,23 +63,23 @@ struct DmaSpiScreenDriver {
 		spi.clear_TXTF_flag();
 	}
 
-	void config_bdma_transfer(uint32_t src, uint32_t sz) {
+	void config_dma_transfer(uint32_t src, uint32_t sz) {
 		uint32_t dst = spi.get_tx_datareg_addr();
-		bdma.config_transfer(dst, src, sz);
+		dma.config_transfer(dst, src, sz);
 	}
 
-	void start_bdma_transfer(std::function<void(void)> &&cb) {
+	void start_dma_transfer(std::function<void(void)> &&cb) {
 		callback = std::move(cb);
-		bdma.register_callback(callback);
+		dma.register_callback(callback);
 
-		start_bdma_transfer();
+		start_dma_transfer();
 	}
 
-	void start_bdma_transfer() {
+	void start_dma_transfer() {
 		spi.disable();
-		bdma.start_transfer();
+		dma.start_transfer();
 
-		uint32_t sz = bdma.get_transfer_size();
+		uint32_t sz = dma.get_transfer_size();
 		if (sz <= 0xFFFF) {
 			spi.set_tx_message_size(sz);
 			spi.set_tx_message_reload_size(0);
@@ -144,7 +143,8 @@ private:
 	std::function<void(void)> callback;
 
 	// MemoryTransfer mdma;
-	target::BDMATransfer<typename ConfT::BDMAConf> bdma;
+	// target::BDMATransfer<typename ConfT::BDMAConf> dma;
+	DmaTransferT dma;
 
 	volatile uint32_t *dma_ifcr_reg;
 	volatile uint32_t *dma_isr_reg;
