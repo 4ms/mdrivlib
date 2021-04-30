@@ -23,7 +23,7 @@ _Reset:
     b IRQ_Handler 		/* 0x18 IRQ */
     b FIQ_Handler 		/* 0x1C FIQ */
 
-.section .text
+.section .resethandler
 Reset_Handler:
 	cpsid   if 										// Mask Interrupts
 
