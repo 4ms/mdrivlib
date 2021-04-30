@@ -174,7 +174,7 @@ IRQ_Handler:
 	str r0, [r3, #24] 		// BSRR reg: Bit set
 
 	//
-	cps MODE_SVC 			// ZZ: Use SVC mode stack instead of USR/SYS, so ISR has plenty of stack available
+	//cps MODE_SVC 			// ZZ: Use SVC mode stack instead of USR/SYS, so ISR has plenty of stack available
 
 	and r3, sp, #4  	 	// Ensure stack is 8-byte aligned. 
 	sub sp, sp, r3 
@@ -214,7 +214,7 @@ IRQ_Handler:
 	pop {r2, r3} 			// ZZ: Restore previous stack pointer
 	add sp, sp, r3  		// ZZ: Restore previous stack pointer
 
-	cps MODE_SYS
+	//cps MODE_SYS
 
 	mov r3, #0x5000 
 	movt r3, #0x5000  		// Debug::Pin1 = GPIOD = 0x50005000
