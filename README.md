@@ -29,34 +29,46 @@ This is a work in progress, the API is in flux. Contributions, feedback, and iss
 
 ## Status of Drivers:
 
-STM32 Internal Peripheral Drivers:
+See next section for description of Config types and HAL types.
 
-| Peripheral | HAL      | Config | Notes |
-|:-----------|:---------|:-------|:------|
+#### STM32 Internal Peripheral Drivers:
+
+| Peripheral | HAL      | Config          | Notes |
+|:-----------|:---------|:----------------|:------|
 | adc        | STM32-LL | template params | Circular DMA mode. F7/H7 only. Todo: split off target-specific code |
-| i2c        | STM32-HAL| config struct | Blocking, IT, DMA modes |
-| mpu        | CMSIS    |  -     	| For disabling D-Cache on a memory region, Cortex-M only|
-| rcc        | CMSIS    |  -     | Safer wrapper over raw register access |
-| sai        |          |        |  |
-| bdma       |          |        |  |
-| mdma       |          |        |  |
+| i2c        | STM32-HAL| config struct   | Blocking, IT, DMA modes |
+| mpu        | CMSIS    |  -           	  | For disabling D-Cache on a memory region, Cortex-M only|
+| rcc        | CMSIS    |  -    	 		  | Safer wrapper over raw register access |
+| sai        |          |        			  |  |
+| bdma       | CMSIS    | template struct | H7x5 only, not tested on MP1 |
+| mdma       |          |        			  |  |
+| dma2d      | CMSIS    |  -              | WIP. Supports FillRect with Rgb565 on H7 |
+| interrupt  | Cortex   |  -              | Easily assign a lambda or any method or function as any IRQ Handler. Supports NVIC (Cortex-M). GIC (Cortex-A) does not yet support nesting. |
+	
+
+#### External Chip Drivers:
+
+| Peripheral          | Config          | Notes |
+|:--------------------|:----------------|:------|
+| ADC, I2C (MAX11645) | config struct   | Blocking and IT mode |
+| ADC, SPI (MAX11666) | template struct | Heavily optimized. Takes FilterType template param |
+| Codec, I2C/I2S (WM8731) | config struct | Virtual class, ties I2C init with SAI+DMA init. Todo: make template class|
+| DAC, SPI (MCP48FVBxx)| template struct| Supports streaming and blocking modes |
+| GPIO Expander, I2C (TCA9535) | config struct | Supports inputs only (so far), I2C in IT mode |
+| LED Driver, I2C (PCA9685) | | Uses STM32-HAL, heavily (HAL callbacks). Supports DMA, IT, and blocking modes. Supports mono and RGB LEDs. Works well with Frame Buffer LED class |
 
 
-External Chip Drivers:
+#### High-level helpers (target-agnostic):
 
-| Peripheral | Config | Notes |
-|:-----------|:-------|:------|
-| adc (i2c max11645) | config struct | Blocking and IT mode |
-| adc (spi max11666) | constexpr config struct | Heavily optimized. Takes FilterType template param |
-| codec (i2s/i2c wm8731) | config struct | Virtual class, ties I2C init with SAI+DMA init. Todo: make template class|
-
-High-level (target-agnostic) helpers:
-
-| Peripheral | Config | Notes |
-|:-----------|:-------|:------|
-| Clocks     |     -  | enable/disable/reset peripheral clocks (via RCC)|
-| AnalogIn   | template params | Generic class to combine multi-channel ADC Source with post-filtering. WIP |
-| CycleCounter | -   | Measures cycles spent between a start and stop point |
+| Peripheral   | Config          | Notes |
+|:-------------|:----------------|:------|
+| Clocks       |     -           | enable/disable/reset peripheral clocks |
+| AnalogIn     | template params | Generic class to combine multi-channel ADC sources with post-filtering. WIP |
+| CycleCounter | -               | Measures cycles spent between a start and stop point |
+| DAC Stream   | template struct | Allows circular buffer to be filled in bursts, and output to DAC a steady rate |
+| GPIO Stream  | template struct | Same as DAC Stream, but for a GPIO Pin output |
+| Debounced Pin | template params |  Basic debouncing of physical pins (for buttons and other inputs). Requires `util` lib
+| Frame Buffer LED| -             | Allows random access to a contigious frame buffer, used with LED DMA or IT drivers |
 
 
 
@@ -130,11 +142,17 @@ Use it:
 
 ```
 #include "pin.hh"
+#include "timekeeper.hh"
 
 Pin myRedLED {GPIO::A, 2, PinMode::Output};
 
 myRedLED.high();
-myRedLED.toggle(); 
+
+Timekeeper lightFlasher({.TIMx=TIM2, .period=100000000/*ns*/}, [](){
+	myRedLED.toggle(); 
+});
+lightFlasher.start();
+
 ```
 
 
@@ -146,108 +164,45 @@ myRedLED.toggle();
 
 mdrivlib contains a mix of these three methods of hardware access:
 
-   - STM32-HAL (`stm32xxxxx_XXX_hal.c/.h` files): The STM32 HAL library is used only when the peripheral is complex enough that re-writing it would be non-trivial *and* offer very little benefit in terms of efficiency, code space, or additional features.
-   - STM32-LL (`stm32xxxxx_XXX_ll.c/.h` files): In some drivers, ST's LL drivers are used, which are thin wrappers over direct register control via CMSIS headers. These are used when
-   - CMSIS (`stm32xxxxx.h` files): These are huge (2MB+) header files provided by the vendor (ST) that map all the registers to C-style structs and macros. The benefit of these is that the datasheet (Reference Manual) can be used along-side to setup or debug peripherals. For type safety I often use register classes called `RegisterBits` and `RegisterSection`. These can be specified as ReadWrite, ReadOnly, or WriteOnly, making this a bit safer to use than raw CMSIS register macros, while still compiling to very efficient assembly.
+   - STM32-HAL (`stm32xxxxx_XXX_hal.c/.h` files): The STM32 HAL library is used only when the peripheral is complex enough that re-writing it would be non-trivial **and** would offer very little benefit in terms of efficiency, code space, or additional features.
+ 
+   - STM32-LL (`stm32xxxxx_XXX_ll.c/.h` files): In some drivers, ST's LL drivers are used, which are thin wrappers over direct register control via CMSIS headers. I am mostly migrating the drivers that use LL to use CMSIS since the LL drivers aren't as portable as I originally believed.
+ 
+   - CMSIS (`stm32xxxxx.h` files): These are huge (2MB+) header files provided by the vendor (ST) that map all the registers to C-style structs and macros. The benefit of these is that the datasheet (Reference Manual) can be used along-side to setup or debug peripherals. For type safety I often use register classes called `RegisterBits` and `RegisterSection`. These can be specified as ReadWrite, ReadOnly, or WriteOnly, making this a bit safer to use than raw CMSIS register macros, while still compiling to at least as efficient assembly.
 
 
 
-### Configuration Structs
+### Configuring a driver
 
-These are structs found in files named `*_config_struct.hh`. They let you define board-specific things like the pins to use, peripheral number, DMA settings, etc. Your project should pass them to the constructor of the driver (either as a template parameter or constructor parameter).
+The tables above mentions three types of configuration:
+
+  * Template params: e.g. 
   
-  - Todo: move all `config_struct.hh` files to a `conf_struct/` dir
-  - Todo: create conf structs for adc_builtin, ... (others)
+  ```
+  AdcChan<AdcPeriphNum::_1, AdcChanNum::_13, uint16_t> myADC;
+  ```
+  
+  * Template config struct: wraps multiple params into a struct passed as a template argument:
+  
+  ```
+  struct MySpiAdcConfig : DefaultSpiConfig { 
+      static constexpr uint16_t NumChips = 2;
+      //...
+  };
+  
+  AdcSpi_MAX11666<MySpiAdcConfig> myADC;
+  ```
+  
+  * Config struct: wraps multiple params into a struct passed as a constructor argument:
 
-There are currently two types of structs: I'm calling them `const` and `constexpr`. Both are simple to use.
-I'm moving towards using more and more constexpr structs because it allows for compile-time values to be used in the drivers (hence less RAM lookups and better performance). However many early drivers perform just fine and use the const style.
+  ```
+  I2CPeriph MyI2C { 
+      .I2Cx = I2C3, 
+	   .SCL = {GPIO::B, 8, LL_GPIO_AF4},
+	   .SDA = {GPIO::B, 9, LL_GPIO_AF4},
+	   // ...
+  };
 
-### const struct configuration:
-
-For an example, see the I2C config struct in `drivers/i2c_config_struct.hh`:
-
-```
-struct I2CConfig {
-	I2C_TypeDef *I2Cx;
-	PinNoInit SCL;
-	PinNoInit SDA;
-	// etc..
-};
-```
-
-To use the I2C peripheral driver, you can specify the struct values inline in the driver constructor:
-
-```
-mdrivlib::I2CPeriph MyI2C { 
-	.I2Cx = I2C3, 
-	.SCL = {GPIO::B, 8, LL_GPIO_AF4},
-	.SDA = {GPIO::B, 9, LL_GPIO_AF4},
-	// etc..
-};
-
-MyI2C.write(deviceAddr, data, dataSize);
-
-```
-
-Or you can define all your conf structs in one or more header files like this:
-
-```
-//.hh file:
-const mdrivlib::I2CConfig MyI2Cconf {
-	.I2Cx = I2C3,
-	.SCL = {GPIO::B, 8, LL_GPIO_AF4},
-	.SDA = {GPIO::B, 9, LL_GPIO_AF4},
-	// etc..
-};
-
-//.cc file:
-mdrivlib::I2CPeriph MyI2C {MyI2Cconf};
-MyI2C.write(deviceAddr, data, dataSize);
-```
-
-### constexpr struct configuration: ###
-
-For an example, see the SPI config struct in `drivers/spi_config_struct.hh`
-
-```
-struct DefaultSpiConf {
-	static constexpr uint16_t PeriphNum = 1; // 1 ==> SPI1, 2 ==> SPI2, ...
-	static constexpr uint16_t NumChips = 1;
-	static constexpr bool is_controller = true; // aka "master"
-	static constexpr IRQType IRQn = SPI1_IRQn;
-	static constexpr uint16_t priority1 = 3;
-	static constexpr uint16_t priority2 = 3;
-	static constexpr PinNoInit SCLK = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit COPI = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CIPO = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CS0 = {GPIO::A, 0, LL_GPIO_AF_0};
-	//...
-};
-```
-
-To use these types of structs, create your own struct type that derives from the DefaultSpiConf type, and override whatever values you don't want to be default:
-
-```
-using namespace mdrivlib;
-
-struct MyDACConf : DefaultSpiConf {
-	static constexpr uint16_t PeriphNum = 2; // SPI2
-	static constexpr IRQType IRQn = SPI2_IRQn;
-	static constexpr PinNoInit SCLK = {GPIO::A, 9, LL_GPIO_AF_5};
-	static constexpr PinNoInit COPI = {GPIO::B, 15, LL_GPIO_AF_5};
-	static constexpr PinNoInit CIPO = {GPIO::A, 0};
-	static constexpr PinNoInit CS0 = {GPIO::B, 9, 0};
-	static constexpr PinNoInit CS1 = {GPIO::B, 8, 0};
-	static constexpr uint16_t clock_division = 1;
-	//...
-};
-
-
-DacSpi_MCP48FVBxx<MM_DACConf> MyDAC;
-MyDAC.init();
-```
-
-These `constexpr` structs are used when configuration values are required during the peripheral's normal operation (as opposed to just during the peripheral's setup), and using values stored in RAM effects performance. For instance, a high-speed SPI DAC driver with multiple chips on a single SPI bus requires manually toggling the Chip Select pins in the SPI interrupt, because the STM32 SPI peripheral does not support multiple CS lines. Using a constexpr struct allows for the CS pins' GPIO register values to be hard-coded into the interrupt's assembly, saving valuable cycles.
-
-
-
+  MyI2C.write(deviceAddr, data, dataSize);
+  ```
+ 
