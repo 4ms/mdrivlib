@@ -1,31 +1,32 @@
 # mdrivlib
 
-## C++20 Embedded driver library
-
-### Providing high-level functionality using modern C++, with an emphasis on higher-end microcontrollers and microprocessors
+## C++17/20 Embedded driver library
 
 This is a work in progress, the API is in flux. Contributions, feedback, and issues are welcome.
 
 ### Devices supported:
 
 *Cortex M7*
+
     * STM32H745/55/47/57 (dual-core M7/M4): full support, except built-in ADC
-    * STM32F7xx (especially STM32F746): partial support
+    * STM32F7xx (especially STM32F746, F76x): partial support
 
 *Cortex A7*
+
   * STM32MP157 (dual-core A7 + M4): partial support, but adding features daily.
 
 ## Goals:
 
   * Easy to use, difficult to misuse.
   * Provide modern C++20 classes for setting up and accessing internal peripherals and common external chips.
-  * Provide high-level functionality for common use cases in embedded projects (debouncing switches, wear-leveling, RGB color blending).
+  * Provide high-level functionality for common use cases in embedded projects (debouncing switches, wear-leveling, RGB color blending, filtering ADC readings).
   * Allow use of lambdas as callbacks (e.g. interrupt request handlers) with minimal overhead
   * Does not depend on dynamic memory (but provides some structures if you use it)
   * Bare-metal: does not depend on a RTOS
   * Priortize peripheral access efficiency over one-time cost of peripheral setup.
   * Unit tests (using doctest)
   * Example code (TODO: needs work!)
+  * Emphasis on higher-end microcontrollers and microprocessors
 
 ## Status of Drivers:
 
@@ -35,16 +36,20 @@ See next section for description of Config types and HAL types.
 
 | Peripheral | HAL      | Config          | Notes |
 |:-----------|:---------|:----------------|:------|
-| adc        | STM32-LL | template params | Circular DMA mode. F7/H7 only. Todo: split off target-specific code |
-| i2c        | STM32-HAL| config struct   | Blocking, IT, DMA modes |
-| mpu        | CMSIS    |  -           	  | For disabling D-Cache on a memory region, Cortex-M only|
-| rcc        | CMSIS    |  -    	 		  | Safer wrapper over raw register access |
-| sai        |          |        			  |  |
-| bdma       | CMSIS    | template struct | H7x5 only, not tested on MP1 |
-| mdma       |          |        			  |  |
-| dma2d      | CMSIS    |  -              | WIP. Supports FillRect with Rgb565 on H7 |
-| interrupt  | Cortex   |  -              | Easily assign a lambda or any method or function as any IRQ Handler. Supports NVIC (Cortex-M). GIC (Cortex-A) does not yet support nesting. |
-	
+| ADC        | STM32-LL | template params | Circular DMA mode. F7/H7 only. Todo: split off target-specific code. Needs modernizing |
+| BDMA       | CMSIS    | template struct | Most configurations supported (H7 only, not present on F7 or MP1) |
+| DMA2D      | CMSIS    |  -              | Supports FillRect with Rgb565 on H7, no other modes yet. (Not present on F7 or MP1) |
+| I2C        | STM32-HAL| config struct   | Blocking, IT, DMA modes |
+| Interrupt  | Cortex   | -               | Assign a lambda or any callable as any IRQ Handler at run-time. Supports NVIC (Cortex-M) and GIC (Cortex-A) |
+| MDMA       | CMSIS    | template struct | Supports mem-to-mem only. |
+| MPU        | CMSIS    |  -           	  | For disabling D-Cache on a memory region, Cortex-M only|
+| GPIO (Pin) | STM32-LL | init/ctor params| Supports all GPIO functions (except Locking?). Run-time values. |
+| GPIO (FPin)| CMSIS    | template params | "Fast Pin". Constexpr-configured, maximum efficiency. Supports high(), low(), read().
+| GPIO (pin change ISR) | CMSIS | template params | Assign ISR callback for rising and/or falling edge for any pin. Current implementation uses a config struct |
+| QSPI       | STM32-HAL| config struct   | Supports blocking and IT modes. Some chip-specific setup may be required in qspi_flash_registers.h file. Does not yet use mdrivlib::Interrupt class |
+| RCC        | CMSIS    |  -    	 	  | Safer wrapper over raw register access |
+| SAI        | STM32-HAL | config struct  | For streaming audio. DMA mode only. Supports RX- or TX-master. Provide it with tx/rx buffers and callbacks |
+
 
 #### External Chip Drivers:
 
@@ -55,7 +60,7 @@ See next section for description of Config types and HAL types.
 | Codec, I2C/I2S (WM8731) | config struct | Virtual class, ties I2C init with SAI+DMA init. Todo: make template class|
 | DAC, SPI (MCP48FVBxx)| template struct| Supports streaming and blocking modes |
 | GPIO Expander, I2C (TCA9535) | config struct | Supports inputs only (so far), I2C in IT mode |
-| LED Driver, I2C (PCA9685) | | Uses STM32-HAL, heavily (HAL callbacks). Supports DMA, IT, and blocking modes. Supports mono and RGB LEDs. Works well with Frame Buffer LED class |
+| LED Driver, I2C (PCA9685) | | Uses STM32-HAL, heavily (HAL callbacks). Supports DMA, IT, and blocking modes. Supports mono and RGB LEDs. Works well with Frame Buffer LED class. Needs modernizing |
 
 
 #### High-level helpers (target-agnostic):
@@ -69,6 +74,9 @@ See next section for description of Config types and HAL types.
 | GPIO Stream  | template struct | Same as DAC Stream, but for a GPIO Pin output |
 | Debounced Pin | template params |  Basic debouncing of physical pins (for buttons and other inputs). Requires `util` lib
 | Frame Buffer LED| -             | Allows random access to a contigious frame buffer, used with LED DMA or IT drivers |
+| QSPI Flash Cell Block | template params | Store and recall any data struct in a block or sector or FLASH memory, 
+| RGB LED      | -              | Supports color blending 24-bit color, floats, RGB565 mode, flashing and fading animations. Supports different LED element types (e.g. Red and Blue are PWM-controlled, but Green is GPIO-controlled)
+| Rotary Encoder | ctor params  | Supports half-step and full-step rotaries. Accumalates net position until read. |
 
 
 
