@@ -1,11 +1,18 @@
 #pragma once
 #include "adc_builtin_driver.hh"
-
+namespace mdrivlib
+{
 template<AdcPeriphNum p, AdcChanNum c, typename FILTER>
 struct AnalogInBuiltin : AdcChan<p, c> {
-	AnalogInBuiltin(GPIO port, uint8_t pin_num) { Pin pin(port, pin_num, PinMode::Analog); }
-	void read() { oversampler_.add_val(this->get_val()); }
-	auto get() { return oversampler_.val(); }
+	AnalogInBuiltin(GPIO port, uint8_t pin_num) {
+		Pin pin(port, pin_num, PinMode::Analog);
+	}
+	void read() {
+		oversampler_.add_val(this->get_val());
+	}
+	auto get() {
+		return oversampler_.val();
+	}
 
 private:
 	FILTER oversampler_;
@@ -19,8 +26,12 @@ struct AnalogInPtr {
 		Pin pin(port, pin_num, PinMode::Analog);
 	}
 
-	void read() { oversampler_.add_val(*(DMABUFFER + offset_)); }
-	auto get() { return oversampler_.val(); }
+	void read() {
+		oversampler_.add_val(*(DMABUFFER + offset_));
+	}
+	auto get() {
+		return oversampler_.val();
+	}
 
 private:
 	unsigned offset_;
@@ -28,4 +39,4 @@ private:
 };
 // Usage
 // AnalogInPtr<AdcChan<AdcPeriphNum::_1, AdcChanNum::_0>, adc_buffer, Oversampler<16>> freq_cv1 = {GPIO::A, 0};
-
+} // namespace mdrivlib
