@@ -12,13 +12,12 @@ enum class LEDDriverError {
 	IT_XMIT_ERR = 7
 };
 
-class ILedDmaDriver {
-public:
-	virtual LEDDriverError start() = 0;
-	virtual LEDDriverError start_dma_mode() = 0;
-	virtual void start_it_mode() = 0;
-	virtual LEDDriverError write_once(uint16_t chipid) = 0;
+// class ILedDmaDriver {
+// public:
+// 	virtual LEDDriverError start() = 0;
+// 	virtual LEDDriverError start_dma_mode() = 0;
+// 	virtual void start_it_mode() = 0;
+// 	virtual LEDDriverError write_once(uint16_t chipid) = 0;
 
-	virtual uint32_t *const get_buf_addr(const uint32_t chipid, const uint32_t ledid) = 0;
-};
-
+// 	virtual uint32_t *const get_buf_addr(const uint32_t chipid, const uint32_t ledid) = 0;
+// };

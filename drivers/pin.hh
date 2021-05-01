@@ -180,7 +180,7 @@ struct FPin {
 		_sethigh.set();
 	}
 	static bool read() {
-		static_assert(Mode == PinMode::Input, "Pin is not an intut, cannot read");
+		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
 		return _read.read();
 	}
 
