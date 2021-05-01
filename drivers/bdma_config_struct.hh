@@ -1,21 +1,11 @@
 #pragma once
 #include "stm32xx.h"
 
-struct BDMA_Config {
-	BDMA_TypeDef *BDMAx;
-	BDMA_Channel_TypeDef *stream;
-	uint32_t channel;
-	IRQn_Type IRQn;
-	uint32_t pri;
-	uint32_t subpri;
-	// bool continuous;
-};
-
 struct BDMA_Conf {
 	static constexpr unsigned BDMAx = 0;
 	static constexpr unsigned StreamNum = 0;
 	static constexpr unsigned RequestNum = 0;
-	static constexpr IRQn_Type IRQn = HardFault_IRQn;
+	static constexpr IRQn_Type IRQn = (IRQn_Type)0;
 	static constexpr uint32_t pri = 0;
 	static constexpr uint32_t subpri = 0;
 
@@ -24,9 +14,9 @@ struct BDMA_Conf {
 
 	static constexpr bool circular = false;
 
-	enum TransferSize {Byte, HalfWord, Word};
-	static constexpr TransferSize transfer_size_mem = Byte; //Dest, in P2P
-	static constexpr TransferSize transfer_size_periph = Byte; //Source, in M2M
+	enum TransferSize { Byte, HalfWord, Word };
+	static constexpr TransferSize transfer_size_mem = Byte;	   // Dest, in P2P
+	static constexpr TransferSize transfer_size_periph = Byte; // Source, in M2M
 
 	// Todo: Double-buffer mode
 
@@ -38,4 +28,3 @@ struct BDMA_Conf {
 
 	static constexpr bool half_transfer_interrupt_enable = false;
 };
-
