@@ -4,8 +4,7 @@
 
 class Uart {
 public:
-	Uart()
-	{
+	Uart() {
 		__HAL_RCC_USART6_CLK_ENABLE();
 		Pin tx{GPIO::G, 14, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 		Pin rx{GPIO::G, 9, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
@@ -24,11 +23,7 @@ public:
 		auto err = HAL_UART_Init(&hal_h);
 	}
 
-	void send(uint8_t *data, uint32_t len)
-	{
-
-		// HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t
-		// Timeout)
+	void send(uint8_t *data, uint32_t len) {
 		auto err = HAL_UART_Transmit(&hal_h, data, len, 10000);
 		if (err != HAL_OK) {
 			while (1)
@@ -39,4 +34,3 @@ public:
 private:
 	UART_HandleTypeDef hal_h;
 };
-

@@ -5,6 +5,7 @@
 #include "spi_registers.hh"
 #include "util/math.hh"
 
+// Todo: move to target-specific dir (is shared between H7 and MP1, so one can #include the other)
 namespace mdrivlib
 {
 template<typename ConfT>
