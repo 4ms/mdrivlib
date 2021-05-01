@@ -1,9 +1,12 @@
 #include "timekeeper.hh"
 #include "arch.hh"
+#include "clocks.hh"
 #include "interrupt.hh"
 #include "stm32xx.h"
 #include "tim.hh"
 
+namespace mdrivlib
+{
 Timekeeper::Timekeeper()
 	: is_running(false) {
 }
@@ -76,9 +79,8 @@ void Timekeeper::_set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pr
 		clock_division = max_clockdivider;
 	}
 
-	auto pri = System::encode_nvic_priority(priority1, priority2);
-	NVIC_SetPriority(irqn, pri);
-	NVIC_EnableIRQ(irqn);
+	target::System::set_irq_priority(irqn, priority1, priority2);
+	target::System::enable_irq(irqn);
 
 	TIMPeriph::init_periph(timx, period_clocks, prescaler, clock_division);
 
@@ -107,6 +109,7 @@ bool Timekeeper::tim_update_IT_is_source() const {
 void Timekeeper::tim_update_IT_clear() const {
 	LL_TIM_ClearFlag_UPDATE(timx);
 }
+} // namespace mdrivlib
 
 // Todo: allows doubling-up on the IRQs that have two TIM UP on a single IRQ.
 // e.g.: TIM1/TIM10, and TIM8/TIM13 share an ISR

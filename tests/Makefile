@@ -27,15 +27,17 @@ CXXFLAGS = 	-Wall \
 			-I$(DOCTESTHEADER_DIR) \
 			-I$(TEST_DIR) \
 			-I. \
-			-I../stm32/cmsis/include \
-			-I../stm32/device/include \
-			-I../stm32/periph/include \
+			-Idrivers \
+			-I/target/stm32h7x5 \
+			-I/target/stm32h7x5/drivers \
+			-I../cmsis-device/stm32h7x5/include \
+			-I../stm32-hal/stm32h7x5/include \
 			-I../../../shared \
-			-DSTM32H7 \
-			-DSTM32H755xx \
-			-DCORE_CM7 \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \
+			# -DSTM32H7 \
+			# -DSTM32H755xx \
+			# -DCORE_CM7 \
 
 ### Boilerplate below here:
 

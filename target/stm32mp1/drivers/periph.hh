@@ -4,26 +4,24 @@
 
 namespace mdrivlib
 {
-namespace stm32h7x5
+namespace stm32mp1
+{
+namespace core_a7
 {
 namespace peripherals
 {
+
 struct GPIO {
-	const static inline uint32_t NumPeriph = 10;
+	const static inline uint32_t NumPeriph = 12; // But only 11 are contigious. Where is this used?
 };
 struct ADC {
-	const static inline uint32_t NumPeriph = 3;
+	const static inline uint32_t NumPeriph = 2;
 	static unsigned to_num(ADC_TypeDef *ADCx) {
-		if (ADCx == nullptr)
-			return 0;
-		else if (ADCx == ADC1)
+		if (ADCx == ADC1)
 			return 1;
-		else if (ADCx == ADC2)
+		if (ADCx == ADC2)
 			return 2;
-		else if (ADCx == ADC3)
-			return 3;
-		else
-			return 0;
+		return 0;
 	}
 };
 struct SAI {
@@ -69,7 +67,7 @@ struct TIM {
 		if (TIM == nullptr)
 			return (IRQn_Type)(0);
 		else if (TIM == TIM1)
-			return TIM1_UP_TIM10_IRQn;
+			return TIM1_UP_IRQn;
 		else if (TIM == TIM2)
 			return TIM2_IRQn;
 		else if (TIM == TIM3)
@@ -79,23 +77,23 @@ struct TIM {
 		else if (TIM == TIM5)
 			return TIM5_IRQn;
 		else if (TIM == TIM6)
-			return TIM6_DAC_IRQn;
+			return TIM6_IRQn;
 		else if (TIM == TIM7)
 			return TIM7_IRQn;
 		else if (TIM == TIM8)
-			return TIM8_UP_TIM13_IRQn;
-		else if (TIM == TIM9)
-			return TIM1_BRK_TIM9_IRQn;
-		else if (TIM == TIM10)
-			return TIM1_UP_TIM10_IRQn;
-		else if (TIM == TIM11)
-			return TIM1_TRG_COM_TIM11_IRQn;
+			return TIM8_UP_IRQn;
+		// else if (TIM == TIM9)
+		//   return TIM9_IRQn;
+		// else if (TIM == TIM10)
+		//   return TIM10_IRQn;
+		// else if (TIM == TIM11)
+		//   return TIM1_TRG_COM_TIM11_IRQn;
 		else if (TIM == TIM12)
-			return TIM8_BRK_TIM12_IRQn;
+			return TIM12_IRQn;
 		else if (TIM == TIM13)
-			return TIM8_UP_TIM13_IRQn;
+			return TIM13_IRQn;
 		else if (TIM == TIM14)
-			return TIM8_TRG_COM_TIM14_IRQn;
+			return TIM14_IRQn;
 		else if (TIM == TIM15)
 			return TIM15_IRQn;
 		else if (TIM == TIM16)
@@ -106,18 +104,20 @@ struct TIM {
 			return (IRQn_Type)(0);
 	}
 	static uint32_t max_freq(TIM_TypeDef *TIM) {
-		uint32_t D2PPREx;
-		auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
+		// Todo: implement this
+		return 104000000;
+		// return SystemCore1Clock / 4;
 
-		// Todo: read D2PPREx from Clocks:: (D2PPRE1 or D2PPRE2)
-		if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
-			D2PPREx = 2;
-		else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
-			D2PPREx = 2; // (1 / D2PPRE2) * 2, where D2PPRE2 = 2 by default
-		else
-			D2PPREx = 2; // unknown, error?
+		// uint32_t D2PPREx;
+		// auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
+		// if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
+		//   D2PPREx = 2;
+		// else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
+		//   D2PPREx = 2; // (1 / D2PPRE2) * 2, where D2PPRE2 = 2 by default
+		// else
+		//   D2PPREx = 2; // unknown, error?
 
-		return (HAL_RCC_GetHCLKFreq() / D2PPREx) * 2; // The x2 is from CubeMX Clock Configuration graphical tab
+		// return (HAL_RCC_GetHCLKFreq() / D2PPREx) * 2; // The x2 is from CubeMX Clock Configuration graphical tab
 	}
 	static constexpr uint32_t max_period(unsigned tim_periph_num) {
 		if (tim_periph_num == 2 || tim_periph_num == 5)
@@ -137,44 +137,6 @@ struct TIM {
 	}
 };
 } // namespace peripherals
-} // namespace stm32h7x5
-
-namespace stm32f7xx
-{
-namespace peripherals
-{
-struct TIM {
-	static uint32_t max_freq(TIM_TypeDef *TIM) {
-		// APB2 --> divider = 1;
-		// APB1 --> divider = 2;
-		uint32_t divider;
-		auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
-		if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
-			divider = 2;
-		else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
-			divider = 1;
-		else
-			divider = 1; // unknown, error?
-		return HAL_RCC_GetHCLKFreq() / divider;
-	}
-	static constexpr uint32_t max_period(unsigned tim_periph_num) {
-		return 65535;
-	}
-	static constexpr uint32_t max_prescaler(unsigned tim_periph_num) {
-		return 255;
-	}
-	static constexpr uint32_t max_clockdivider(unsigned tim_periph_num) {
-		// if (tim_periph_num == 1)
-		// 	return 255;
-		return 255;
-	}
-	static constexpr uint32_t next_allowed_clockdivision(uint32_t tim_periph_num, uint32_t clock_division) {
-		return clock_division + 1;
-	}
-};
-
-} // namespace peripherals
-
-} // namespace stm32f7xx
-
+} // namespace core_a7
+} // namespace stm32mp1
 } // namespace mdrivlib

@@ -158,8 +158,4 @@ void PendSV_Handler() {
 	while (1)
 		;
 }
-void __cxa_pure_virtual() {
-	while (1)
-		;
-}
 }

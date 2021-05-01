@@ -5,12 +5,14 @@
 #include "spi_registers.hh"
 #include "util/math.hh"
 
-// namespace mdrivlib {
-// namespace stm32h7x5 {
+// Todo: move to target-specific dir (is shared between H7 and MP1, so one can #include the other)
+namespace mdrivlib
+{
 template<typename ConfT>
 struct SpiPeriph {
 public:
 	static inline const unsigned N = ConfT::PeriphNum;
+
 	template<unsigned M>
 	using IER = typename target::SPI<N>::template IER<M>;
 	template<unsigned M>
@@ -59,10 +61,10 @@ public:
 				Pin init_cs3{ConfT::CS3, PinMode::Output};
 				unselect<3>();
 			}
-			static_assert(ConfT::NumChips <= 4, "SpiPeriph only supports selecting 1-4 chips");
+			static_assert(ConfT::NumChips <= 4, "mdrivlib::SpiPeriph only supports selecting 1-4 chips");
 		}
 
-		target::RCC_Control::SPI<N>::Reg::set();
+		target::RCC_Enable::SPI<N>::set();
 
 		// Todo: make configurable
 		CR1<SPI_CR1_IOLOCK>::clear();
@@ -328,4 +330,4 @@ private:
 	FPin<ConfT::CS2.gpio, ConfT::CS2.pin> CS2;
 	FPin<ConfT::CS3.gpio, ConfT::CS3.pin> CS3;
 };
-// end spi.hh
+} // namespace mdrivlib

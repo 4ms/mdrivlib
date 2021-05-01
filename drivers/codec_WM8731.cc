@@ -29,6 +29,12 @@
 #include "codec_WM8731.hh"
 #include "codec_WM8731_registers.h"
 
+// #ifdef STM32H7
+static constexpr bool DISABLE_I2C = false;
+// #else
+// static constexpr bool DISABLE_I2C = true;
+// #endif
+
 namespace mdrivlib
 {
 using namespace _CodecWM8731;
@@ -54,6 +60,9 @@ CodecWM8731::CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef)
 	: i2c_(i2c)
 	, sai_{saidef}
 	, samplerate_{saidef.samplerate} {
+}
+
+void CodecWM8731::init() {
 	init_at_samplerate(samplerate_);
 	sai_.init();
 }
@@ -122,9 +131,10 @@ CodecWM8731::Error CodecWM8731::_write_register(uint8_t reg_address, uint16_t re
 	uint8_t Byte2 = reg_value & 0xFF;
 	uint8_t data[2] = {Byte1, Byte2};
 
-	auto err = i2c_.write(CODEC_ADDRESS, data, 2);
-	// auto err = I2CPeriph::I2C_INIT_ERR;
+	if constexpr (DISABLE_I2C)
+		return CODEC_NO_ERR;
 
+	auto err = i2c_.write(CODEC_ADDRESS, data, 2);
 	// auto err = i2c_.mem_write(CODEC_ADDRESS, Byte1, REGISTER_ADDR_SIZE, &Byte2, 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
@@ -141,4 +151,3 @@ DMA_HandleTypeDef *CodecWM8731::get_tx_dmahandle() {
 	return sai_.get_tx_dmahandle();
 }
 } // namespace mdrivlib
-

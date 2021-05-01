@@ -4,6 +4,8 @@
 #include "sai_config_struct.hh"
 #include <cstdint>
 
+namespace mdrivlib
+{
 class SaiPeriph {
 public:
 	enum Error {
@@ -64,4 +66,4 @@ private:
 	volatile uint32_t *dma_isr_reg;
 	volatile uint32_t *dma_ifcr_reg;
 };
-
+} // namespace mdrivlib

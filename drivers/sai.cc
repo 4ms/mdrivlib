@@ -1,8 +1,11 @@
 #include "sai.hh"
+#include "clocks.hh"
 #include "interrupt.hh"
 #include "stm32xx.h"
 #include "system.hh"
 
+namespace mdrivlib
+{
 DMA_HandleTypeDef *SaiPeriph::get_rx_dmahandle() {
 	return &hdma_rx;
 }
@@ -14,10 +17,13 @@ DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() {
 SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
+	Clocks::SAI::reset(saidef_.sai);
 	Clocks::SAI::enable(saidef_.sai);
 
 	Clocks::DMA::enable(saidef_.dma_init_rx.DMAx);
 	Clocks::DMA::enable(saidef_.dma_init_tx.DMAx);
+	Clocks::DMAMUX::enable();
+
 	{
 		// Todo: swap order: always init slave first
 		_config_tx_sai();
@@ -39,12 +45,12 @@ SaiPeriph::Error SaiPeriph::init() {
 	__HAL_SAI_ENABLE(&hsai_tx);
 
 	tx_irqn = saidef_.dma_init_tx.IRQn;
-	HAL_NVIC_SetPriority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
-	HAL_NVIC_DisableIRQ(tx_irqn);
+	target::System::set_irq_priority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
+	target::System::disable_irq(tx_irqn);
 
 	rx_irqn = saidef_.dma_init_rx.IRQn;
-	HAL_NVIC_SetPriority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
-	HAL_NVIC_DisableIRQ(rx_irqn);
+	target::System::set_irq_priority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
+	target::System::disable_irq(rx_irqn);
 
 	return SAI_NO_ERR;
 }
@@ -58,13 +64,13 @@ void SaiPeriph::_config_rx_sai() {
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		hsai_rx.Init.AudioMode = SAI_MODEMASTER_RX;
 		hsai_rx.Init.Synchro = SAI_ASYNCHRONOUS;
-#if defined(STM32H7)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 #endif
 	} else {
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
-#if defined(STM32H7)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 #endif
 	}
@@ -76,7 +82,7 @@ void SaiPeriph::_config_rx_sai() {
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_rx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_rx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-#if defined(STM32H7)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_rx.Init.PdmInit.Activation = DISABLE;
 #endif
@@ -92,13 +98,13 @@ void SaiPeriph::_config_tx_sai() {
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
 		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
-#if defined(STM32H7)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 #endif
 	} else {
 		hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
 		hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
-#if defined(STM32H7)
+#if defined(STM32H7x5) || defined(STM32MP1)
 		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 #endif
 	}
@@ -110,7 +116,7 @@ void SaiPeriph::_config_tx_sai() {
 	hsai_tx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_tx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_tx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-#if defined(STM32H7)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_tx.Init.PdmInit.Activation = DISABLE;
 #endif
@@ -128,19 +134,13 @@ SaiPeriph::Error SaiPeriph::_init_sai_protocol() {
 }
 
 void SaiPeriph::_config_rx_dma() {
-	hdma_rx.Instance = saidef_.dma_init_rx.stream;
-
-#if defined(STM32H755xx) || defined(STM32H745xx)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hdma_rx.Init.Request = saidef_.dma_init_rx.channel;
-#else
-#if defined(STM32H7)
-	hdma_rx.Init.Request = saidef_.dma_init_rx.channel;
-#endif
-#if defined(STM32F7)
+#elif defined(STM32F7)
 	hdma_rx.Init.Channel = saidef_.dma_init_rx.channel;
 #endif
-#endif
 
+	hdma_rx.Instance = saidef_.dma_init_rx.stream;
 	hdma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
 	hdma_rx.Init.PeriphInc = DMA_PINC_DISABLE;
 	hdma_rx.Init.MemInc = DMA_MINC_ENABLE;
@@ -158,17 +158,13 @@ void SaiPeriph::_config_rx_dma() {
 }
 
 void SaiPeriph::_config_tx_dma() {
-	hdma_tx.Instance = saidef_.dma_init_tx.stream;
-#if defined(STM32H755xx) || defined(STM32H745xx)
+#if defined(STM32H7x5) || defined(STM32MP1)
 	hdma_tx.Init.Request = saidef_.dma_init_tx.channel;
-#else
-#if defined(STM32H7)
-	hdma_tx.Init.Request = saidef_.dma_init_tx.channel;
-#endif
-#if defined(STM32F7)
+#elif defined(STM32F7)
 	hdma_tx.Init.Channel = saidef_.dma_init_tx.channel;
 #endif
-#endif
+
+	hdma_tx.Instance = saidef_.dma_init_tx.stream;
 	hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
 	hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
 	hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
@@ -291,16 +287,14 @@ void SaiPeriph::start() {
 		}
 	});
 
-	if (saidef_.mode == SaiConfig::RXMaster)
-		HAL_NVIC_EnableIRQ(rx_irqn);
-	else
-		HAL_NVIC_EnableIRQ(tx_irqn);
+	target::System::enable_irq(_irqn);
 
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
 }
 
 void SaiPeriph::stop() {
-	HAL_NVIC_DisableIRQ(tx_irqn);
-	HAL_NVIC_DisableIRQ(rx_irqn);
+	target::System::disable_irq(tx_irqn);
+	target::System::disable_irq(rx_irqn);
 }
+} // namespace mdrivlib

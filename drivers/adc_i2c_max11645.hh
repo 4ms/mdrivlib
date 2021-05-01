@@ -1,6 +1,5 @@
 #pragma once
 #include "adc_i2c_config_struct.hh"
-#include "debug.hh"
 #include "i2c.hh"
 #include "pin.hh"
 #include "stm32xx.h"

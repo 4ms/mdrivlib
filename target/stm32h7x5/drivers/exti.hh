@@ -1,16 +1,12 @@
 #pragma once
-#include "register_access.hh"
-#include "stm32xx.h"
+#include "drivers/register_access.hh"
+#include "drivers/stm32xx.h"
 
 namespace mdrivlib
 {
-
 namespace stm32h7x5
 {
-
-using SYSCFG_FMP = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, PMCR), 0, 7>;
-
-namespace SYSCFG_EXTI
+namespace EXTI_
 {
 using Pin0 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 0, 3>;
 using Pin1 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 4, 3>;
@@ -40,7 +36,7 @@ constexpr uint8_t PortH = 7;
 constexpr uint8_t PortI = 8;
 constexpr uint8_t PortJ = 9;
 constexpr uint8_t PortK = 10;
-} // namespace SYSCFG_EXTI
+} // namespace EXTI_
 
 using EXTI_IMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, IMR1), 0xFFFFFFFF>;
 using EXTI_EMR1 = RegisterBits<ReadWrite, EXTI_BASE + offsetof(EXTI_TypeDef, EMR1), 0xFFFFFFFF>;

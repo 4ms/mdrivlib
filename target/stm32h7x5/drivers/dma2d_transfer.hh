@@ -13,15 +13,14 @@ struct DMA2DTransfer {
 	static volatile inline bool is_dma2d_done;
 
 	void init() {
-		RCC_Control::DMA2D_::set();
-		NVIC_DisableIRQ(DMA2D_IRQn);
+		target::RCC_Enable::DMA2D_::set();
+		target::System::disable_irq(DMA2D_IRQn);
 		InterruptManager::registerISR(DMA2D_IRQn, [&]() {
 			DMA2D->IFCR = DMA2D->IFCR | DMA2D_IFCR_CTCIF;
 			is_dma2d_done = true;
-			NVIC_DisableIRQ(DMA2D_IRQn);
+			target::System::disable_irq(DMA2D_IRQn);
 		});
-		auto pri = System::encode_nvic_priority(0, 0);
-		NVIC_SetPriority(DMA2D_IRQn, pri);
+		target::System::set_irq_priority(DMA2D_IRQn, 0, 0);
 		is_dma2d_done = true;
 	}
 
@@ -39,12 +38,12 @@ struct DMA2DTransfer {
 		DMA2D->CR = (0b011 << DMA2D_CR_MODE_Pos) | DMA2D_CR_TCIE; // clear everything else
 
 		is_dma2d_done = false;
-		NVIC_EnableIRQ(DMA2D_IRQn);
+		target::System::enable_irq(DMA2D_IRQn);
 		DMA2D->CR |= DMA2D_CR_START;
 
 		while (!is_dma2d_done) {
 		}
-		NVIC_DisableIRQ(DMA2D_IRQn);
+		target::System::disable_irq(DMA2D_IRQn);
 	}
 };
 

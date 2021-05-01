@@ -1,6 +1,32 @@
 #pragma once
 #include "stm32xx.h"
-#include "system.hh"
+
+struct DefaultDMAConf {
+	static constexpr unsigned DMAx = 0;
+	static constexpr unsigned StreamNum = 0;
+	static constexpr unsigned RequestNum = 0;
+	static constexpr IRQn_Type IRQn = (IRQn_Type)0;
+	static constexpr uint32_t pri = 0;
+	static constexpr uint32_t subpri = 0;
+
+	enum Direction { Mem2Mem, Mem2Periph, Periph2Mem, Periph2Periph };
+	static constexpr Direction dir = Mem2Periph;
+
+	static constexpr bool circular = false;
+
+	enum TransferSize { Byte, HalfWord, Word };
+	static constexpr TransferSize transfer_size_mem = Byte;	   // Dest, in P2P
+	static constexpr TransferSize transfer_size_periph = Byte; // Source, in M2M
+
+	// Todo: Double-buffer mode
+	enum Priority { Low = 0, Medium = 1, High = 2, VeryHigh = 3 };
+	static constexpr uint8_t dma_priority = Low;
+
+	static constexpr bool mem_inc = true;
+	static constexpr bool periph_inc = false;
+
+	static constexpr bool half_transfer_interrupt_enable = false;
+};
 
 struct DMA_Config {
 	DMA_TypeDef *DMAx;
@@ -22,47 +48,10 @@ struct DMA_LL_Config {
 	// bool continuous;
 };
 
-struct BDMA_Config {
-	BDMA_TypeDef *BDMAx;
-	BDMA_Channel_TypeDef *stream;
-	uint32_t channel;
-	IRQn_Type IRQn;
-	uint32_t pri;
-	uint32_t subpri;
-	// bool continuous;
-};
-
-struct BDMA_Conf {
-	static constexpr unsigned BDMAx = 0;
-	static constexpr unsigned StreamNum = 0;
-	static constexpr unsigned RequestNum = 0;
-	static constexpr IRQn_Type IRQn = HardFault_IRQn;
-	static constexpr uint32_t pri = 0;
-	static constexpr uint32_t subpri = 0;
-
-	enum Direction { Mem2Mem, Mem2Periph, Periph2Mem, Periph2Periph };
-	static constexpr Direction dir = Mem2Periph;
-
-	static constexpr bool circular = false;
-
-	enum TransferSize {Byte, HalfWord, Word};
-	static constexpr TransferSize transfer_size_mem = Byte; //Dest, in P2P
-	static constexpr TransferSize transfer_size_periph = Byte; //Source, in M2M
-
-	// Todo: Double-buffer mode
-
-	enum Priority { Low = 0, Medium = 1, High = 2, VeryHigh = 3 };
-	static constexpr uint8_t dma_priority = Low;
-
-	static constexpr bool mem_inc = true;
-	static constexpr bool periph_inc = false;
-
-	static constexpr bool half_transfer_interrupt_enable = false;
-};
-
 // Todo: this should be in some dma manager class
 
-#if defined(BDMA)
+#if defined(HAS_BDMA)
+
 template<typename T>
 constexpr volatile uint32_t *dma_get_ISR_reg(T stream) {
 	uint32_t s = (uint32_t)stream;
@@ -82,9 +71,9 @@ constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 		 : s > (uint32_t)DMA1_Stream3 ? &(DMA1->HIFCR)
 									  : &(DMA1->LIFCR);
 }
-#endif
 
-#if !defined(BDMA)
+#else
+
 template<typename T>
 constexpr volatile uint32_t *dma_get_ISR_reg(T stream) {
 	uint32_t s = (uint32_t)stream;
@@ -102,6 +91,7 @@ constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 		 : s > (uint32_t)DMA1_Stream3 ? &(DMA1->HIFCR)
 									  : &(DMA1->LIFCR);
 }
+
 #endif
 
 template<typename T>
@@ -123,7 +113,7 @@ constexpr uint32_t dma_get_TC_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_TCIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_TCIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_TCIF3_7
-#if defined(BDMA)
+#if defined(HAS_BDMA)
 		 : s == ((uint32_t)BDMA_Channel0) ? BDMA_FLAG_TC0
 		 : s == ((uint32_t)BDMA_Channel1) ? BDMA_FLAG_TC1
 		 : s == ((uint32_t)BDMA_Channel2) ? BDMA_FLAG_TC2
@@ -155,7 +145,7 @@ constexpr uint32_t dma_get_TE_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_TEIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_TEIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_TEIF3_7
-#if defined(BDMA)
+#if defined(HAS_BDMA)
 		 : s == ((uint32_t)BDMA_Channel0) ? BDMA_FLAG_TE0
 		 : s == ((uint32_t)BDMA_Channel1) ? BDMA_FLAG_TE1
 		 : s == ((uint32_t)BDMA_Channel2) ? BDMA_FLAG_TE2
@@ -187,7 +177,7 @@ constexpr uint32_t dma_get_HT_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_HTIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_HTIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_HTIF3_7
-#if defined(BDMA)
+#if defined(HAS_BDMA)
 		 : s == ((uint32_t)BDMA_Channel0) ? BDMA_FLAG_HT0
 		 : s == ((uint32_t)BDMA_Channel1) ? BDMA_FLAG_HT1
 		 : s == ((uint32_t)BDMA_Channel2) ? BDMA_FLAG_HT2

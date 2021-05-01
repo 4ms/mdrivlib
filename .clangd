@@ -1,14 +1,14 @@
----
 CompileFlags:
 	Add: [
-		"-I../shared/doctest/doctest",
-		"-Ilib/mdrivlib/drivers",
+		"-std=gnu++2a",
+		"--target=arm-none-eabi",
+	]
+---
+If:
+	PathMatch: [".*test.*"]
+CompileFlags:
+	Add: [
 		"-Ilib/mdrivlib/tests",
 		"-Ilib/mdrivlib/tests/stubs",
 		"-Ilib/mdrivlib/tests/stubs/stm32",
-		"-std=gnu++2a",
-		"--target=arm-none-eabi",
-		"-DSTM32H7",
-		"-DSTM32H755xx",
-		"-DCORE_CM7",
 	]

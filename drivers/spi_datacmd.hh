@@ -41,9 +41,8 @@ protected:
 			}
 		});
 		_ready = true;
-		auto pri = System::encode_nvic_priority(ConfT::SpiConf::priority1, ConfT::SpiConf::priority2);
-		NVIC_SetPriority(ConfT::SpiConf::IRQn, pri);
-		NVIC_EnableIRQ(ConfT::SpiConf::IRQn);
+		target::System::set_irq_priority(ConfT::SpiConf::IRQn, ConfT::SpiConf::priority1, ConfT::SpiConf::priority2);
+		target::System::enable_irq(ConfT::SpiConf::IRQn);
 		spi.enable_end_of_xfer_interrupt();
 	}
 
@@ -150,4 +149,3 @@ protected:
 		spi.enable();
 	}
 };
-

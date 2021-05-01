@@ -4,21 +4,13 @@
 
 namespace mdrivlib
 {
-// namespace stm32h7x5 { //Todo: is this universal or target-specific?
-
 class CycleCounter {
 public:
 	CycleCounter() {
 		init();
 	}
 
-	void init() {
-		if (!(DWT->CTRL & DWT_CTRL_NOCYCCNT_Msk)) {
-			CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-			DWT->LAR = 0xC5ACCE55;
-			DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-		}
-	}
+	void init();
 
 	void start_measurement() {
 		_start_tm = read_cycle_count();
@@ -56,8 +48,6 @@ private:
 	uint32_t _measured_tm = 0;
 	uint32_t _period = 0;
 
-	uint32_t read_cycle_count() {
-		return DWT->CYCCNT;
-	}
+	uint32_t read_cycle_count();
 };
 } // namespace mdrivlib

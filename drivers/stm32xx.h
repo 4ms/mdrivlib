@@ -3,30 +3,33 @@
 #ifndef STM32XX_H_INCLUDE_ONCE
 #define STM32XX_H_INCLUDE_ONCE
 
-#ifdef STM32F7
+#if defined(STM32F7)
 #include "stm32f7xx.h"
-#else
-#ifdef STM32H7
+
+#elif defined(STM32H7)
 #include "stm32h7xx.h"
-#else
-#ifdef STM32F4
+
+#elif defined(STM32F4)
 #include "stm32f4xx.h"
-#else
-#ifdef STM32MP1
-#ifdef CORE_CM4
+
+#elif defined(STM32MP1)
+
+#if defined(CORE_CM4)
+#include "stm32mp1xx.h"
+#elif defined(CORE_CA7)
 #include "stm32mp1xx.h"
 #else
-#error "STM32MP1 is defined, but not CORE_CM4. This library does not support Cortex-A cores"
+#error "STM32MP1 is #defined, but not CORE_CM4 or CORE_CA7"
 #endif
+
+#elif defined(TESTPROJECT)
+#include "stubs/stm32/cmsis_periphs.hh"
 #else
 #error                                                                                                                 \
 	"Please #define STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile. Other targets are not yet supported."
 #endif
-#endif
-#endif
-#endif
 
-// Peripheral names not defined in CMSIS header will be set to nullptr
+// Peripheral names not defined in CMSIS header will be set to nullptr or 0
 
 #ifndef ADC1
 #define ADC1 nullptr
@@ -137,6 +140,13 @@
 #endif
 #ifndef SPI6
 #define SPI6 nullptr
+#endif
+
+#ifndef BDMA
+#undef HAS_BDMA
+#define BDMA 0
+#else
+#define HAS_BDMA
 #endif
 
 #endif //#ifndef STM32XX_H_INCLUDE_ONCE

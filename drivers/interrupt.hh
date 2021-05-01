@@ -7,13 +7,13 @@ using IRQType = IRQn_Type;
 #ifdef TESTPROJECT
 #include "stubs/system.hh"
 #else
-#include "drivers/system.hh"
+#include "arch.hh"
+#include "system.hh"
 #endif
 
 #include <functional>
 
-// Interrupt class
-// register a callable object (e.g. lambda) to an IRQType
+// Interrupt Manager class
 class Interrupt {
 public:
 	// Todo: Try inplace_function<void(void)> instead of std::function
@@ -27,16 +27,18 @@ public:
 		ISRs[irqnum] = std::move(func);
 	}
 
+	// Register a callable object (e.g. lambda) to respond to an IRQ
 	static void registerISR(IRQType irqnum, ISRType &&func) {
 		ISRs[irqnum] = std::move(func);
 	}
 
+	// Register a callable object (e.g. lambda) to respond to an IRQ
+	// Sets the priority and enables the IRQ immediately
 	static void registerISR(IRQType irqnum, unsigned priority1, unsigned priority2, ISRType &&func) {
-		NVIC_DisableIRQ(irqnum);
-		auto pri = System::encode_nvic_priority(priority1, priority2);
-		NVIC_SetPriority(irqnum, pri);
+		target::System::disable_irq(irqnum);
+		target::System::set_irq_priority(irqnum, priority1, priority2);
 		ISRs[irqnum] = std::move(func);
-		NVIC_EnableIRQ(irqnum);
+		target::System::enable_irq(irqnum);
 	}
 
 	static inline void callISR(uint32_t irqnum) {

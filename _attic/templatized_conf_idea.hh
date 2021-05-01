@@ -89,7 +89,7 @@ namespace Clocks
 template<unsigned pn>
 struct SAIs {
 	static void enable() {
-		std::variant_alternative_t<pn - 1, target::RCC_Control::SAI_variant>::set();
+		std::variant_alternative_t<pn - 1, target::RCC_Enable::SAI>::set();
 		// instead of if periph_num==1/else if/else if/...
 	}
 };

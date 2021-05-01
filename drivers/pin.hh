@@ -51,6 +51,7 @@ enum class PinOType : uint32_t {
 	OpenDrain = LL_GPIO_OUTPUT_OPENDRAIN,
 };
 
+// GPIOx_BASE are defined in the CMSIS header that's included from stm32xx.h
 enum class GPIO : uint32_t {
 	A = GPIOA_BASE,
 	B = GPIOB_BASE,
@@ -68,6 +69,9 @@ enum class GPIO : uint32_t {
 #endif
 #ifdef GPIOK_BASE
 	K = GPIOK_BASE,
+#endif
+#ifdef GPIOZ_BASE
+	Z = GPIOZ_BASE,
 #endif
 };
 
@@ -155,9 +159,11 @@ using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GP
 
 template<enum GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output>
 struct FPin {
+	static constexpr auto Gpio_v = Gpio;
+	static constexpr auto PinNum_v = PinNum;
 
 	// Todo: do our own init here using RegisterBits, don't rely on Pin class
-	// Will still need to depend on RCC_Control class
+	// Will still need to depend on RCC_Enable class
 	FPin() {
 		Pin init{Gpio, PinNum, Mode};
 	}
@@ -174,7 +180,7 @@ struct FPin {
 		_sethigh.set();
 	}
 	static bool read() {
-		static_assert(Mode == PinMode::Input, "Pin is not an intut, cannot read");
+		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
 		return _read.read();
 	}
 
@@ -183,4 +189,3 @@ private:
 	static PinSetHigh<Gpio, PinNum> _sethigh;
 	static PinRead<Gpio, PinNum> _read;
 };
-

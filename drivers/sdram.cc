@@ -149,7 +149,7 @@ void SDRAMPeriph::start_refresh() {
 
 void SDRAMPeriph::init_gpio() {
 	// Hack for H7x5: pins PC_2C and PC_3C must be configured. See RM0399 Rev 3, page 588
-	target::RCC_Control::SYSCFG_::set();
+	target::RCC_Enable::SYSCFG_::set();
 	SYSCFG->PMCR = SYSCFG->PMCR & ~(SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk);
 
 	for (auto &pind : defs.pin_list.pin_array) {

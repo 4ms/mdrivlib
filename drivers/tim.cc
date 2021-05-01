@@ -1,7 +1,11 @@
 #include "tim.hh"
 #include "arch.hh"
+#include "clocks.hh"
 #include "periph.hh"
 #include "system.hh"
+
+namespace mdrivlib
+{
 
 void TIMPeriph::init_periph(TIM_TypeDef *TIM, uint32_t period, uint16_t prescaler, uint32_t clock_division) {
 	Clocks::TIM::enable(TIM);
@@ -26,4 +30,4 @@ void TIMPeriph::init_periph_once(TIM_TypeDef *TIM, uint32_t period, uint16_t pre
 
 	did_init[tim_i - 1] = true;
 }
-
+} // namespace mdrivlib

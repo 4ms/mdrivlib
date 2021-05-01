@@ -28,11 +28,14 @@
 
 #pragma once
 
+#include "clocks.hh"
 #include "dma_config_struct.hh"
 #include "pin.hh"
 #include "stm32xx.h"
 #include <array>
 
+namespace mdrivlib
+{
 enum class AdcChanNum { _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15 };
 enum class AdcPeriphNum { _1, _2, _3 };
 
@@ -53,10 +56,16 @@ public:
 		AdcPeriph<ADCN>::add_channel(c, sampletime);
 	}
 
-	static T *const get_val_ptr() { return AdcPeriph<ADCN>::get_val_ptr(c); }
-	static const T &get_val_ref() { return AdcPeriph<ADCN>::get_val_ref(c); }
+	static T *const get_val_ptr() {
+		return AdcPeriph<ADCN>::get_val_ptr(c);
+	}
+	static const T &get_val_ref() {
+		return AdcPeriph<ADCN>::get_val_ref(c);
+	}
 
-	T get_val() { return AdcPeriph<ADCN>::get_val(c); }
+	T get_val() {
+		return AdcPeriph<ADCN>::get_val(c);
+	}
 
 	// void start_dma(const DMA_LL_Config dma_defs)
 	// {
@@ -75,7 +84,9 @@ public:
 	static void enable_DMA_IT();
 	static void start_adc();
 
-	static uint16_t get_val(const AdcChanNum channel) { return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]]; }
+	static uint16_t get_val(const AdcChanNum channel) {
+		return dma_buffer_[ranks_[static_cast<uint8_t>(channel)]];
+	}
 
 	static uint16_t *const get_val_ptr(const AdcChanNum channel) {
 		return &(dma_buffer_[ranks_[static_cast<uint8_t>(channel)]]);
@@ -101,9 +112,10 @@ private:
 	static inline uint8_t DMA_IRQ_subpri;
 
 	static ADC_TypeDef *get_ADC_base(AdcPeriphNum p = ADCN) {
-		return (p == AdcPeriphNum::_1)	 ? ADC1
-			   : (p == AdcPeriphNum::_2) ? ADC2
-			   : (p == AdcPeriphNum::_3) ? ADC3
-										 : nullptr;
+		return (p == AdcPeriphNum::_1) ? ADC1
+			 : (p == AdcPeriphNum::_2) ? ADC2
+			 : (p == AdcPeriphNum::_3) ? ADC3
+									   : nullptr;
 	}
 };
+} // namespace mdrivlib

@@ -1,6 +1,5 @@
 #pragma once
 #include "arch.hh"
-#include "debug.hh" //FixMe: remove when done debugging (not an mdrivlib file!)
 #include "dma_config_struct.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
@@ -13,9 +12,6 @@ namespace stm32h7x5
 {
 template<typename ConfT>
 struct BDMATransfer {
-	// Todo: use a callback with 1 argument for HT mode: 0 = first half, 1=second half
-	static_assert(ConfT::half_transfer_interrupt_enable == false, "Half Transfer is not supported yet :(");
-
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
@@ -30,7 +26,7 @@ struct BDMATransfer {
 	DMAMUX_Channel_TypeDef *dmamux_chan;
 
 	BDMATransfer() {
-		target::RCC_Control::BDMA_P::set();
+		target::RCC_Enable::BDMA_::set();
 
 		if constexpr (ConfT::StreamNum == 0) {
 			stream = BDMA_Channel0;

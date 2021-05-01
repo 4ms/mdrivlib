@@ -1,8 +1,10 @@
 #pragma once
 #include "pin.hh"
-#include "stm32f7xx_ll_tim.h"
+#include "stm32xx.h"
 #include "tim.hh"
 
+namespace mdrivlib
+{
 enum class TimChannelNum {
 	_1 = LL_TIM_CHANNEL_CH1,
 	_1N = LL_TIM_CHANNEL_CH1N,
@@ -33,8 +35,7 @@ public:
 				  uint16_t prescaler = 1,
 				  uint32_t clock_division = 0)
 		: TIM_(TIM)
-		, channel_(channel)
-	{
+		, channel_(channel) {
 		TIMPeriph::init_periph(TIM, period, prescaler, clock_division);
 
 		if (IS_TIM_BREAK_INSTANCE(TIM))
@@ -71,27 +72,23 @@ public:
 		LL_TIM_EnableCounter(TIM_);
 	}
 
-	constexpr void set(uint32_t val) const
-	{
+	constexpr void set(uint32_t val) const {
 		_set_timer_ccr(TIM_, channel_base_, val);
 	}
-	void start_output() const
-	{
+	void start_output() const {
 		LL_TIM_CC_EnableChannel(TIM_, static_cast<uint32_t>(channel_));
 	}
-	void stop_output() const
-	{
+	void stop_output() const {
 		LL_TIM_CC_DisableChannel(TIM_, static_cast<uint32_t>(channel_));
 	}
 
 protected:
 	TimPwmChannel()
-		: TIM_(nullptr)
-	{}
+		: TIM_(nullptr) {
+	}
 
 private:
-	constexpr void _set_timer_ccr(TIM_TypeDef *TIMx, TimChannelNum channel, uint32_t val) const
-	{
+	constexpr void _set_timer_ccr(TIM_TypeDef *TIMx, TimChannelNum channel, uint32_t val) const {
 		switch (channel) {
 			case TimChannelNum::_1:
 				TIMx->CCR1 = val;
@@ -122,7 +119,9 @@ private:
 // Dummy class for use when an LED element of an RGB LED is not connected
 class NoPwmChannel : public TimPwmChannel {
 public:
-	NoPwmChannel() {}
-	void set(uint32_t val) const {}
+	NoPwmChannel() {
+	}
+	void set(uint32_t val) const {
+	}
 };
-
+} // namespace mdrivlib

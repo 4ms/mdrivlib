@@ -1,12 +1,13 @@
 #pragma once
 #include "arch.hh"
-#include "debug.hh"
 #include "interrupt.hh"
 #include "spi.hh"
 #include "spi_config_struct.hh"
 #include "spi_transfer.hh"
 #include "system.hh"
 
+namespace mdrivlib
+{
 // Todo: Try this: use hardware NSS, and use ch2sel pin to mux the NSS output to chip 1 or chip 2
 // Then run SPI DMA in duplex mode for 16 packets: 8 with CH1 selected, 8 with CH2 selected.
 // Only one ISR at the end of this 16-packet run (could use FIFO, instead of DMA)
@@ -91,4 +92,4 @@ private:
 		CONTINUE_READING_CH2 = 0xFFFF,
 	};
 };
-
+} // namespace mdrivlib

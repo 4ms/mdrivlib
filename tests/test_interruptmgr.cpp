@@ -2,9 +2,12 @@
 // #undef STM32H7
 // #undef STM32F7
 // #undef STM32F4
+
+#include "stubs/system.hh"
+
+namespace target = TestProject;
+
 #include "drivers/interrupt.hh"
-//#include "stm32xx.h"
-// using IRQType = uint32_t;
 
 static int g_state = 0;
 

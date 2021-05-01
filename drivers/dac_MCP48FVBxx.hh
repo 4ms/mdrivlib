@@ -1,12 +1,12 @@
 #pragma once
 #include "arch.hh"
-#include "debug.hh"
-#include "interrupt.hh"
 #include "rcc.hh"
 #include "spi.hh"
 #include "spi_transfer.hh"
 #include "spi_transfer_config_struct.hh"
 
+namespace mdrivlib
+{
 template<typename ConfT>
 struct DacSpi_MCP48FVBxx {
 	using SpiConf = typename ConfT::SpiConf;
@@ -42,7 +42,7 @@ public:
 		driver.begin_open_transmission();
 		driver.transmit(make_packet(DACVALUE0, WRITE, (val >> 12) & 0xFFF));
 		driver.transmit(make_packet(DACVALUE1, WRITE, val & 0xFFF));
-		driver.wait_until_xfer_complete();
+		driver.wait_until_tx_complete();
 		latch.low();
 		driver.unselect_chip(chip);
 	}
@@ -122,4 +122,4 @@ private:
 		}
 	}
 };
-
+} // namespace mdrivlib

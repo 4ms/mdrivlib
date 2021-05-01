@@ -1,49 +1,14 @@
 #include "i2c.hh"
+#include "clocks.hh"
+#include "i2c_target.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
 #include "register_access.hh"
 #include "stm32xx.h"
-#include "syscfg.hh"
 #include "system.hh"
 
 namespace mdrivlib
 {
-namespace stm32h7x5
-{
-// Todo: move to i2c_target.hh ?
-struct I2C {
-
-	static void init(const I2CConfig &defs) {
-		// if (calc_clock_kHz(defs.timing) > 800000UL)
-		// enable_fast_mode_plus(defs);
-	}
-	static void enable_fast_mode_plus(const I2CConfig &defs) {
-		// H7x5 requires enabling FMP in SYSCFG, as well as specific pins, see RM0399 Rev 3, p. 587 (SYSCFG)
-		target::RCC_Control::SYSCFG_::set();
-
-		auto tmp = SYSCFG_FMP::read();
-		if (defs.I2Cx == I2C1)
-			tmp |= SYSCFG_PMCR_I2C1_FMP;
-		else if (defs.I2Cx == I2C2)
-			tmp |= SYSCFG_PMCR_I2C2_FMP;
-		else if (defs.I2Cx == I2C3)
-			tmp |= SYSCFG_PMCR_I2C3_FMP;
-		else if (defs.I2Cx == I2C4)
-			tmp |= SYSCFG_PMCR_I2C4_FMP;
-
-		if ((defs.SCL.gpio == GPIO::B && defs.SCL.pin == 6) || (defs.SDA.gpio == GPIO::B && defs.SDA.pin == 6))
-			tmp |= SYSCFG_PMCR_I2C_PB6_FMP;
-		if ((defs.SCL.gpio == GPIO::B && defs.SCL.pin == 7) || (defs.SDA.gpio == GPIO::B && defs.SDA.pin == 7))
-			tmp |= SYSCFG_PMCR_I2C_PB7_FMP;
-		if ((defs.SCL.gpio == GPIO::B && defs.SCL.pin == 8) || (defs.SDA.gpio == GPIO::B && defs.SDA.pin == 8))
-			tmp |= SYSCFG_PMCR_I2C_PB8_FMP;
-		if ((defs.SCL.gpio == GPIO::B && defs.SCL.pin == 9) || (defs.SDA.gpio == GPIO::B && defs.SDA.pin == 9))
-			tmp |= SYSCFG_PMCR_I2C_PB7_FMP;
-
-		SYSCFG_FMP::write(tmp);
-	}
-};
-} // namespace stm32h7x5
 
 constexpr uint32_t _I2C_FLAG_TIMEOUT = 1;
 constexpr uint32_t _I2C_LONG_TIMEOUT = 30;
@@ -205,17 +170,17 @@ I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingCon
 
 void I2CPeriph::enable_IT(uint8_t pri1, uint8_t pri2) {
 	event_isr.registerISR(i2c_irq_num_, [this]() { i2c_event_handler(); });
-	HAL_NVIC_SetPriority(i2c_irq_num_, pri1, pri2);
-	HAL_NVIC_EnableIRQ(i2c_irq_num_);
+	target::System::set_irq_priority(i2c_irq_num_, pri1, pri2);
+	target::System::enable_irq(i2c_irq_num_);
 
 	error_isr.registerISR(i2c_err_irq_num_, [this]() { i2c_error_handler(); });
-	HAL_NVIC_SetPriority(i2c_err_irq_num_, pri1, pri2);
-	HAL_NVIC_EnableIRQ(i2c_err_irq_num_);
+	target::System::set_irq_priority(i2c_err_irq_num_, pri1, pri2);
+	target::System::enable_irq(i2c_err_irq_num_);
 }
 
 void I2CPeriph::disable_IT() {
-	HAL_NVIC_DisableIRQ(i2c_irq_num_);
-	HAL_NVIC_DisableIRQ(i2c_err_irq_num_);
+	target::System::disable_irq(i2c_irq_num_);
+	target::System::disable_irq(i2c_err_irq_num_);
 }
 
 void I2CPeriph::i2c_event_handler() {
