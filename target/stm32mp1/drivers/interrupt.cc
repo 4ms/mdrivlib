@@ -22,6 +22,14 @@ void __attribute__((interrupt)) __attribute__((section(".irqhandler"))) IRQ_Hand
 		"and r3, sp, #4  	 			\n" // Ensure stack is 8-byte aligned.
 		"sub sp, sp, r3  				\n" //
 		"push {r3}  					\n" // Store adjustment to stack
+											//////////FPU
+		"vmrs r1, FPSCR 				\n" // Copy FPU status reg to r1
+		"vpush {d0-d15} 				\n" // Push all double and single registers
+		"vpush {d16-d31} 				\n"
+		"vpush {s0-s15} 				\n"
+		"vpush {s16-s31} 				\n"
+		"push {r1} 						\n" // Push the FPU status reg
+											/////////
 
 		// The following block used to be 'bl IRQ_GetActiveIRQ', which contained an Errata fix
 		"mov r3, #GICCPU_BASE_low		\n"
@@ -47,6 +55,16 @@ void __attribute__((interrupt)) __attribute__((section(".irqhandler"))) IRQ_Hand
 		"InvalidIRQNum: 				\n"
 
 		"cpsid i 						\n" // Disable interrupts while we exit
+
+		//////////FPU
+		"pop {r1} 						\n" // Pop the FPU status reg
+		"vpop {s16-s31} 				\n"
+		"vpop {s0-s15} 					\n"
+		"vpop {d16-d31} 				\n"
+		"vpop {d0-d15} 					\n" // Push all double and single registers
+		"vmsr FPSCR, r1 				\n" // Restore FPU status reg from popped r1
+											////////////
+
 		"pop {r3} 						\n" // Pop the stack adjustment
 		"add sp, sp, r3  				\n" // Restore previous stack pointer
 		"pop {r0-r3, r12, lr} 			\n" //
