@@ -15,13 +15,13 @@
 .global _start
 _Reset:
     b Reset_Handler
-    b Undef_Handler 	/* 0x4  Undefined Instruction */
-    b SVC_Handler 		/* Software Interrupt */
-    b PAbt_Handler  	/* 0xC  Prefetch Abort */
-    b DAbt_Handler 		/* 0x10 Data Abort */
-    b . 				/* 0x14 Reserved */
-    b IRQ_Handler 		/* 0x18 IRQ */
-    b FIQ_Handler 		/* 0x1C FIQ */
+    b Undef_Handler 								// 0x4  Undefined Instruction 
+    b SVC_Handler 									// Software Interrupt 
+    b PAbt_Handler  								// 0xC  Prefetch Abort
+    b DAbt_Handler 									// 0x10 Data Abort
+    b . 											// 0x14 Reserved 
+    b IRQ_Handler 									// 0x18 IRQ 
+    b FIQ_Handler 									// 0x1C FIQ/
 
 .section .resethandler
 Reset_Handler:
@@ -29,16 +29,14 @@ Reset_Handler:
 
 													// Put any cores other than 0 to sleep
 	mrc     p15, 0, R0, c0, c0, 5					// Read MPIDR
-	ands    R0, R0, #3
+	ands    R0, R0, #3 								// ??? what is this? 
 goToSleep:
 	wfine
 	bne goToSleep
-
 	
 	ldr r4, =UART4_TDR 								// UART: print 'A'
 	mov r0, #65
 	str r0, [r4]
-
 
 	mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
 	bic     R0, R0, #(0x1 << 12) 					// Clear I bit 12 to disable I Cache
@@ -63,7 +61,6 @@ goToSleep:
     ldr sp, =_fiq_stack_end
     movw r0, #0xFEFF
     movt r0, #0xFEFF
-
 fiq_loop:
     cmp r1, sp
     strlt r0, [r1], #4
@@ -75,7 +72,6 @@ fiq_loop:
     ldr sp, =_irq_stack_end
     movw r0, #0xF1F1
     movt r0, #0xF1F1
-
 irq_loop:
     cmp r1, sp
     strlt r0, [r1], #4
@@ -87,16 +83,14 @@ irq_loop:
     ldr sp, =_svc_stack_end
     movw r0, #0xF5F5
     movt r0, #0xF5F5
-
 svc_loop:
     cmp r1, sp
     strlt r0, [r1], #4
     blt svc_loop
-
-													// Initialize nested ISR count
-	ldr r0, =0
-	ldr r2, =_svc_nested_isr_count
-	str r0, [r2]
+													/* // Initialize nested ISR count */
+	/* ldr r0, =0 */
+	/* ldr r2, =_svc_nested_isr_count */
+	/* str r0, [r2] */
 
 													// USER and SYS mode stack
 	msr cpsr_c, MODE_SYS
@@ -104,7 +98,6 @@ svc_loop:
 	ldr sp, =_user_stack_end
     movw r0, #0xF0F0
     movt r0, #0xF0F0
-
 usrsys_loop:
     cmp r1, sp
     strlt r0, [r1], #4
@@ -119,7 +112,6 @@ data_loop:
     ldrlt r3, [r0], #4
     strlt r3, [r1], #4
     blt data_loop
-
     												// Initialize .bss
     mov r0, #0
     ldr r1, =_bss_start
@@ -141,7 +133,7 @@ bss_loop:
 	mov r5, #67
 	str r5, [r4]
 
-	CPSIE  if 										// enable fiq and irq interrupts
+	CPSIE  i 										// enable irq interrupts
 
 run_main:
     bl main
