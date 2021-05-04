@@ -38,5 +38,6 @@ struct MemoryTransferByteSwapTest {
 	};
 	static inline MemoryTransfer<ScreenMemXferConfT> mem_xfer;
 };
+
 } // namespace HardwareExample
 } // namespace mdrivlib

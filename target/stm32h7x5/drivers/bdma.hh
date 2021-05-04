@@ -93,7 +93,14 @@ struct BDMATransfer {
 	}
 
 	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
-		_transfer_size = (sz > 0xFFFF) ? 0xFFFF : sz;
+		if constexpr (ConfT::transfer_size_periph == ConfT::Byte)
+			_transfer_size = sz;
+		if constexpr (ConfT::transfer_size_periph == ConfT::HalfWord)
+			_transfer_size = sz / 2;
+		if constexpr (ConfT::transfer_size_periph == ConfT::Word)
+			_transfer_size = sz / 4;
+
+		_transfer_size = (_transfer_size > 0xFFFF) ? 0xFFFF : _transfer_size;
 		_src_addr = src;
 		_dst_addr = dst;
 
@@ -166,7 +173,7 @@ struct BDMATransfer {
 		BDMA_::ClearHalfTransferComplISRFlag::set();
 		BDMA_::TransferComplISRFlag::set();
 		BDMA_::TransferErrorISRFlag::set();
-		HAL_NVIC_EnableIRQ(ConfT::BDMAConf::IRQn);
+		HAL_NVIC_EnableIRQ(ConfT::IRQn);
 
 		stream->CCR &= ~BDMA_CCR_EN;
 

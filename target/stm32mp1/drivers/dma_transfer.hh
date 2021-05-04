@@ -131,6 +131,7 @@ struct DMATransfer {
 				}
 			}
 			if (*dma_isr_reg & dma_te_flag_index) {
+				// __BKPT();
 				*dma_ifcr_reg = dma_te_flag_index;
 				// Error: debug breakpoint or logging here
 			}
@@ -140,12 +141,12 @@ struct DMATransfer {
 	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
 		hdma_tx.Init.Request = ConfT::RequestNum;
 		hdma_tx.Instance = stream;
-		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;			// Todo config
-		hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;				// Todo config
-		hdma_tx.Init.MemInc = DMA_MINC_ENABLE;					// Todo config
-		hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE; // Todo config
-		hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;	// Todo config
-		hdma_tx.Init.Mode = DMA_NORMAL;							// circular //Todo config
+		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+		hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+		hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
+		hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+		hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+		hdma_tx.Init.Mode = DMA_NORMAL;
 		hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
 		hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
 		hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
@@ -156,6 +157,7 @@ struct DMATransfer {
 
 		HAL_DMA_DeInit(&hdma_tx);
 		HAL_DMA_Init(&hdma_tx);
+		// stream->CR = stream->CR | DMA_SxCR_PFCTRL;
 
 		_transfer_size = sz;
 		_src_addr = src;
@@ -227,7 +229,7 @@ struct DMATransfer {
 
 	void start_transfer() {
 		target::System::enable_irq(ConfT::IRQn);
-		HAL_DMA_Start_IT(&hdma_tx, _src_addr, _dst_addr, _transfer_size);
+		HAL_DMA_Start_IT(&hdma_tx, _src_addr, _dst_addr, _transfer_size / 2);
 
 		// BDMA_::ClearGlobalISRFlag::set();
 		// BDMA_::ClearHalfTransferComplISRFlag::set();
