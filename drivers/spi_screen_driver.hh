@@ -49,6 +49,7 @@ struct DmaSpiScreenDriver {
 		spi.disable();
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
+		spi.set_data_size(8);
 		spi.set_tx_message_size(4);
 		spi.enable();
 		if constexpr (MessageType == Cmd)
@@ -65,6 +66,18 @@ struct DmaSpiScreenDriver {
 
 	void config_dma_transfer(uint32_t src, uint32_t sz) {
 		uint32_t dst = spi.get_tx_datareg_addr();
+
+		if constexpr (ConfT::DMAConf::transfer_size_periph == ConfT::DMAConf::HalfWord) {
+			spi.disable();
+			spi.set_data_size(16);
+			spi.enable();
+		}
+		if constexpr (ConfT::DMAConf::transfer_size_periph == ConfT::DMAConf::Word) {
+			spi.disable();
+			spi.set_data_size(32);
+			spi.enable();
+		}
+
 		dma.config_transfer(dst, src, sz);
 	}
 
@@ -97,53 +110,11 @@ struct DmaSpiScreenDriver {
 		spi.start_transfer();
 	}
 
-	// void init_mdma(std::function<void(void)> &&cb) {
-	// 	callback = std::move(cb);
-	// 	mdma.register_callback([&]() { callback(); });
-	// }
-
-	// void start_mdma_transfer(uint32_t src, uint32_t sz, std::function<void(void)> &&cb) {
-	// 	callback = std::move(cb);
-	// 	mdma.register_callback([&]() { callback(); });
-	// 	start_mdma_transfer(src, sz);
-	// }
-
-	// void start_mdma_transfer(uint32_t src, uint32_t sz) {
-	// 	spi.disable();
-	// 	uint32_t dst = spi.get_tx_datareg_addr();
-
-	// 	mdma.config_transfer((void *)dst, (void *)src, sz);
-
-	// 	if (sz <= 0xFFFF) {
-	// 		spi.set_tx_message_size(sz);
-	// 		spi.set_tx_message_reload_size(0);
-	// 	} else if (sz <= (0xFFFF * 2)) {
-	// 		spi.set_tx_message_size(0xFFFF);
-	// 		spi.set_tx_message_reload_size(sz - 0xFFFF);
-	// 	} else
-	// 		return; // Todo: handle transfers > 128k packets by setting up an ISR on TSERF that sets the reload size
-
-	// 	dcpin.high();
-	// 	spi.clear_EOT_flag();
-	// 	spi.clear_TXTF_flag();
-	// 	spi.enable_tx_dma();
-	// 	spi.enable();
-	// 	spi.start_transfer();
-	// 	mdma.start_transfer();
-	// }
-
-	// void wait_until_ready() {
-	// 	while (!spi.is_tx_complete())
-	// 		;
-	// }
-
 private:
 	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
 	typename ConfT::DCPin dcpin;
 	std::function<void(void)> callback;
 
-	// MemoryTransfer mdma;
-	// target::BDMATransfer<typename ConfT::BDMAConf> dma;
 	DmaTransferT dma;
 
 	volatile uint32_t *dma_ifcr_reg;
