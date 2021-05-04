@@ -97,8 +97,7 @@ static uint32_t Page_L1_64k = 0x0;	// generic
 static uint32_t Page_4k_Device_RW;	// Shared device, not executable, rw, domain 0
 static uint32_t Page_64k_Device_RW; // Shared device, not executable, rw, domain 0
 
-void MMU_CreateTranslationTable(void)
-{
+void MMU_CreateTranslationTable(void) {
 	mmu_region_attributes_Type region;
 
 	// Create 4GB of faulting entries
@@ -109,8 +108,7 @@ void MMU_CreateTranslationTable(void)
 	section_normal_ro(Sect_Normal_RO, region);
 	section_normal_rw(Sect_Normal_RW, region);
 	section_device_ro(Sect_Device_RO, region);
-	section_device_rw(Sect_Device_RW, region);
-	page64k_device_rw(Page_L1_64k, Page_64k_Device_RW, region);
+	section_device_rw(Sect_Device_RW, region) page64k_device_rw(Page_L1_64k, Page_64k_Device_RW, region);
 	page4k_device_rw(Page_L1_4k, Page_4k_Device_RW, region);
 
 	// ROM should be Cod (RO), but that seems to interere with debugger loading an elf file, so setting it to Normal:
@@ -128,7 +126,10 @@ void MMU_CreateTranslationTable(void)
 	MMU_TTSection(TTB_BASE, 0x40000000, 0x10000000 / 0x100000, Sect_Device_RW);
 	MMU_TTSection(TTB_BASE, 0x50000000, 0x10000000 / 0x100000, Sect_Device_RW);
 
-	MMU_TTSection(TTB_BASE, A7_SYSRAM_SECTION_BASE, A7_SYSRAM_SECTION_SIZE / 0x100000, Sect_Normal_RW);
+	MMU_TTSection(TTB_BASE,
+				  A7_SYSRAM_SECTION_BASE,
+				  A7_SYSRAM_SECTION_SIZE / 0x100000,
+				  Sect_Device_RW); // disabled cache for testing
 
 	// Create (16 * 64k)=1MB faulting entries to cover peripheral range 0x1C000000-0x1C00FFFF
 	// MMU_TTPage64k(TTB_BASE, PERIPHERAL_A_FAULT, 16, Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k,
