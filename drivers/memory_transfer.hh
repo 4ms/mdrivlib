@@ -35,12 +35,10 @@ struct MemoryTransferDefaultConfT {
 
 namespace mdrivlib
 {
-// Todo: template on channel#
-// And template on ConfigType:
-// which ISRs are set
-// which ISR gets the callback (or is it always CTC?)
-// src/dst inc, dir, amount
-//...
+// Todo: create `register_channel_isr` and `enable_global_isr` like HSEM does, to handle multiple MemoryTransfer active
+// at once, on different channels.
+// - Add ability to choose which ISR flags are set (CTC, BRTC, BTC, etc), and which ISR gets the callback (or is it
+// always CTC?)
 template<typename ConfT = MemoryTransferDefaultConfT>
 struct MemoryTransfer {
 	using MDMAX = target::MDMAx<ConfT::channel>;
@@ -154,6 +152,7 @@ struct MemoryTransfer {
 		_set_addrs();
 		_set_addr_bus_bits();
 
+		// Set certain ISRs (todo: allow config)
 		MDMAX::TransferErrISREnable::set();
 		// MDMAX::BufferTransferComplISREnable::set();
 		// MDMAX::BlockTransferComplISREnable::set();
