@@ -8,19 +8,27 @@
 #include <cstddef>
 struct MemoryTransferDefaultConfT {
 	static constexpr unsigned channel = 0;
+
+	// Endianess
 	static constexpr bool swap_bytes = false;
 	static constexpr bool swap_halfwords = false;
 	static constexpr bool swap_words = false;
 
+	// Data sizes
 	enum Sizes { Byte = 0b00, HalfWord = 0b01, Word = 0b10, DoubleWord = 0b11 };
 	static constexpr uint32_t src_data_size = Word;
 	static constexpr uint32_t dst_data_size = Word;
 	static constexpr uint32_t src_data_inc = Word;
 	static constexpr uint32_t dst_data_inc = Word;
+	static constexpr uint32_t src_burst = 0b000;
+	static constexpr uint32_t dst_burst = 0b000;
 
 	enum Directions { DoNotInc = 0b00, Up = 0b10, Down = 0b11 };
 	static constexpr uint32_t src_data_dir = Up;
 	static constexpr uint32_t dst_data_dir = Up;
+
+	enum Priority { Low = 0b00, Medium = 0b01, High = 0b10, VeryHigh = 0b11 };
+	static constexpr uint32_t PriorityLevel = Medium;
 
 	static constexpr bool bufferable_write_mode = false;
 };
@@ -103,9 +111,12 @@ struct MemoryTransfer {
 		MDMAX::DstSize::write(ConfT::dst_data_size);
 		MDMAX::DstIncDir::write(MDMAX::Up);
 		MDMAX::DstIncAmount::write(ConfT::dst_data_inc);
+		MDMAX::SrcBurst::write(ConfT::src_burst);
+		MDMAX::DstBurst::write(ConfT::dst_burst);
+
 		MDMAX::TransferLength::write(sz >= 128 ? 127 : sz - 1);
 
-		// Todo: try if we cna just set TriggerMode to 0b11 (transfer all)
+		// Todo: try if we can just set TriggerMode to 0b11 (transfer all)
 		if (_num_blocks > 0)
 			MDMAX::TriggerMode::write(0b10); // Repeated Block transfer
 		else if (sz > 127)
@@ -115,6 +126,10 @@ struct MemoryTransfer {
 
 		MDMAX::PaddingAlignmentMode::write(0b00);
 		MDMAX::PackEnable::set();
+
+		// Use software request mode for memory-to-memory transfers
+		MDMAX::SWRequestMode::set();
+
 		if constexpr (ConfT::bufferable_write_mode)
 			MDMAX::BufferableWriteMode::set();
 		else
@@ -127,6 +142,9 @@ struct MemoryTransfer {
 		if constexpr (ConfT::swap_words)
 			MDMAX::WordEndianessExchange::set();
 
+		MDMAX::PriorityLevel::write(ConfT::PriorityLevel);
+
+		// Clear all ISRs
 		MDMAX::BufferTransferComplISRClear::set();
 		MDMAX::BlockTransferComplISRClear::set();
 		MDMAX::BlockRepeatTransferComplISRClear::set();

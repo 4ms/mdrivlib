@@ -78,6 +78,7 @@ struct MDMAx {
 
 	static constexpr uint32_t CBNDTR_Base = BASE + offsetof(MDMA_Channel_TypeDef, CBNDTR);
 	using BlockRepeatCount = RegisterSection<ReadWrite, CBNDTR_Base, MDMA_CBNDTR_BRC_Pos, 12>;
+	enum BRUpdateMode { AddDestUpdateVal = 0b00, SubtractDestUpdateVal = 0b01 };
 	using BlockRepeatDstUpdateMode = RegisterSection<ReadWrite, CBNDTR_Base, MDMA_CBNDTR_BRDUM_Pos, 1>;
 	using BlockRepeatSrcUpdateMode = RegisterSection<ReadWrite, CBNDTR_Base, MDMA_CBNDTR_BRSUM_Pos, 1>;
 	using BlockNumDataBytesToXfer = RegisterSection<ReadWrite, CBNDTR_Base, MDMA_CBNDTR_BNDT_Pos, 17>;
