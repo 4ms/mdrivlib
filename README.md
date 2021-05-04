@@ -100,9 +100,18 @@ This is a work in progress, the API is in flux. Contributions, feedback, and iss
 
 ## Usage
 
-Add `mdrivlib/drivers` and `mdrivlib/target/XXX/drivers/` as INCLUDE dirs in your build system.
+Add the following directories as INCLUDE directories for your build system:
+(e.g. add `-Ipath` to your compile commands for each of the following paths):
+
+  * `mdrivlib/drivers` 
+  * `mdrivlib/util`
+  * `mdrivlib/target/XXX/drivers/`, where XXX is the target architecture (look in the target dir to see what the options are)
+  * CMSIS device header: if you've downloaded STM32Cube, then include the path something like this (for H7xx): `STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/` 
+  * If you're using any drivers that require STM32-HAL or STM32-LL: STM32 HAL Include directory, e.g. `STM32Cube_FW_H7_V1/Drivers/STM32H7xx_HAL_Driver/Inc`
 
 Compile and link any `mdrivlib/drivers/*.cc` and `mdrivlib/target/XXX/drivers/*.cc` that you wish to use.
+
+
 
 Build with the proper symbols defined for your target: (TODO: specify these clearly in one place)
 example: `-DSTM32H7x5 -DCORE_CM7`
@@ -113,14 +122,21 @@ Use it:
 #include "pin.hh"
 #include "timekeeper.hh"
 
-Pin myRedLED {GPIO::A, 2, PinMode::Output};
+//Values for an STM32H745 Discovery board. Adjust these values to suit your chip/board:
+Pin userLED {GPIO::J, 2, PinMode::Output};
+Pin pwmPin {GPIO::A, 6, PinMode::Alt, LL_GPIO_AF2};
+TimPwmChannel myAnalogOut{{.TIMx = TIM3, .channel = 1, .period = 10000}};
 
-myRedLED.high();
+userLED.high();
+myAnalogOut.start_output();
+uint8_t ramp_up = 0;
 
-Timekeeper lightFlasher({.TIMx=TIM2, .period=100000000/*ns*/}, [](){
+Timekeeper lightFlasher({.TIMx=TIM2, .period=100000000/*ns*/}, [&ramp_up](){
 	myRedLED.toggle(); 
+    myAnalogOut.set(ramp_up);
 });
 lightFlasher.start();
+
 
 ```
 
