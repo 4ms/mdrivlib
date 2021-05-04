@@ -8,10 +8,23 @@
 #include <cstddef>
 struct MemoryTransferDefaultConfT {
 	static constexpr unsigned channel = 0;
-	static constexpr bool swap_bytes = true;
+	static constexpr bool swap_bytes = false;
 	static constexpr bool swap_halfwords = false;
 	static constexpr bool swap_words = false;
+
+	enum Sizes { Byte = 0b00, HalfWord = 0b01, Word = 0b10, DoubleWord = 0b11 };
+	static constexpr uint32_t src_data_size = Word;
+	static constexpr uint32_t dst_data_size = Word;
+	static constexpr uint32_t src_data_inc = Word;
+	static constexpr uint32_t dst_data_inc = Word;
+
+	enum Directions { DoNotInc = 0b00, Up = 0b10, Down = 0b11 };
+	static constexpr uint32_t src_data_dir = Up;
+	static constexpr uint32_t dst_data_dir = Up;
+
+	static constexpr bool bufferable_write_mode = false;
 };
+
 namespace mdrivlib
 {
 // Todo: template on channel#
@@ -26,7 +39,8 @@ struct MemoryTransfer {
 
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
-	uint32_t _transfer_size;
+	uint32_t _transfer_block_size;
+	uint32_t _num_blocks;
 
 	MemoryTransfer() {
 	}
@@ -58,29 +72,53 @@ struct MemoryTransfer {
 	}
 
 	void config_transfer(void *dst, const void *src, size_t sz) {
-		_transfer_size = sz;
 		_dst_addr = reinterpret_cast<uint32_t>(dst);
 		_src_addr = reinterpret_cast<uint32_t>(src);
 
 		target::RCC_Enable::MDMA_::set();
 		MDMAX::Enable::clear();
-		MDMAX::BlockNumDataBytesToXfer::write(_transfer_size);
-		MDMAX::BlockRepeatCount::write(0);
 
-		MDMAX::SrcSize::write(MDMAX::Word);
+		_transfer_block_size = sz;
+		_num_blocks = 1;
+		while (_transfer_block_size >= 0x8000U) {
+			_num_blocks++;
+			_transfer_block_size = sz / _num_blocks;
+		}
+		// Deal with leftover bytes due to _transfer_block_size * _num_blocks < sz
+		// Todo: test this!
+		while (_transfer_block_size * _num_blocks < sz)
+			_transfer_block_size += (ConfT::src_data_size == 0b00) ? 1
+								  : (ConfT::src_data_size == 0b01) ? 2
+								  : (ConfT::src_data_size == 0b10) ? 4
+																   : 8;
+
+		_num_blocks--;
+
+		MDMAX::BlockNumDataBytesToXfer::write(_transfer_block_size);
+		MDMAX::BlockRepeatCount::write(_num_blocks);
+
+		MDMAX::SrcSize::write(ConfT::src_data_size);
 		MDMAX::SrcIncDir::write(MDMAX::Up);
-		MDMAX::SrcIncAmount::write(MDMAX::Word);
-		MDMAX::DstSize::write(MDMAX::Word);
+		MDMAX::SrcIncAmount::write(ConfT::src_data_inc);
+		MDMAX::DstSize::write(ConfT::dst_data_size);
 		MDMAX::DstIncDir::write(MDMAX::Up);
-		MDMAX::DstIncAmount::write(MDMAX::Word);
+		MDMAX::DstIncAmount::write(ConfT::dst_data_inc);
 		MDMAX::TransferLength::write(sz >= 128 ? 127 : sz - 1);
-		if (sz > 127)
+
+		// Todo: try if we cna just set TriggerMode to 0b11 (transfer all)
+		if (_num_blocks > 0)
+			MDMAX::TriggerMode::write(0b10); // Repeated Block transfer
+		else if (sz > 127)
 			MDMAX::TriggerMode::write(0b01); // Block transfer
 		else
 			MDMAX::TriggerMode::write(0b00); // Buffer transfer
+
 		MDMAX::PaddingAlignmentMode::write(0b00);
 		MDMAX::PackEnable::set();
-		MDMAX::BufferableWriteMode::clear();
+		if constexpr (ConfT::bufferable_write_mode)
+			MDMAX::BufferableWriteMode::set();
+		else
+			MDMAX::BufferableWriteMode::clear();
 
 		if constexpr (ConfT::swap_bytes)
 			MDMAX::ByteEndianessExchange::set();
@@ -107,7 +145,8 @@ struct MemoryTransfer {
 
 	void repeat_transfer_new_dst(void *dst) {
 		MDMAX::Enable::clear();
-		MDMAX::BlockNumDataBytesToXfer::write(_transfer_size);
+		MDMAX::BlockNumDataBytesToXfer::write(_transfer_block_size);
+		MDMAX::BlockRepeatCount::write(_num_blocks);
 		_dst_addr = reinterpret_cast<uint32_t>(dst);
 		_set_addrs();
 		MDMAX::Enable::set();
@@ -116,7 +155,8 @@ struct MemoryTransfer {
 
 	void start_transfer() {
 		MDMAX::Enable::clear();
-		MDMAX::BlockNumDataBytesToXfer::write(_transfer_size);
+		MDMAX::BlockNumDataBytesToXfer::write(_transfer_block_size);
+		MDMAX::BlockRepeatCount::write(_num_blocks);
 		_set_addrs();
 		MDMAX::Enable::set();
 		// Debug point:
