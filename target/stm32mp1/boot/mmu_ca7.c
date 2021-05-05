@@ -62,8 +62,7 @@
 
 #define A7_SYSRAM_BASE 0x2FFC0000
 #define A7_SYSRAM_SIZE 0x00040000 /* 256kB */
-#define A7_SYSRAM_SECTION_BASE 0x20000000
-#define A7_SYSRAM_SECTION_SIZE 0x10000000
+#define A7_SYSRAM_1MB_SECTION_BASE 0x2FF00000
 
 #define A7_SRAM1_BASE (0x10000000UL)
 #define A7_SRAM2_BASE (0x10020000UL)
@@ -108,7 +107,8 @@ void MMU_CreateTranslationTable(void) {
 	section_normal_ro(Sect_Normal_RO, region);
 	section_normal_rw(Sect_Normal_RW, region);
 	section_device_ro(Sect_Device_RO, region);
-	section_device_rw(Sect_Device_RW, region) page64k_device_rw(Page_L1_64k, Page_64k_Device_RW, region);
+	section_device_rw(Sect_Device_RW, region);
+	page64k_device_rw(Page_L1_64k, Page_64k_Device_RW, region);
 	page4k_device_rw(Page_L1_4k, Page_4k_Device_RW, region);
 
 	// ROM should be Cod (RO), but that seems to interere with debugger loading an elf file, so setting it to Normal:
@@ -122,45 +122,16 @@ void MMU_CreateTranslationTable(void) {
 	MMU_TTSection(TTB_BASE, A7_SRAM1_BASE, 1, Sect_Normal_RW); // 1MB RAM (actually is only 384kB)
 
 	// Peripheral memory
-	// Todo: be more specific: cover only actual peripherals, as in example below
+	// For better security: be more specific and use 4k tables to cover only actual peripherals, as in example file in
+	// CMSIS
 	MMU_TTSection(TTB_BASE, 0x40000000, 0x10000000 / 0x100000, Sect_Device_RW);
 	MMU_TTSection(TTB_BASE, 0x50000000, 0x10000000 / 0x100000, Sect_Device_RW);
 
-	MMU_TTSection(TTB_BASE,
-				  A7_SYSRAM_SECTION_BASE,
-				  A7_SYSRAM_SECTION_SIZE / 0x100000,
-				  Sect_Device_RW); // disabled cache for testing
+	MMU_TTSection(TTB_BASE, A7_SYSRAM_1MB_SECTION_BASE, 1, Sect_Normal_RW);
 
-	// Create (16 * 64k)=1MB faulting entries to cover peripheral range 0x1C000000-0x1C00FFFF
-	// MMU_TTPage64k(TTB_BASE, PERIPHERAL_A_FAULT, 16, Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k,
-	// DESCRIPTOR_FAULT);
-	// // Define peripheral range 0x1C000000-0x1C00FFFF
-	// MMU_TTPage64k(TTB_BASE, VE_A7_MP_DAP_BASE, 1, Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k,
-	// Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_SYSTEM_REG_BASE, 1, Page_L1_64k, (uint32_t
-	// *)PERIPHERAL_A_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_SERIAL_BASE, 1,
-	// Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE,
-	// VE_A7_MP_AACI_BASE, 1, Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k, Page_64k_Device_RW);
-	// MMU_TTPage64k(TTB_BASE, VE_A7_MP_MMCI_BASE, 1, Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k,
-	// Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_KMI0_BASE, 2, Page_L1_64k, (uint32_t
-	// *)PERIPHERAL_A_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_UART_BASE, 4,
-	// Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE,
-	// VE_A7_MP_WDT_BASE, 1, Page_L1_64k, (uint32_t *)PERIPHERAL_A_TABLE_L2_BASE_64k, Page_64k_Device_RW);
-
-	// // Create (16 * 64k)=1MB faulting entries to cover peripheral range 0x1C100000-0x1C10FFFF
-	// MMU_TTPage64k(TTB_BASE, PERIPHERAL_B_FAULT, 16, Page_L1_64k, (uint32_t *)PERIPHERAL_B_TABLE_L2_BASE_64k,
-	// DESCRIPTOR_FAULT);
-	// // Define peripheral range 0x1C100000-0x1C10FFFF
-	// MMU_TTPage64k(TTB_BASE, VE_A7_MP_TIMER_BASE, 2, Page_L1_64k, (uint32_t *)PERIPHERAL_B_TABLE_L2_BASE_64k,
-	// Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_DVI_BASE, 1, Page_L1_64k, (uint32_t
-	// *)PERIPHERAL_B_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_RTC_BASE, 1, Page_L1_64k,
-	// (uint32_t *)PERIPHERAL_B_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE, VE_A7_MP_UART4_BASE, 1,
-	// Page_L1_64k, (uint32_t *)PERIPHERAL_B_TABLE_L2_BASE_64k, Page_64k_Device_RW); MMU_TTPage64k(TTB_BASE,
-	// VE_A7_MP_CLCD_BASE, 1, Page_L1_64k, (uint32_t *)PERIPHERAL_B_TABLE_L2_BASE_64k, Page_64k_Device_RW);
-
-	// Create (256 * 4k)=1MB faulting entries to cover private address space. Needs to be marked as Device memory
-	MMU_TTPage4k(TTB_BASE, __get_CBAR(), 256, Page_L1_4k, (uint32_t *)PRIVATE_TABLE_L2_BASE_4k, DESCRIPTOR_FAULT);
-	// 0xA002 0000 - 0xA002 7FFF
-	MMU_TTPage4k(TTB_BASE, __get_CBAR(), 8, Page_L1_4k, (uint32_t *)PRIVATE_TABLE_L2_BASE_4k, Page_4k_Device_RW);
+	// GIC
+	// Only need: 0xA002 0000 - 0xA002 8000, but set 0xA002 0000 - 0XA0012 0000
+	MMU_TTSection(TTB_BASE, __get_CBAR(), 1, Sect_Device_RW);
 
 	// Define L2CC entry.  Uncomment if PL310 is present
 	//    MMU_TTPage4k (TTB_BASE, VE_A5_MP_PL310_BASE     ,  1,  Page_L1_4k, (uint32_t *)PRIVATE_TABLE_L2_BASE_4k,

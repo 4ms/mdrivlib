@@ -5,6 +5,7 @@
 #include "rcc.hh"
 #include "stm32xx.h"
 
+// Todo: Finish converting to using CMSIS instead of STM32-HAL
 namespace mdrivlib
 {
 namespace stm32mp1
