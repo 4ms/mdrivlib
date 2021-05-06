@@ -14,7 +14,7 @@ enum class SupportedTargets {
 //
 // STM32MP1
 //
-#if defined(STM32MP1) && defined(CORE_CA7)
+#if defined(STM32MP1) /*&& defined(CORE_CA7)*/
 namespace mdrivlib
 {
 namespace stm32mp1
@@ -28,19 +28,19 @@ constexpr auto TYPE = SupportedTargets::stm32mp1_ca7;
 } // namespace mdrivlib
 namespace target = mdrivlib::stm32mp1::core_a7;
 
-#elif defined(STM32MP1) && defined(CORE_CM4)
-namespace mdrivlib
-{
-namespace stm32mp1
-{
-namespace core_m4
-{
-constexpr bool TARGET_FOUND = true;
-constexpr auto TYPE = SupportedTargets::stm32mp1_cm4;
-} // namespace core_m4
-} // namespace stm32mp1
-} // namespace mdrivlib
-namespace target = mdrivlib::stm32mp1::core_m4;
+// #elif defined(STM32MP1) && defined(CORE_CM4)
+// namespace mdrivlib
+// {
+// namespace stm32mp1
+// {
+// namespace core_m4
+// {
+// constexpr bool TARGET_FOUND = true;
+// constexpr auto TYPE = SupportedTargets::stm32mp1_cm4;
+// } // namespace core_m4
+// } // namespace stm32mp1
+// } // namespace mdrivlib
+// namespace target = mdrivlib::stm32mp1::core_m4;
 
 //
 // STM32H745 and STM32H755
