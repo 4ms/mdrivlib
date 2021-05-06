@@ -8,7 +8,7 @@ namespace stm32mp1
 {
 namespace core_a7
 {
-struct System {
+struct System { // InterruptControl
 	System() {
 	}
 
@@ -30,13 +30,14 @@ struct System {
 	}
 
 	static void disable_irq(IRQn_Type irqn) {
-		IRQ_Disable(irqn);
+		GIC_DisableIRQ(irqn);
+		// IRQ_Disable(irqn);
 	}
 
 	static void enable_irq(IRQn_Type irqn) {
-		auto status =
-			IRQ_SetMode((IRQn_ID_t)irqn, IRQ_MODE_TRIG_EDGE_RISING | IRQ_MODE_CPU_0 /*ALL*/ | IRQ_MODE_TYPE_IRQ);
-		IRQ_Enable(irqn);
+		IRQ_SetMode((IRQn_ID_t)irqn, IRQ_MODE_TRIG_EDGE_RISING | IRQ_MODE_CPU_0 /*ALL*/ | IRQ_MODE_TYPE_IRQ);
+		// IRQ_Enable(irqn);
+		GIC_EnableIRQ(irqn);
 	}
 };
 } // namespace core_a7
