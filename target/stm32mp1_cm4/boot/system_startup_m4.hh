@@ -41,9 +41,13 @@ struct SystemClocks {
 		// SystemD2Clock = (common_system_clock >>
 		// 				 ((D1CorePrescTable[(RCC->D1CFGR & RCC_D1CFGR_HPRE) >> RCC_D1CFGR_HPRE_Pos]) & 0x1FU));
 		// SystemCoreClock = SystemD2Clock;
+		//
+
+		SystemCoreClock = HAL_RCC_GetSystemCoreClockFreq();
+
 		HAL_InitTick(TICK_INT_PRIORITY);
 
-		target::RCC_Enable::SYSCFG_::set();
+		// target::RCC_Enable::SYSCFG_::set();
 	}
 };
 } // namespace core_a7
