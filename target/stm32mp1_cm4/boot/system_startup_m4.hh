@@ -13,15 +13,14 @@ namespace core_a7
 {
 struct SystemClocks {
 	SystemClocks() {
-		target::RCC_Enable::HSEM_::set();
 
 		// Enable notification in order to wakeup
-		HWSemaphore<15>::enable_channel_ISR();
-		System::enable_irq(HSEM_IT2_IRQn);
-		InterruptManager::registerISR(HSEM_IT2_IRQn, 0, 0, []() {
-			HWSemaphore<15>::clear_ISR();
-			System::disable_irq(HSEM_IT2_IRQn);
-		});
+		// HWSemaphore<15>::enable_channel_ISR();
+		// System::enable_irq(HSEM_IT2_IRQn);
+		// InterruptManager::registerISR(HSEM_IT2_IRQn, 0, 0, []() {
+		// 	HWSemaphore<15>::clear_ISR();
+		// 	System::disable_irq(HSEM_IT2_IRQn);
+		// });
 
 		// Domain D2 goes to STOP mode (Cortex-M4 in deep-sleep) waiting for Cortex-M7 to
 		// perform system initialization
@@ -33,7 +32,7 @@ struct SystemClocks {
 		// __HAL_ART_CONFIG_BASE_ADDRESS(0x10000000UL);
 		// __HAL_ART_ENABLE();
 
-		// HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+		NVIC_SetPriorityGrouping(0b101); // 2/2
 
 		// uint32_t common_system_clock;
 		// common_system_clock = HAL_RCC_GetSysClockFreq() >>
@@ -42,7 +41,7 @@ struct SystemClocks {
 		// SystemD2Clock = (common_system_clock >>
 		// 				 ((D1CorePrescTable[(RCC->D1CFGR & RCC_D1CFGR_HPRE) >> RCC_D1CFGR_HPRE_Pos]) & 0x1FU));
 		// SystemCoreClock = SystemD2Clock;
-		// HAL_InitTick(TICK_INT_PRIORITY);
+		HAL_InitTick(TICK_INT_PRIORITY);
 
 		target::RCC_Enable::SYSCFG_::set();
 	}
