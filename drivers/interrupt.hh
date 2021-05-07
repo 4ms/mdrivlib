@@ -16,8 +16,6 @@ using IRQType = IRQn_Type;
 // Interrupt Manager class
 class Interrupt {
 public:
-	// Todo: Try inplace_function<void(void)> instead of std::function
-	// https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
 	using ISRType = std::function<void(void)>;
 	static inline const uint32_t NumISRs = 256;
 
@@ -58,3 +56,14 @@ private:
 };
 
 using InterruptManager = Interrupt;
+
+// Todo:
+// 		rename file to interrupt_handler.hh
+// 		rename InterruptManager to InterruptHandler
+// 		registerISR(IRQType, ISRType) ==> register_isr
+// 		registerISR(IRQType, unsigned, unsigned, ISRType) ==> register_and_start_isr
+//
+// 		Test SetDefaultISR()
+// 		try alternatives to std::function
+// 		inplace_function<void(void)>
+//		https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
