@@ -1,4 +1,5 @@
 #pragma once
+#include "../../stm32mp1/drivers/rcc_common.hh"
 #include "drivers/register_access.hh"
 #include "drivers/stm32xx.h"
 #include <variant>
