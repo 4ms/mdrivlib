@@ -104,21 +104,12 @@ struct TIM {
 			return (IRQn_Type)(0);
 	}
 	static uint32_t max_freq(TIM_TypeDef *TIM) {
-		// Todo: implement this
-		return 104000000;
-		// return SystemCore1Clock / 4;
-
-		// uint32_t D2PPREx;
-		// auto TIMx_BASE_ADDR = reinterpret_cast<uintptr_t>(TIM);
-		// if (TIMx_BASE_ADDR >= APB1PERIPH_BASE && TIMx_BASE_ADDR < APB2PERIPH_BASE)
-		//   D2PPREx = 2;
-		// else if (TIMx_BASE_ADDR >= APB2PERIPH_BASE)
-		//   D2PPREx = 2; // (1 / D2PPRE2) * 2, where D2PPRE2 = 2 by default
-		// else
-		//   D2PPREx = 2; // unknown, error?
-
-		// return (HAL_RCC_GetHCLKFreq() / D2PPREx) * 2; // The x2 is from CubeMX Clock Configuration graphical tab
+		if (TIM == TIM1 || TIM == TIM8 || TIM == TIM17 || TIM == TIM15 || TIM == TIM16)
+			return HAL_RCC_GetPCLK2Freq() * 2; // RCC->APB3DIVR & RCC_APB3DIVR_APB3DIV;
+		else
+			return HAL_RCC_GetPCLK1Freq() * 2; // MCU clock >> RCC->APB1DIVR & RCC_APB1DIVR_APB1DIV;
 	}
+
 	static constexpr uint32_t max_period(unsigned tim_periph_num) {
 		if (tim_periph_num == 2 || tim_periph_num == 5)
 			return 0xFFFFFFFF;
