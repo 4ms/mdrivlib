@@ -8,8 +8,8 @@ namespace mdrivlib
 {
 struct GPIO_expander_conf {
 	uint8_t addr;
-	Pin int_pin;
-	IRQType IRQn;
+	// Pin int_pin;
+	// IRQType IRQn;
 	uint16_t config;
 
 	enum PinDirection { Output = 0, Input = 1 };
