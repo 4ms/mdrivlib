@@ -1,6 +1,5 @@
 CompileFlags:
 	Add: [
-		"-std=gnu++2a",
 		"--target=arm-none-eabi",
 	]
 ---
