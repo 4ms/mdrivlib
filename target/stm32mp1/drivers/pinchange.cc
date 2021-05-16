@@ -2,7 +2,6 @@
 #include "drivers/exti.hh"
 #include "drivers/interrupt.hh"
 #include "rcc.hh"
-#include "src/debug.hh"
 
 PinChangeInterrupt::PinChangeInterrupt() {
 }
