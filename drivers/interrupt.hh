@@ -65,5 +65,9 @@ using InterruptManager = Interrupt;
 //
 // 		Test SetDefaultISR()
 // 		try alternatives to std::function
-// 		inplace_function<void(void)>
-//		https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
+// 			* inplace_function<void(void)>
+//			  https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
+//			* function_view
+//			  https://vittorioromeo.info/index/blog/passing_functions_to_functions.html#fn_view_impl
+//
+//
