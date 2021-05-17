@@ -30,6 +30,10 @@ struct SystemCache {
 	static void clean_dcache_by_range(void *addr, int32_t size) {
 		SCB_CleanDCache_by_Addr(reinterpret_cast<uint32_t *>(addr), size);
 	}
+
+	static void clean_and_invalidate_dcache_by_range(void *addr, int32_t size) {
+		SCB_CleanInvalidateDCache_by_Addr(reinterpret_cast<uint32_t *>(addr), size);
+	}
 };
 } // namespace stm32h7x5
 } // namespace mdrivlib
