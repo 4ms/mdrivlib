@@ -44,6 +44,15 @@ inline void clean_dcache_by_range(void *addr, int32_t size) {
 		size -= 4;
 	}
 }
+
+inline void clean_and_invalidate_dcache_by_range(void *addr, int32_t size) {
+	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
+	while (size > 0) {
+		L1C_CleanInvalidateDCacheMVA(u32_ptr);
+		u32_ptr += 1;
+		size -= 4;
+	}
+}
 } // namespace SystemCache
 } // namespace core_a7
 } // namespace stm32mp1
