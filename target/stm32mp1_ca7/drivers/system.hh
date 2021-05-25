@@ -22,21 +22,24 @@ struct System { // InterruptControl
 	// So we have:
 	//     ggg.ssXXX
 	//
-	// So, pri1 is upper 3 bits (value can be 0-7), pri2 is lower 2 bits (value can be 0-3)
+	// So, pri1 is upper 3 bits (value can be 0-7), pri2 is next 2 bits (value can be 0-3), and lower 3 bits are ignored
 	//
 	static void set_irq_priority(IRQn_Type irqn, uint32_t pri1, uint32_t pri2) {
-		auto pri = ((pri1 & 0b111) << 5) | (pri2 & 0b11 << 3);
+		pri1 = pri1 > 7 ? 7 : pri1;
+		pri2 = pri2 > 3 ? 3 : pri2;
+		auto pri = (pri1 << 5) | (pri2 << 3);
 		GIC_SetPriority(irqn, pri);
 	}
 
 	static void disable_irq(IRQn_Type irqn) {
 		GIC_DisableIRQ(irqn);
-		// IRQ_Disable(irqn);
 	}
 
+	enum { LevelTriggered = 0b00, EdgeTriggered = 0b10 };
 	static void enable_irq(IRQn_Type irqn) {
-		IRQ_SetMode((IRQn_ID_t)irqn, IRQ_MODE_TRIG_EDGE_RISING | IRQ_MODE_CPU_0 /*ALL*/ | IRQ_MODE_TYPE_IRQ);
-		// IRQ_Enable(irqn);
+		GIC_SetTarget(irqn, 1); // Todo: Use current CPU number
+		GIC_SetConfiguration(irqn, EdgeTriggered);
+		GIC_ClearPendingIRQ(irqn);
 		GIC_EnableIRQ(irqn);
 	}
 };
