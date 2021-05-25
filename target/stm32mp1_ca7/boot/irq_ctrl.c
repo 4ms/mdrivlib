@@ -45,8 +45,10 @@ void GIC_ClearActiveIRQ(IRQn_Type IRQn) {
 
 /// Initialize interrupt controller.
 int32_t IRQ_Initialize(void) {
+	GIC_Enable();
 
-	unsigned num_irq = 32U * ((GIC_DistributorInfo() & 0x1FU) + 1U); // 32 * (8 + 1) = 0x120 = 288
+	// GIC_DisableDistributor();
+	unsigned num_irq = 32U * ((GIC_DistributorInfo() & 0x1FU) + 1U);
 	int x;
 	do {
 		x = GIC_AcknowledgePending();
@@ -69,8 +71,6 @@ int32_t IRQ_Initialize(void) {
 			GIC_ClearPendingIRQ(i);
 	}
 
-	GIC_Enable();
-
 	// Reset the active priority register, in case we halted/reset during an ISR
 	GICInterface->APR[0] = 0x00U;
 	__DSB();
@@ -80,6 +80,7 @@ int32_t IRQ_Initialize(void) {
 										// sets it to the largest supported priority field value.
 	GIC_SetBinaryPoint(4);
 
+	// GIC_EnableDistributor();
 	return (0);
 }
 
