@@ -1,4 +1,5 @@
 #include "drivers/pinchange.hh"
+#include "debug.hh"
 #include "drivers/exti.hh"
 #include "drivers/interrupt.hh"
 #include "rcc.hh"
@@ -94,6 +95,7 @@ void PinChangeInterrupt::_init(const PinChangeConfig &config) {
 								 : EXTI15_IRQn;
 
 	InterruptManager::registerISR(irqn, config.priority1, config.priority2, [&]() {
+		Debug::Pin1::high();
 		if (config.on_rising_edge && (target::EXTI_::RPR1::read() & (1 << _pin))) {
 			target::EXTI_::RPR1::write(1 << _pin); // clear on write
 			task_func();
@@ -102,6 +104,7 @@ void PinChangeInterrupt::_init(const PinChangeConfig &config) {
 			target::EXTI_::FPR1::write(1 << _pin); // clear on write
 			task_func();
 		}
+		Debug::Pin1::low();
 	});
 }
 
