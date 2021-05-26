@@ -21,6 +21,11 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 		"cps MODE_SYS 		 			\n" // Switch to system mode
 		"push {r0-r3, r12, lr} 			\n" // Store remaining AAPCS registers on the System mode stack:
 											// these are expected to be clobbered by the bl ISRHandler call
+
+		// Debug3 high
+		"mov r0, #0x8000\n movt r0, #0x5000\n"
+		"mov r1, #0x8000\n str r1, [r0, #24]\n"
+
 		"and r3, sp, #4  	 			\n" // Ensure stack is 8-byte aligned.
 		"sub sp, sp, r3  				\n" //
 		"push {r3}  					\n" // Store adjustment to stack
@@ -41,9 +46,19 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 		"bge InvalidIRQNum 				\n" // Skip this if it's invalid
 
 		"push {r0} 						\n" // Push IRQ number (r0) so ISRHandler doesn't overwrite
+
+		// Debug3 low
+		"mov r3, #0x8000\n movt r3, #0x5000\n"
+		"mov r1, #0x80000000\n str r1, [r3, #24]\n"
+
 		"cpsie i 						\n" // Enable interrupts
 		"bl ISRHandler 					\n" // Handle the ISR
 		"cpsid i 						\n" // Disable interrupts while we exit
+
+		// Debug3 high
+		"mov r3, #0x8000\n movt r3, #0x5000\n"
+		"mov r0, #0x8000\n str r0, [r3, #24]\n"
+
 		"pop {r0} 						\n" // Restore the IRQ number
 
 		"mov r3, #GICCPU_BASE_low		\n" //
@@ -61,6 +76,11 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 
 		"pop {r3} 						\n" // Pop the stack adjustment
 		"add sp, sp, r3  				\n" // Restore previous stack pointer
+
+		// Debug3 low
+		"mov r3, #0x8000\n movt r3, #0x5000\n"
+		"mov r1, #0x80000000\n str r1, [r3, #24]\n"
+
 		"pop {r0-r3, r12, lr} 			\n" //
 		"rfeia sp! 						\n" // Return to address on stack, and pop SPSR (which restores the en/disable
 											// state of IRQs)
