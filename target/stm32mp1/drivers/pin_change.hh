@@ -1,5 +1,4 @@
 #include "arch.hh"
-#include "debug.hh"
 #include "drivers/exti.hh"
 #include "interrupt.hh"
 #include "pin.hh"
@@ -111,7 +110,6 @@ private:
 									 : EXTI15_IRQn;
 
 		InterruptManager::registerISR(irqn, ConfT::priority1, ConfT::priority2, [&]() {
-			Debug::Pin1::high();
 			if constexpr (ConfT::on_rising_edge) {
 				if (target::EXTI_::PinRisingTrigPending<ConfT::pin>::read()) {
 					target::EXTI_::PinRisingTrigPending<ConfT::pin>::set(); // clear on write
@@ -124,7 +122,6 @@ private:
 					task_func();
 				}
 			}
-			Debug::Pin1::low();
 		});
 	}
 
