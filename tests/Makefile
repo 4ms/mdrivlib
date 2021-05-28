@@ -19,7 +19,6 @@ BUILDDIR = $(TEST_DIR)/build
 
 CXXFLAGS = 	-Wall \
 		 	-std=gnu++2a \
-			-stdlib=libc++ \
 			-include $(TEST_DIR)/stubs/stm32/fake_gpio.h \
 			-include $(TEST_DIR)/stubs/system.hh \
 			-I$(TEST_DIR)/stubs \
@@ -35,9 +34,6 @@ CXXFLAGS = 	-Wall \
 			-I../../../shared \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \
-			# -DSTM32H7 \
-			# -DSTM32H755xx \
-			# -DCORE_CM7 \
 
 ### Boilerplate below here:
 
