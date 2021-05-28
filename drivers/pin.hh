@@ -20,6 +20,7 @@
 
 #include "drivers/register_access.hh"
 #include "stm32xx.h"
+#include <cstddef>
 
 enum class PinPolarity {
 	Normal,
