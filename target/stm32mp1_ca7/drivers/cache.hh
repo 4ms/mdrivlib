@@ -9,6 +9,11 @@ namespace core_a7
 {
 namespace SystemCache
 {
+// Data clean by VMA to point of unification
+static inline void __set_DCCMVAU(uint32_t value) {
+	__set_CP(15, 0, value, 7, 11, 1);
+}
+
 inline void invalidate_dcache() {
 	L1C_InvalidateDCacheAll();
 }
@@ -21,10 +26,11 @@ inline void invalidate_dcache_by_addr(ptr addr) {
 inline void invalidate_dcache_by_range(void *addr, int32_t size) {
 	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
 	while (size > 0) {
-		L1C_InvalidateDCacheMVA(u32_ptr);
+		__set_DCIMVAC((uint32_t)u32_ptr);
 		u32_ptr += 1;
 		size -= 4;
 	}
+	__DMB();
 }
 
 inline void clean_dcache() {
@@ -39,19 +45,21 @@ inline void clean_dcache_by_addr(ptr addr) {
 inline void clean_dcache_by_range(void *addr, int32_t size) {
 	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
 	while (size > 0) {
-		L1C_CleanDCacheMVA(u32_ptr);
+		__set_DCCMVAC((uint32_t)u32_ptr);
 		u32_ptr += 1;
 		size -= 4;
 	}
+	__DMB();
 }
 
 inline void clean_and_invalidate_dcache_by_range(void *addr, int32_t size) {
 	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
 	while (size > 0) {
-		L1C_CleanInvalidateDCacheMVA(u32_ptr);
+		__set_DCCIMVAC((uint32_t)u32_ptr);
 		u32_ptr += 1;
 		size -= 4;
 	}
+	__DMB();
 }
 } // namespace SystemCache
 } // namespace core_a7
