@@ -29,10 +29,9 @@ Reset_Handler:
 
 													// Put any cores other than 0 to sleep
 	mrc     p15, 0, R0, c0, c0, 5					// Read MPIDR
-	ands    R0, R0, #3 								// ??? what is this? 
-goToSleep:
-	wfine
-	bne goToSleep
+	ands    R0, R0, #3 								// grab just the CPU ID
+
+	bne aux_core_main 									// Cores > 0 go to aux_core_start()
 	
 	ldr r4, =UART4_TDR 								// UART: print 'A'
 	mov r0, #65
