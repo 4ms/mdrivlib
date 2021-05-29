@@ -3,7 +3,7 @@
 #include "rcc.hh"
 #include "stm32xx.h"
 
-extern uint32_t *_Reset; // defined in startup.s
+extern uint32_t _Reset; // defined in startup.s
 
 // Controls MPU1 from MPU0
 struct SecondaryCoreController {
@@ -18,10 +18,14 @@ struct SecondaryCoreController {
 	// write 0xCA7FACE1 value into MAGIC_NUMBER backup register.
 	// generate an SGI interrupt to core1
 	static void start() {
-		write_branch_address(reinterpret_cast<uint32_t>(_Reset));
+		write_branch_address(reinterpret_cast<uint32_t>(&_Reset));
 		write_magic_number(MagicNumberValue);
 		// Send SGI #0 interrupt to core1
-		GIC_SendSGI((IRQn_Type)0, 0b10, 0b00);
+		constexpr uint32_t filter_all_other_cores = 0b01;
+		constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
+		constexpr uint32_t cpu0 = 1 << 0;
+		constexpr uint32_t cpu1 = 1 << 1;
+		GIC_SendSGI(SGI1_IRQn, cpu1, filter_all_other_cores);
 		__DSB();
 		__ISB();
 	}
