@@ -30,10 +30,10 @@ Reset_Handler:
 													// Put any cores other than 0 to sleep
 	mrc     p15, 0, R0, c0, c0, 5					// Read MPIDR
 	ands    R0, R0, #3 								// grab just the CPU ID
-goToSleep:
-	wfine
-	bne goToSleep
-	// bne aux_core_main 									// Cores > 0 go to aux_core_start()
+; goToSleep:
+; 	wfine
+; 	bne goToSleep
+	bne aux_core_start 								// Cores > 0 go to aux_core_start()
 	
 	ldr r4, =UART4_TDR 								// UART: print 'A'
 	mov r0, #65
@@ -151,3 +151,21 @@ PAbt_Handler:
 
 DAbt_Handler:
 	b .
+
+aux_core_start:
+	msr cpsr_c, MODE_SYS 							// Setup secondary core user/sys mode stack
+	ldr r1, =_core2_user_stack_start
+	ldr sp, =_core2_user_stack_end
+    movw r0, #0xF2F2
+    movt r0, #0xF2F2
+core2_usrsys_loop:
+    cmp r1, sp
+    strlt r0, [r1], #4
+    blt core2_usrsys_loop
+
+	ldr r4, =UART4_TDR  							//UART: print 'D'
+	mov r5, #68
+	str r5, [r4]
+
+	cpsie  i 										// enable irq interrupts
+	bl aux_core_main 								// Go to secondary core main code

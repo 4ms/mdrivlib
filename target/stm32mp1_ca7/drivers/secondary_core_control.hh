@@ -17,15 +17,28 @@ struct SecondaryCoreController {
 	// write jump address into BRANCH_ADDRESS backup register.
 	// write 0xCA7FACE1 value into MAGIC_NUMBER backup register.
 	// generate an SGI interrupt to core1
+
+	static void GIC_SendSecureSGI(IRQn_Type IRQn, uint32_t target_list, uint32_t filter_list) {
+		GICDistributor->SGIR =
+			((filter_list & 3U) << 24U) | ((target_list & 0xFFUL) << 16U) | (1 << 15) | (IRQn & 0x0FUL);
+	}
+
 	static void start() {
 		write_branch_address(reinterpret_cast<uint32_t>(&_Reset));
 		write_magic_number(MagicNumberValue);
-		// Send SGI #0 interrupt to core1
-		constexpr uint32_t filter_all_other_cores = 0b01;
+		// Send SGI #1 interrupt to core1
+		auto irq = SGI1_IRQn;
+		GIC_EnableIRQ(irq);
+		GIC_SetPriority(irq, 0b00000000);
+
+		constexpr uint32_t filter_to_this_core_only = 0b01;
+		constexpr uint32_t filter_to_all_other_cores = 0b01;
 		constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
 		constexpr uint32_t cpu0 = 1 << 0;
 		constexpr uint32_t cpu1 = 1 << 1;
-		GIC_SendSGI(SGI1_IRQn, cpu1, filter_all_other_cores);
+		asm volatile("CPS #22\n");
+		GIC_SendSecureSGI(irq, cpu1, filter_to_all_other_cores);
+		asm volatile("CPS #31\n");
 		__DSB();
 		__ISB();
 	}
@@ -40,7 +53,6 @@ struct SecondaryCoreController {
 
 	static void reset() {
 		// Reset MPU1
-		// Todo: Does this work?
 		RCC->MP_GRSTCSETR = RCC_MP_GRSTCSETR_MPUP1RST;
 		__DSB();
 		__ISB();
