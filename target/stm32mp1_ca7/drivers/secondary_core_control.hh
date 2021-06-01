@@ -8,39 +8,53 @@ extern uint32_t _Reset; // defined in startup.s
 // Controls MPU1 from MPU0
 struct SecondaryCoreController {
 
-	enum {
-		MagicNumberValue = 0xCA7FACE1,
-	};
+	enum { MagicNumberValue = 0xCA7FACE1 };
+	// static inline volatile uint32_t *MagicNumberRegister = &(TAMP->BKP4R);
+
+	static constexpr auto irq = SGI0_IRQn;
+
+	// static void GIC_SendSecureSGI(IRQn_Type IRQn, uint32_t target_list, uint32_t filter_list) {
+	// 	GICDistributor->SGIR =
+	// 		((filter_list & 3U) << 24U) | ((target_list & 0xFFUL) << 16U) | (1 << 15) | (IRQn & 0x0FUL);
+	// }
 
 	// From https://wiki.st.com/stm32mpu/wiki/STM32MP15_ROM_code_overview#Secondary_core_boot
 	// To unpark the core1, the application running on core0 shall:
-	// write jump address into BRANCH_ADDRESS backup register.
-	// write 0xCA7FACE1 value into MAGIC_NUMBER backup register.
-	// generate an SGI interrupt to core1
-
-	static void GIC_SendSecureSGI(IRQn_Type IRQn, uint32_t target_list, uint32_t filter_list) {
-		GICDistributor->SGIR =
-			((filter_list & 3U) << 24U) | ((target_list & 0xFFUL) << 16U) | (1 << 15) | (IRQn & 0x0FUL);
-	}
+	// 	- write jump address into BRANCH_ADDRESS backup register.
+	// 	- write 0xCA7FACE1 value into MAGIC_NUMBER backup register.
+	// 	- generate an SGI interrupt to core1
 
 	static void start() {
-		write_branch_address(reinterpret_cast<uint32_t>(&_Reset));
-		write_magic_number(MagicNumberValue);
-		// Send SGI #1 interrupt to core1
-		auto irq = SGI1_IRQn;
-		GIC_EnableIRQ(irq);
-		GIC_SetPriority(irq, 0b00000000);
+		unlock_backup_registers();
 
-		constexpr uint32_t filter_to_this_core_only = 0b01;
-		constexpr uint32_t filter_to_all_other_cores = 0b01;
-		constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
-		constexpr uint32_t cpu0 = 1 << 0;
-		constexpr uint32_t cpu1 = 1 << 1;
-		asm volatile("CPS #22\n");
-		GIC_SendSecureSGI(irq, cpu1, filter_to_all_other_cores);
-		asm volatile("CPS #31\n");
-		__DSB();
-		__ISB();
+		// ROM code needs an SGI0 after core reset
+		// core is ready when magic is set to 0 in ROM code
+		// reset_magic_number();
+
+		reset();
+
+		// while (TAMP->BKP4R)
+		// 	send_sgi();
+
+		// Write entry point
+		write_branch_address(reinterpret_cast<uint32_t>(&_Reset));
+
+		write_magic_number(MagicNumberValue);
+
+		// Send second SGI0 to start the core
+		send_sgi();
+	}
+
+	static void unlock_backup_registers() {
+		// Turn on the Disable Backup Protection bit, to allow us to write to the TAMP backup registers
+		PWR->CR1 = PWR->CR1 | PWR_CR1_DBP;
+		while (!(PWR->CR1 & PWR_CR1_DBP))
+			;
+	}
+
+	static void reset_magic_number() {
+		if (TAMP->BKP4R)
+			TAMP->BKP4R = 0xFFFFFFFF;
 	}
 
 	static void write_magic_number(uint32_t magic_number_value) {
@@ -49,6 +63,19 @@ struct SecondaryCoreController {
 
 	static void write_branch_address(uint32_t addr) {
 		TAMP->BKP5R = addr;
+	}
+
+	static void setup_sgi() {
+		GIC_EnableIRQ(irq);
+		GIC_SetPriority(irq, 0b00000000);
+	}
+	static void send_sgi() {
+		static constexpr uint32_t filter_to_this_core_only = 0b01;
+		static constexpr uint32_t filter_to_all_other_cores = 0b01;
+		static constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
+		static constexpr uint32_t cpu0 = 1 << 0;
+		static constexpr uint32_t cpu1 = 1 << 1;
+		GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
 	}
 
 	static void reset() {
