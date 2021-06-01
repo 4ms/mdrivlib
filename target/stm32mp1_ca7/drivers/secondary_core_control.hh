@@ -29,12 +29,10 @@ struct SecondaryCoreController {
 
 		// ROM code needs an SGI0 after core reset
 		// core is ready when magic is set to 0 in ROM code
-		// reset_magic_number();
-
+		reset_magic_number();
 		reset();
-
-		// while (TAMP->BKP4R)
-		// 	send_sgi();
+		while (TAMP->BKP4R)
+			send_sgi();
 
 		// Write entry point
 		write_branch_address(reinterpret_cast<uint32_t>(&_Reset));
@@ -53,8 +51,8 @@ struct SecondaryCoreController {
 	}
 
 	static void reset_magic_number() {
-		if (TAMP->BKP4R)
-			TAMP->BKP4R = 0xFFFFFFFF;
+		// if (TAMP->BKP4R)
+		TAMP->BKP4R = 0xFFFFFFFF;
 	}
 
 	static void write_magic_number(uint32_t magic_number_value) {
