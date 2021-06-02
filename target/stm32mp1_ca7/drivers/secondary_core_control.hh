@@ -25,12 +25,24 @@ struct SecondaryCoreController {
 	// 	- generate an SGI interrupt to core1
 
 	static void start() {
+
+		// Enable SMP
+		// uint32_t actlr = __get_ACTLR();
+		// actlr |= ACTLR_SMP_Msk;
+		// __set_ACTLR(actlr);
+		// __ISB();
+		// __DSB();
+
+		setup_sgi();
 		unlock_backup_registers();
 
 		// ROM code needs an SGI0 after core reset
 		// core is ready when magic is set to 0 in ROM code
-		reset_magic_number();
+		// reset_magic_number();
 		reset();
+
+		write_magic_number(MagicNumberValue);
+
 		while (TAMP->BKP4R)
 			send_sgi();
 
@@ -68,12 +80,27 @@ struct SecondaryCoreController {
 		GIC_SetPriority(irq, 0b00000000);
 	}
 	static void send_sgi() {
-		static constexpr uint32_t filter_to_this_core_only = 0b01;
-		static constexpr uint32_t filter_to_all_other_cores = 0b01;
-		static constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
-		static constexpr uint32_t cpu0 = 1 << 0;
-		static constexpr uint32_t cpu1 = 1 << 1;
-		GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
+		constexpr uint32_t filter_to_this_core_only = 0b01;
+		constexpr uint32_t filter_to_all_other_cores = 0b01;
+		constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
+		constexpr uint32_t cpu0 = 1 << 0;
+		constexpr uint32_t cpu1 = 1 << 1;
+
+		uint32_t periphbase;
+
+		/* get the GIC base address from the CBAR register */
+
+		constexpr uint32_t CBAR_MASK = 0xFFFF8000;
+		constexpr uint32_t GIC_DIST_OFFSET = 0x1000;
+		constexpr uint32_t GICD_SGIR = 0x0f00;
+		asm("mrc p15, 4, %0, c15, c0, 0\n" : "=r"(periphbase));
+		volatile uint32_t *SGIR = reinterpret_cast<uint32_t *>((periphbase & CBAR_MASK) + GIC_DIST_OFFSET + GICD_SGIR);
+		asm volatile("msr cpsr_c, #22\n");
+		*SGIR = 1UL << 17UL;
+		__DSB();
+		__ISB();
+		asm volatile("msr cpsr_c, #0x1f\n");
+		// GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
 	}
 
 	static void reset() {
