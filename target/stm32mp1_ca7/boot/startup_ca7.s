@@ -27,17 +27,10 @@ _Reset:
 Reset_Handler:
 	cpsid   if 										// Mask Interrupts
 
-													// Put any cores other than 0 to sleep
 	mrc     p15, 0, R0, c0, c0, 5					// Read MPIDR
 	ands    R0, R0, #3 								// grab just the CPU ID
-//goToSleep:
-	///wfine
-	//bne goToSleep
 	bne aux_core_start 								// Cores > 0 go to aux_core_start()
 	
-	ldr r4, =UART4_TDR 								// UART: print 'A'
-	mov r0, #65
-	str r0, [r4]
 
 	mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
 	bic     R0, R0, #(0x1 << 12) 					// Clear I bit 12 to disable I Cache
@@ -56,6 +49,9 @@ Reset_Handler:
 	ldr    R0, =0xC2000040
 	mcr    p15, 0, R0, c12, c0, 0
 
+	ldr r4, =UART4_TDR 								// UART: print 'A'
+	mov r0, #65
+	str r0, [r4]
     												// FIQ stack
     msr cpsr_c, MODE_FIQ
     ldr r1, =_fiq_stack_start
@@ -156,6 +152,19 @@ aux_core_start:
 	ldr r4, =UART4_TDR  							//UART: print 'D'
 	mov r5, #68
 	str r5, [r4]
+
+//	mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
+//	orr     R0, R0, #(0x1 << 12) 					// Set I bit 12 to enable I Cache
+//	orr     R0, R0, #(0x1 <<  2) 					// Set C bit  2 to enable D Cache
+	// orr     R0, R0, #0x1 							// Set M bit  0 to enable MMU
+	// orr     R0, R0, #(0x1 << 11) 					// Set Z bit 11 to enable branch prediction
+	// orr     R0, R0, #(0x1 << 13) 					// Set V bit 13 to enable hivecs
+//	mcr     p15, 0, R0, c1, c0, 0 					// Write value back to CP15 System Control register
+//	isb
+	 												// Configure ACTLR
+	// mrc     p15, 0, r0, c1, c0, 1 					// Read CP15 Auxiliary Control Register
+	// orr     r0, r0, #(1 <<  1) 						// Enable L2 prefetch hint (UNK/WI since r4p1)
+	// mcr     p15, 0, r0, c1, c0, 1 					// Write CP15 Auxiliary Control Register
 
 	msr cpsr_c, MODE_SYS 							// Setup secondary core user/sys mode stack
 	ldr r1, =_core2_user_stack_start
