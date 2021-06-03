@@ -132,9 +132,25 @@ bss_loop:
 
 	CPSIE  i 										// enable irq interrupts
 
-run_main:
     bl main
     b Abort_Exception
+
+aux_core_start:
+	bl SystemInitAuxCore 							// System and libc/cpp init
+
+	msr cpsr_c, MODE_SYS 							// Setup secondary core user/sys mode stack
+	ldr r1, =_auxcore_user_stack_start
+	ldr sp, =_auxcore_user_stack_end
+    movw r0, #0xF2F2
+    movt r0, #0xF2F2
+auxcore_usrsys_loop:
+    cmp r1, sp
+    strlt r0, [r1], #4
+    blt auxcore_usrsys_loop
+
+
+	cpsie  i 										// enable irq interrupts
+	bl aux_core_main 								// Go to secondary core main code
 
 Abort_Exception:
 	b .
@@ -147,32 +163,3 @@ PAbt_Handler:
 
 DAbt_Handler:
 	b .
-
-aux_core_start:
-	//ldr r4, =UART4_TDR  							//UART: print 'D'
-	//mov r5, #68
-	//str r5, [r4]
-
-	bl SystemInitAuxCore 									// System and libc/cpp init
-	// mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
-	// orr     R0, R0, #(0x1 << 12) 					// Set I bit 12 to enable I Cache
-	// orr     R0, R0, #(0x1 <<  2) 					// Set C bit  2 to enable D Cache
-	// orr     R0, R0, #0x1 							// Set M bit  0 to enable MMU
-	// orr     R0, R0, #(0x1 << 11) 					// Set Z bit 11 to enable branch prediction
-	// orr     R0, R0, #(0x1 << 13) 					// Set V bit 13 to enable hivecs
-	// mcr     p15, 0, R0, c1, c0, 0 					// Write value back to CP15 System Control register
-	// isb
-
-	msr cpsr_c, MODE_SYS 							// Setup secondary core user/sys mode stack
-	ldr r1, =_core2_user_stack_start
-	ldr sp, =_core2_user_stack_end
-    movw r0, #0xF2F2
-    movt r0, #0xF2F2
-core2_usrsys_loop:
-    cmp r1, sp
-    strlt r0, [r1], #4
-    blt core2_usrsys_loop
-
-
-	cpsie  i 										// enable irq interrupts
-	bl aux_core_main 								// Go to secondary core main code
