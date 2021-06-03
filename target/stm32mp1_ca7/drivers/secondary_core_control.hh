@@ -11,12 +11,7 @@ struct SecondaryCoreController {
 	enum { MagicNumberValue = 0xCA7FACE1 };
 	// static inline volatile uint32_t *MagicNumberRegister = &(TAMP->BKP4R);
 
-	static constexpr auto irq = SGI0_IRQn;
-
-	// static void GIC_SendSecureSGI(IRQn_Type IRQn, uint32_t target_list, uint32_t filter_list) {
-	// 	GICDistributor->SGIR =
-	// 		((filter_list & 3U) << 24U) | ((target_list & 0xFFUL) << 16U) | (1 << 15) | (IRQn & 0x0FUL);
-	// }
+	static constexpr auto irq = SGI1_IRQn;
 
 	// From https://wiki.st.com/stm32mpu/wiki/STM32MP15_ROM_code_overview#Secondary_core_boot
 	// To unpark the core1, the application running on core0 shall:
@@ -24,25 +19,15 @@ struct SecondaryCoreController {
 	// 	- write 0xCA7FACE1 value into MAGIC_NUMBER backup register.
 	// 	- generate an SGI interrupt to core1
 
-	// From u-boot:
-	// ROM code needs an SGI0 after core reset
-	// core is ready when magic is set to 0 in ROM code
-
 	static void start() {
-
-		// Enable SMP
-		// uint32_t actlr = __get_ACTLR();
-		// actlr |= ACTLR_SMP_Msk;
-		// __set_ACTLR(actlr);
-		// __ISB();
-		// __DSB();
 
 		setup_sgi();
 		unlock_backup_registers();
 
-		// reset_magic_number();
+		// Todo: some way to reload new firmware while debugging without a hard reset
+		// This mimicks what u-boot does, but it doesn't work.
 		// reset();
-
+		// reset_magic_number();
 		// while (TAMP->BKP4R)
 		// 	send_sgi();
 
@@ -82,23 +67,9 @@ struct SecondaryCoreController {
 	}
 
 	static void send_sgi() {
-		constexpr uint32_t filter_to_this_core_only = 0b01;
-		constexpr uint32_t filter_to_all_other_cores = 0b01;
 		constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
-		constexpr uint32_t cpu0 = 1 << 0;
 		constexpr uint32_t cpu1 = 1 << 1;
-
-		constexpr uint32_t CBAR_MASK = 0xFFFF8000;
-		constexpr uint32_t GIC_DIST_OFFSET = 0x1000;
-		constexpr uint32_t GICD_SGIR = 0x0f00;
-		uint32_t periphbase;
-		asm("mrc p15, 4, %0, c15, c0, 0\n" : "=r"(periphbase));
-		volatile uint32_t *SGIR = reinterpret_cast<uint32_t *>((periphbase & CBAR_MASK) + GIC_DIST_OFFSET + GICD_SGIR);
-		__DSB();
-		__ISB();
-		*SGIR = 1UL << 17UL;
-
-		// GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
+		GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
 	}
 
 	static void reset() {

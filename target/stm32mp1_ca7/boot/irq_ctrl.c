@@ -47,7 +47,6 @@ void GIC_ClearActiveIRQ(IRQn_Type IRQn) {
 int32_t IRQ_Initialize(void) {
 	GIC_Enable();
 
-	// GIC_DisableDistributor();
 	unsigned num_irq = 32U * ((GIC_DistributorInfo() & 0x1FU) + 1U);
 	int x;
 	do {
@@ -80,7 +79,6 @@ int32_t IRQ_Initialize(void) {
 										// sets it to the largest supported priority field value.
 	GIC_SetBinaryPoint(4);
 
-	// GIC_EnableDistributor();
 	return (0);
 }
 
