@@ -75,11 +75,11 @@ void SystemInitAuxCore(void) {
 
 	__FPU_Enable(); // ok
 
-	// MMU_CreateTranslationTable();
-	// MMU_Enable();
+	MMU_CreateTranslationTable();
+	MMU_Enable();
 
 	L1C_EnableCaches(); // ok
-	L1C_EnableBTAC();	// ok
+						// L1C_EnableBTAC();	// ok
 
-	// 	GIC_CPUInterfaceInit();
+	GIC_CPUInterfaceInit();
 }
