@@ -56,3 +56,30 @@ void SystemInit(void) {
 
 	IRQ_Initialize();
 }
+
+void SystemInitAuxCore(void) {
+	// Invalidate entire Unified TLB
+	// __set_TLBIALL(0);
+
+	// Invalidate entire branch predictor array
+	// __set_BPIALL(0);
+	// __DSB();
+	// __ISB();
+
+	//  Invalidate instruction cache and flush branch target cache
+	// __set_ICIALLU(0);
+	// __DSB();
+	// __ISB();
+
+	// L1C_InvalidateDCacheAll();
+
+	__FPU_Enable(); // ok
+
+	// MMU_CreateTranslationTable();
+	// MMU_Enable();
+
+	L1C_EnableCaches(); // ok
+	L1C_EnableBTAC();	// ok
+
+	// 	GIC_CPUInterfaceInit();
+}

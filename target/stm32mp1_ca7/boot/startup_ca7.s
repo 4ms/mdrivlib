@@ -149,22 +149,19 @@ DAbt_Handler:
 	b .
 
 aux_core_start:
-	ldr r4, =UART4_TDR  							//UART: print 'D'
-	mov r5, #68
-	str r5, [r4]
+	//ldr r4, =UART4_TDR  							//UART: print 'D'
+	//mov r5, #68
+	//str r5, [r4]
 
-//	mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
-//	orr     R0, R0, #(0x1 << 12) 					// Set I bit 12 to enable I Cache
-//	orr     R0, R0, #(0x1 <<  2) 					// Set C bit  2 to enable D Cache
+	bl SystemInitAuxCore 									// System and libc/cpp init
+	// mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
+	// orr     R0, R0, #(0x1 << 12) 					// Set I bit 12 to enable I Cache
+	// orr     R0, R0, #(0x1 <<  2) 					// Set C bit  2 to enable D Cache
 	// orr     R0, R0, #0x1 							// Set M bit  0 to enable MMU
 	// orr     R0, R0, #(0x1 << 11) 					// Set Z bit 11 to enable branch prediction
 	// orr     R0, R0, #(0x1 << 13) 					// Set V bit 13 to enable hivecs
-//	mcr     p15, 0, R0, c1, c0, 0 					// Write value back to CP15 System Control register
-//	isb
-	 												// Configure ACTLR
-	// mrc     p15, 0, r0, c1, c0, 1 					// Read CP15 Auxiliary Control Register
-	// orr     r0, r0, #(1 <<  1) 						// Enable L2 prefetch hint (UNK/WI since r4p1)
-	// mcr     p15, 0, r0, c1, c0, 1 					// Write CP15 Auxiliary Control Register
+	// mcr     p15, 0, R0, c1, c0, 0 					// Write value back to CP15 System Control register
+	// isb
 
 	msr cpsr_c, MODE_SYS 							// Setup secondary core user/sys mode stack
 	ldr r1, =_core2_user_stack_start

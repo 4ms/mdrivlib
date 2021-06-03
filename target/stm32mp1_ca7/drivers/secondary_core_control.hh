@@ -43,8 +43,6 @@ struct SecondaryCoreController {
 		// reset_magic_number();
 		// reset();
 
-		// write_magic_number(MagicNumberValue);
-
 		// while (TAMP->BKP4R)
 		// 	send_sgi();
 
@@ -62,10 +60,12 @@ struct SecondaryCoreController {
 		PWR->CR1 = PWR->CR1 | PWR_CR1_DBP;
 		while (!(PWR->CR1 & PWR_CR1_DBP))
 			;
+
+		// Turn off Write protection on backup registers (BOOTROM seems to turn it on during MPU1 boot-up)
+		TAMP->SMCR = (0 << TAMP_SMCR_BKPRWDPROT_Pos) | (0 << TAMP_SMCR_BKPWDPROT_Pos) | (1 << TAMP_SMCR_TAMPDPROT_Pos);
 	}
 
 	static void reset_magic_number() {
-		// if (TAMP->BKP4R)
 		TAMP->BKP4R = 0xFFFFFFFF;
 	}
 
@@ -78,9 +78,7 @@ struct SecondaryCoreController {
 	}
 
 	static void setup_sgi() {
-		// GIC_DisableIRQ(irq);
 		GIC_EnableIRQ(irq);
-		// GIC_SetPriority(irq, 0b00000000);
 	}
 
 	static void send_sgi() {
@@ -90,21 +88,16 @@ struct SecondaryCoreController {
 		constexpr uint32_t cpu0 = 1 << 0;
 		constexpr uint32_t cpu1 = 1 << 1;
 
-		uint32_t periphbase;
-
 		constexpr uint32_t CBAR_MASK = 0xFFFF8000;
 		constexpr uint32_t GIC_DIST_OFFSET = 0x1000;
 		constexpr uint32_t GICD_SGIR = 0x0f00;
+		uint32_t periphbase;
 		asm("mrc p15, 4, %0, c15, c0, 0\n" : "=r"(periphbase));
 		volatile uint32_t *SGIR = reinterpret_cast<uint32_t *>((periphbase & CBAR_MASK) + GIC_DIST_OFFSET + GICD_SGIR);
-		// asm volatile("cps #22\n");
 		__DSB();
 		__ISB();
 		*SGIR = 1UL << 17UL;
 
-		// __DSB();
-		// __ISB();
-		// asm volatile("cps #0x1f\n");
 		// GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
 	}
 
