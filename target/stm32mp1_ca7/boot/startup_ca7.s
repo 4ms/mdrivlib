@@ -12,7 +12,6 @@
 
 .section .vector_table, "x"
 .global _Reset
-.global _start
 _Reset:
     b Reset_Handler
     b Undef_Handler 								// 0x4  Undefined Instruction 
@@ -26,11 +25,6 @@ _Reset:
 .section .resethandler
 Reset_Handler:
 	cpsid   if 										// Mask Interrupts
-
-	mrc     p15, 0, R0, c0, c0, 5					// Read MPIDR
-	ands    R0, R0, #3 								// grab just the CPU ID
-	bne aux_core_start 								// Cores > 0 go to aux_core_start()
-	
 
 	mrc     p15, 0, R0, c1, c0, 0					// Read CP15 System Control register
 	bic     R0, R0, #(0x1 << 12) 					// Clear I bit 12 to disable I Cache
@@ -135,7 +129,11 @@ bss_loop:
     bl main
     b Abort_Exception
 
+
+.global aux_core_start
 aux_core_start:
+	cpsid   if 										// Disable Interrupts: keep them disabled since we use IRQ as a inter-processor signal
+													
 	bl SystemInitAuxCore 							// System and libc/cpp init
 
 	msr cpsr_c, MODE_SYS 							// Setup secondary core user/sys mode stack
@@ -148,9 +146,9 @@ auxcore_usrsys_loop:
     strlt r0, [r1], #4
     blt auxcore_usrsys_loop
 
-
-	cpsie  i 										// enable irq interrupts
 	bl aux_core_main 								// Go to secondary core main code
+
+
 
 Abort_Exception:
 	b .

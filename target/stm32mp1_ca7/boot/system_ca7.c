@@ -82,5 +82,6 @@ void SystemInitAuxCore(void) {
 	L1C_EnableCaches();
 	L1C_EnableBTAC();
 
-	GIC_CPUInterfaceInit();
+	// Don't actually setup the GIC: we're not using interrupts to "interrupt", we just use them as signals
+	// GIC_CPUInterfaceInit();
 }
