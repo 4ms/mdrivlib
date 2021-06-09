@@ -1,9 +1,8 @@
 #pragma once
+#include "drivers/cache.hh"
 #include "drivers/stm32xx.h"
 
 namespace mdrivlib
-{
-namespace stm32h7x5
 {
 struct SystemCache {
 	static void invalidate_dcache() {
@@ -35,5 +34,4 @@ struct SystemCache {
 		SCB_CleanInvalidateDCache_by_Addr(reinterpret_cast<uint32_t *>(addr), size);
 	}
 };
-} // namespace stm32h7x5
 } // namespace mdrivlib

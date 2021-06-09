@@ -1,13 +1,7 @@
 #pragma once
 #include "drivers/stm32xx.h"
 
-namespace mdrivlib
-{
-namespace stm32mp1
-{
-namespace core_a7
-{
-namespace SystemCache
+namespace mdrivlib::SystemCache
 {
 // Data clean by VMA to point of unification
 static inline void __set_DCCMVAU(uint32_t value) {
@@ -24,7 +18,7 @@ inline void invalidate_dcache_by_addr(ptr addr) {
 }
 
 inline void invalidate_dcache_by_range(void *addr, int32_t size) {
-	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
+	auto *u32_ptr = reinterpret_cast<uint32_t *>(addr);
 	while (size > 0) {
 		__set_DCIMVAC((uint32_t)u32_ptr);
 		u32_ptr += 1;
@@ -43,7 +37,7 @@ inline void clean_dcache_by_addr(ptr addr) {
 }
 
 inline void clean_dcache_by_range(void *addr, int32_t size) {
-	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
+	auto *u32_ptr = reinterpret_cast<uint32_t *>(addr);
 	while (size > 0) {
 		__set_DCCMVAC((uint32_t)u32_ptr);
 		u32_ptr += 1;
@@ -53,7 +47,7 @@ inline void clean_dcache_by_range(void *addr, int32_t size) {
 }
 
 inline void clean_and_invalidate_dcache_by_range(void *addr, int32_t size) {
-	uint32_t *u32_ptr = reinterpret_cast<uint32_t *>(addr);
+	auto *u32_ptr = reinterpret_cast<uint32_t *>(addr);
 	while (size > 0) {
 		__set_DCCIMVAC((uint32_t)u32_ptr);
 		u32_ptr += 1;
@@ -61,7 +55,4 @@ inline void clean_and_invalidate_dcache_by_range(void *addr, int32_t size) {
 	}
 	__DMB();
 }
-} // namespace SystemCache
-} // namespace core_a7
-} // namespace stm32mp1
-} // namespace mdrivlib
+} // namespace mdrivlib::SystemCache
