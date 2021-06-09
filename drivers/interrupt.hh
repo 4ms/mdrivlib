@@ -19,8 +19,7 @@ public:
 	using ISRType = std::function<void(void)>;
 	static inline const uint32_t NumISRs = 256;
 
-	Interrupt() {
-	}
+	Interrupt() = default;
 	Interrupt(IRQType irqnum, ISRType &&func) {
 		ISRs[irqnum] = std::move(func);
 	}

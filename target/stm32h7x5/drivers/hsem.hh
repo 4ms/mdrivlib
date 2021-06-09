@@ -4,10 +4,7 @@
 #include "stm32xx.h"
 #include <functional>
 
-namespace mdrivlib
-{
-
-namespace stm32h7x5
+namespace mdrivlib::stm32h7x5
 {
 struct HSEM_ {
 	template<uint32_t Mask>
@@ -22,8 +19,7 @@ struct HSEM_ {
 	template<uint32_t Mask>
 	using MISR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, MISR), Mask>;
 };
-} // namespace stm32h7x5
-} // namespace mdrivlib
+} // namespace mdrivlib::stm32h7x5
 
 enum class HWSemaphoreFlag {
 	LockFailed = 0,
