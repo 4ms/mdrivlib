@@ -10,7 +10,7 @@ struct SecondaryCoreController {
 	static inline volatile uint32_t *MagicNumberRegister = &(TAMP->BKP4R);
 	static inline volatile uint32_t *BranchAddressRegister = &(TAMP->BKP5R);
 
-	static constexpr auto irq = SGI0_IRQn;
+	static constexpr auto irq0 = SGI0_IRQn;
 
 	// Start MPU1 (aux core A7) from the _Reset function
 	// From https://wiki.st.com/stm32mpu/wiki/STM32MP15_ROM_code_overview#Secondary_core_boot
@@ -28,7 +28,7 @@ struct SecondaryCoreController {
 
 		*BranchAddressRegister = reinterpret_cast<uint32_t>(&aux_core_start);
 		*MagicNumberRegister = MagicNumberValue;
-		send_sgi();
+		send_sgi(irq0);
 	}
 
 	static void reset() {
@@ -46,7 +46,7 @@ struct SecondaryCoreController {
 		__ISB();
 	}
 
-	static void send_sgi() {
+	static void send_sgi(IRQn_Type irq) {
 		constexpr uint32_t filter_use_cpu_sel_bits = 0b00;
 		constexpr uint32_t cpu1 = 1 << 1;
 		GIC_SendSGI(irq, cpu1, filter_use_cpu_sel_bits);
@@ -64,7 +64,7 @@ private:
 	}
 
 	static void setup_sgi() {
-		GIC_EnableIRQ(irq);
+		GIC_EnableIRQ(irq0);
 	}
 };
 
