@@ -146,6 +146,7 @@ auxcore_usrsys_loop:
     strlt r0, [r1], #4
     blt auxcore_usrsys_loop
 
+	cpsid   if 										// Disable Interrupts: keep them disabled since we use IRQ as a inter-processor signal
 	bl aux_core_main 								// Go to secondary core main code
 
 

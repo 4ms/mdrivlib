@@ -15,17 +15,11 @@ enum class SupportedTargets {
 // STM32MP1
 //
 #if defined(STM32MP1) /*&& defined(CORE_CA7)*/
-namespace mdrivlib
-{
-namespace stm32mp1
-{
-namespace core_a7
+namespace mdrivlib::stm32mp1::core_a7
 {
 constexpr bool TARGET_FOUND = true;
 constexpr auto TYPE = SupportedTargets::stm32mp1_ca7;
-} // namespace core_a7
-} // namespace stm32mp1
-} // namespace mdrivlib
+} // namespace mdrivlib::stm32mp1::core_a7
 namespace target = mdrivlib::stm32mp1::core_a7;
 
 // #elif defined(STM32MP1) && defined(CORE_CM4)
