@@ -34,29 +34,28 @@ static constexpr bool DISABLE_I2C = false;
 
 namespace mdrivlib
 {
-using namespace _CodecCS42L51;
+using namespace CodecCS42L51Register;
 
-uint16_t default_codec_init_data[] = {
-	VOL_0dB,   // Reg 00: Left Line In
-	VOL_0dB,   // Reg 01: Right Line In
-	HPVOL_0dB, // Reg 02: Left Headphone out
-	HPVOL_0dB, // Reg 03: Right Headphone out
-	(MUTEMIC   // Reg 04: Analog Audio Path Control (maximum attenuation on sidetone, sidetone disabled, DAC selected,
-			   // Mute Mic, no bypass)
-	 | INSEL_line | DACSEL | SIDEATT_neg6dB),
-	(DEEMPH_disable // Reg 05: Digital Audio Path Control: HPF, De-emp at 48kHz on DAC, do not soft mute dac
-	 | ADCHPFEnable),
-	(PD_MIC | PD_OSC | PD_CLKOUT), // Reg 06: Power Down Control (Clkout, Osc, Mic Off) 0x062
-	(format_24b					   // Reg 07: Digital Audio Interface Format (24-bit, slave)
-	 | format_I2S),
-	0x000, // Reg 08: Sampling Control (USB_NORM=Normal, BOSR=256x, MCLK=12.288MHz, SR=48k)
-	0x001  // Reg 09: Active Control
+struct RegisterData {
+	uint8_t reg_num;
+	uint8_t value;
 };
 
-CodecCS42L51::CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef)
+static RegisterData default_codec_init[] = {
+	// {POWER_CTL1, 0},
+	{MIC_POWER_CTL, MIC_POWER_CTL_AUTO},
+	{INTF_CTL, INTF_CTL_DAC_FORMAT(DAC_DIF_I2S) | INTF_CTL_ADC_I2S},
+
+	//... etc
+};
+
+CodecCS42L51::CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef, PinNoInit reset_pin, uint8_t address_bit)
 	: i2c_(i2c)
 	, sai_{saidef}
-	, samplerate_{saidef.samplerate} {
+	, samplerate_{saidef.samplerate}
+	, reset_pin_{reset_pin, PinMode::Output}
+	, CODEC_ADDRESS{static_cast<uint8_t>(0x4A + (address_bit ? 1 : 0))} {
+	reset_pin_.low();
 }
 
 void CodecCS42L51::init() {
@@ -75,52 +74,47 @@ void CodecCS42L51::set_callbacks(std::function<void()> &&tx_complete_cb, std::fu
 uint32_t CodecCS42L51::get_samplerate() {
 	return samplerate_;
 }
+
 void CodecCS42L51::start() {
 	sai_.start();
+
+	// Set Power Down bit to 0 after MCLK and LRCK are running (CS42L51 datasheet, section 4.8)
+	power_up();
 }
 
-CodecCS42L51::Error CodecCS42L51::init_at_samplerate(uint32_t new_sample_rate) {
-	HAL_Delay(10);
-	auto err = _reset();
-	if (err != CODEC_NO_ERR)
-		return err;
-	return _write_all_registers(new_sample_rate);
-}
+CodecCS42L51::Error CodecCS42L51::init_at_samplerate(uint32_t sample_rate) {
+	reset_pin_.high();
+	HAL_Delay(1);
 
-CodecCS42L51::Error CodecCS42L51::_reset() {
-	return _write_register(WM8731_REG_RESET, 0);
+	// Set Power Down bit to 1 to enter Software Mode (must do it <10ms from reset pin going high). See CS42L51
+	// datasheet, section 4.8
+	power_down();
+
+	return _write_all_registers(sample_rate);
 }
 
 CodecCS42L51::Error CodecCS42L51::_write_all_registers(uint32_t sample_rate) {
 	CodecCS42L51::Error err;
 
-	for (uint8_t i = 0; i < WM8731_NUM_REGS; i++) {
-		if (i != WM8731_REG_SAMPLE_CTRL)
-			err = _write_register(i, default_codec_init_data[i]);
-		else
-			err = _write_register(i, default_codec_init_data[i] | _calc_samplerate(sample_rate));
-
+	for (auto packet : default_codec_init) {
+		err = _write_register(packet.reg_num, packet.value);
 		if (err != CODEC_NO_ERR)
 			return err;
 	}
 	return err;
 }
 
-uint16_t CodecCS42L51::_calc_samplerate(uint32_t sample_rate) {
-	if (sample_rate == 48000)
-		return SR_NORM_48K;
-	else if (sample_rate == 44100)
-		return SR_NORM_44K;
-	else if (sample_rate == 32000)
-		return SR_NORM_32K;
-	else if (sample_rate == 88200)
-		return SR_NORM_88K;
-	else if (sample_rate == 96000)
-		return SR_NORM_96K;
+auto CodecCS42L51::_calc_samplerate(uint32_t sample_rate) {
+	if (sample_rate > 50000)
+		return DSM_MODE;
+	else if (sample_rate == 16000)
+		return HSM_MODE;
 	else if (sample_rate == 8000)
-		return SR_NORM_8K;
+		return QSM_MODE;
+	else if (sample_rate > 4000)
+		return SSM_MODE;
 	else
-		return 0;
+		return (uint8_t)0;
 }
 
 CodecCS42L51::Error CodecCS42L51::_write_register(uint8_t reg_address, uint16_t reg_value) {
@@ -136,15 +130,11 @@ CodecCS42L51::Error CodecCS42L51::_write_register(uint8_t reg_address, uint16_t 
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
 
-CodecCS42L51::Error CodecCS42L51::power_down(void) {
-	return _write_register(WM8731_REG_POWERDOWN, 0xFF); // Power Down enable all
+CodecCS42L51::Error CodecCS42L51::power_down() {
+	return _write_register(POWER_CTL1, POWER_CTL1_PDN);
 }
 
-// FixMe: Why is this exposed?
-DMA_HandleTypeDef *CodecCS42L51::get_rx_dmahandle() {
-	return sai_.get_rx_dmahandle();
-}
-DMA_HandleTypeDef *CodecCS42L51::get_tx_dmahandle() {
-	return sai_.get_tx_dmahandle();
+CodecCS42L51::Error CodecCS42L51::power_up() {
+	return _write_register(POWER_CTL1, 0);
 }
 } // namespace mdrivlib

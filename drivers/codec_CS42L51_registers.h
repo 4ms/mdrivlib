@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace mdrivlib::_CodecCS42L51
+namespace mdrivlib::CodecCS42L51Register
 {
 constexpr uint8_t CHIP_ID = 0x1B;
 constexpr uint8_t CHIP_REV_A = 0x00;
@@ -245,4 +245,4 @@ constexpr uint8_t CHARGE_FREQ = 0x21;
 //#define SR_NORM_48K (0b0000 << 2)
 //#define SR_NORM_88K (0b1111 << 2)
 //#define SR_NORM_96K (0b0111 << 2)
-} // namespace mdrivlib::_CodecCS42L51
+} // namespace mdrivlib::CodecCS42L51Register
