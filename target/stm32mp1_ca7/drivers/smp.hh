@@ -59,26 +59,27 @@ struct SMPControl {
 	}
 };
 
-// Todo: keep this class synced with the aux_core implementation
-// Assumes thread calls SMPControl::write<0>(0) when done;
-// SGI3 is used for "call function"
 struct SMPThread {
-	enum { DataReg = 0 };
+	enum : uint32_t { DataReg = 0, CallFunction = 3 };
 
 	static inline std::function<void()> thread_func;
 
 	// Runs a function on the secondary core.
-	static void run(std::function<void()> &&entry) {
+	static void launch(std::function<void()> &&entry) {
 		thread_func = std::move(entry);
-		auto thread_func_addr = reinterpret_cast<uint32_t>(&thread_func);
-		SMPControl::write<DataReg>(thread_func_addr);
-		SMPControl::notify<3>();
+		SMPControl::write<DataReg>(1);
+		SMPControl::notify<CallFunction>();
 	}
 
 	template<uint32_t command_id, uint32_t data_reg = DataReg>
-	static void run_command(uint32_t data) {
+	static void launch_command(uint32_t data) {
 		SMPControl::write<data_reg>(data);
 		SMPControl::notify<command_id>();
+	}
+
+	static void execute() {
+		thread_func();
+		signal_done();
 	}
 
 	// Waits until thread completes
@@ -87,12 +88,17 @@ struct SMPThread {
 			;
 	}
 
+	// Aux Core must call this after processing a custom command (any command besides CallFunction)
+	static void signal_done() {
+		SMPControl::write<DataReg>(0);
+	}
+
 	// Returns true if thread is completed
 	static bool is_running() {
 		return (SMPControl::read<DataReg>() != 0);
 	}
 
 	static void init() {
-		// SMPControl::write<DataReg>(0);
+		SMPControl::write<DataReg>(0);
 	}
 };

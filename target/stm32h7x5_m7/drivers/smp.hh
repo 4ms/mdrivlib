@@ -16,12 +16,14 @@ struct SMPControl {
 };
 
 struct SMPThread {
-	static void run(std::function<void()> entry) {
+	static void launch(std::function<void()> entry) {
 	}
 	template<uint32_t command_id, uint32_t data_reg = 0>
-	static void run_command(uint32_t) {
+	static void launch_command(uint32_t) {
 	}
 	static void join() {
+	}
+	static void execute() {
 	}
 	static bool is_running() {
 		return true;
