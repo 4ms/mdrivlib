@@ -5,6 +5,8 @@
 #include <functional>
 
 struct SMPControl {
+	static inline __attribute__((section(".sysram"))) uint32_t regs[4];
+
 	template<uint32_t channel>
 	static void notify() {
 		if constexpr (channel == 1)
@@ -18,29 +20,25 @@ struct SMPControl {
 	template<uint32_t reg_num = 31>
 	static void write(uint32_t value) {
 		if constexpr (reg_num == 31)
-			TAMP->BKP31R = value;
+			regs[0] = value;
 		else if (reg_num == 30)
-			TAMP->BKP30R = value;
+			regs[1] = value;
 		else if (reg_num == 29)
-			TAMP->BKP29R = value;
+			regs[2] = value;
 		else if (reg_num == 28)
-			TAMP->BKP28R = value;
-		else if (reg_num == 27)
-			TAMP->BKP27R = value;
+			regs[3] = value;
 	}
 
 	template<uint32_t reg_num = 31>
 	static uint32_t read() {
 		if constexpr (reg_num == 31)
-			return TAMP->BKP31R;
+			return regs[0];
 		else if (reg_num == 30)
-			return TAMP->BKP30R;
+			return regs[1];
 		else if (reg_num == 29)
-			return TAMP->BKP29R;
+			return regs[2];
 		else if (reg_num == 28)
-			return TAMP->BKP28R;
-		else if (reg_num == 27)
-			return TAMP->BKP27R;
+			return regs[3];
 	}
 };
 
@@ -51,26 +49,22 @@ struct SMPThread {
 
 	// Runs a function on the secondary core.
 	static void run(std::function<void()> &&entry) {
-		// while (is_running())
-		// 	;
 		thread_func = std::move(entry);
 		auto thread_func_addr = reinterpret_cast<uint32_t>(&thread_func);
-		SMPControl::write(thread_func_addr);
-		SMPControl::write<StatusReg>(IsRunning);
+		SMPControl::write<DataReg>(thread_func_addr);
 		SMPControl::notify<3>();
 	}
 
 	static void join() {
-		while (SMPControl::read() != 0)
+		while (SMPControl::read<DataReg>() != 0)
 			;
 	}
 
 	static bool is_running() {
-		return (SMPControl::read<StatusReg>() == IsRunning);
+		return (SMPControl::read<DataReg>() != 0);
 	}
 
 	static void init() {
 		SMPControl::write<DataReg>(0);
-		SMPControl::write<StatusReg>(NotRunning);
 	}
 };

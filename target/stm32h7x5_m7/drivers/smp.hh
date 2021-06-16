@@ -1,11 +1,15 @@
 #include <cstdint>
 #include <functional>
 struct SMPControl {
-	static void notify(uint32_t) {
+	template<uint32_t channel>
+	static void notify() {
 	}
+
+	template<uint32_t channel = 31>
 	static void write(uint32_t) {
 	}
 
+	template<uint32_t channel = 31>
 	static uint32_t read() {
 		return 0;
 	}
@@ -17,7 +21,6 @@ struct SMPThread {
 
 	static void join() {
 	}
-
 	static bool is_running() {
 		return true;
 	}
