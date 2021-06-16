@@ -21,6 +21,12 @@ struct SMPControl {
 			TAMP->BKP31R = value;
 		else if (reg_num == 30)
 			TAMP->BKP30R = value;
+		else if (reg_num == 29)
+			TAMP->BKP29R = value;
+		else if (reg_num == 28)
+			TAMP->BKP28R = value;
+		else if (reg_num == 27)
+			TAMP->BKP27R = value;
 	}
 
 	template<uint32_t reg_num = 31>
@@ -29,24 +35,28 @@ struct SMPControl {
 			return TAMP->BKP31R;
 		else if (reg_num == 30)
 			return TAMP->BKP30R;
+		else if (reg_num == 29)
+			return TAMP->BKP29R;
+		else if (reg_num == 28)
+			return TAMP->BKP28R;
+		else if (reg_num == 27)
+			return TAMP->BKP27R;
 	}
 };
 
 struct SMPThread {
 	enum { NotRunning = 0, IsRunning = 1 };
 	enum { StatusReg = 30, DataReg = 31 };
+	static inline std::function<void()> thread_func;
 
 	// Runs a function on the secondary core.
-	// Function must be owned by caller and lifetime must last until function is over, at least
-	static void run(std::function<void()> &entry) {
-		lazy_init();
-
-		while (is_running())
-			;
-
-		SMPControl::write<StatusReg>(IsRunning);
-		auto thread_func_addr = reinterpret_cast<uint32_t>(&entry);
+	static void run(std::function<void()> &&entry) {
+		// while (is_running())
+		// 	;
+		thread_func = std::move(entry);
+		auto thread_func_addr = reinterpret_cast<uint32_t>(&thread_func);
 		SMPControl::write(thread_func_addr);
+		SMPControl::write<StatusReg>(IsRunning);
 		SMPControl::notify<3>();
 	}
 
@@ -59,13 +69,8 @@ struct SMPThread {
 		return (SMPControl::read<StatusReg>() == IsRunning);
 	}
 
-private:
-	static void lazy_init() {
-		static bool _lazy_init = true;
-		if (_lazy_init) {
-			SMPControl::write<DataReg>(0);
-			SMPControl::write<StatusReg>(NotRunning);
-			_lazy_init = false;
-		}
+	static void init() {
+		SMPControl::write<DataReg>(0);
+		SMPControl::write<StatusReg>(NotRunning);
 	}
 };

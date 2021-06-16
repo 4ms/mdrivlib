@@ -17,4 +17,10 @@ struct SMPThread {
 
 	static void join() {
 	}
+
+	static bool is_running() {
+		return true;
+	}
+	static void init() {
+	}
 };
