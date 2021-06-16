@@ -60,11 +60,14 @@ struct SMPControl {
 };
 
 struct SMPThread {
-	enum : uint32_t { DataReg = 0, CallFunction = 3 };
+	static constexpr uint32_t DataReg = 0;
+
+	enum : uint32_t { CustomFunc0 = 0, CustomFunc1 = 0, CustomFunc2 = 2, CallFunction = 3 };
 
 	static inline std::function<void()> thread_func;
 
-	// Runs a function on the secondary core.
+	// Moves a function to static storage and notifies the secondary core that it should execute it
+	// Aux Core must respond to the SGI#3 by calling SMPThread::execute();
 	static void launch(std::function<void()> &&entry) {
 		thread_func = std::move(entry);
 		SMPControl::write<DataReg>(1);
@@ -77,6 +80,7 @@ struct SMPThread {
 		SMPControl::notify<command_id>();
 	}
 
+	// Called by the aux core to respond to receiving an SGI3
 	static void execute() {
 		thread_func();
 		signal_done();
