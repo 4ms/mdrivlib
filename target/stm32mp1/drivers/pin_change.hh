@@ -11,11 +11,11 @@ struct DefaultPinChangeConf {
 	static constexpr bool on_falling_edge = false;
 	static constexpr uint32_t priority1 = 3;
 	static constexpr uint32_t priority2 = 3;
+	static constexpr uint32_t core = 1;
 };
 
-// requires ConfT derives from DefaultPinChangeConf
 template<typename ConfT>
-class PinChangeInt {
+requires std::derived_from<ConfT, DefaultPinChangeConf> class PinChangeInt {
 public:
 	PinChangeInt() = default;
 
