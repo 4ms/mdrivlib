@@ -17,8 +17,7 @@ struct DefaultPinChangeConf {
 template<typename ConfT>
 class PinChangeInt {
 public:
-	PinChangeInt() {
-	}
+	PinChangeInt() = default;
 
 	PinChangeInt(std::function<void(void)> &&func)
 		: task_func{std::move(func)} {

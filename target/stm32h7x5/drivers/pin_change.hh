@@ -11,14 +11,14 @@ struct DefaultPinChangeConf {
 	static constexpr bool on_falling_edge = false;
 	static constexpr uint32_t priority1 = 3;
 	static constexpr uint32_t priority2 = 3;
+	static constexpr uint32_t core = 2; // 1 = CORE1 (M7), 2 = CORE2 (M4)
 };
 
 // requires ConfT derives from DefaultPinChangeConf
 template<typename ConfT>
 class PinChangeInt {
 public:
-	PinChangeInt() {
-	}
+	PinChangeInt() = default;
 
 	PinChangeInt(std::function<void(void)> &&func)
 		: task_func{std::move(func)} {
@@ -31,11 +31,17 @@ public:
 	}
 
 	void start() {
-		target::EXTI_::PinInterruptMask<ConfT::pin>::set();
+		if constexpr (ConfT::core == 1)
+			target::EXTI_::PinInterruptMaskCore1<ConfT::pin>::set();
+		else
+			target::EXTI_::PinInterruptMaskCore2<ConfT::pin>::set();
 	}
 
 	void stop() {
-		target::EXTI_::PinInterruptMask<ConfT::pin>::clear();
+		if constexpr (ConfT::core == 1)
+			target::EXTI_::PinInterruptMaskCore1<ConfT::pin>::clear();
+		else
+			target::EXTI_::PinInterruptMaskCore2<ConfT::pin>::clear();
 	}
 
 private:
@@ -105,9 +111,16 @@ private:
 									 : EXTI4_IRQn;
 
 		InterruptManager::registerISR(irqn, ConfT::priority1, ConfT::priority2, [&]() {
-			if (target::EXTI_::PinTrigPending<ConfT::pin>::read()) {
-				target::EXTI_::PinTrigPending<ConfT::pin>::set(); // clear on write
-				task_func();
+			if constexpr (ConfT::core == 1) {
+				if (target::EXTI_::PinTrigPendingCore1<ConfT::pin>::read()) {
+					target::EXTI_::PinTrigPendingCore1<ConfT::pin>::set(); // clear on write
+					task_func();
+				}
+			} else {
+				if (target::EXTI_::PinTrigPendingCore2<ConfT::pin>::read()) {
+					target::EXTI_::PinTrigPendingCore2<ConfT::pin>::set(); // clear on write
+					task_func();
+				}
 			}
 		});
 	}
