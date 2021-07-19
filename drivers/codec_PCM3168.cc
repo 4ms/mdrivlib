@@ -26,15 +26,16 @@
  * -----------------------------------------------------------------------------
  */
 
-#include "codec_CS42L51.hh"
-#include "codec_CS42L51_registers.h"
+#include "codec_PCM3168.hh"
+#include "codec_PCM3168_registers.hh"
 #include "stm32xx.h"
+#include "util/bitfield.hh"
 
 static constexpr bool DISABLE_I2C = false;
 
 namespace mdrivlib
 {
-using namespace CodecCS42L51Register;
+using namespace CodecPCM3168Register;
 
 struct RegisterData {
 	uint8_t reg_num;
@@ -42,59 +43,64 @@ struct RegisterData {
 };
 
 static RegisterData default_codec_init[] = {
-	// {POWER_CTL1, 0},
-	{MIC_POWER_CTL, MIC_POWER_CTL_AUTO},
-	{INTF_CTL, INTF_CTL_DAC_FORMAT(DAC_DIF_I2S) | INTF_CTL_ADC_I2S},
+	{ResetControl::Address, bitfield8(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
+	{DacControl1::Address, bitfield8(DacControl1::I2S_TDM_24bit, DacControl1::SlaveMode)},
+	{DacControl2::Address, bitfield8(DacControl2::DacAllEnable)},
+	{DacSoftMute::Address, bitfield8(DacSoftMute::NoDacMuted)},
+	{DacAllAtten::Address, bitfield8(DacAtten::ZeroDB)},
+	{AdcSamplingMode::Address, bitfield8(AdcSamplingMode::Single)},
+	{AdcControl1::Address, bitfield8(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
+	{AdcSoftMute::Address, bitfield8(AdcSoftMute::NoAdcMuted)},
+	{AdcAllAtten::Address, bitfield8(AdcAtten::ZeroDB)},
 
-	//... etc
 };
 
-CodecCS42L51::CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef, PinNoInit reset_pin, uint8_t address_bit)
+CodecPCM3168::CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef)
 	: i2c_(i2c)
 	, sai_{saidef}
 	, samplerate_{saidef.samplerate}
-	, reset_pin_{reset_pin, PinMode::Output}
-	, CODEC_ADDRESS{static_cast<uint8_t>(0x4A + (address_bit ? 1 : 0))} {
+	, reset_pin_{saidef.reset_pin, PinMode::Output}
+	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b11) << 1)))} {
 	reset_pin_.low();
 }
 
-void CodecCS42L51::init() {
+void CodecPCM3168::init() {
+	auto err = sai_.init();
+	if (err)
+		return;
+
+	reset_pin_.high();
+
+	HAL_Delay(1); // 3846 SYSCLKI cycles = 0.313ms
 	init_at_samplerate(samplerate_);
-	sai_.init();
 }
 
-void CodecCS42L51::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
+void CodecPCM3168::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
 	sai_.set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
 }
 
-void CodecCS42L51::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
+void CodecPCM3168::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
 	sai_.set_callbacks(std::move(tx_complete_cb), std::move(tx_half_complete_cb));
 }
 
-uint32_t CodecCS42L51::get_samplerate() {
+uint32_t CodecPCM3168::get_samplerate() {
 	return samplerate_;
 }
 
-void CodecCS42L51::start() {
+void CodecPCM3168::start() {
 	sai_.start();
-
-	// Set Power Down bit to 0 after MCLK and LRCK are running (CS42L51 datasheet, section 4.8)
-	power_up();
 }
 
-CodecCS42L51::Error CodecCS42L51::init_at_samplerate(uint32_t sample_rate) {
-	reset_pin_.high();
-	HAL_Delay(1);
-
-	// Set Power Down bit to 1 to enter Software Mode (must do it <10ms from reset pin going high). See CS42L51
-	// datasheet, section 4.8
-	power_down();
+CodecPCM3168::Error CodecPCM3168::init_at_samplerate(uint32_t sample_rate) {
+	// reset_pin_.high();
+	// HAL_Delay(1);
+	// power_down();
 
 	return _write_all_registers(sample_rate);
 }
 
-CodecCS42L51::Error CodecCS42L51::_write_all_registers(uint32_t sample_rate) {
-	CodecCS42L51::Error err;
+CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
+	CodecPCM3168::Error err;
 
 	for (auto packet : default_codec_init) {
 		err = _write_register(packet.reg_num, packet.value);
@@ -104,37 +110,37 @@ CodecCS42L51::Error CodecCS42L51::_write_all_registers(uint32_t sample_rate) {
 	return err;
 }
 
-auto CodecCS42L51::_calc_samplerate(uint32_t sample_rate) {
-	if (sample_rate > 50000)
-		return DSM_MODE;
-	else if (sample_rate == 16000)
-		return HSM_MODE;
-	else if (sample_rate == 8000)
-		return QSM_MODE;
-	else if (sample_rate > 4000)
-		return SSM_MODE;
-	else
-		return (uint8_t)0;
+auto CodecPCM3168::_calc_samplerate(uint32_t sample_rate) {
+	// if (sample_rate > 50000)
+	// 	return DSM_MODE;
+	// else if (sample_rate == 16000)
+	// 	return HSM_MODE;
+	// else if (sample_rate == 8000)
+	// 	return QSM_MODE;
+	// else if (sample_rate > 4000)
+	// 	return SSM_MODE;
+	// else
+	return (uint8_t)0;
 }
 
-CodecCS42L51::Error CodecCS42L51::_write_register(uint8_t reg_address, uint16_t reg_value) {
-	uint8_t Byte1 = ((reg_address << 1) & 0xFE) | ((reg_value >> 8) & 0x01);
-	uint8_t Byte2 = reg_value & 0xFF;
-	uint8_t data[2] = {Byte1, Byte2};
+CodecPCM3168::Error CodecPCM3168::_write_register(uint8_t reg_address, uint8_t reg_value) {
+	uint8_t data[2] = {reg_address, reg_value};
 
 	if constexpr (DISABLE_I2C)
 		return CODEC_NO_ERR;
 
-	auto err = i2c_.write(CODEC_ADDRESS, data, 2);
-	// auto err = i2c_.mem_write(CODEC_ADDRESS, Byte1, REGISTER_ADDR_SIZE, &Byte2, 1);
+	// auto err = i2c_.write(I2C_address, data, 2);
+	auto err = i2c_.mem_write(I2C_address, reg_address, REGISTER_ADDR_SIZE, &data[1], 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
 
-CodecCS42L51::Error CodecCS42L51::power_down() {
-	return _write_register(POWER_CTL1, POWER_CTL1_PDN);
+CodecPCM3168::Error CodecPCM3168::power_down() {
+	return CodecPCM3168::Error::CODEC_NO_ERR;
+	// return _write_register(ResetControl::Address, bitfield8(ResetControl::Reset));
 }
 
-CodecCS42L51::Error CodecCS42L51::power_up() {
-	return _write_register(POWER_CTL1, 0);
+CodecPCM3168::Error CodecPCM3168::power_up() {
+	return CodecPCM3168::Error::CODEC_NO_ERR;
+	// return _write_register(POWER_CTL1, 0);
 }
 } // namespace mdrivlib

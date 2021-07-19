@@ -1,5 +1,5 @@
 /*
- * CodecCS42L51.cc
+ * CodecPCM3168.cc
  *
  * Author: Dan Green (danngreen1@gmail.com)
  *
@@ -30,13 +30,13 @@
 
 #include "codec.hh"
 #include "i2c.hh"
-#include "sai.hh"
+#include "sai_tdm.hh"
 #include <cstdint>
 
 namespace mdrivlib
 {
 
-class CodecCS42L51 : public ICodec {
+class CodecPCM3168 {
 public:
 	enum Error {
 		CODEC_NO_ERR = 0,
@@ -55,13 +55,13 @@ public:
 		INVALID_PARAM
 	};
 
-	CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef, PinNoInit reset_pin, uint8_t address_bit = 1);
+	CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef);
 
-	void init() override;
-	void start() override;
-	uint32_t get_samplerate() override;
-	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) override;
-	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) override;
+	void init();
+	void start();
+	uint32_t get_samplerate();
+	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
+	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
 
 	Error init_at_samplerate(uint32_t sample_rate);
 	Error power_down();
@@ -69,15 +69,15 @@ public:
 
 private:
 	I2CPeriph &i2c_;
-	SaiPeriph sai_;
+	SaiTdmPeriph sai_;
 	uint32_t samplerate_;
 	Pin reset_pin_;
 
-	Error _write_register(uint8_t RegisterAddr, uint16_t RegisterValue);
+	Error _write_register(uint8_t RegisterAddr, uint8_t RegisterValue);
 	Error _write_all_registers(uint32_t sample_rate);
 	auto _calc_samplerate(uint32_t sample_rate);
 
-	const uint8_t CODEC_ADDRESS;
-	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
+	const uint8_t I2C_address;
+	static inline constexpr auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
 } // namespace mdrivlib

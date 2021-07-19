@@ -1,164 +1,212 @@
 #pragma once
 #include <cstdint>
 
-namespace mdrivlib::CodecCS42L51Register
+namespace mdrivlib::CodecPCM3168Register
 {
-constexpr uint8_t CHIP_ID = 0x1B;
-constexpr uint8_t CHIP_REV_A = 0x00;
-constexpr uint8_t CHIP_REV_B = 0x01;
-constexpr uint8_t CHIP_REV_MASK = 0x07;
+constexpr uint8_t I2C_BASE_ADDR = 0b10001000; // Shifted address, PCM3168 datasheet section 9.3.14
 
-constexpr uint8_t CHIP_REV_ID = 0x01;
-constexpr uint8_t MK_CHIP_REV(uint8_t a, uint8_t b) {
-	return a << 3 | b;
-}
+struct ResetControl {
+	static constexpr uint8_t Address = 0x40;
+	enum ModeReset : uint8_t { Reset = 0, NoReset = (1 << 7) };
+	enum SystemReset : uint8_t { Resync = 0, NoResync = (1 << 6) };
+	enum DacSamplingMode : uint8_t { Auto = 0, Single = 0b01, Dual = 0b10, Quad = 0b11 };
+};
 
-constexpr uint8_t POWER_CTL1 = 0x02;
-constexpr uint8_t POWER_CTL1_PDN_DACB = (1 << 6);
-constexpr uint8_t POWER_CTL1_PDN_DACA = (1 << 5);
-constexpr uint8_t POWER_CTL1_PDN_PGAB = (1 << 4);
-constexpr uint8_t POWER_CTL1_PDN_PGAA = (1 << 3);
-constexpr uint8_t POWER_CTL1_PDN_ADCB = (1 << 2);
-constexpr uint8_t POWER_CTL1_PDN_ADCA = (1 << 1);
-constexpr uint8_t POWER_CTL1_PDN = (1 << 0);
+struct DacControl1 {
+	static constexpr uint8_t Address = 0x41;
+	enum PowerSaveModeSelect : uint8_t { PowerSaveEnable = 0, PowerSaveDisable = 1 << 7 };
+	enum MasterSlave : uint8_t {
+		SlaveMode = 0b000 << 4,
+		MasterMode768fs = 0b001 << 4,
+		MasterMode512fs = 0b010 << 4,
+		MasterMode384fs = 0b011 << 4,
+		MasterMode256fs = 0b100 << 4,
+		MasterMode192fs = 0b101 << 4,
+		MasterMode128fs = 0b110 << 4,
+	};
+	enum DacAudioFormat : uint8_t {
+		I2S_24bit = 0b0000,
+		LeftJustified_24bit = 0b0001,
+		RightJustified_24bit = 0b0010,
+		RightJustified_16bit = 0b0011,
+		I2S_DSP_24bit = 0b0100,
+		LeftJustified_DSP_24bit = 0b0101,
+		I2S_TDM_24bit = 0b0110,
+		LeftJustified_TDM_24bit = 0b0111,
+		I2S_HighSpeed_TDM_24bit = 0b1000,
+		LeftJustified_HighSpeed_TDM_24bit = 0b1001,
+	};
+};
 
-constexpr uint8_t MIC_POWER_CTL = 0x03;
-constexpr uint8_t MIC_POWER_CTL_AUTO = (1 << 7);
-constexpr uint8_t MIC_POWER_CTL_SPEED(uint8_t x) {
-	return (x & 3) << 5;
-}
-constexpr uint8_t QSM_MODE = 3;
-constexpr uint8_t HSM_MODE = 2;
-constexpr uint8_t SSM_MODE = 1;
-constexpr uint8_t DSM_MODE = 0;
-constexpr uint8_t MIC_POWER_CTL_3ST_SP = (1 << 4);
-constexpr uint8_t MIC_POWER_CTL_PDN_MICB = (1 << 3);
-constexpr uint8_t MIC_POWER_CTL_PDN_MICA = (1 << 2);
-constexpr uint8_t MIC_POWER_CTL_PDN_BIAS = (1 << 1);
-constexpr uint8_t MIC_POWER_CTL_MCLK_DIV2 = (1 << 0);
+struct DacControl2 {
+	static constexpr uint8_t Address = 0x42;
+	static constexpr uint8_t DacAllEnable = (0b1111 << 4);
+	enum Dac12Control : uint8_t { Dac12Enable = 0, Dac12Disable = 1 << 4 };
+	enum Dac34Control : uint8_t { Dac34Enable = 0, Dac34Disable = 1 << 5 };
+	enum Dac56Control : uint8_t { Dac56Enable = 0, Dac56Disable = 1 << 6 };
+	enum Dac78Control : uint8_t { Dac78Enable = 0, Dac78Disable = 1 << 7 };
+	static constexpr uint8_t DacAllRollOffSlow = (0b1111 << 0);
+	enum Dac12RollOff : uint8_t { Dac12RollOffSharp = 0 << 0, Dac12RollOffSlow = 1 << 0 };
+	enum Dac34RollOff : uint8_t { Dac34RollOffSharp = 0 << 1, Dac34RollOffSlow = 1 << 1 };
+	enum Dac56RollOff : uint8_t { Dac56RollOffSharp = 0 << 2, Dac56RollOffSlow = 1 << 2 };
+	enum Dac78RollOff : uint8_t { Dac78RollOffSharp = 0 << 3, Dac78RollOffSlow = 1 << 3 };
+};
 
-constexpr uint8_t INTF_CTL = 0x04;
-constexpr uint8_t INTF_CTL_LOOPBACK = (1 << 7);
-constexpr uint8_t INTF_CTL_MASTER = (1 << 6);
-constexpr uint8_t INTF_CTL_DAC_FORMAT(uint8_t x) {
-	return (x & 7) << 3;
-}
-constexpr uint8_t DAC_DIF_LJ24 = 0x00;
-constexpr uint8_t DAC_DIF_I2S = 0x01;
-constexpr uint8_t DAC_DIF_RJ24 = 0x02;
-constexpr uint8_t DAC_DIF_RJ20 = 0x03;
-constexpr uint8_t DAC_DIF_RJ18 = 0x04;
-constexpr uint8_t DAC_DIF_RJ16 = 0x05;
-constexpr uint8_t INTF_CTL_ADC_I2S = (1 << 2);
-constexpr uint8_t INTF_CTL_DIGMIX = (1 << 1);
-constexpr uint8_t INTF_CTL_MICMIX = (1 << 0);
+struct DacPhase {
+	static constexpr uint8_t Address = 0x43;
+	enum : uint8_t {
+		NoDacInverted = 0,
+		Dac1Invert = 1 << 0,
+		Dac2Invert = 1 << 1,
+		Dac3Invert = 1 << 2,
+		Dac4Invert = 1 << 3,
+		Dac5Invert = 1 << 4,
+		Dac6Invert = 1 << 5,
+		Dac7Invert = 1 << 6,
+		Dac8Invert = 1 << 7,
+	};
+};
 
-constexpr uint8_t MIC_CTL = 0x05;
-constexpr uint8_t MIC_CTL_ADC_SNGVOL = (1 << 7);
-constexpr uint8_t MIC_CTL_ADCD_DBOOST = (1 << 6);
-constexpr uint8_t MIC_CTL_ADCA_DBOOST = (1 << 5);
-constexpr uint8_t MIC_CTL_MICBIAS_SEL = (1 << 4);
-constexpr uint8_t MIC_CTL_MICBIAS_LVL(uint8_t x) {
-	return (x & 3) << 2;
-}
-constexpr uint8_t MIC_CTL_MICB_BOOST = (1 << 1);
-constexpr uint8_t MIC_CTL_MICA_BOOST = (1 << 0);
+struct DacSoftMute {
+	static constexpr uint8_t Address = 0x44;
+	enum : uint8_t {
+		NoDacMuted = 0,
+		Dac1Mute = 1 << 0,
+		Dac2Mute = 1 << 1,
+		Dac3Mute = 1 << 2,
+		Dac4Mute = 1 << 3,
+		Dac5Mute = 1 << 4,
+		Dac6Mute = 1 << 5,
+		Dac7Mute = 1 << 6,
+		Dac8Mute = 1 << 7,
+	};
+};
 
-constexpr uint8_t ADC_CTL = 0x06;
-constexpr uint8_t ADC_CTL_ADCB_HPFEN = (1 << 7);
-constexpr uint8_t ADC_CTL_ADCB_HPFRZ = (1 << 6);
-constexpr uint8_t ADC_CTL_ADCA_HPFEN = (1 << 5);
-constexpr uint8_t ADC_CTL_ADCA_HPFRZ = (1 << 4);
-constexpr uint8_t ADC_CTL_SOFTB = (1 << 3);
-constexpr uint8_t ADC_CTL_ZCROSSB = (1 << 2);
-constexpr uint8_t ADC_CTL_SOFTA = (1 << 1);
-constexpr uint8_t ADC_CTL_ZCROSSA = (1 << 0);
+struct DacZeroDetect {
+	static constexpr uint8_t Address = 0x45;
+	// TODO
+};
 
-constexpr uint8_t ADC_INPUT = 0x07;
-constexpr uint8_t ADC_INPUT_AINB_MUX(uint8_t x) {
-	return (((x)&3) << 6);
-}
-constexpr uint8_t ADC_INPUT_AINA_MUX(uint8_t x) {
-	return (((x)&3) << 4);
-}
-constexpr uint8_t ADC_INPUT_INV_ADCB = (1 << 3);
-constexpr uint8_t ADC_INPUT_INV_ADCA = (1 << 2);
-constexpr uint8_t ADC_INPUT_ADCB_MUTE = (1 << 1);
-constexpr uint8_t ADC_INPUT_ADCA_MUTE = (1 << 0);
+struct DacControl3 {
+	static constexpr uint8_t Address = 0x46;
+	// TODO
+};
 
-constexpr uint8_t DAC_OUT_CTL = 0x08;
-constexpr uint8_t DAC_OUT_CTL_HP_GAIN(uint8_t x) {
-	return (((x)&7) << 5);
-}
-constexpr uint8_t DAC_OUT_CTL_DAC_SNGVOL = (1 << 4);
-constexpr uint8_t DAC_OUT_CTL_INV_PCMB = (1 << 3);
-constexpr uint8_t DAC_OUT_CTL_INV_PCMA = (1 << 2);
-constexpr uint8_t DAC_OUT_CTL_DACB_MUTE = (1 << 1);
-constexpr uint8_t DAC_OUT_CTL_DACA_MUTE = (1 << 0);
+enum class DacAtten { ZeroDB = 255, N100dB = 53, MuteStart = 54, Mute = 0 };
+struct DacAllAtten {
+	static constexpr uint8_t Address = 0x47;
+};
+struct Dac1Atten {
+	static constexpr uint8_t Address = 0x48;
+};
+struct Dac2Atten {
+	static constexpr uint8_t Address = 0x49;
+};
+struct Dac3Atten {
+	static constexpr uint8_t Address = 0x4a;
+};
+struct Dac4Atten {
+	static constexpr uint8_t Address = 0x4b;
+};
+struct Dac5Atten {
+	static constexpr uint8_t Address = 0x4c;
+};
+struct Dac6Atten {
+	static constexpr uint8_t Address = 0x4d;
+};
+struct Dac7Atten {
+	static constexpr uint8_t Address = 0x4e;
+};
+struct Dac8Atten {
+	static constexpr uint8_t Address = 0x4f;
+};
 
-constexpr uint8_t DAC_CTL = 0x09;
-constexpr uint8_t DAC_CTL_DATA_SEL(uint8_t x) {
-	return (((x)&3) << 6);
-}
-constexpr uint8_t DAC_CTL_FREEZE = (1 << 5);
-constexpr uint8_t DAC_CTL_DEEMPH = (1 << 3);
-constexpr uint8_t DAC_CTL_AMUTE = (1 << 2);
-constexpr uint8_t DAC_CTL_DACSZ(uint8_t x) {
-	return (((x)&3) << 0);
-}
+struct AdcSamplingMode {
+	static constexpr uint8_t Address = 0x50;
+	enum : uint8_t { Auto = 0b00, Single = 0b01, Dual = 0b10 };
+};
 
-constexpr uint8_t ALC_PGA_CTL = 0x0A;
-constexpr uint8_t ALC_PGB_CTL = 0x0B;
-constexpr uint8_t ALC_PGX_ALCX_SRDIS = (1 << 7);
-constexpr uint8_t ALC_PGX_ALCX_ZCDIS = (1 << 6);
-constexpr uint8_t ALC_PGX_PGX_VOL(uint8_t x) {
-	return (((x)&0x1f) << 0);
-}
+struct AdcControl1 {
+	static constexpr uint8_t Address = 0x51;
+	enum MasterSlave : uint8_t {
+		SlaveMode = 0b000 << 4,
+		MasterMode768fs = 0b001 << 4,
+		MasterMode512fs = 0b010 << 4,
+		MasterMode384fs = 0b011 << 4,
+		MasterMode256fs = 0b100 << 4,
+	};
+	enum AdcAudioFormat : uint8_t {
+		I2S_24bit = 0b000,
+		LeftJustified_24bit = 0b001,
+		RightJustified_24bit = 0b010,
+		RightJustified_16bit = 0b011,
+		I2S_DSP_24bit = 0b100,
+		LeftJustified_DSP_24bit = 0b101,
+		I2S_TDM_24bit = 0b110,
+		LeftJustified_TDM_24bit = 0b111,
+	};
+};
 
-constexpr uint8_t ADCA_ATT = 0x0C;
-constexpr uint8_t ADCB_ATT = 0x0D;
+struct AdcInputType {
+	static constexpr uint8_t Address = 0x53;
+	// TODO
+};
 
-constexpr uint8_t ADCA_VOL = 0x0E;
-constexpr uint8_t ADCB_VOL = 0x0F;
-constexpr uint8_t PCMA_VOL = 0x10;
-constexpr uint8_t PCMB_VOL = 0x11;
-constexpr uint8_t MIX_MUTE_ADCMIX = (1 << 7);
-constexpr uint8_t MIX_VOLUME(uint8_t x) {
-	return (((x)&0x7f) << 0);
-}
+struct AdcInputPhase {
+	static constexpr uint8_t Address = 0x54;
+	// TODO
+};
 
-constexpr uint8_t BEEP_FREQ = 0x12;
-constexpr uint8_t BEEP_VOL = 0x13;
-constexpr uint8_t BEEP_CONF = 0x14;
+struct AdcSoftMute {
+	static constexpr uint8_t Address = 0x55;
+	enum : uint8_t {
+		NoAdcMuted = 0,
+		Adc1Mute = 1 << 0,
+		Adc2Mute = 1 << 1,
+		Adc3Mute = 1 << 2,
+		Adc4Mute = 1 << 3,
+		Adc5Mute = 1 << 4,
+		Adc6Mute = 1 << 5,
+	};
+};
 
-constexpr uint8_t TONE_CTL = 0x15;
-constexpr uint8_t TONE_CTL_TREB(uint8_t x) {
-	return (((x)&0xf) << 4);
-}
-constexpr uint8_t TONE_CTL_BASS(uint8_t x) {
-	return (((x)&0xf) << 0);
-}
+struct AdcOverflowRO {
+	static constexpr uint8_t Address = 0x56;
+	// TODO
+};
 
-constexpr uint8_t AOUTA_VOL = 0x16;
-constexpr uint8_t AOUTB_VOL = 0x17;
-constexpr uint8_t PCM_MIXER = 0x18;
-constexpr uint8_t LIMIT_THRES_DIS = 0x19;
-constexpr uint8_t LIMIT_REL = 0x1A;
-constexpr uint8_t LIMIT_ATT = 0x1B;
-constexpr uint8_t ALC_EN = 0x1C;
-constexpr uint8_t ALC_REL = 0x1D;
-constexpr uint8_t ALC_THRES = 0x1E;
-constexpr uint8_t NOISE_CONF = 0x1F;
+struct AdcControl3 {
+	static constexpr uint8_t Address = 0x57;
+	// TODO
+};
 
-constexpr uint8_t STATUS = 0x20;
-constexpr uint8_t STATUS_SP_CLKERR = (1 << 6);
-constexpr uint8_t STATUS_SPEA_OVFL = (1 << 5);
-constexpr uint8_t STATUS_SPEB_OVFL = (1 << 4);
-constexpr uint8_t STATUS_PCMA_OVFL = (1 << 3);
-constexpr uint8_t STATUS_PCMB_OVFL = (1 << 2);
-constexpr uint8_t STATUS_ADCA_OVFL = (1 << 1);
-constexpr uint8_t STATUS_ADCB_OVFL = (1 << 0);
+enum class AdcAtten { Plus20DB = 255, ZeroDB = 215, N100dB = 15, MuteStart = 14, Mute = 0 };
+struct AdcAllAtten {
+	static constexpr uint8_t Address = 0x47;
+};
+struct Adc1Atten {
+	static constexpr uint8_t Address = 0x48;
+};
+struct Adc2Atten {
+	static constexpr uint8_t Address = 0x49;
+};
+struct Adc3Atten {
+	static constexpr uint8_t Address = 0x4a;
+};
+struct Adc4Atten {
+	static constexpr uint8_t Address = 0x4b;
+};
+struct Adc5Atten {
+	static constexpr uint8_t Address = 0x4c;
+};
+struct Adc6Atten {
+	static constexpr uint8_t Address = 0x4d;
+};
+struct Adc7Atten {
+	static constexpr uint8_t Address = 0x4e;
+};
+struct Adc8Atten {
+	static constexpr uint8_t Address = 0x4f;
+};
 
-constexpr uint8_t CHARGE_FREQ = 0x21;
-
-} // namespace mdrivlib::CodecCS42L51Register
+} // namespace mdrivlib::CodecPCM3168Register
