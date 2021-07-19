@@ -31,7 +31,7 @@
 #include "codec.hh"
 #include "i2c.hh"
 #include "sai.hh"
-#include <stdint.h>
+#include <cstdint>
 
 namespace mdrivlib
 {
@@ -57,11 +57,11 @@ public:
 
 	CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef);
 
-	virtual void init();
-	virtual void start();
-	virtual uint32_t get_samplerate();
-	virtual void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
-	virtual void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
+	void init() override;
+	void start() override;
+	uint32_t get_samplerate() override;
+	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) override;
+	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) override;
 
 	Error init_at_samplerate(uint32_t sample_rate);
 	Error power_down();
