@@ -40,7 +40,7 @@ struct DacControl1 {
 
 struct DacControl2 {
 	static constexpr uint8_t Address = 0x42;
-	static constexpr uint8_t DacAllEnable = (0b1111 << 4);
+	static constexpr uint8_t DacAllEnable = (0b0000 << 4);
 	enum Dac12Control : uint8_t { Dac12Enable = 0, Dac12Disable = 1 << 4 };
 	enum Dac34Control : uint8_t { Dac34Enable = 0, Dac34Disable = 1 << 5 };
 	enum Dac56Control : uint8_t { Dac56Enable = 0, Dac56Disable = 1 << 6 };

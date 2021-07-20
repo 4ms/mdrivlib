@@ -304,8 +304,8 @@ void SaiTdmPeriph::start() {
 
 	target::System::enable_irq(_irqn);
 
-	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, block_size_);
-	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, block_size_);
+	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, 1024 /*block_size_*/);
+	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, 768 /*block_size_*/);
 }
 
 void SaiTdmPeriph::stop() {
