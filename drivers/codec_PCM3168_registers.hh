@@ -147,6 +147,19 @@ struct AdcControl1 {
 	};
 };
 
+struct AdcControl2 {
+	static constexpr uint8_t Address = 0x52;
+	enum Adc12PowerSave : uint8_t {};
+	enum Adc34PowerSave : uint8_t {};
+	enum Adc56PowerSave : uint8_t {};
+	enum Adc78PowerSave : uint8_t {};
+	enum : uint8_t { AdcAllHPFDisabled = 0b111 };
+	enum Adc12HPF : uint8_t { Adc12HPFDisabled = 0b001 };
+	enum Adc34HPF : uint8_t { Adc34HPFDisabled = 0b010 };
+	enum Adc56HPF : uint8_t { Adc56HPFDisabled = 0b010 };
+	enum Adc78HPF : uint8_t { Adc78HPFDisabled = 0b100 };
+};
+
 struct AdcInputType {
 	static constexpr uint8_t Address = 0x53;
 	// TODO

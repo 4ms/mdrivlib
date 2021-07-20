@@ -83,7 +83,7 @@ void SaiTdmPeriph::_config_rx_sai() {
 		hsai_rx.FrameInit.FrameLength = 256;
 		hsai_rx.FrameInit.ActiveFrameLength = 1;
 		hsai_rx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
-		hsai_rx.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+		hsai_rx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
 		hsai_rx.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
 		hsai_rx.SlotInit.FirstBitOffset = 0;
 		hsai_rx.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
@@ -127,7 +127,7 @@ void SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.FrameInit.FrameLength = 256;
 		hsai_tx.FrameInit.ActiveFrameLength = 1;
 		hsai_tx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
-		hsai_tx.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+		hsai_tx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
 		hsai_tx.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
 		hsai_tx.SlotInit.FirstBitOffset = 0;
 		hsai_tx.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;

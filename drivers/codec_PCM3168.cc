@@ -50,6 +50,7 @@ static RegisterData default_codec_init[] = {
 	{DacAllAtten::Address, bitfield8(DacAtten::ZeroDB)},
 	{AdcSamplingMode::Address, bitfield8(AdcSamplingMode::Single)},
 	{AdcControl1::Address, bitfield8(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
+	{AdcControl2::Address, bitfield8(AdcControl2::AdcAllHPFDisabled)},
 	{AdcSoftMute::Address, bitfield8(AdcSoftMute::NoAdcMuted)},
 	{AdcAllAtten::Address, bitfield8(AdcAtten::ZeroDB)},
 
