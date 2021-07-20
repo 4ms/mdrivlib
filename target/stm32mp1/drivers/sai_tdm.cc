@@ -79,14 +79,14 @@ void SaiTdmPeriph::_config_rx_sai() {
 		hsai_rx.Init.Protocol = SAI_FREE_PROTOCOL;
 		hsai_rx.Init.DataSize = saidef_.datasize;
 		hsai_rx.Init.FirstBit = SAI_FIRSTBIT_MSB;
-		hsai_rx.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
+		hsai_rx.Init.ClockStrobing = SAI_CLOCKSTROBING_RISINGEDGE;
 		hsai_rx.FrameInit.FrameLength = 256;
-		hsai_rx.FrameInit.ActiveFrameLength = 1;
+		hsai_rx.FrameInit.ActiveFrameLength = 1; // FS pulses at start of frame
 		hsai_rx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
 		hsai_rx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
-		hsai_rx.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
+		hsai_rx.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
 		hsai_rx.SlotInit.FirstBitOffset = 0;
-		hsai_rx.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
+		hsai_rx.SlotInit.SlotSize = SAI_SLOTSIZE_32B;
 		hsai_rx.SlotInit.SlotNumber = saidef_.num_tdm_ins;
 		hsai_rx.SlotInit.SlotActive = 0x0000FFFF;
 	}
@@ -125,12 +125,12 @@ void SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.Init.FirstBit = SAI_FIRSTBIT_MSB;
 		hsai_tx.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
 		hsai_tx.FrameInit.FrameLength = 256;
-		hsai_tx.FrameInit.ActiveFrameLength = 1;
+		hsai_tx.FrameInit.ActiveFrameLength = 1; // FS pulses at start of frame
 		hsai_tx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
 		hsai_tx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
-		hsai_tx.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
+		hsai_tx.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
 		hsai_tx.SlotInit.FirstBitOffset = 0;
-		hsai_tx.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
+		hsai_tx.SlotInit.SlotSize = SAI_SLOTSIZE_32B;
 		hsai_tx.SlotInit.SlotNumber = saidef_.num_tdm_outs;
 		hsai_tx.SlotInit.SlotActive = 0x0000FFFF;
 	}
