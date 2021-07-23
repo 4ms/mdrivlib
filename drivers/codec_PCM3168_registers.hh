@@ -162,7 +162,22 @@ struct AdcControl2 {
 
 struct AdcInputType {
 	static constexpr uint8_t Address = 0x53;
-	// TODO
+	enum : uint8_t {
+		AllAdcDifferential = 0,
+		Adc1Differential = 1 << 0,
+		Adc2Differential = 1 << 1,
+		Adc3Differential = 1 << 2,
+		Adc4Differential = 1 << 3,
+		Adc5Differential = 1 << 4,
+		Adc6Differential = 1 << 5,
+		Adc1SingleEnded = 1 << 0,
+		Adc2SingleEnded = 1 << 1,
+		Adc3SingleEnded = 1 << 2,
+		Adc4SingleEnded = 1 << 3,
+		Adc5SingleEnded = 1 << 4,
+		Adc6SingleEnded = 1 << 5,
+		AllAdcSingleEnded = 0b111111,
+	};
 };
 
 struct AdcInputPhase {

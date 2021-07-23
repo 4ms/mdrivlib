@@ -53,6 +53,7 @@ static RegisterData default_codec_init[] = {
 	{AdcControl2::Address, bitfield8(AdcControl2::AdcAllHPFDisabled)},
 	{AdcSoftMute::Address, bitfield8(AdcSoftMute::NoAdcMuted)},
 	{AdcAllAtten::Address, bitfield8(AdcAtten::ZeroDB)},
+	{AdcInputType::Address, bitfield8(AdcInputType::Adc1SingleEnded, AdcInputType::AllAdcDifferential)},
 
 };
 
