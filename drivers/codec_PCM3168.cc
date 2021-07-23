@@ -44,7 +44,7 @@ struct RegisterData {
 
 static RegisterData default_codec_init[] = {
 	{ResetControl::Address, bitfield8(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
-	{DacControl1::Address, bitfield8(DacControl1::LeftJustified_TDM_24bit, DacControl1::SlaveMode)},
+	{DacControl1::Address, bitfield8(DacControl1::I2S_TDM_24bit, DacControl1::SlaveMode)},
 	{DacControl2::Address, bitfield8(DacControl2::DacAllEnable)},
 	{DacSoftMute::Address, bitfield8(DacSoftMute::NoDacMuted)},
 	{DacAllAtten::Address, bitfield8(DacAtten::ZeroDB)},
