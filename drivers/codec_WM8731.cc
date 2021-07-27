@@ -35,7 +35,7 @@ namespace mdrivlib
 {
 using namespace CodecWM8731Registers;
 
-uint16_t default_codec_init_data[] = {
+const uint16_t default_codec_init_data[] = {
 	VOL_0dB,   // Reg 00: Left Line In
 	VOL_0dB,   // Reg 01: Right Line In
 	HPVOL_0dB, // Reg 02: Left Headphone out
@@ -91,7 +91,7 @@ CodecWM8731::Error CodecWM8731::_reset() {
 }
 
 CodecWM8731::Error CodecWM8731::_write_all_registers(uint32_t sample_rate) {
-	CodecWM8731::Error err;
+	CodecWM8731::Error err{};
 
 	for (uint8_t i = 0; i < WM8731_NUM_REGS; i++) {
 		if (i != WM8731_REG_SAMPLE_CTRL)
