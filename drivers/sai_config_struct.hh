@@ -8,7 +8,7 @@ struct SaiConfig {
 	SAI_Block_TypeDef *tx_block;
 	SAI_Block_TypeDef *rx_block;
 
-	enum SAIRxTxMode { RXMaster, TXMaster } mode;
+	enum SAIRxTxMode { RXMaster, TXMaster, RXExtSynced, TXExtSynced } mode;
 
 	DMA_Config dma_init_tx;
 	DMA_Config dma_init_rx;
@@ -28,4 +28,8 @@ struct SaiConfig {
 
 	uint32_t num_tdm_ins;
 	uint32_t num_tdm_outs;
+
+	enum SyncSendMode { NoSendSync = 0b00, BlockASendsSync = 0b01, BlockBSendsSync = 0b11 } sync_send;
+	enum SyncReceiveMode { NoReceiveSync = 0, SyncToThisSAI = 1, SyncToExtSAI = 2 } sync_receive;
+	enum SyncReceiveFrom { SyncToSAI1 = 0, SyncToSAI2 = 1, SyncToSAI3 = 2, SyncToSAI4 = 3 } sync_receive_from;
 };

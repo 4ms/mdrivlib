@@ -215,30 +215,32 @@ SaiTdmPeriph::Error SaiTdmPeriph::_init_sai_dma() {
 }
 
 void SaiTdmPeriph::_init_pins() {
-	Pin sai_mclk{saidef_.MCLK.gpio,
-				 saidef_.MCLK.pin,
-				 PinMode::Alt,
-				 saidef_.MCLK.af,
-				 PinPull::None,
-				 PinPolarity::Normal,
-				 PinSpeed::High,
-				 PinOType::PushPull};
-	Pin sai_sclk{saidef_.SCLK.gpio,
-				 saidef_.SCLK.pin,
-				 PinMode::Alt,
-				 saidef_.SCLK.af,
-				 PinPull::None,
-				 PinPolarity::Normal,
-				 PinSpeed::High,
-				 PinOType::PushPull};
-	Pin sai_lrclk{saidef_.LRCLK.gpio,
-				  saidef_.LRCLK.pin,
-				  PinMode::Alt,
-				  saidef_.LRCLK.af,
-				  PinPull::None,
-				  PinPolarity::Normal,
-				  PinSpeed::High,
-				  PinOType::PushPull};
+	if (saidef_.mode == SaiConfig::TXMaster || saidef_.mode == SaiConfig::RXMaster) {
+		Pin sai_mclk{saidef_.MCLK.gpio,
+					 saidef_.MCLK.pin,
+					 PinMode::Alt,
+					 saidef_.MCLK.af,
+					 PinPull::None,
+					 PinPolarity::Normal,
+					 PinSpeed::High,
+					 PinOType::PushPull};
+		Pin sai_sclk{saidef_.SCLK.gpio,
+					 saidef_.SCLK.pin,
+					 PinMode::Alt,
+					 saidef_.SCLK.af,
+					 PinPull::None,
+					 PinPolarity::Normal,
+					 PinSpeed::High,
+					 PinOType::PushPull};
+		Pin sai_lrclk{saidef_.LRCLK.gpio,
+					  saidef_.LRCLK.pin,
+					  PinMode::Alt,
+					  saidef_.LRCLK.af,
+					  PinPull::None,
+					  PinPolarity::Normal,
+					  PinSpeed::High,
+					  PinOType::PushPull};
+	}
 	Pin sai_mrx_adc{saidef_.SD_ADC.gpio,
 					saidef_.SD_ADC.pin,
 					PinMode::Alt,
