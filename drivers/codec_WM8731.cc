@@ -29,15 +29,11 @@
 #include "codec_WM8731.hh"
 #include "codec_WM8731_registers.h"
 
-// #ifdef STM32H7
 static constexpr bool DISABLE_I2C = false;
-// #else
-// static constexpr bool DISABLE_I2C = true;
-// #endif
 
 namespace mdrivlib
 {
-using namespace _CodecWM8731;
+using namespace CodecWM8731Registers;
 
 const uint16_t default_codec_init_data[] = {
 	VOL_0dB,   // Reg 00: Left Line In
@@ -45,7 +41,7 @@ const uint16_t default_codec_init_data[] = {
 	HPVOL_0dB, // Reg 02: Left Headphone out
 	HPVOL_0dB, // Reg 03: Right Headphone out
 	(MUTEMIC   // Reg 04: Analog Audio Path Control (maximum attenuation on sidetone, sidetone disabled, DAC selected,
-			 // Mute Mic, no bypass)
+			   // Mute Mic, no bypass)
 	 | INSEL_line | DACSEL | SIDEATT_neg6dB),
 	(DEEMPH_disable // Reg 05: Digital Audio Path Control: HPF, De-emp at 48kHz on DAC, do not soft mute dac
 	 | ADCHPFEnable),

@@ -22,4 +22,10 @@ struct SaiConfig {
 	PinNoInit LRCLK;
 	PinNoInit SD_DAC;
 	PinNoInit SD_ADC;
+	PinNoInit reset_pin;
+
+	uint32_t bus_address;
+
+	uint32_t num_tdm_ins;
+	uint32_t num_tdm_outs;
 };
