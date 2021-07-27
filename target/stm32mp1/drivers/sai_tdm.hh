@@ -22,13 +22,9 @@ public:
 	~SaiTdmPeriph() = default;
 
 	Error init();
-	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
+	void set_rx_buffers(uint8_t *rx_buf_ptr, uint32_t block_size);
+	void set_tx_buffers(uint8_t *tx_buf_ptr, uint32_t block_size);
 	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
-
-	Error init(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
-		set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
-		return init();
-	}
 
 	void start();
 	void stop();
@@ -45,7 +41,8 @@ private:
 	IRQn_Type rx_irqn;
 	uint8_t *tx_buf_ptr_;
 	uint8_t *rx_buf_ptr_;
-	uint32_t block_size_;
+	uint32_t tx_block_size_;
+	uint32_t rx_block_size_;
 
 	void _init_pins();
 	void _config_rx_sai();

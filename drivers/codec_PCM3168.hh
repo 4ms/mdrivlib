@@ -58,11 +58,25 @@ public:
 	CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef);
 
 	void init();
-	void start();
-	uint32_t get_samplerate();
-	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
+
+	template<typename FrameT, size_t BUFSIZE>
+	void set_tx_buffers(std::array<FrameT, BUFSIZE> tx_buf) {
+		constexpr uint32_t block_size = sizeof(tx_buf) / 2;
+		sai_.set_tx_buffers(reinterpret_cast<uint8_t *>(tx_buf.data()), block_size);
+		// static_assert(block_size == 1024);
+	}
+
+	template<typename FrameT, size_t BUFSIZE>
+	void set_rx_buffers(std::array<FrameT, BUFSIZE> rx_buf) {
+		constexpr uint32_t block_size = sizeof(rx_buf) / 2;
+		sai_.set_rx_buffers(reinterpret_cast<uint8_t *>(rx_buf.data()), block_size);
+		// static_assert(block_size == 768);
+	}
+
 	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
 
+	void start();
+	uint32_t get_samplerate();
 	Error init_at_samplerate(uint32_t sample_rate);
 	Error power_down();
 	Error power_up();

@@ -257,11 +257,16 @@ void SaiTdmPeriph::_init_pins() {
 					PinOType::PushPull};
 }
 
-void SaiTdmPeriph::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
-	rx_buf_ptr_ = rx_buf_ptr;
+void SaiTdmPeriph::set_tx_buffers(uint8_t *tx_buf_ptr, uint32_t block_size) {
 	tx_buf_ptr_ = tx_buf_ptr;
-	block_size_ = block_size;
+	tx_block_size_ = block_size;
 }
+
+void SaiTdmPeriph::set_rx_buffers(uint8_t *rx_buf_ptr, uint32_t block_size) {
+	rx_buf_ptr_ = rx_buf_ptr;
+	rx_block_size_ = block_size;
+}
+
 void SaiTdmPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
 	tx_tc_cb = std::move(tx_complete_cb);
 	tx_ht_cb = std::move(tx_half_complete_cb);
@@ -304,8 +309,8 @@ void SaiTdmPeriph::start() {
 
 	target::System::enable_irq(_irqn);
 
-	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, 1024 /*block_size_*/);
-	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, 768 /*block_size_*/);
+	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
+	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
 }
 
 void SaiTdmPeriph::stop() {
