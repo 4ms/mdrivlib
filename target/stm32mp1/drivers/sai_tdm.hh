@@ -28,8 +28,6 @@ public:
 
 	void start();
 	void stop();
-	DMA_HandleTypeDef *get_tx_dmahandle();
-	DMA_HandleTypeDef *get_rx_dmahandle();
 
 private:
 	const SaiConfig &saidef_;
@@ -45,14 +43,14 @@ private:
 	uint32_t rx_block_size_;
 
 	void _init_pins();
-	void _config_rx_sai();
-	void _config_tx_sai();
+	Error _config_rx_sai();
+	Error _config_tx_sai();
 	void _config_rx_dma();
 	void _config_tx_dma();
-	Error _init_sai_protocol();
 	Error _init_sai_dma();
 	void _sai_enable(SAI_HandleTypeDef *hsai);
 	void _sai_disable(SAI_HandleTypeDef *hsai);
+	void _start_irq(IRQn_Type irqn);
 
 	std::function<void()> tx_tc_cb;
 	std::function<void()> tx_ht_cb;

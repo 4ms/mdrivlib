@@ -17,22 +17,23 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	Clocks::DMA::enable(saidef_.dma_init_tx.DMAx);
 	Clocks::DMAMUX::enable();
 
-	{
-		// Todo: swap order: always init slave first
-		_config_tx_sai();
-		_config_rx_sai();
-		auto err = _init_sai_protocol();
-		if (err != SAI_NO_ERR)
-			return err;
-	}
-	{
-		// Todo: swap order: always init slave first
-		_config_tx_dma();
-		_config_rx_dma();
-		auto err = _init_sai_dma();
-		if (err != SAI_NO_ERR)
-			return err;
-	}
+	Error err = SAI_NO_ERR;
+
+	// Todo: swap order: always init slave first
+	err = _config_tx_sai();
+	if (err != SAI_NO_ERR)
+		return err;
+
+	err = _config_rx_sai();
+	if (err != SAI_NO_ERR)
+		return err;
+
+	// Todo: swap order: always init slave first
+	_config_tx_dma();
+	_config_rx_dma();
+	err = _init_sai_dma();
+	if (err != SAI_NO_ERR)
+		return err;
 
 	_sai_enable(&hsai_rx);
 	_sai_enable(&hsai_tx);
@@ -48,7 +49,9 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	return SAI_NO_ERR;
 }
 
-void SaiTdmPeriph::_config_rx_sai() {
+SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
+	Error err = SAI_NO_ERR;
+
 	__HAL_SAI_RESET_HANDLE_STATE(&hsai_rx);
 	hsai_rx.Instance = saidef_.rx_block;
 
@@ -76,6 +79,7 @@ void SaiTdmPeriph::_config_rx_sai() {
 
 	if (saidef_.num_tdm_ins > 2) {
 		// Todo: use conf to set FrameLength
+		// Todo: allow conf to set FS pulse mode (ActiveFrameLength)
 		hsai_rx.Init.Protocol = SAI_FREE_PROTOCOL;
 		hsai_rx.Init.DataSize = saidef_.datasize;
 		hsai_rx.Init.FirstBit = SAI_FIRSTBIT_MSB;
@@ -89,12 +93,21 @@ void SaiTdmPeriph::_config_rx_sai() {
 		hsai_rx.SlotInit.SlotSize = SAI_SLOTSIZE_32B;
 		hsai_rx.SlotInit.SlotNumber = saidef_.num_tdm_ins;
 		hsai_rx.SlotInit.SlotActive = 0x0000FFFF;
+		HAL_SAI_DeInit(&hsai_rx);
+		if (HAL_SAI_Init(&hsai_rx) != HAL_OK)
+			err = SAI_INIT_ERR;
+	} else {
+		HAL_SAI_DeInit(&hsai_rx);
+		if (HAL_SAI_InitProtocol(&hsai_rx, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2) != HAL_OK)
+			err = SAI_INIT_ERR;
 	}
 
-	HAL_SAI_DeInit(&hsai_rx);
+	return err;
 }
 
-void SaiTdmPeriph::_config_tx_sai() {
+SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
+	Error err = SAI_NO_ERR;
+
 	__HAL_SAI_RESET_HANDLE_STATE(&hsai_tx);
 	hsai_tx.Instance = saidef_.tx_block;
 	_sai_disable(&hsai_tx);
@@ -133,27 +146,16 @@ void SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.SlotInit.SlotSize = SAI_SLOTSIZE_32B;
 		hsai_tx.SlotInit.SlotNumber = saidef_.num_tdm_outs;
 		hsai_tx.SlotInit.SlotActive = 0x0000FFFF;
-	}
-
-	HAL_SAI_DeInit(&hsai_tx);
-}
-
-SaiTdmPeriph::Error SaiTdmPeriph::_init_sai_protocol() {
-	if (saidef_.num_tdm_outs > 2) {
+		HAL_SAI_DeInit(&hsai_tx);
 		if (HAL_SAI_Init(&hsai_tx) != HAL_OK)
-			return SAI_INIT_ERR;
-
-		if (HAL_SAI_Init(&hsai_rx) != HAL_OK)
-			return SAI_INIT_ERR;
+			err = SAI_INIT_ERR;
 	} else {
+		HAL_SAI_DeInit(&hsai_tx);
 		if (HAL_SAI_InitProtocol(&hsai_tx, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2) != HAL_OK)
-			return SAI_INIT_ERR;
-
-		if (HAL_SAI_InitProtocol(&hsai_rx, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2) != HAL_OK)
-			return SAI_INIT_ERR;
+			err = SAI_INIT_ERR;
 	}
 
-	return SAI_NO_ERR;
+	return err;
 }
 
 void SaiTdmPeriph::_config_rx_dma() {
@@ -172,7 +174,6 @@ void SaiTdmPeriph::_config_rx_dma() {
 	hdma_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
 	__HAL_LINKDMA(&hsai_rx, hdmarx, hdma_rx);
-	// __HAL_LINKDMA(&hsai_rx, hdmatx, hdma_rx); //??!
 	HAL_DMA_DeInit(&hdma_rx);
 }
 
@@ -192,24 +193,16 @@ void SaiTdmPeriph::_config_tx_dma() {
 	hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
 	__HAL_LINKDMA(&hsai_tx, hdmatx, hdma_tx);
-	// __HAL_LINKDMA(&hsai_tx, hdmarx, hdma_tx); //??!
 	HAL_DMA_DeInit(&hdma_tx);
 }
 
 SaiTdmPeriph::Error SaiTdmPeriph::_init_sai_dma() {
 	// Todo always init slave first
-
 	if (HAL_DMA_Init(&hdma_tx) != HAL_OK)
 		return SAI_INIT_ERR;
 
-	// __HAL_LINKDMA(&hsai_tx, hdmatx, hdma_tx);
-	// __HAL_LINKDMA(&hsai_tx, hdmarx, hdma_tx); //??!
-
 	if (HAL_DMA_Init(&hdma_rx) != HAL_OK)
 		return SAI_INIT_ERR;
-
-	// __HAL_LINKDMA(&hsai_rx, hdmarx, hdma_rx);
-	// __HAL_LINKDMA(&hsai_rx, hdmatx, hdma_rx); //??!
 
 	return SAI_NO_ERR;
 }
@@ -275,24 +268,29 @@ void SaiTdmPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::fu
 }
 
 void SaiTdmPeriph::start() {
-	IRQn_Type _irqn;
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		dma_tc_flag_index = dma_get_TC_flag_index(hdma_rx.Instance);
 		dma_ht_flag_index = dma_get_HT_flag_index(hdma_rx.Instance);
 		dma_te_flag_index = dma_get_TE_flag_index(hdma_rx.Instance);
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_rx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_rx.stream);
-		_irqn = rx_irqn;
-	} else {
+		_start_irq(rx_irqn);
+	}
+	if (saidef_.mode == SaiConfig::TXMaster) {
 		dma_tc_flag_index = dma_get_TC_flag_index(hdma_tx.Instance);
 		dma_ht_flag_index = dma_get_HT_flag_index(hdma_tx.Instance);
 		dma_te_flag_index = dma_get_TE_flag_index(hdma_tx.Instance);
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_tx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
-		_irqn = tx_irqn;
+		_start_irq(tx_irqn);
 	}
 
-	InterruptManager::registerISR(_irqn, [this]() {
+	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
+	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
+}
+
+void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
+	InterruptManager::registerISR(irqn, [this]() {
 		if ((*dma_isr_reg & dma_tc_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_TC)*/) {
 			*dma_ifcr_reg = dma_tc_flag_index;
 			tx_tc_cb();
@@ -308,24 +306,12 @@ void SaiTdmPeriph::start() {
 			// Error: debug breakpoint or logging here
 		}
 	});
-
-	target::System::enable_irq(_irqn);
-
-	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
-	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
+	target::System::enable_irq(irqn);
 }
 
 void SaiTdmPeriph::stop() {
 	target::System::disable_irq(tx_irqn);
 	target::System::disable_irq(rx_irqn);
-}
-
-DMA_HandleTypeDef *SaiTdmPeriph::get_rx_dmahandle() {
-	return &hdma_rx;
-}
-
-DMA_HandleTypeDef *SaiTdmPeriph::get_tx_dmahandle() {
-	return &hdma_tx;
 }
 
 void SaiTdmPeriph::_sai_enable(SAI_HandleTypeDef *hsai) {
