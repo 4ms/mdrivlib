@@ -61,12 +61,30 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 		hsai_rx.Init.AudioMode = SAI_MODEMASTER_RX;
 		hsai_rx.Init.Synchro = SAI_ASYNCHRONOUS;
 		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-	} else {
+		hsai_rx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
+								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
+																				  : SAI_SYNCEXT_DISABLE;
+	}
+	if (saidef_.mode == SaiConfig::TXMaster) {
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
 		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
+		hsai_rx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
+								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
+																				  : SAI_SYNCEXT_DISABLE;
 	}
-	hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+	if (saidef_.mode == SaiConfig::ExtSynced) {
+		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
+		hsai_rx.Init.Synchro = saidef_.sync_receive_from == SaiConfig::SyncToSAI1 ? SAI_SYNCHRONOUS_EXT_SAI1
+							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI2 ? SAI_SYNCHRONOUS_EXT_SAI2
+							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI3 ? SAI_SYNCHRONOUS_EXT_SAI3
+							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI4 ? SAI_SYNCHRONOUS_EXT_SAI4
+																				  : SAI_SYNCHRONOUS;
+
+		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
+		hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+	}
+
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
@@ -78,13 +96,13 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 	hsai_rx.Init.PdmInit.Activation = DISABLE;
 
 	if (saidef_.num_tdm_ins > 2) {
-		// Todo: use conf to set FrameLength
+		// Todo: use conf to set slot size
 		// Todo: allow conf to set FS pulse mode (ActiveFrameLength)
 		hsai_rx.Init.Protocol = SAI_FREE_PROTOCOL;
 		hsai_rx.Init.DataSize = saidef_.datasize;
 		hsai_rx.Init.FirstBit = SAI_FIRSTBIT_MSB;
 		hsai_rx.Init.ClockStrobing = SAI_CLOCKSTROBING_RISINGEDGE;
-		hsai_rx.FrameInit.FrameLength = 256;
+		hsai_rx.FrameInit.FrameLength = saidef_.framesize;
 		hsai_rx.FrameInit.ActiveFrameLength = 1; // FS pulses at start of frame
 		hsai_rx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
 		hsai_rx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
@@ -116,12 +134,30 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
 		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
 		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
-	} else {
+		hsai_tx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
+								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
+																				  : SAI_SYNCEXT_DISABLE;
+	}
+	if (saidef_.mode == SaiConfig::TXMaster) {
 		hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
 		hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
 		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
+		hsai_tx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
+								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
+																				  : SAI_SYNCEXT_DISABLE;
 	}
-	hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+	if (saidef_.mode == SaiConfig::ExtSynced) {
+		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
+		hsai_tx.Init.Synchro = saidef_.sync_receive_from == SaiConfig::SyncToSAI1 ? SAI_SYNCHRONOUS_EXT_SAI1
+							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI2 ? SAI_SYNCHRONOUS_EXT_SAI2
+							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI3 ? SAI_SYNCHRONOUS_EXT_SAI3
+							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI4 ? SAI_SYNCHRONOUS_EXT_SAI4
+																				  : SAI_SYNCHRONOUS;
+
+		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
+		hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+	}
+
 	hsai_tx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_tx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_tx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
@@ -137,7 +173,7 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.Init.DataSize = saidef_.datasize;
 		hsai_tx.Init.FirstBit = SAI_FIRSTBIT_MSB;
 		hsai_tx.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
-		hsai_tx.FrameInit.FrameLength = 256;
+		hsai_tx.FrameInit.FrameLength = saidef_.framesize;
 		hsai_tx.FrameInit.ActiveFrameLength = 1; // FS pulses at start of frame
 		hsai_tx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
 		hsai_tx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
