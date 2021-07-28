@@ -60,17 +60,15 @@ public:
 	void init();
 
 	template<typename FrameT, size_t BUFSIZE>
-	void set_tx_buffers(std::array<FrameT, BUFSIZE> tx_buf) {
+	void set_tx_buffers(std::array<FrameT, BUFSIZE> &tx_buf) {
 		constexpr uint32_t block_size = sizeof(tx_buf) / 2;
 		sai_.set_tx_buffers(reinterpret_cast<uint8_t *>(tx_buf.data()), block_size);
-		// static_assert(block_size == 1024);
 	}
 
 	template<typename FrameT, size_t BUFSIZE>
-	void set_rx_buffers(std::array<FrameT, BUFSIZE> rx_buf) {
+	void set_rx_buffers(std::array<FrameT, BUFSIZE> &rx_buf) {
 		constexpr uint32_t block_size = sizeof(rx_buf) / 2;
 		sai_.set_rx_buffers(reinterpret_cast<uint8_t *>(rx_buf.data()), block_size);
-		// static_assert(block_size == 768);
 	}
 
 	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
