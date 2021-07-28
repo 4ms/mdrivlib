@@ -41,7 +41,7 @@ const uint16_t default_codec_init_data[] = {
 	HPVOL_0dB, // Reg 02: Left Headphone out
 	HPVOL_0dB, // Reg 03: Right Headphone out
 	(MUTEMIC   // Reg 04: Analog Audio Path Control (maximum attenuation on sidetone, sidetone disabled, DAC selected,
-			   // Mute Mic, no bypass)
+			 // Mute Mic, no bypass)
 	 | INSEL_line | DACSEL | SIDEATT_neg6dB),
 	(DEEMPH_disable // Reg 05: Digital Audio Path Control: HPF, De-emp at 48kHz on DAC, do not soft mute dac
 	 | ADCHPFEnable),
@@ -137,13 +137,5 @@ CodecWM8731::Error CodecWM8731::_write_register(uint8_t reg_address, uint16_t re
 
 CodecWM8731::Error CodecWM8731::power_down() {
 	return _write_register(WM8731_REG_POWERDOWN, 0xFF); // Power Down enable all
-}
-
-// FixMe: Why is this exposed?
-DMA_HandleTypeDef *CodecWM8731::get_rx_dmahandle() {
-	return sai_.get_rx_dmahandle();
-}
-DMA_HandleTypeDef *CodecWM8731::get_tx_dmahandle() {
-	return sai_.get_tx_dmahandle();
 }
 } // namespace mdrivlib

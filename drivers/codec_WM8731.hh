@@ -66,9 +66,6 @@ public:
 	Error init_at_samplerate(uint32_t sample_rate);
 	Error power_down();
 
-	DMA_HandleTypeDef *get_rx_dmahandle();
-	DMA_HandleTypeDef *get_tx_dmahandle();
-
 private:
 	I2CPeriph &i2c_;
 	SaiPeriph sai_;
