@@ -1,6 +1,7 @@
 #include "sai_tdm.hh"
 #include "clocks.hh"
 #include "interrupt.hh"
+#include "interrupt_control.hh"
 #include "stm32xx.h"
 #include "system.hh"
 
@@ -39,12 +40,12 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	_sai_enable(&hsai_tx);
 
 	tx_irqn = saidef_.dma_init_tx.IRQn;
-	target::System::set_irq_priority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
-	target::System::disable_irq(tx_irqn);
+	InterruptControl::set_irq_priority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
+	InterruptControl::disable_irq(tx_irqn);
 
 	rx_irqn = saidef_.dma_init_rx.IRQn;
-	target::System::set_irq_priority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
-	target::System::disable_irq(rx_irqn);
+	InterruptControl::set_irq_priority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
+	InterruptControl::disable_irq(rx_irqn);
 
 	return SAI_NO_ERR;
 }
@@ -342,12 +343,12 @@ void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 			// Error: debug breakpoint or logging here
 		}
 	});
-	target::System::enable_irq(irqn);
+	InterruptControl::enable_irq(irqn);
 }
 
 void SaiTdmPeriph::stop() {
-	target::System::disable_irq(tx_irqn);
-	target::System::disable_irq(rx_irqn);
+	InterruptControl::disable_irq(tx_irqn);
+	InterruptControl::disable_irq(rx_irqn);
 }
 
 void SaiTdmPeriph::_sai_enable(SAI_HandleTypeDef *hsai) {
