@@ -1,5 +1,5 @@
 /*
- * CodecWM8731.c
+ * CodecCS42L51.cc
  *
  * Author: Dan Green (danngreen1@gmail.com)
  *
@@ -36,7 +36,7 @@
 namespace mdrivlib
 {
 
-class CodecWM8731 : public ICodec {
+class CodecCS42L51 : public ICodec {
 public:
 	enum Error {
 		CODEC_NO_ERR = 0,
@@ -55,7 +55,7 @@ public:
 		INVALID_PARAM
 	};
 
-	CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef);
+	CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef, PinNoInit reset_pin, uint8_t address_bit = 1);
 
 	void init() override;
 	void start() override;
@@ -65,18 +65,19 @@ public:
 
 	Error init_at_samplerate(uint32_t sample_rate);
 	Error power_down();
+	Error power_up();
 
 private:
 	I2CPeriph &i2c_;
 	SaiPeriph sai_;
 	uint32_t samplerate_;
+	Pin reset_pin_;
 
 	Error _write_register(uint8_t RegisterAddr, uint16_t RegisterValue);
 	Error _write_all_registers(uint32_t sample_rate);
-	Error _reset();
-	uint16_t _calc_samplerate(uint32_t sample_rate);
+	auto _calc_samplerate(uint32_t sample_rate);
 
-	// const static inline uint32_t I2C_BASE_ADDRESS = 0b10000000;
+	const uint8_t CODEC_ADDRESS;
 	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
 } // namespace mdrivlib

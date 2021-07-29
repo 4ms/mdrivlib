@@ -29,17 +29,13 @@
 #include "codec_WM8731.hh"
 #include "codec_WM8731_registers.h"
 
-// #ifdef STM32H7
 static constexpr bool DISABLE_I2C = false;
-// #else
-// static constexpr bool DISABLE_I2C = true;
-// #endif
 
 namespace mdrivlib
 {
-using namespace _CodecWM8731;
+using namespace CodecWM8731Registers;
 
-uint16_t default_codec_init_data[] = {
+const uint16_t default_codec_init_data[] = {
 	VOL_0dB,   // Reg 00: Left Line In
 	VOL_0dB,   // Reg 01: Right Line In
 	HPVOL_0dB, // Reg 02: Left Headphone out
@@ -95,7 +91,7 @@ CodecWM8731::Error CodecWM8731::_reset() {
 }
 
 CodecWM8731::Error CodecWM8731::_write_all_registers(uint32_t sample_rate) {
-	CodecWM8731::Error err;
+	CodecWM8731::Error err{};
 
 	for (uint8_t i = 0; i < WM8731_NUM_REGS; i++) {
 		if (i != WM8731_REG_SAMPLE_CTRL)
@@ -139,15 +135,7 @@ CodecWM8731::Error CodecWM8731::_write_register(uint8_t reg_address, uint16_t re
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
 
-CodecWM8731::Error CodecWM8731::power_down(void) {
+CodecWM8731::Error CodecWM8731::power_down() {
 	return _write_register(WM8731_REG_POWERDOWN, 0xFF); // Power Down enable all
-}
-
-// FixMe: Why is this exposed?
-DMA_HandleTypeDef *CodecWM8731::get_rx_dmahandle() {
-	return sai_.get_rx_dmahandle();
-}
-DMA_HandleTypeDef *CodecWM8731::get_tx_dmahandle() {
-	return sai_.get_tx_dmahandle();
 }
 } // namespace mdrivlib

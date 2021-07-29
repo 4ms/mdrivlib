@@ -7,14 +7,6 @@
 namespace mdrivlib
 {
 
-DMA_HandleTypeDef *SaiPeriph::get_rx_dmahandle() {
-	return &hdma_rx;
-}
-
-DMA_HandleTypeDef *SaiPeriph::get_tx_dmahandle() {
-	return &hdma_tx;
-}
-
 SaiPeriph::Error SaiPeriph::init() {
 	_init_pins();
 
