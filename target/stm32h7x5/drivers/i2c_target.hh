@@ -1,9 +1,10 @@
 #pragma once
 #include "drivers/i2c.hh"
 #include "syscfg.hh"
+
 namespace mdrivlib
 {
-// Todo: move to i2c_target.hh ?
+
 struct I2C {
 	static void init(const I2CConfig &defs) {
 		// if (calc_clock_kHz(defs.timing) > 800000UL)

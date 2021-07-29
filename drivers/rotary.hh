@@ -4,6 +4,7 @@
 
 namespace mdrivlib
 {
+
 class RotaryBase {
 public:
 	RotaryBase(GPIO portA, uint8_t pin_numA, GPIO portB, uint8_t pin_numB);

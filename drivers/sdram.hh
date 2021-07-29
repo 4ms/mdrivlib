@@ -24,6 +24,7 @@ static constexpr uint32_t ns_to_hclks(const uint32_t sdram_clock, const uint32_t
 
 namespace mdrivlib
 {
+
 class SDRAMPeriph {
 public:
 	SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept;
@@ -43,4 +44,5 @@ private:
 
 	uint32_t sdram_clock_;
 };
+
 } // namespace mdrivlib

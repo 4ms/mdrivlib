@@ -1,6 +1,8 @@
 #include "rotary.hh"
+
 namespace mdrivlib
 {
+
 enum HalfStepRotaryState : uint8_t {
 	HS_R_START = 0x0,
 	HS_R_CCW_BEGIN = 0x01,

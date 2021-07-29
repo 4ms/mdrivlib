@@ -1,5 +1,10 @@
+#pragma once
 #include <cstdint>
 #include <functional>
+
+namespace mdrivlib
+{
+
 struct SMPControl {
 	template<uint32_t channel>
 	static void notify() {
@@ -31,3 +36,4 @@ struct SMPThread {
 	static void init() {
 	}
 };
+} // namespace mdrivlib

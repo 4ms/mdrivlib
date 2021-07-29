@@ -1,5 +1,6 @@
 #pragma once
 #include "pin.hh"
+
 namespace mdrivlib
 {
 struct I2CTimingConfig {

@@ -6,6 +6,7 @@
 
 namespace mdrivlib
 {
+
 DMA_HandleTypeDef *SaiPeriph::get_rx_dmahandle() {
 	return &hdma_rx;
 }

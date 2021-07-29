@@ -5,6 +5,7 @@
 
 namespace mdrivlib
 {
+
 struct SystemStartup {
 
 	static constexpr bool DEBUG_MODE_DISABLE_I_CACHE = false;
@@ -71,4 +72,4 @@ struct SystemStartup {
 		__HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
 	}
 };
-} // namespace mdrivlib::core_m7
+} // namespace mdrivlib

@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <functional>
 
+namespace mdrivlib
+{
+
 struct SMPControl {
 	static inline __attribute__((section(".noncachable"))) uint32_t regs[4] = {0, 0, 0, 0};
 
@@ -106,3 +109,4 @@ struct SMPThread {
 		SMPControl::write<DataReg>(0);
 	}
 };
+} // namespace mdrivlib

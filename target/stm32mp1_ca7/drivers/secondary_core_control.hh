@@ -3,6 +3,9 @@
 
 extern uint32_t aux_core_start; // defined in startup.s
 
+namespace mdrivlib
+{
+
 // Controls MPU1 from MPU0
 struct SecondaryCoreController {
 
@@ -81,3 +84,4 @@ struct PrimaryCoreController {
 
 using MainCore = PrimaryCoreController;
 using SecondaryCore = SecondaryCoreController;
+} // namespace mdrivlib

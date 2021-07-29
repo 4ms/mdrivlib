@@ -7,6 +7,7 @@
 
 namespace mdrivlib
 {
+
 Timekeeper::Timekeeper()
 	: is_running(false) {
 }

@@ -6,6 +6,7 @@
 
 namespace mdrivlib
 {
+
 class SaiPeriph {
 public:
 	enum Error {
