@@ -2,11 +2,7 @@
 #include "drivers/register_access.hh"
 #include "drivers/stm32xx.h"
 
-namespace mdrivlib
-{
-namespace stm32h7x5
-{
-namespace EXTI_
+namespace mdrivlib::EXTI_
 {
 using Pin0 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 0, 3>;
 using Pin1 = RegisterSection<ReadWrite, SYSCFG_BASE + offsetof(SYSCFG_TypeDef, EXTICR[0]), 4, 3>;
@@ -119,6 +115,4 @@ using PinTrigPending = PinTrigPendingCore1<PinNum>;
 template<uint32_t PinNum>
 using PinInterruptMask = PinInterruptMaskCore1<PinNum>;
 
-} // namespace EXTI_
-} // namespace stm32h7x5
-} // namespace mdrivlib
+} // namespace mdrivlib::EXTI_

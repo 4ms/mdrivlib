@@ -1,7 +1,6 @@
 #pragma once
 #include "spi.hh"
 #include "spi_transfer_config_struct.hh"
-#include "system.hh"
 #include "util/math.hh"
 
 // Arch-specific wrapper around a chip's SPI peripheral, handling multi-chip buses.

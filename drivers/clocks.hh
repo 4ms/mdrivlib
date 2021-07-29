@@ -7,7 +7,7 @@
 // Todo: once all drivers are using constexpr init, much of these can go away,
 // and we'll use RCC_Enable::ADC<N>::set() instead
 
-// Wrapper class for RCC_Enable, which allows for enabling/disabling the clock (RCC) of peripherals using run-time
+// Wrapper class for RCC_Enable, which allows for enabling/disabling the clock (RCC) of PeriphUtil using run-time
 // values
 
 namespace mdrivlib::Clocks
@@ -22,7 +22,7 @@ struct ADC {
 			RCC_Enable::ADC3_::set();
 	}
 	static void enable(ADC_TypeDef *ADCx) {
-		enable(target::peripherals::ADC::to_num(ADCx));
+		enable(PeriphUtil::ADC::to_num(ADCx));
 	}
 	static void disable(const unsigned periph_num) {
 		if (periph_num == 1)
@@ -33,7 +33,7 @@ struct ADC {
 			RCC_Enable::ADC3_::clear();
 	}
 	static void disable(ADC_TypeDef *ADCx) {
-		disable(target::peripherals::ADC::to_num(ADCx));
+		disable(PeriphUtil::ADC::to_num(ADCx));
 	}
 };
 
@@ -149,7 +149,7 @@ struct SAI {
 
 struct TIM {
 	static void enable(unsigned periph_num) {
-		if (periph_num < 1 || periph_num > target::peripherals::TIM::NumPeriph)
+		if (periph_num < 1 || periph_num > PeriphUtil::TIM::NumPeriph)
 			return;
 		else if (periph_num == 1)
 			RCC_Enable::TIM1_::set();
@@ -187,7 +187,7 @@ struct TIM {
 			RCC_Enable::TIM17_::set();
 	}
 	static void disable(unsigned periph_num) {
-		if (periph_num < 1 || periph_num > target::peripherals::TIM::NumPeriph)
+		if (periph_num < 1 || periph_num > PeriphUtil::TIM::NumPeriph)
 			return;
 		else if (periph_num == 1)
 			RCC_Enable::TIM1_::clear();
@@ -225,10 +225,10 @@ struct TIM {
 			RCC_Enable::TIM17_::clear();
 	}
 	static void enable(TIM_TypeDef *TIMx) {
-		enable(target::peripherals::TIM::to_num(TIMx));
+		enable(PeriphUtil::TIM::to_num(TIMx));
 	}
 	static void disable(TIM_TypeDef *TIMx) {
-		disable(target::peripherals::TIM::to_num(TIMx));
+		disable(PeriphUtil::TIM::to_num(TIMx));
 	}
 };
 } // namespace mdrivlib::Clocks
