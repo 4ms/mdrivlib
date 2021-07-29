@@ -27,6 +27,7 @@
  */
 
 #pragma once
+#include "stm32xx.h"
 
 #include "codec.hh"
 #include "i2c.hh"
