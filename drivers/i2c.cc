@@ -121,7 +121,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 			PinSpeed::High,
 			PinOType::OpenDrain};
 
-	target::I2C::init(defs);
+	I2C::init(defs);
 	return _init_periph(defs.I2Cx, defs.timing);
 }
 

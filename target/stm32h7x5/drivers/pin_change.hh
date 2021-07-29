@@ -4,6 +4,9 @@
 #include "pin.hh"
 #include <functional>
 
+namespace mdrivlib
+{
+
 struct DefaultPinChangeConf {
 	static constexpr uint32_t pin = 0;
 	static constexpr GPIO port = GPIO::A;
@@ -46,8 +49,7 @@ public:
 
 private:
 	void _init() {
-		// This is different for H7 vs MP1:
-		target::RCC_Enable::SYSCFG_::set();
+		RCC_Enable::SYSCFG_::set();
 
 		auto port = ConfT::port == GPIO::A ? target::EXTI_::PortA
 				  : ConfT::port == GPIO::B ? target::EXTI_::PortB
@@ -128,3 +130,4 @@ private:
 private:
 	std::function<void(void)> task_func;
 };
+} // namespace mdrivlib

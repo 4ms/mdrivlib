@@ -30,8 +30,7 @@ public:
 	template<unsigned M>
 	using CRCPOLY = typename target::SPI<N>::template CRCPOLY<M>;
 
-	SpiPeriph() {
-	}
+	SpiPeriph() = default;
 
 	void configure() {
 		disable();
@@ -64,7 +63,7 @@ public:
 			static_assert(ConfT::NumChips <= 4, "mdrivlib::SpiPeriph only supports selecting 1-4 chips");
 		}
 
-		target::RCC_Enable::SPI<N>::set();
+		mdrivlib::RCC_Enable::SPI<N>::set();
 
 		// Todo: make configurable
 		CR1<SPI_CR1_IOLOCK>::clear();

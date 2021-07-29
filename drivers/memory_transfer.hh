@@ -81,7 +81,7 @@ struct MemoryTransfer {
 		_dst_addr = reinterpret_cast<uint32_t>(dst);
 		_src_addr = reinterpret_cast<uint32_t>(src);
 
-		target::RCC_Enable::MDMA_::set();
+		RCC_Enable::MDMA_::set();
 		MDMAX::Enable::clear();
 
 		_transfer_block_size = sz;

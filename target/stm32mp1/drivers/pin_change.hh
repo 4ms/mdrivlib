@@ -4,6 +4,8 @@
 #include "pin.hh"
 #include <functional>
 
+namespace mdrivlib
+{
 struct DefaultPinChangeConf {
 	static constexpr uint32_t pin = 0;
 	static constexpr GPIO port = GPIO::A;
@@ -127,3 +129,4 @@ private:
 private:
 	std::function<void(void)> task_func;
 };
+} // namespace mdrivlib

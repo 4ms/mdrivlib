@@ -3,6 +3,8 @@
 #include "pin.hh"
 #include "stm32xx.h"
 
+namespace mdrivlib
+{
 struct SaiConfig {
 	SAI_TypeDef *sai;
 	SAI_Block_TypeDef *tx_block;
@@ -23,3 +25,4 @@ struct SaiConfig {
 	PinNoInit SD_DAC;
 	PinNoInit SD_ADC;
 };
+} // namespace mdrivlib
