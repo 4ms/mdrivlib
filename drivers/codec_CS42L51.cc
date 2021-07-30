@@ -50,25 +50,17 @@ static RegisterData default_codec_init[] = {
 };
 
 CodecCS42L51::CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef, PinNoInit reset_pin, uint8_t address_bit)
-	: i2c_(i2c)
-	, sai_{saidef}
+	: CodecBase{saidef}
+	, i2c_(i2c)
 	, samplerate_{saidef.samplerate}
 	, reset_pin_{reset_pin, PinMode::Output}
-	, CODEC_ADDRESS{static_cast<uint8_t>(0x4A + (address_bit ? 1 : 0))} {
+	, I2C_address{static_cast<uint8_t>(0x4A + (address_bit ? 1 : 0))} {
 	reset_pin_.low();
 }
 
-void CodecCS42L51::init() {
+CodecCS42L51::Error CodecCS42L51::init() {
 	init_at_samplerate(samplerate_);
-	sai_.init();
-}
-
-void CodecCS42L51::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
-	sai_.set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
-}
-
-void CodecCS42L51::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
-	sai_.set_callbacks(std::move(tx_complete_cb), std::move(tx_half_complete_cb));
+	return sai_.init() == SaiTdmPeriph::SAI_NO_ERR ? CODEC_NO_ERR : SAI_INIT_ERR;
 }
 
 uint32_t CodecCS42L51::get_samplerate() {
@@ -125,7 +117,7 @@ CodecCS42L51::Error CodecCS42L51::_write_register(uint8_t reg_address, uint16_t 
 	if constexpr (DISABLE_I2C)
 		return CODEC_NO_ERR;
 
-	auto err = i2c_.write(CODEC_ADDRESS, data, 2);
+	auto err = i2c_.write(I2C_address, data, 2);
 	// auto err = i2c_.mem_write(CODEC_ADDRESS, Byte1, REGISTER_ADDR_SIZE, &Byte2, 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
