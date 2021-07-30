@@ -27,72 +27,35 @@
  */
 
 #pragma once
-#include "stm32xx.h"
-
 #include "codec.hh"
 #include "i2c.hh"
-#include "sai_tdm.hh"
 #include <cstdint>
 
 namespace mdrivlib
 {
 
-class CodecPCM3168 {
+class CodecPCM3168 : public CodecBase {
 public:
 	enum Error {
 		CODEC_NO_ERR = 0,
 		CODEC_I2C_ERR,
 		I2C_INIT_ERR,
-		I2S_CLK_INIT_ERR,
-		I2STX_INIT_ERR,
-		I2SRX_INIT_ERR,
-		I2STX_DMA_INIT_ERR,
-		I2SRX_DMA_INIT_ERR,
-		I2STX_XMIT_DMA_ERR,
-		I2SRX_XMIT_DMA_ERR,
-		SAI_DMA_IT_FE,
-		SAI_DMA_IT_TE,
-		SAI_DMA_IT_DME,
-		INVALID_PARAM
+		I2S_INIT_ERR,
 	};
 
 	CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef);
 
-	void init();
-
-	template<typename FrameT, size_t BUFSIZE>
-	void set_tx_buffers(std::array<FrameT, BUFSIZE> &tx_buf) {
-		constexpr uint32_t NumHalfTransfers = 2;
-		constexpr uint32_t BytesPerSample = 4;
-		constexpr uint32_t block_size = sizeof(tx_buf) * NumHalfTransfers / BytesPerSample;
-		sai_.set_tx_buffers(reinterpret_cast<uint8_t *>(tx_buf.data()), block_size);
-	}
-
-	template<typename FrameT, size_t BUFSIZE>
-	void set_rx_buffers(std::array<FrameT, BUFSIZE> &rx_buf) {
-		constexpr uint32_t NumHalfTransfers = 2;
-		constexpr uint32_t BytesPerSample = 4;
-		constexpr uint32_t block_size = sizeof(rx_buf) * NumHalfTransfers / BytesPerSample;
-		sai_.set_rx_buffers(reinterpret_cast<uint8_t *>(rx_buf.data()), block_size);
-	}
-
-	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
-
-	void start();
+	Error init();
 	uint32_t get_samplerate();
-	Error init_at_samplerate(uint32_t sample_rate);
-	Error power_down();
-	Error power_up();
+	void start();
 
 private:
 	I2CPeriph &i2c_;
-	SaiTdmPeriph sai_;
 	uint32_t samplerate_;
 	Pin reset_pin_;
 
 	Error _write_register(uint8_t RegisterAddr, uint8_t RegisterValue);
 	Error _write_all_registers(uint32_t sample_rate);
-	auto _calc_samplerate(uint32_t sample_rate);
 
 	const uint8_t I2C_address;
 	static inline constexpr auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;

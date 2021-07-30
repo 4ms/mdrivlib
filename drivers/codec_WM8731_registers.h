@@ -5,9 +5,8 @@ namespace mdrivlib::CodecWM8731Registers
 {
 #define WM8731_ADDR_0 0x1A
 #define WM8731_ADDR_1 0x1B
-#define WM8731_NUM_REGS 10
 
-const uint16_t CODEC_ADDRESS = WM8731_ADDR_0 << 1;
+#define WM8731_NUM_REGS 10
 
 // Registers:
 #define WM8731_REG_INBOTH ((uint8_t)8)

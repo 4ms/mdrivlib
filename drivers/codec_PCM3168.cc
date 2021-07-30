@@ -1,5 +1,5 @@
 /*
- * codec_i2c.c
+ * codec_PCM3168.cc
  *
  * Author: Dan Green (danngreen1@gmail.com)
  *
@@ -31,10 +31,11 @@
 #include "stm32xx.h"
 #include "util/bitfield.hh"
 
-static constexpr bool DISABLE_I2C = false;
-
 namespace mdrivlib
 {
+
+static constexpr bool DISABLE_I2C = false;
+
 using namespace CodecPCM3168Register;
 
 struct RegisterData {
@@ -58,27 +59,23 @@ static RegisterData default_codec_init[] = {
 };
 
 CodecPCM3168::CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef)
-	: i2c_(i2c)
-	, sai_{saidef}
+	: CodecBase{saidef}
+	, i2c_(i2c)
 	, samplerate_{saidef.samplerate}
 	, reset_pin_{saidef.reset_pin, PinMode::Output}
 	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b11) << 1)))} {
 	reset_pin_.low();
 }
 
-void CodecPCM3168::init() {
+CodecPCM3168::Error CodecPCM3168::init() {
 	auto err = sai_.init();
-	if (err)
-		return;
+	if (err != SaiTdmPeriph::SAI_NO_ERR)
+		return CodecPCM3168::I2S_INIT_ERR;
 
 	reset_pin_.high();
 
 	HAL_Delay(1); // 3846 SYSCLKI cycles = 0.313ms
-	init_at_samplerate(samplerate_);
-}
-
-void CodecPCM3168::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
-	sai_.set_callbacks(std::move(tx_complete_cb), std::move(tx_half_complete_cb));
+	return _write_all_registers(samplerate_);
 }
 
 uint32_t CodecPCM3168::get_samplerate() {
@@ -87,14 +84,6 @@ uint32_t CodecPCM3168::get_samplerate() {
 
 void CodecPCM3168::start() {
 	sai_.start();
-}
-
-CodecPCM3168::Error CodecPCM3168::init_at_samplerate(uint32_t sample_rate) {
-	// reset_pin_.high();
-	// HAL_Delay(1);
-	// power_down();
-
-	return _write_all_registers(sample_rate);
 }
 
 CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
@@ -108,37 +97,14 @@ CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
 	return err;
 }
 
-auto CodecPCM3168::_calc_samplerate(uint32_t sample_rate) {
-	// if (sample_rate > 50000)
-	// 	return DSM_MODE;
-	// else if (sample_rate == 16000)
-	// 	return HSM_MODE;
-	// else if (sample_rate == 8000)
-	// 	return QSM_MODE;
-	// else if (sample_rate > 4000)
-	// 	return SSM_MODE;
-	// else
-	return (uint8_t)0;
-}
-
 CodecPCM3168::Error CodecPCM3168::_write_register(uint8_t reg_address, uint8_t reg_value) {
 	uint8_t data[2] = {reg_address, reg_value};
 
 	if constexpr (DISABLE_I2C)
 		return CODEC_NO_ERR;
 
-	// auto err = i2c_.write(I2C_address, data, 2);
 	auto err = i2c_.mem_write(I2C_address, reg_address, REGISTER_ADDR_SIZE, &data[1], 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
 
-CodecPCM3168::Error CodecPCM3168::power_down() {
-	return CodecPCM3168::Error::CODEC_NO_ERR;
-	// return _write_register(ResetControl::Address, bitfield8(ResetControl::Reset));
-}
-
-CodecPCM3168::Error CodecPCM3168::power_up() {
-	return CodecPCM3168::Error::CODEC_NO_ERR;
-	// return _write_register(POWER_CTL1, 0);
-}
 } // namespace mdrivlib
