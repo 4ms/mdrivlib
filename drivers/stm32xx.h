@@ -41,6 +41,27 @@
 #define ADC3 nullptr
 #endif
 
+#ifndef ADC123_COMMON
+#define ADC123_COMMON nullptr
+#define ADC123_COMMON_BASE 0
+#endif
+#ifndef ADC12_COMMON
+#define ADC12_COMMON nullptr
+#define ADC12_COMMON_BASE 0
+#endif
+#ifndef ADC1_COMMON
+#define ADC1_COMMON nullptr
+#define ADC1_COMMON_BASE 0
+#endif
+#ifndef ADC2_COMMON
+#define ADC2_COMMON nullptr
+#define ADC2_COMMON_BASE 0
+#endif
+#ifndef ADC3_COMMON
+#define ADC3_COMMON nullptr
+#define ADC3_COMMON_BASE 0
+#endif
+
 #ifndef DMA1
 #define DMA1 nullptr
 #endif
