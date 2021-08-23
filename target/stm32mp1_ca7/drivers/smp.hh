@@ -28,14 +28,8 @@ struct SMPControl {
 
 	template<uint32_t reg_num = 0>
 	static void write(uint32_t value) {
-		if constexpr (reg_num == 0)
-			regs[0] = value;
-		else if (reg_num == 1)
-			regs[1] = value;
-		else if (reg_num == 2)
-			regs[2] = value;
-		else if (reg_num == 3)
-			regs[3] = value;
+		if constexpr (reg_num <= 3)
+			regs[reg_num] = value;
 	}
 
 	static void write(uint32_t reg_num, uint32_t value) {
@@ -46,15 +40,10 @@ struct SMPControl {
 
 	template<uint32_t reg_num = 0>
 	static uint32_t read() {
-		if constexpr (reg_num == 0)
-			return regs[0];
-		else if (reg_num == 1)
-			return regs[1];
-		else if (reg_num == 2)
-			return regs[2];
-		else if (reg_num == 3)
-			return regs[3];
-		return 0;
+		if constexpr (reg_num <= 3)
+			return regs[reg_num];
+		else
+			return 0;
 	}
 
 	static uint32_t read(uint32_t reg_num) {
