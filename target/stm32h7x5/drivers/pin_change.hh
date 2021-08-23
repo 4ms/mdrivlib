@@ -1,25 +1,16 @@
+#pragma once
 #include "exti.hh"
 #include "interrupt.hh"
 #include "pin.hh"
+#include "pin_change_conf.hh"
 #include "rcc.hh"
 #include <functional>
 
 namespace mdrivlib
 {
 
-struct DefaultPinChangeConf {
-	static constexpr uint32_t pin = 0;
-	static constexpr GPIO port = GPIO::A;
-	static constexpr bool on_rising_edge = false;
-	static constexpr bool on_falling_edge = false;
-	static constexpr uint32_t priority1 = 3;
-	static constexpr uint32_t priority2 = 3;
-	static constexpr uint32_t core = 1; // 1 = CORE1 (M7), 2 = CORE2 (M4)
-};
-
-// requires ConfT derives from DefaultPinChangeConf
-template<typename ConfT>
-requires std::derived_from<ConfT, DefaultPinChangeConf> class PinChangeInt {
+template<PinChangeConf ConfT>
+class PinChangeInt {
 public:
 	PinChangeInt() = default;
 
