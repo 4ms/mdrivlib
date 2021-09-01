@@ -1,93 +1,107 @@
 #pragma once
+#include "util/math.hh"
 #include <cstdint>
 
 namespace mdrivlib
 {
 
-struct ST77XX {
-	constexpr static uint8_t ST_CMD_DELAY = 0x80;
+namespace ST77XX
+{
+enum Command : uint8_t {
+	ST_CMD_DELAY = 0x80,
 
-	constexpr static uint8_t NOP = 0x00;
-	constexpr static uint8_t SWRESET = 0x01;
-	constexpr static uint8_t RDDID = 0x04;
-	constexpr static uint8_t RDDST = 0x09;
+	NOP = 0x00,
+	SWRESET = 0x01,
+	RDDID = 0x04,
+	RDDST = 0x09,
 
-	constexpr static uint8_t SLPIN = 0x10;
-	constexpr static uint8_t SLPOUT = 0x11;
-	constexpr static uint8_t PTLON = 0x12;
-	constexpr static uint8_t NORON = 0x13;
+	SLPIN = 0x10,
+	SLPOUT = 0x11,
+	PTLON = 0x12,
+	NORON = 0x13,
 
-	constexpr static uint8_t INVOFF = 0x20;
-	constexpr static uint8_t INVON = 0x21;
-	constexpr static uint8_t DISPOFF = 0x28;
-	constexpr static uint8_t DISPON = 0x29;
-	constexpr static uint8_t CASET = 0x2A;
-	constexpr static uint8_t RASET = 0x2B;
-	constexpr static uint8_t RAMWR = 0x2C;
-	constexpr static uint8_t RAMRD = 0x2E;
+	INVOFF = 0x20,
+	INVON = 0x21,
+	DISPOFF = 0x28,
+	DISPON = 0x29,
+	CASET = 0x2A,
+	RASET = 0x2B,
+	RAMWR = 0x2C,
+	RAMRD = 0x2E,
 
-	constexpr static uint8_t PTLAR = 0x30;
-	constexpr static uint8_t TEOFF = 0x34;
-	constexpr static uint8_t TEON = 0x35;
-	constexpr static uint8_t MADCTL = 0x36;
-	constexpr static uint8_t COLMOD = 0x3A;
-
-	constexpr static uint8_t MADCTL_MY = 0x80;
-	constexpr static uint8_t MADCTL_MX = 0x40;
-	constexpr static uint8_t MADCTL_MV = 0x20;
-	constexpr static uint8_t MADCTL_ML = 0x10;
-	constexpr static uint8_t MADCTL_RGB = 0x00;
-
-	constexpr static uint8_t RDID1 = 0xDA;
-	constexpr static uint8_t RDID2 = 0xDB;
-	constexpr static uint8_t RDID3 = 0xDC;
-	constexpr static uint8_t RDID4 = 0xDD;
-
-	constexpr static uint16_t BLACK = 0x0000;
-	constexpr static uint16_t WHITE = 0xFFFF;
-	constexpr static uint16_t RED = 0xF800;
-	constexpr static uint16_t GREEN = 0x07E0;
-	constexpr static uint16_t BLUE = 0x001F;
-	constexpr static uint16_t CYAN = 0x07FF;
-	constexpr static uint16_t MAGENTA = 0xF81F;
-	constexpr static uint16_t YELLOW = 0xFFE0;
-	constexpr static uint16_t ORANGE = 0xFC00;
+	PTLAR = 0x30,
+	TEOFF = 0x34,
+	TEON = 0x35,
+	MADCTL = 0x36,
+	COLMOD = 0x3A,
 };
 
-// clang-format off
+enum Arg {
+	MADCTL_MY = 0x80,
+	MADCTL_MX = 0x40,
+	MADCTL_MV = 0x20,
+	MADCTL_ML = 0x10,
+	MADCTL_RGB = 0x00,
 
-static const uint8_t generic_st7789[] =  {                
-									// Init commands for 7789 screens
-    9,                              //  9 commands in list:
-    ST77XX::SWRESET,   ST77XX::ST_CMD_DELAY, //  1: Software reset, no args, w/delay
-      150,                          //     ~150 ms delay
-    ST77XX::SLPOUT ,   ST77XX::ST_CMD_DELAY, //  2: Out of sleep mode, no args, w/delay
-      10,                           //      10 ms delay
-    ST77XX::COLMOD , 1+ST77XX::ST_CMD_DELAY, //  3: Set color mode, 1 arg + delay:
-      0x55,                         //     16-bit color
-      10,                           //     10 ms delay
-    ST77XX::MADCTL , 1,              //  4: Mem access ctrl (directions), 1 arg:
-      0x08,                         //     Row/col addr, bottom-top refresh
-    ST77XX::CASET  , 4,              //  5: Column addr set, 4 args, no delay:
-      0x00,
-      0,        					//     XSTART = 0
-      0,
-      240,  						//     XEND = 240
-    ST77XX::RASET  , 4,              //  6: Row addr set, 4 args, no delay:
-      0x00,
-      0,             				//     YSTART = 0
-      //320>>8,
-	  0,
-	  240,
-      //320&0xFF, 			 		//     YEND = 320
-    ST77XX::INVON  ,   ST77XX::ST_CMD_DELAY, //  7: hack
-      10,
-    ST77XX::NORON  ,   ST77XX::ST_CMD_DELAY, //  8: Normal display on, no args, w/delay
-      10,                           //     10 ms delay
-    ST77XX::DISPON ,   ST77XX::ST_CMD_DELAY, //  9: Main screen turn on, no args, delay
-      10 
+	RDID1 = 0xDA,
+	RDID2 = 0xDB,
+	RDID3 = 0xDC,
+	RDID4 = 0xDD,
 };
 
-// clang-format on
+struct InitCommand {
+	ST77XX::Command cmd;
+	uint8_t num_args;
+	uint16_t delay_ms;
+	uint32_t args;
+
+	static constexpr uint32_t makecmd(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+		return (d << 24) | (c << 16) | (b << 8) | a;
+	}
+	static constexpr uint32_t makecmd(uint16_t a, uint16_t b) {
+		return MathTools::swap_bytes_and_combine(b, a);
+	}
+};
+
+enum InvertState { NotInverted, Inverted };
+} // namespace ST77XX
+
+// TODO: incorporate Rotation into the MADCTL commands
+template<uint16_t WIDTH, uint16_t HEIGHT, enum ST77XX::InvertState ISINVERTED>
+struct ST7789Init {
+	static constexpr uint32_t num_commands = 9;
+	static constexpr ST77XX::InitCommand cmds[num_commands] = {
+		//  1: Software reset, no args, w/delay
+		{ST77XX::SWRESET, 0, 150},
+
+		//  2: Out of sleep mode, no args, w/delay
+		{ST77XX::SLPOUT, 0, 10},
+
+		//  3: Set color mode, 1 arg, 10ms delay, 0x55 = 16-bit color
+		{ST77XX::COLMOD, 1, 10, 0x55},
+
+		//  4: Mem access ctrl (directions),
+		//	 	0x08 =  Row/col addr, bottom-top refresh, BGR not RGB
+		{ST77XX::MADCTL, 1, 0, 0x08},
+
+		//  5: Column addr set, 4 args, no delay
+		// 		XSTART = 0, XEND = WIDTH
+		{ST77XX::CASET, 4, 0, ST77XX::InitCommand::makecmd(0, WIDTH)},
+
+		//  6: Row addr set, 4 args, no delay:
+		// 		YSTART = 0, YEND = HEIGHT
+		{ST77XX::RASET, 4, 0, ST77XX::InitCommand::makecmd(0, HEIGHT)},
+
+		//  7: Inverted or not
+		{ISINVERTED == ST77XX::Inverted ? ST77XX::INVON : ST77XX::INVOFF, 0, 10},
+
+		//  8: Normal display on, no args, w/delay
+		{ST77XX::NORON, 0, 10},
+
+		//  9: Main screen turn on, no args, delay
+		{ST77XX::DISPON, 0, 10},
+
+	};
+};
 
 } // namespace mdrivlib
