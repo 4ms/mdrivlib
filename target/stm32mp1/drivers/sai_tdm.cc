@@ -299,7 +299,7 @@ void SaiTdmPeriph::set_rx_buffers(uint8_t *rx_buf_ptr, uint32_t block_size) {
 	rx_block_size_ = block_size;
 }
 
-void SaiTdmPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
+void SaiTdmPeriph::set_callbacks(Interrupt::ISRType &&tx_complete_cb, Interrupt::ISRType &&tx_half_complete_cb) {
 	tx_tc_cb = std::move(tx_complete_cb);
 	tx_ht_cb = std::move(tx_half_complete_cb);
 }

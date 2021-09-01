@@ -10,7 +10,8 @@ using IRQType = IRQn_Type;
 #include "interrupt_control.hh"
 #endif
 
-#include <functional>
+#include "drivers/callable.hh"
+//#include <functional>
 
 namespace mdrivlib
 {
@@ -18,7 +19,10 @@ namespace mdrivlib
 // Interrupt Manager class
 class Interrupt {
 public:
-	using ISRType = std::function<void(void)>;
+	// using ISRType = std::function<void(void)>;
+	// using ISRType = Function<void()>;
+	using ISRType = Callback;
+
 	static inline const uint32_t NumISRs = 256;
 
 	Interrupt() = default;

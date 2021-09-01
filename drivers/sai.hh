@@ -8,6 +8,8 @@ namespace mdrivlib
 {
 
 class SaiPeriph {
+	using CallbackT = Interrupt::ISRType;
+
 public:
 	enum Error {
 		SAI_NO_ERR,
@@ -24,7 +26,7 @@ public:
 
 	Error init();
 	void set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size);
-	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
+	void set_callbacks(CallbackT &&tx_complete_cb, CallbackT &&tx_half_complete_cb);
 
 	Error init(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint32_t block_size) {
 		set_txrx_buffers(tx_buf_ptr, rx_buf_ptr, block_size);
@@ -54,8 +56,8 @@ private:
 	Error _init_sai_protocol();
 	Error _init_sai_dma();
 
-	std::function<void()> tx_tc_cb;
-	std::function<void()> tx_ht_cb;
+	CallbackT tx_tc_cb;
+	CallbackT tx_ht_cb;
 
 	// Todo: can we use RegisterBits<>, if SaiConfig is a constexpr?
 	// or: Saiconfig contains a RegisterBits object or type alias?

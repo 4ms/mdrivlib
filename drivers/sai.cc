@@ -240,7 +240,7 @@ void SaiPeriph::set_txrx_buffers(uint8_t *tx_buf_ptr, uint8_t *rx_buf_ptr, uint3
 	tx_buf_ptr_ = tx_buf_ptr;
 	block_size_ = block_size;
 }
-void SaiPeriph::set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb) {
+void SaiPeriph::set_callbacks(CallbackT &&tx_complete_cb, CallbackT &&tx_half_complete_cb) {
 	tx_tc_cb = std::move(tx_complete_cb);
 	tx_ht_cb = std::move(tx_half_complete_cb);
 }

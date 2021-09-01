@@ -24,7 +24,7 @@ public:
 	Error init();
 	void set_rx_buffers(uint8_t *rx_buf_ptr, uint32_t block_size);
 	void set_tx_buffers(uint8_t *tx_buf_ptr, uint32_t block_size);
-	void set_callbacks(std::function<void()> &&tx_complete_cb, std::function<void()> &&tx_half_complete_cb);
+	void set_callbacks(Interrupt::ISRType &&tx_complete_cb, Interrupt::ISRType &&tx_half_complete_cb);
 
 	void start();
 	void stop();
@@ -52,8 +52,8 @@ private:
 	void _sai_disable(SAI_HandleTypeDef *hsai);
 	void _start_irq(IRQn_Type irqn);
 
-	std::function<void()> tx_tc_cb;
-	std::function<void()> tx_ht_cb;
+	Interrupt::ISRType tx_tc_cb;
+	Interrupt::ISRType tx_ht_cb;
 
 	// Todo: can we use RegisterBits<>, if SaiConfig is a constexpr?
 	// or: Saiconfig contains a RegisterBits object or type alias?
