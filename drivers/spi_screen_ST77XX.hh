@@ -34,6 +34,9 @@ enum Command : uint8_t {
 	TEON = 0x35,
 	MADCTL = 0x36,
 	COLMOD = 0x3A,
+
+	WRDISBV = 0x51,
+	WRCTRLD = 0x53,
 };
 
 enum Arg {
@@ -69,8 +72,7 @@ enum InvertState { NotInverted, Inverted };
 // TODO: incorporate Rotation into the MADCTL commands
 template<uint16_t WIDTH, uint16_t HEIGHT, enum ST77XX::InvertState ISINVERTED>
 struct ST7789Init {
-	static constexpr uint32_t num_commands = 9;
-	static constexpr ST77XX::InitCommand cmds[num_commands] = {
+	static constexpr ST77XX::InitCommand cmds[] = {
 		//  1: Software reset, no args, w/delay
 		{ST77XX::SWRESET, 0, 150},
 
@@ -95,6 +97,10 @@ struct ST7789Init {
 		//  7: Inverted or not
 		{ISINVERTED == ST77XX::Inverted ? ST77XX::INVON : ST77XX::INVOFF, 0, 10},
 
+		// Display Brightness Max
+		// {.cmd = ST77XX::WRCTRLD, .num_args = 1, .delay_ms = 0, .args = 0b00101100},
+		// {.cmd = ST77XX::WRDISBV, .num_args = 1, .delay_ms = 0, .args = 0xFF0000FF},
+
 		//  8: Normal display on, no args, w/delay
 		{ST77XX::NORON, 0, 10},
 
@@ -102,6 +108,8 @@ struct ST7789Init {
 		{ST77XX::DISPON, 0, 10},
 
 	};
+
+	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(ST77XX::InitCommand);
 };
 
 } // namespace mdrivlib
