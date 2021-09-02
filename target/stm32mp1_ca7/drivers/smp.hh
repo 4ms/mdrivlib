@@ -8,7 +8,8 @@ namespace mdrivlib
 {
 
 struct SMPControl {
-	static inline __attribute__((section(".noncachable"))) uint32_t regs[4] = {0, 0, 0, 0};
+	static constexpr uint32_t NumRegs = 8;
+	static inline __attribute__((section(".noncachable"))) uint32_t regs[NumRegs] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 	template<uint32_t channel>
 	static void notify() {
@@ -28,26 +29,26 @@ struct SMPControl {
 
 	template<uint32_t reg_num = 0>
 	static void write(uint32_t value) {
-		if constexpr (reg_num <= 3)
+		if constexpr (reg_num < NumRegs)
 			regs[reg_num] = value;
 	}
 
 	static void write(uint32_t reg_num, uint32_t value) {
-		if (reg_num >= 4)
+		if (reg_num >= NumRegs)
 			return;
 		regs[reg_num] = value;
 	}
 
 	template<uint32_t reg_num = 0>
 	static uint32_t read() {
-		if constexpr (reg_num <= 3)
+		if constexpr (reg_num < NumRegs)
 			return regs[reg_num];
 		else
 			return 0;
 	}
 
 	static uint32_t read(uint32_t reg_num) {
-		return reg_num < 4 ? regs[reg_num] : 0;
+		return reg_num < NumRegs ? regs[reg_num] : 0;
 	}
 };
 
@@ -66,7 +67,7 @@ struct SMPThread {
 		SMPControl::notify<CallFunction>();
 	}
 
-	template<uint32_t command_id, uint32_t data_reg = DataReg>
+	template<uint32_t command_id, uint32_t data_reg>
 	static void launch_command(uint32_t data) {
 		SMPControl::write<data_reg>(data);
 		SMPControl::notify<command_id>();
