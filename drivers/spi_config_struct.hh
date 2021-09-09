@@ -10,7 +10,7 @@ struct DefaultSpiConf {
 	static constexpr uint16_t PeriphNum = 1; // 1 ==> SPI1, 2 ==> SPI2, etc
 	static constexpr uint16_t NumChips = 1;
 	static constexpr bool is_controller = true; // aka "master"
-	static constexpr IRQType IRQn = SPI1_IRQn;
+	static constexpr IRQn_Type IRQn = SPI1_IRQn;
 	static constexpr uint16_t priority1 = 3;
 	static constexpr uint16_t priority2 = 3;
 	static constexpr PinNoInit SCLK = {GPIO::A, 0, LL_GPIO_AF_0};

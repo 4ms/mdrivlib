@@ -12,7 +12,7 @@ static void some_func(int some_arg) {
 	g_state = some_arg;
 }
 
-static IRQType irqmap[7] = {
+static IRQn_Type irqmap[7] = {
 	ADC_IRQn,
 	CEC_IRQn,
 	COMP_IRQn,

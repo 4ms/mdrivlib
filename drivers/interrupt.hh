@@ -1,7 +1,7 @@
 #pragma once
 #include "drivers/callable.hh"
 #include "stm32xx.h"
-using IRQType = IRQn_Type;
+#include <array>
 
 // FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
@@ -26,6 +26,7 @@ class Interrupt {
 public:
 	static constexpr uint32_t NumISRs = 256;
 	using ISRType = Callback;
+	using IRQType = IRQn_Type;
 
 	Interrupt() = default;
 	Interrupt(IRQType irqnum, ISRType &&func) {
