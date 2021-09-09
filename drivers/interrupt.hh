@@ -1,5 +1,5 @@
 #pragma once
-
+#include "drivers/callable.hh"
 #include "stm32xx.h"
 using IRQType = IRQn_Type;
 
@@ -10,7 +10,13 @@ using IRQType = IRQn_Type;
 #include "interrupt_control.hh"
 #endif
 
-#include "drivers/callable.hh"
+template<typename T, size_t N>
+std::array<T, N> fill_arr(T val) {
+	std::array<T, N> arr;
+	for (auto &a : arr)
+		a = val;
+	return arr;
+}
 
 namespace mdrivlib
 {
@@ -18,9 +24,8 @@ namespace mdrivlib
 // Interrupt Manager class
 class Interrupt {
 public:
+	static constexpr uint32_t NumISRs = 256;
 	using ISRType = Callback;
-
-	static inline const uint32_t NumISRs = 256;
 
 	Interrupt() = default;
 	Interrupt(IRQType irqnum, ISRType &&func) {
@@ -45,28 +50,14 @@ public:
 		ISRs[irqnum]();
 	}
 
-	// Sets a default handler for all ISRs.
-	// This could be done for debug builds, to point to debug breakpoint
-	// Note: this copies the provided func
-	static inline void SetDefaultISR(ISRType func) {
-		for (auto &ISR : ISRs)
-			ISR = func;
+private:
+	static void null_func() {
+		return;
 	}
 
-private:
-	static inline ISRType ISRs[NumISRs];
+	static inline std::array<ISRType, NumISRs> ISRs{fill_arr<ISRType, NumISRs>(null_func)};
 };
 
 using InterruptManager = Interrupt;
 
 } // namespace mdrivlib
-
-// Todo:
-// 		- Test SetDefaultISR()
-// 		- Try alternatives to std::function
-// 			* inplace_function<void(void)>
-//			  https://github.com/WG21-SG14/SG14/blob/master/Docs/Proposals/NonAllocatingStandardFunction.pdf
-//			* function_view
-//			  https://vittorioromeo.info/index/blog/passing_functions_to_functions.html#fn_view_impl
-//
-//

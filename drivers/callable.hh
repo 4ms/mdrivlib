@@ -31,8 +31,8 @@ public:
 	}
 
 	void call() {
-		if (m_callback)
-			m_callback(&m_data[0]);
+		// if (m_callback)
+		m_callback(&m_data[0]);
 		return;
 	}
 
