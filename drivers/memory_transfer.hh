@@ -53,7 +53,7 @@ struct MemoryTransfer {
 
 	template<typename CallbackT>
 	void register_callback(CallbackT &&callback) {
-		InterruptManager::registerISR(MDMA_IRQn, 0, 2, [=]() {
+		InterruptManager::register_and_start_isr(MDMA_IRQn, 0, 2, [=]() {
 			// if (MDMAX::BlockRepeatTransferComplISRFlag::read() && MDMAX::BlockRepeatTransferComplISREnable::read()) {
 			// 	MDMAX::BlockRepeatTransferComplISRClear::set();
 			// }

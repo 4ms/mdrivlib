@@ -36,7 +36,7 @@ private:
 public:
 	void start_circular_mode() {
 		driver.enable_fixed_size_interrupt();
-		InterruptManager::registerISR(ConfT::IRQn, ConfT::priority1, ConfT::priority2, [this]() {
+		InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::priority1, ConfT::priority2, [this]() {
 			read_and_switch_channels();
 			// Todo: check for OVR flag, UDR flag, MODF, FRE
 		});

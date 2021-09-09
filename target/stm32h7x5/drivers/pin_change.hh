@@ -103,7 +103,7 @@ private:
 				  : ConfT::pin == 3	 ? EXTI3_IRQn
 									 : EXTI4_IRQn;
 
-		InterruptManager::registerISR(irqn, ConfT::priority1, ConfT::priority2, [&]() {
+		InterruptManager::register_and_start_isr(irqn, ConfT::priority1, ConfT::priority2, [&]() {
 			if constexpr (ConfT::core == 1) {
 				if (EXTI_::PinTrigPendingCore1<ConfT::pin>::read()) {
 					EXTI_::PinTrigPendingCore1<ConfT::pin>::set(); // clear on write

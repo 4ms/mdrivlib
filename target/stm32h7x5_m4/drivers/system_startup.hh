@@ -15,7 +15,7 @@ struct SystemStartup {
 		// Enable notification in order to wakeup
 		HWSemaphore<15>::enable_channel_ISR();
 		HAL_NVIC_EnableIRQ(HSEM2_IRQn);
-		InterruptManager::registerISR(HSEM2_IRQn, 0, 0, []() {
+		InterruptManager::register_and_start_isr(HSEM2_IRQn, 0, 0, []() {
 			HWSemaphore<15>::clear_ISR();
 			HAL_NVIC_DisableIRQ(HSEM2_IRQn);
 		});

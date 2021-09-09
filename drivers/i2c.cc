@@ -168,13 +168,8 @@ I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingCon
 }
 
 void I2CPeriph::enable_IT(uint8_t pri1, uint8_t pri2) {
-	event_isr.registerISR(i2c_irq_num_, [this]() { i2c_event_handler(); });
-	InterruptControl::set_irq_priority(i2c_irq_num_, pri1, pri2);
-	InterruptControl::enable_irq(i2c_irq_num_);
-
-	error_isr.registerISR(i2c_err_irq_num_, [this]() { i2c_error_handler(); });
-	InterruptControl::set_irq_priority(i2c_err_irq_num_, pri1, pri2);
-	InterruptControl::enable_irq(i2c_err_irq_num_);
+	event_isr.register_and_start_isr(i2c_irq_num_, pri1, pri2, [this]() { i2c_event_handler(); });
+	error_isr.register_and_start_isr(i2c_err_irq_num_, pri1, pri2, [this]() { i2c_error_handler(); });
 }
 
 void I2CPeriph::disable_IT() {

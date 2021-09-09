@@ -24,7 +24,7 @@ static IRQType irqmap[7] = {
 
 static void register_a_local_lamba(uint32_t testIRQnum, uint32_t state_value) {
 	auto isrfunc = [state_value = state_value]() { some_func(state_value); };
-	InterruptManager::registerISR(irqmap[testIRQnum], isrfunc);
+	InterruptManager::register_isr(irqmap[testIRQnum], isrfunc);
 }
 
 TEST_CASE("InterruptManager Tests") {
@@ -46,7 +46,7 @@ TEST_CASE("InterruptManager Tests") {
 
 	SUBCASE("interrupt_tests, static_init") {
 		unsigned testIRQnum = 5;
-		InterruptManager::registerISR(irqmap[testIRQnum], []() { some_func(33333); });
+		InterruptManager::register_isr(irqmap[testIRQnum], []() { some_func(33333); });
 
 		CHECK_EQ(0, g_state);
 		InterruptManager::callISR(irqmap[testIRQnum]);

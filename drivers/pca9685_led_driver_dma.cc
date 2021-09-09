@@ -41,12 +41,8 @@ LEDDriverError PCA9685DmaDriver::start_dma() {
 
 	// Link I2C and DMA
 	i2c_periph_.link_DMA_TX(&hal_dma_h_);
-
-	InterruptManager::registerISR(dma_defs_.IRQn, [dmah_ptr = &hal_dma_h_]() { HAL_DMA_IRQHandler(dmah_ptr); });
-
-	HAL_NVIC_SetPriority(dma_defs_.IRQn, dma_defs_.pri, dma_defs_.subpri);
-	HAL_NVIC_EnableIRQ(dma_defs_.IRQn);
-
+	InterruptManager::register_and_start_isr(
+		dma_defs_.IRQn, dma_defs_.pri, dma_defs_.subpri, [dmah_ptr = &hal_dma_h_]() { HAL_DMA_IRQHandler(dmah_ptr); });
 	write_current_frame_to_chip();
 
 	if (led_error_ == LEDDriverError::DMA_XMIT_ERR)

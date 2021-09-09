@@ -263,7 +263,7 @@ void SaiPeriph::start() {
 		_irqn = tx_irqn;
 	}
 
-	InterruptManager::registerISR(_irqn, [this]() {
+	InterruptManager::register_isr(_irqn, [this]() {
 		if ((*dma_isr_reg & dma_tc_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_TC)*/) {
 			*dma_ifcr_reg = dma_tc_flag_index;
 			tx_tc_cb();

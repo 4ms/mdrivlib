@@ -90,7 +90,7 @@ void Timekeeper::_set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pr
 }
 
 void Timekeeper::_register_task() {
-	InterruptManager::registerISR(irqn, [this]() {
+	InterruptManager::register_isr(irqn, [this]() {
 		if (tim_update_IT_is_set()) {
 			if (tim_update_IT_is_source()) {
 				if (is_running && task_func)

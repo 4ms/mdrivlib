@@ -103,7 +103,7 @@ private:
 				  : ConfT::pin == 14 ? EXTI14_IRQn
 									 : EXTI15_IRQn;
 
-		InterruptManager::registerISR(irqn, ConfT::priority1, ConfT::priority2, [&]() {
+		InterruptManager::register_and_start_isr(irqn, ConfT::priority1, ConfT::priority2, [&]() {
 			if constexpr (ConfT::on_rising_edge) {
 				if (EXTI_::PinRisingTrigPending<ConfT::pin>::read()) {
 					EXTI_::PinRisingTrigPending<ConfT::pin>::set(); // clear on write

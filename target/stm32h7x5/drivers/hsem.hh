@@ -95,7 +95,7 @@ struct HWSemaphoreGlobalBase {
 	}
 
 	static void enable_all_handlers(IRQn_Type irqn) {
-		InterruptManager::registerISR(irqn, 0, 0, [&]() {
+		InterruptManager::register_and_start_isr(irqn, 0, 0, [&]() {
 			handle_isr<0>();
 			handle_isr<1>();
 			handle_isr<2>();

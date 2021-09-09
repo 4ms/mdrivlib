@@ -1,8 +1,8 @@
 #pragma once
 #include "sai_config_struct.hh"
 #include "sai_tdm.hh"
+#include <array>
 #include <cstdint>
-#include <functional>
 
 namespace mdrivlib
 {

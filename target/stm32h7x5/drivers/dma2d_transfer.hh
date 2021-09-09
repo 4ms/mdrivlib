@@ -13,7 +13,7 @@ struct DMA2DTransfer {
 	void init() {
 		RCC_Enable::DMA2D_::set();
 		InterruptControl::disable_irq(DMA2D_IRQn);
-		InterruptManager::registerISR(DMA2D_IRQn, [&]() {
+		InterruptManager::register_isr(DMA2D_IRQn, [&]() {
 			DMA2D->IFCR = DMA2D->IFCR | DMA2D_IFCR_CTCIF;
 			is_dma2d_done = true;
 			InterruptControl::disable_irq(DMA2D_IRQn);

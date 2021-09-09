@@ -82,7 +82,7 @@ void SDRAMPeriph::config_timing() {
 	// FMC_Bank1_R->BTCR[0] |= FMC_BCR1_FMCEN;
 
 	// Debugging:
-	InterruptManager::registerISR(FMC_IRQn, []() { __BKPT(); });
+	InterruptManager::register_isr(FMC_IRQn, []() { __BKPT(); });
 	FMC_SDRAM_DEVICE->SDRTR |= FMC_SDRTR_REIE;
 }
 
