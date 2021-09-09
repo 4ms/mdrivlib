@@ -6,11 +6,11 @@
 namespace mdrivlib
 {
 
+// Note: this is only used by PCA9685 DMA driver. Is it worth keeping?
+// Using this locks us into ST's I2C HAL, and an extra layer of re-direction
+// in response to an IRQ.
 enum class HALCallbackID {
 	I2C_MemTxCplt,
-	SAI_TxCplt,
-	SAI_TxHalfCplt,
-
 	MAX,
 };
 const int kMaxHALCallbackIDs = static_cast<uint32_t>(HALCallbackID::MAX);
