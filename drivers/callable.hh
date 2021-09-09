@@ -3,6 +3,11 @@
 #include <type_traits>
 #include <utility>
 
+// Callback is a callable object that takes no parameters,
+// and has a maximum of 8 Bytes of captures (on ARM 32-bit system)
+// Note: [this] takes 4 Bytes (on ARM 32-bit system), so it's quite useful
+// Improvements, possibly: remove m_destroy and make m_data sizeof(void*)
+// this would reduce the size (on ARM 32-bit) from 16 Bytes to 8 Bytes
 class Callback {
 private:
 	static constexpr uint8_t BUFFER_SIZE = 2 * sizeof(void *);
@@ -32,9 +37,7 @@ public:
 	}
 
 	void operator()() {
-		if (m_callback)
-			m_callback(&m_data[0]);
-		// call();
+		call();
 	}
 
 private:
