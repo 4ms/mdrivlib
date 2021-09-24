@@ -4,6 +4,7 @@
 #include "interrupt.hh"
 #include "spi.hh"
 #include "util/math.hh"
+#include <functional>
 
 namespace mdrivlib
 {
@@ -79,13 +80,20 @@ struct DmaSpiScreenDriver {
 		dma.config_transfer(dst, src, sz);
 	}
 
-	template<typename CT>
-	void start_dma_transfer(CT &&cb) {
-		// callback = std::move(cb);
-		dma.register_callback(std::forward<CT>(cb));
+	void start_dma_transfer(std::function<void(void)> &&cb) {
+		callback = std::move(cb);
+		dma.register_callback(callback);
 
 		start_dma_transfer();
 	}
+
+	// template<typename CT>
+	// void start_dma_transfer(CT &&cb) {
+	// 	// callback = std::move(cb);
+	// 	dma.register_callback(std::forward<CT>(cb));
+
+	// 	start_dma_transfer();
+	// }
 
 	void start_dma_transfer() {
 		spi.disable();
@@ -112,7 +120,8 @@ struct DmaSpiScreenDriver {
 private:
 	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
 	typename ConfT::DCPin dcpin;
-	Interrupt::ISRType callback;
+	// Interrupt::ISRType callback;
+	std::function<void(void)> callback;
 
 	DmaTransferT dma;
 
