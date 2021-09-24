@@ -1,7 +1,8 @@
 #pragma once
-#include "drivers/callable.hh"
+// #include "drivers/callable.hh"
 #include "stm32xx.h"
 #include <array>
+#include <functional>
 
 // FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
@@ -10,13 +11,13 @@
 #include "interrupt_control.hh"
 #endif
 
-template<typename T, size_t N>
-std::array<T, N> fill_arr(T val) {
-	std::array<T, N> arr;
-	for (auto &a : arr)
-		a = val;
-	return arr;
-}
+// template<typename T, size_t N>
+// std::array<T, N> fill_arr(T val) {
+// 	std::array<T, N> arr;
+// 	for (auto &a : arr)
+// 		a = val;
+// 	return arr;
+// }
 
 namespace mdrivlib
 {
@@ -25,7 +26,8 @@ namespace mdrivlib
 class Interrupt {
 public:
 	static constexpr uint32_t NumISRs = 256;
-	using ISRType = Callback;
+	// using ISRType = Callback;
+	using ISRType = std::function<void()>;
 	using IRQType = IRQn_Type;
 
 	Interrupt() = default;
@@ -52,11 +54,12 @@ public:
 	}
 
 private:
-	static void null_func() {
-		return;
-	}
+	// static void null_func() {
+	// 	return;
+	// }
 
-	static inline std::array<ISRType, NumISRs> ISRs{fill_arr<ISRType, NumISRs>(null_func)};
+	// static inline std::array<ISRType, NumISRs> ISRs{fill_arr<ISRType, NumISRs>(null_func)};
+	static inline std::array<ISRType, NumISRs> ISRs;
 };
 
 using InterruptManager = Interrupt;
