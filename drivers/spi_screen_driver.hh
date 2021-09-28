@@ -81,19 +81,9 @@ struct DmaSpiScreenDriver {
 	}
 
 	void start_dma_transfer(Interrupt::ISRType &&cb) {
-		callback = std::move(cb);
-		dma.register_callback(callback);
-
+		dma.register_callback(std::forward<Interrupt::ISRType>(cb));
 		start_dma_transfer();
 	}
-
-	// template<typename CT>
-	// void start_dma_transfer(CT &&cb) {
-	// 	// callback = std::move(cb);
-	// 	dma.register_callback(std::forward<CT>(cb));
-
-	// 	start_dma_transfer();
-	// }
 
 	void start_dma_transfer() {
 		spi.disable();
@@ -120,7 +110,6 @@ struct DmaSpiScreenDriver {
 private:
 	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
 	typename ConfT::DCPin dcpin;
-	Interrupt::ISRType callback;
 
 	DmaTransferT dma;
 
