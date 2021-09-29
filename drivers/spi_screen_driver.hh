@@ -81,7 +81,7 @@ struct DmaSpiScreenDriver {
 	}
 
 	void start_dma_transfer(Interrupt::ISRType &&cb) {
-		dma.register_callback(std::forward<Interrupt::ISRType>(cb));
+		dma.register_callback(std::forward<decltype(cb)>(cb));
 		start_dma_transfer();
 	}
 
