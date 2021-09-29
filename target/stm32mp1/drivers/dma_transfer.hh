@@ -113,7 +113,7 @@ struct DMATransfer {
 	void register_callback(auto &&cb) {
 		InterruptControl::disable_irq(ConfT::IRQn);
 		InterruptManager::register_and_start_isr(
-			ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = std::forward<decltype(cb)>(cb), this]() {
+			ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = std::move(cb), this]() {
 				if (*dma_isr_reg & dma_tc_flag_index) {
 					*dma_ifcr_reg = dma_tc_flag_index;
 					if constexpr (ConfT::half_transfer_interrupt_enable)
