@@ -80,8 +80,8 @@ struct DmaSpiScreenDriver {
 		dma.config_transfer(dst, src, sz);
 	}
 
-	void start_dma_transfer(Interrupt::ISRType &&cb) {
-		dma.register_callback(std::move(cb));
+	void start_dma_transfer(auto cb) {
+		dma.register_callback(cb);
 		start_dma_transfer();
 	}
 

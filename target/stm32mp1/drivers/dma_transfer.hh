@@ -110,29 +110,28 @@ struct DMATransfer {
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
 	}
 
-	void register_callback(auto &&cb) {
+	void register_callback(auto cb) {
 		InterruptControl::disable_irq(ConfT::IRQn);
-		InterruptManager::register_and_start_isr(
-			ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = std::move(cb), this]() {
-				if (*dma_isr_reg & dma_tc_flag_index) {
-					*dma_ifcr_reg = dma_tc_flag_index;
-					if constexpr (ConfT::half_transfer_interrupt_enable)
-						callback(1);
-					else
-						callback();
+		InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = cb, this]() {
+			if (*dma_isr_reg & dma_tc_flag_index) {
+				*dma_ifcr_reg = dma_tc_flag_index;
+				if constexpr (ConfT::half_transfer_interrupt_enable)
+					callback(1);
+				else
+					callback();
+			}
+			if constexpr (ConfT::half_transfer_interrupt_enable) {
+				if (*dma_isr_reg & dma_ht_flag_index) {
+					*dma_ifcr_reg = dma_ht_flag_index;
+					callback(0);
 				}
-				if constexpr (ConfT::half_transfer_interrupt_enable) {
-					if (*dma_isr_reg & dma_ht_flag_index) {
-						*dma_ifcr_reg = dma_ht_flag_index;
-						callback(0);
-					}
-				}
-				if (*dma_isr_reg & dma_te_flag_index) {
-					// __BKPT();
-					*dma_ifcr_reg = dma_te_flag_index;
-					// Error: debug breakpoint or logging here
-				}
-			});
+			}
+			if (*dma_isr_reg & dma_te_flag_index) {
+				// __BKPT();
+				*dma_ifcr_reg = dma_te_flag_index;
+				// Error: debug breakpoint or logging here
+			}
+		});
 	}
 
 	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
