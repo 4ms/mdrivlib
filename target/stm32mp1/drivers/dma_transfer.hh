@@ -105,7 +105,7 @@ struct DMATransfer {
 		}
 		dma_tc_flag_index = dma_get_TC_flag_index(stream);
 		dma_te_flag_index = dma_get_TE_flag_index(stream);
-		dma_te_flag_index = dma_get_HT_flag_index(stream);
+		dma_ht_flag_index = dma_get_HT_flag_index(stream);
 		dma_isr_reg = dma_get_ISR_reg(stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
 	}
