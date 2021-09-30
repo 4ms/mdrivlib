@@ -110,31 +110,7 @@ struct DMATransfer {
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
 	}
 
-	void register_callback(auto cb) {
-		InterruptControl::disable_irq(ConfT::IRQn);
-		InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = cb, this]() {
-			if (*dma_isr_reg & dma_tc_flag_index) {
-				*dma_ifcr_reg = dma_tc_flag_index;
-				if constexpr (ConfT::half_transfer_interrupt_enable)
-					callback(1);
-				else
-					callback();
-			}
-			if constexpr (ConfT::half_transfer_interrupt_enable) {
-				if (*dma_isr_reg & dma_ht_flag_index) {
-					*dma_ifcr_reg = dma_ht_flag_index;
-					callback(0);
-				}
-			}
-			if (*dma_isr_reg & dma_te_flag_index) {
-				// __BKPT();
-				*dma_ifcr_reg = dma_te_flag_index;
-				// Error: debug breakpoint or logging here
-			}
-		});
-	}
-
-	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
+	void init() {
 		hdma_tx.Init.Request = ConfT::RequestNum;
 		hdma_tx.Instance = stream;
 		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
@@ -153,70 +129,37 @@ struct DMATransfer {
 
 		HAL_DMA_DeInit(&hdma_tx);
 		HAL_DMA_Init(&hdma_tx);
-		// stream->CR = stream->CR | DMA_SxCR_PFCTRL;
+	}
 
+	void register_callback(auto cb) {
+		InterruptControl::disable_irq(ConfT::IRQn);
+		InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = cb, this]() {
+			if (*dma_isr_reg & dma_tc_flag_index) {
+				*dma_ifcr_reg = dma_tc_flag_index;
+				if constexpr (ConfT::half_transfer_interrupt_enable)
+					callback(1);
+				else
+					callback();
+			}
+			if constexpr (ConfT::half_transfer_interrupt_enable) {
+				if (*dma_isr_reg & dma_ht_flag_index) {
+					*dma_ifcr_reg = dma_ht_flag_index;
+					callback(0);
+				}
+			}
+			if (*dma_isr_reg & dma_te_flag_index) {
+				__BKPT();
+				*dma_ifcr_reg = dma_te_flag_index;
+				// Error: debug breakpoint or logging here
+			}
+		});
+	}
+
+	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
+		init();
 		_transfer_size = sz;
 		_src_addr = src;
 		_dst_addr = dst;
-
-		// BDMA_::ClearGlobalISRFlag::set();
-		// BDMA_::ClearHalfTransferComplISRFlag::set();
-		// BDMA_::ClearTransferComplISRFlag::set();
-		// BDMA_::ClearTransferErrorISRFlag::set();
-
-		// stream->CCR &= ~BDMA_CCR_EN;
-		// uint32_t _ccr = 0;
-		// _ccr |= BDMA_CCR_TCIE | BDMA_CCR_TEIE;
-
-		// if constexpr (ConfT::half_transfer_interrupt_enable)
-		// 	_ccr |= BDMA_CCR_HTIE;
-
-		// if constexpr (ConfT::dir == ConfT::Mem2Mem) {
-		// 	_ccr |= BDMA_CCR_MEM2MEM;
-		// 	stream->CM0AR = dst;
-		// 	stream->CPAR = src;
-		// }
-		// if constexpr (ConfT::dir == ConfT::Mem2Periph) {
-		// 	_ccr |= BDMA_CCR_DIR;
-		// 	stream->CM0AR = src;
-		// 	stream->CPAR = dst;
-		// }
-		// if constexpr (ConfT::dir == ConfT::Periph2Mem) {
-		// 	stream->CM0AR = dst;
-		// 	stream->CPAR = src;
-		// }
-		// if constexpr (ConfT::dir == ConfT::Periph2Periph) {
-		// 	stream->CM0AR = dst;
-		// 	stream->CPAR = src;
-		// }
-
-		// if constexpr (ConfT::circular)
-		// 	_ccr |= BDMA_CCR_CIRC;
-
-		// _ccr |= ConfT::dma_priority << BDMA_CCR_PL_Pos;
-
-		// if constexpr (ConfT::transfer_size_mem == ConfT::HalfWord)
-		// 	_ccr |= 0b01 << BDMA_CCR_MSIZE_Pos;
-		// if constexpr (ConfT::transfer_size_mem == ConfT::Word)
-		// 	_ccr |= 0b10 << BDMA_CCR_MSIZE_Pos;
-		// if constexpr (ConfT::transfer_size_periph == ConfT::HalfWord)
-		// 	_ccr |= 0b01 << BDMA_CCR_PSIZE_Pos;
-		// if constexpr (ConfT::transfer_size_periph == ConfT::Word)
-		// 	_ccr |= 0b10 << BDMA_CCR_PSIZE_Pos;
-		// // 1 byte: no action
-
-		// if constexpr (ConfT::mem_inc)
-		// 	_ccr |= BDMA_CCR_MINC;
-		// if constexpr (ConfT::periph_inc)
-		// 	_ccr |= BDMA_CCR_PINC;
-
-		// // Todo:
-		// // DBM = 0 //double buffer mode
-		// // CT = 0 //current target
-
-		// stream->CCR = _ccr;
-
-		// init_DMAMUX();
 	}
 
 	void config_transfer(void *dst, const void *src, size_t sz) {
@@ -226,65 +169,17 @@ struct DMATransfer {
 	void start_transfer() {
 		InterruptControl::enable_irq(ConfT::IRQn);
 		HAL_DMA_Start_IT(&hdma_tx, _src_addr, _dst_addr, _transfer_size / 2);
-
-		// BDMA_::ClearGlobalISRFlag::set();
-		// BDMA_::ClearHalfTransferComplISRFlag::set();
-		// BDMA_::TransferComplISRFlag::set();
-		// BDMA_::TransferErrorISRFlag::set();
-		// HAL_NVIC_EnableIRQ(ConfT::BDMAConf::IRQn);
-
-		// stream->CCR &= ~BDMA_CCR_EN;
-
-		// DMAMUX_::ClearFlag::write(1 << ConfT::StreamNum);
-		// init_DMAMUX_request();
-
-		// stream->CNDTR = _transfer_size;
-		// stream->CCR |= BDMA_CCR_EN;
 	}
 
 	uint32_t get_transfer_size() {
 		return _transfer_size;
 	}
 
+private:
 	void init_DMAMUX() {
-		// if constexpr (ConfT::dir == ConfT::Mem2Mem)
-		// 	dmamux_chan->CCR = 0;
-		// else
-		// 	dmamux_chan->CCR = ConfT::RequestNum & DMAMUX_CxCR_DMAREQ_ID_Msk;
-
-		// DMAMUX_::ClearFlag::write(1 << ConfT::StreamNum);
-		// init_DMAMUX_request();
 	}
 
 	void init_DMAMUX_request() {
-		// if constexpr (ConfT::RequestNum >= 0 && ConfT::RequestNum <= 7) {
-		// 	// These ones are special somehow...Todo: why?
-		// 	auto DMAmuxRequestGen = (DMAMUX_RequestGen_TypeDef *)((uint32_t)(((uint32_t)DMAMUX1_RequestGenerator0) +
-		// 																	 ((ConfT::RequestNum - 1U) * 4U)));
-		// 	DMAmuxRequestGen->RGCR = 0;
-		// 	DMAMUX1_RequestGenStatus->RGCFR = 1 << (ConfT::Request - 1);
-		// }
 	}
-
-private:
-	// struct BDMA_ {
-	// 	static constexpr uint32_t ISR_Base = BDMA_BASE + offsetof(BDMA_TypeDef, ISR);
-	// 	using GlobalISRFlag = RegisterSection<ReadWrite, ISR_Base, BDMA_ISR_GIF0_Pos + ConfT::StreamNum, 1>;
-	// 	using TransferComplISRFlag = RegisterSection<ReadWrite, ISR_Base, BDMA_ISR_TCIF0_Pos + ConfT::StreamNum, 1>;
-	// 	using HalfTransferComplISRFlag = RegisterSection<ReadWrite, ISR_Base, BDMA_ISR_HTIF0_Pos + ConfT::StreamNum, 1>;
-	// 	using TransferErrorISRFlag = RegisterSection<ReadWrite, ISR_Base, BDMA_ISR_TEIF0_Pos + ConfT::StreamNum, 1>;
-
-	// 	static constexpr uint32_t IFCR_Base = BDMA_BASE + offsetof(BDMA_TypeDef, IFCR);
-	// 	using ClearGlobalISRFlag = RegisterSection<WriteOnly, IFCR_Base, BDMA_IFCR_CGIF0 + ConfT::StreamNum, 1>;
-	// 	using ClearTransferComplISRFlag =
-	// 		RegisterSection<WriteOnly, IFCR_Base, BDMA_IFCR_CTCIF0_Pos + ConfT::StreamNum, 1>;
-	// 	using ClearHalfTransferComplISRFlag =
-	// 		RegisterSection<WriteOnly, IFCR_Base, BDMA_IFCR_CHTIF0_Pos + ConfT::StreamNum, 1>;
-	// 	using ClearTransferErrorISRFlag =
-	// 		RegisterSection<WriteOnly, IFCR_Base, BDMA_IFCR_CTEIF0_Pos + ConfT::StreamNum, 1>;
-	// };
-	// struct DMAMUX_ {
-	// 	using ClearFlag = RegisterBits<WriteOnly, DMAMUX1_BASE, 0x000000FF>;
-	// };
 };
 } // namespace mdrivlib

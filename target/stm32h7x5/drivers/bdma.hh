@@ -66,6 +66,9 @@ struct BDMATransfer {
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
 	}
 
+	void init() {
+	}
+
 	template<typename CallbackT>
 	void register_callback(CallbackT &&callback) {
 		HAL_NVIC_DisableIRQ(ConfT::IRQn);
