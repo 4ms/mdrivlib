@@ -191,4 +191,26 @@ constexpr uint32_t dma_get_HT_flag_index(T stream) {
 #endif
 										  : 0x00000000;
 }
+
+template<typename T>
+constexpr uint32_t dma_get_FE_flag_index(T stream) {
+	auto s = (uint32_t)stream;
+	return s == ((uint32_t)DMA1_Stream0) ? DMA_FLAG_FEIF0_4
+		 : s == ((uint32_t)DMA2_Stream0) ? DMA_FLAG_FEIF0_4
+		 : s == ((uint32_t)DMA1_Stream4) ? DMA_FLAG_FEIF0_4
+		 : s == ((uint32_t)DMA2_Stream4) ? DMA_FLAG_FEIF0_4
+		 : s == ((uint32_t)DMA1_Stream1) ? DMA_FLAG_FEIF1_5
+		 : s == ((uint32_t)DMA2_Stream1) ? DMA_FLAG_FEIF1_5
+		 : s == ((uint32_t)DMA1_Stream5) ? DMA_FLAG_FEIF1_5
+		 : s == ((uint32_t)DMA2_Stream5) ? DMA_FLAG_FEIF1_5
+		 : s == ((uint32_t)DMA1_Stream2) ? DMA_FLAG_FEIF2_6
+		 : s == ((uint32_t)DMA2_Stream2) ? DMA_FLAG_FEIF2_6
+		 : s == ((uint32_t)DMA1_Stream6) ? DMA_FLAG_FEIF2_6
+		 : s == ((uint32_t)DMA2_Stream6) ? DMA_FLAG_FEIF2_6
+		 : s == ((uint32_t)DMA1_Stream3) ? DMA_FLAG_FEIF3_7
+		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_FEIF3_7
+		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_FEIF3_7
+		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_FEIF3_7
+										  : 0x00000000;
+}
 } // namespace mdrivlib

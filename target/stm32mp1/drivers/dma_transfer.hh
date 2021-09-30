@@ -21,6 +21,7 @@ struct DMATransfer {
 	uint32_t dma_tc_flag_index;
 	uint32_t dma_ht_flag_index;
 	uint32_t dma_te_flag_index;
+	uint32_t dma_fe_flag_index;
 
 	DMAMUX_Channel_TypeDef *dmamux_chan;
 
@@ -105,6 +106,7 @@ struct DMATransfer {
 		}
 		dma_tc_flag_index = dma_get_TC_flag_index(stream);
 		dma_te_flag_index = dma_get_TE_flag_index(stream);
+		dma_fe_flag_index = dma_get_FE_flag_index(stream);
 		dma_ht_flag_index = dma_get_HT_flag_index(stream);
 		dma_isr_reg = dma_get_ISR_reg(stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
@@ -150,7 +152,10 @@ struct DMATransfer {
 			if (*dma_isr_reg & dma_te_flag_index) {
 				__BKPT();
 				*dma_ifcr_reg = dma_te_flag_index;
-				// Error: debug breakpoint or logging here
+			}
+			if (*dma_isr_reg & dma_fe_flag_index) {
+				__BKPT();
+				*dma_ifcr_reg = dma_fe_flag_index;
 			}
 		});
 	}
