@@ -9,6 +9,7 @@
 namespace mdrivlib
 {
 
+// Todo: pass dma as reference in ctor, rather than passing its type in the template params?
 template<typename ConfT, typename DmaTransferT>
 struct DmaSpiScreenDriver {
 	enum PacketType { Cmd, Data };
@@ -64,20 +65,24 @@ struct DmaSpiScreenDriver {
 	}
 
 	void config_dma_transfer(uint32_t src, uint32_t sz) {
-		uint32_t dst = spi.get_tx_datareg_addr();
-
+		spi_dr = spi.get_tx_datareg_addr();
 		if constexpr (ConfT::DMAConf::transfer_size_periph == ConfT::DMAConf::HalfWord) {
 			spi.disable();
 			spi.set_data_size(16);
 			spi.enable();
-		}
-		if constexpr (ConfT::DMAConf::transfer_size_periph == ConfT::DMAConf::Word) {
+		} else if (ConfT::DMAConf::transfer_size_periph == ConfT::DMAConf::Word) {
 			spi.disable();
 			spi.set_data_size(32);
 			spi.enable();
 		}
+		// else
+		// 	spi.set_data_size(8);
 
-		dma.config_transfer(dst, src, sz);
+		dma.config_transfer(spi_dr, src, sz);
+	}
+
+	void register_callback(auto cb) {
+		dma.register_callback(cb);
 	}
 
 	void start_dma_transfer(auto cb) {
@@ -112,6 +117,7 @@ private:
 	typename ConfT::DCPin dcpin;
 
 	DmaTransferT dma;
+	uint32_t spi_dr;
 
 	volatile uint32_t *dma_ifcr_reg;
 	volatile uint32_t *dma_isr_reg;
