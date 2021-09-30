@@ -122,12 +122,10 @@ struct DMATransfer {
 		hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
 		hdma_tx.Init.Mode = DMA_NORMAL;
 		hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
-		hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+		hdma_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+		hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
 		hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
 		hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
-
-		// __HAL_LINKDMA(&hsai_tx, hdmatx, hdma_tx);
-		// hdma_tx.Parent = &hsai_tx;
 
 		HAL_DMA_DeInit(&hdma_tx);
 		HAL_DMA_Init(&hdma_tx);
@@ -161,7 +159,7 @@ struct DMATransfer {
 	}
 
 	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
-		init();
+		// init();
 		_transfer_size = sz;
 		_src_addr = src;
 		_dst_addr = dst;
@@ -173,6 +171,21 @@ struct DMATransfer {
 
 	void start_transfer() {
 		InterruptControl::enable_irq(ConfT::IRQn);
+		hdma_tx.Init.Request = ConfT::RequestNum;
+		hdma_tx.Instance = stream;
+		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+		hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+		hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
+		hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+		hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+		hdma_tx.Init.Mode = DMA_NORMAL;
+		hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
+		hdma_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+		hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
+		hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
+		hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+		HAL_DMA_Init(&hdma_tx);
+
 		HAL_DMA_Start_IT(&hdma_tx, _src_addr, _dst_addr, _transfer_size / 2);
 	}
 
