@@ -85,15 +85,15 @@ struct MDMA_ {
 	using SrcBusIsAHBTCM = RegisterSection<ReadWrite, CTBR_Base, MDMA_CTBR_SBUS_Pos, 1>;
 	using TriggerSelection = RegisterSection<ReadWrite, CTBR_Base, MDMA_CTBR_TSEL_Pos, 6>;
 
-	using DstAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CDAR), 0xFFFFFFFF>;
-	using SrcAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CSAR), 0xFFFFFFFF>;
+	using DstAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CDAR), MDMA_CDAR_DAR_Msk>;
+	using SrcAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CSAR), MDMA_CSAR_SAR_Msk>;
 
 	static constexpr uint32_t CBRUR_Base = BASE + offsetof(MDMA_Channel_TypeDef, CBRUR);
 	using DestAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_DUV_Pos, 16>;
 	using SrcAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_SUV_Pos, 16>;
 
-	// Todo: CLAR
-	// Todo: CMAR
-	// Todo: CMDR
+	using LinkListAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CLAR), MDMA_CLAR_LAR_Msk>;
+	using LinkListMaskAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CMAR), MDMA_CMAR_MAR_Msk>;
+	using LinkListMaskData = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CMDR), MDMA_CMDR_MDR_Msk>;
 };
 } // namespace mdrivlib
