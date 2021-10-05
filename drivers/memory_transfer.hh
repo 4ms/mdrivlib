@@ -26,6 +26,9 @@ struct MemoryTransferDefaultConfT {
 	static constexpr uint32_t src_burst = 0b000;
 	static constexpr uint32_t dst_burst = 0b000;
 
+	static constexpr uint32_t src_inc_each_block = 0;
+	static constexpr uint32_t dst_inc_each_block = 0;
+
 	enum Directions { DoNotInc = 0b00, Up = 0b10, Down = 0b11 };
 	static constexpr uint32_t src_data_dir = Up;
 	static constexpr uint32_t dst_data_dir = Up;
