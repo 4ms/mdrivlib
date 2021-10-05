@@ -1,6 +1,7 @@
 #pragma once
-#include "arch.hh"
+#include "debug.hh" //REMOVE ME
 #include "dma_config_struct.hh"
+#include "dma_registers.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
 #include "stm32xx.h"
@@ -10,6 +11,8 @@ namespace mdrivlib
 {
 template<typename ConfT>
 struct DMATransfer {
+	using DMAX = DMA_<ConfT::DMAx, ConfT::StreamNum>;
+
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
@@ -110,9 +113,15 @@ struct DMATransfer {
 		dma_ht_flag_index = dma_get_HT_flag_index(stream);
 		dma_isr_reg = dma_get_ISR_reg(stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(stream);
+
+		init();
 	}
 
 	void init() {
+		// Todo: allow more detailed Configuration in ConfT:
+		// FIFO enable and level
+		// Data alignment: byte, halfword, word
+		// Direction: M->P or P->M or M->M
 		hdma_tx.Init.Request = ConfT::RequestNum;
 		hdma_tx.Instance = stream;
 		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
@@ -159,7 +168,6 @@ struct DMATransfer {
 	}
 
 	void config_transfer(uint32_t dst, uint32_t src, size_t sz) {
-		// init();
 		_transfer_size = sz;
 		_src_addr = src;
 		_dst_addr = dst;
@@ -170,23 +178,28 @@ struct DMATransfer {
 	}
 
 	void start_transfer() {
-		InterruptControl::enable_irq(ConfT::IRQn);
-		hdma_tx.Init.Request = ConfT::RequestNum;
-		hdma_tx.Instance = stream;
-		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-		hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-		hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
-		hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-		hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-		hdma_tx.Init.Mode = DMA_NORMAL;
-		hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
-		hdma_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
-		hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
-		hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
-		hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
-		HAL_DMA_Init(&hdma_tx);
-
+		hdma_tx.Lock = HAL_UNLOCKED;
+		hdma_tx.State = HAL_DMA_STATE_READY;
 		HAL_DMA_Start_IT(&hdma_tx, _src_addr, _dst_addr, _transfer_size / 2);
+		// Todo: replace the HAL command with this:
+		// DMAX::Enable::clear();
+		// while (DMAX::Enable::read())
+		// 	;
+		// clear DMAMUX CFR synchro overrun
+		// clear DMAMUX request gen overrun
+		// DMAX::TransferComplClearFlag::set();
+		// DMAX::HalfTransferComplClearFlag::set();
+		// DMAX::TransferErrorClearFlag::set();
+		// DMAX::DirectModeErrorClearFlag::set();
+		// DMAX::FIFOErrorClearFlag::set();
+		// clear DBM bit
+		// DMAX::NDTR::write(_transfer_size/2)
+		// DMAX::PAR::write(_dst_addr) //or src, if p to m
+		// DMAX::M0AR::write(_src_addr) //or dst_addr, if p to m
+		// enable interrupts: DMAX::TransferComplEnableFlag::set(); ... etc
+		// DMAMUX sync overrun IT?
+		// DMAMUX RequestGen IT?
+		// DMAX::Enable::set();
 	}
 
 	uint32_t get_transfer_size() {
