@@ -21,6 +21,8 @@ struct DmaSpiScreenDriver {
 		spi.configure();
 		spi.set_tx_message_size(1); // not needed?
 		spi.enable();
+
+		spi_dr = spi.get_tx_datareg_addr();
 	}
 
 	template<PacketType MessageType>
@@ -65,7 +67,8 @@ struct DmaSpiScreenDriver {
 	}
 
 	void config_dma_transfer(uint32_t src, uint32_t sz) {
-		spi_dr = spi.get_tx_datareg_addr();
+		// Todo: we could check if data_size doesn't match conf data size, thus skipping the need to disable/enable the
+		// SPI
 		if constexpr (ConfT::DMAConf::transfer_size_periph == ConfT::DMAConf::HalfWord) {
 			spi.disable();
 			spi.set_data_size(16);
@@ -75,8 +78,6 @@ struct DmaSpiScreenDriver {
 			spi.set_data_size(32);
 			spi.enable();
 		}
-		// else
-		// 	spi.set_data_size(8);
 
 		dma.config_transfer(spi_dr, src, sz);
 	}
