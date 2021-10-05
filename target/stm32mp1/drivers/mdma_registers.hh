@@ -57,6 +57,7 @@ struct MDMA_ {
 	static constexpr uint32_t CTCR_Base = BASE + offsetof(MDMA_Channel_TypeDef, CTCR);
 	using BufferableWriteMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_BWM_Pos, 1>;
 	using SWRequestMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_SWRM_Pos, 1>;
+	enum TriggerModes { Buffer = 0b00, Block = 0b01, RepeatedBlock = 0b10, EntireData = 0b11 };
 	using TriggerMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_TRGM_Pos, 2>;
 	using PaddingAlignmentMode = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_PAM_Pos, 2>;
 	using PackEnable = RegisterSection<ReadWrite, CTCR_Base, MDMA_CTCR_PKE_Pos, 1>;
@@ -87,7 +88,10 @@ struct MDMA_ {
 	using DstAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CDAR), 0xFFFFFFFF>;
 	using SrcAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CSAR), 0xFFFFFFFF>;
 
-	// Todo: CBRUR
+	static constexpr uint32_t CBRUR_Base = BASE + offsetof(MDMA_Channel_TypeDef, CBRUR);
+	using DestAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_DUV_Pos, 16>;
+	using SrcAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_SUV_Pos, 16>;
+
 	// Todo: CLAR
 	// Todo: CMAR
 	// Todo: CMDR
