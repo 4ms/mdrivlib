@@ -1,5 +1,6 @@
 #pragma once
-#include "arch.hh"
+#include "debug.hh" //FIXME
+#include "drivers/cache.hh"
 #include "interrupt.hh"
 #include "mdma_registers.hh"
 #include "rcc.hh"
@@ -102,43 +103,46 @@ struct MemoryTransfer {
 		if (ConfT::src_data_size == ConfT::HalfWord)
 			_fillval |= (_fillval << 16);
 
-		_src_addr = reinterpret_cast<uint32_t>(&_fillval);
+		_src_addr = reinterpret_cast<uint32_t>(&_fillval); // invariant
+		SystemCache::clean_dcache_by_addr(_src_addr);
 
-		_num_blocks = area.y1 - area.y0;
+		_num_blocks = area.y1 - area.y0 - 1;
 		_transfer_block_size = (area.x1 - area.x0) * data_size;
 
-		MDMAX::SrcAddrUpdateValue::write(0);
+		MDMAX::SrcAddrUpdateValue::write(0); // invariant
 		MDMAX::DstAddrUpdateValue::write(dst_width * data_size - _transfer_block_size);
 		MDMAX::BlockRepeatDstUpdateMode::write(MDMAX::AddDestUpdateVal);
 
 		/// this should be same as _config()
 		MDMAX::Enable::clear();
 
-		MDMAX::SrcSize::write(ConfT::src_data_size);
-		MDMAX::SrcIncDir::write(MDMAX::DoNotInc);
-		MDMAX::SrcIncAmount::write(ConfT::src_data_inc);
+		MDMAX::SrcSize::write(ConfT::src_data_size);	 // invariant
+		MDMAX::SrcIncDir::write(MDMAX::DoNotInc);		 // invariant
+		MDMAX::SrcIncAmount::write(ConfT::src_data_inc); // invariant
 
-		MDMAX::DstSize::write(ConfT::dst_data_size);
-		MDMAX::DstIncDir::write(MDMAX::Up);
-		MDMAX::DstIncAmount::write(ConfT::dst_data_inc);
+		MDMAX::DstSize::write(ConfT::dst_data_size);	 // invariant
+		MDMAX::DstIncDir::write(MDMAX::Up);				 // invariant
+		MDMAX::DstIncAmount::write(ConfT::dst_data_inc); // invariant
 
-		MDMAX::SrcBurst::write(ConfT::src_burst);
-		MDMAX::DstBurst::write(ConfT::dst_burst);
+		MDMAX::SrcBurst::write(ConfT::src_burst); // invariant
+		MDMAX::DstBurst::write(ConfT::dst_burst); // invariant
 
-		MDMAX::BlockNumDataBytesToXfer::write(_transfer_block_size);
-		MDMAX::BlockRepeatCount::write(_num_blocks);
-		MDMAX::TriggerMode::write(MDMAX::RepeatedBlock);
+		// These are done in start_transfer:
+		// MDMAX::BlockNumDataBytesToXfer::write(_transfer_block_size);
+		// MDMAX::BlockRepeatCount::write(_num_blocks);
+
+		MDMAX::TriggerMode::write(MDMAX::RepeatedBlock); // invariant
 
 		MDMAX::TransferLength::write(_transfer_block_size >= 128 ? 127 : _transfer_block_size - 1);
 
-		MDMAX::PaddingAlignmentMode::write(0b00);
-		MDMAX::PackEnable::set();
-		MDMAX::SWRequestMode::set();
+		MDMAX::PaddingAlignmentMode::write(0b00); // invariant
+		MDMAX::PackEnable::set();				  // invariant
+		MDMAX::SWRequestMode::set();			  // invariant
 
 		if constexpr (ConfT::bufferable_write_mode)
 			MDMAX::BufferableWriteMode::set();
 		else
-			MDMAX::BufferableWriteMode::clear();
+			MDMAX::BufferableWriteMode::clear(); // invariant
 
 		// Clear all ISRs
 		MDMAX::BufferTransferComplISRClear::set();
