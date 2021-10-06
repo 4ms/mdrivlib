@@ -89,7 +89,7 @@ struct MDMA_ {
 	using SrcAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CSAR), MDMA_CSAR_SAR_Msk>;
 
 	static constexpr uint32_t CBRUR_Base = BASE + offsetof(MDMA_Channel_TypeDef, CBRUR);
-	using DestAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_DUV_Pos, 16>;
+	using DstAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_DUV_Pos, 16>;
 	using SrcAddrUpdateValue = RegisterSection<ReadWrite, CBRUR_Base, MDMA_CBRUR_SUV_Pos, 16>;
 
 	using LinkListAddr = RegisterBits<ReadWrite, BASE + offsetof(MDMA_Channel_TypeDef, CLAR), MDMA_CLAR_LAR_Msk>;

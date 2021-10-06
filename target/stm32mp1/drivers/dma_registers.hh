@@ -70,32 +70,23 @@ struct DMA_ {
 
 	static constexpr uint32_t BASE = PeriphNum == 1 ? DMA1_BASE : DMA2_BASE;
 	static constexpr uint32_t STREAM_BASE = GetStreamBase();
-	// typedef struct
-	// {
-	//   __IO uint32_t CR;     /*!< DMA stream x configuration register      */
-	//   __IO uint32_t NDTR;   /*!< DMA stream x number of data register     */
-	//   __IO uint32_t PAR;    /*!< DMA stream x peripheral address register */
-	//   __IO uint32_t M0AR;   /*!< DMA stream x memory 0 address register   */
-	//   __IO uint32_t M1AR;   /*!< DMA stream x memory 1 address register   */
-	//   __IO uint32_t FCR;    /*!< DMA stream x FIFO control register       */
-	// } DMA_Stream_TypeDef;
+
+	// Todo: Finish converting this class
 
 	static constexpr uint32_t CR_Base = STREAM_BASE + offsetof(DMA_Stream_TypeDef, CR);
 	using Enable = RegisterSection<ReadWrite, CR_Base, DMA_SxCR_EN_Pos, 1>;
+	static constexpr uint32_t NDTR_Base = STREAM_BASE + offsetof(DMA_Stream_TypeDef, NDTR);
+	// using...
+	static constexpr uint32_t PAR_Base = STREAM_BASE + offsetof(DMA_Stream_TypeDef, PAR);
+	// using...
+	static constexpr uint32_t M0AR_Base = STREAM_BASE + offsetof(DMA_Stream_TypeDef, M0AR);
+	// using...
+	static constexpr uint32_t M1AR_Base = STREAM_BASE + offsetof(DMA_Stream_TypeDef, M1AR);
+	// using...
+	static constexpr uint32_t FCR_Base = STREAM_BASE + offsetof(DMA_Stream_TypeDef, FCR);
+	// using...
 
-	// typedef struct
-	// {
-	//   __IO uint32_t LISR;   /*!< DMA low interrupt status register,      Address offset: 0x00 */
-	//   __IO uint32_t HISR;   /*!< DMA high interrupt status register,     Address offset: 0x04 */
-	//   __IO uint32_t LIFCR;  /*!< DMA low interrupt flag clear register,  Address offset: 0x08 */
-	//   __IO uint32_t HIFCR;  /*!< DMA high interrupt flag clear register, Address offset: 0x0C */
-	//   __IO uint32_t RESERVED[247];  /*!< Reserved,               Address offset: 0x10 - 0x3E8 */
-	//   __IO uint32_t HWCFGR2; /*!< DMA HW Configuration register 2,      Address offset: 0x3EC */
-	//   __IO uint32_t HWCFGR1; /*!< DMA HW Configuration register 1,      Address offset: 0x3F0 */
-	//   __IO uint32_t VERR;    /*!< DMA Version register,                 Address offset: 0x3F4 */
-	//   __IO uint32_t IPDR;    /*!< DMA Identification register,          Address offset: 0x3F8 */
-	//   __IO uint32_t SIDR;    /*!< DMA Size Identification register,     Address offset: 0x3FC */
-	// } DMA_TypeDef;
+	// Todo: add DMAMUX stuff
 
 	// typedef struct
 	// {
