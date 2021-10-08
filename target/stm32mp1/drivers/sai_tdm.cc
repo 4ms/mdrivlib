@@ -340,6 +340,7 @@ void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 
 		if ((*dma_isr_reg & dma_te_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_HT)*/) {
 			*dma_ifcr_reg = dma_te_flag_index;
+			__BKPT();
 			// Error: debug breakpoint or logging here
 		}
 	});
