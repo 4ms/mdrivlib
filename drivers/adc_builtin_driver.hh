@@ -45,11 +45,12 @@ class AdcPeriph;
 #ifdef STM32F7
 const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_144CYCLES;
 #elif defined(STM32H7) || defined(STM32MP1)
-const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_64CYCLES_5;
+const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_387CYCLES_5;
 #endif
 
 template<AdcPeriphNum ADCN, AdcChanNum c, typename T = uint16_t>
 class AdcChan {
+
 public:
 	AdcChan(const uint32_t sampletime = ADC_DEFAULT_SAMPLINGTIME) {
 		auto init_adc_once = AdcPeriph<ADCN>::AdcInstance();
@@ -117,5 +118,7 @@ private:
 			 : (p == AdcPeriphNum::_3) ? ADC3
 									   : nullptr;
 	}
+
+	static inline ADC_TypeDef *ADCx = get_ADC_base(ADCN);
 };
 } // namespace mdrivlib
