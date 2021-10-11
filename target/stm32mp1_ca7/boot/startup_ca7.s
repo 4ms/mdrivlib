@@ -157,8 +157,17 @@ Abort_Exception:
 Undef_Handler:
 	b .
 
+//The CP15 SCTLR.TE bit is used to specify whether exception handlers will use ARM or Thumb.
 PAbt_Handler:
+	BKPT #98
+	SUBS PC, R14, #4
+	msr cpsr_c, MODE_SYS
+	bx LR
 	b .
 
 DAbt_Handler:
+	BKPT #99
+	SUBS PC, R14, #8
+	msr cpsr_c, MODE_SYS
+	bx LR
 	b .
