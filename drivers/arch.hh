@@ -8,6 +8,7 @@ enum class Targets {
 	stm32h7x5,
 	stm32f7,
 	stm32f4,
+	simulator,
 };
 
 // STM32MP1 CoreA7
@@ -35,6 +36,11 @@ constexpr auto TargetName = Targets::stm32h7x5;
 #endif
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::stm32f7;
+
+// Simulator
+#elif defined(SIMULATOR)
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::simulator;
 
 #endif
 } // namespace mdrivlib
