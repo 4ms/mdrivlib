@@ -65,12 +65,13 @@ AdcPeriph<p>::AdcPeriph() {
 
 	InterruptControl::disable_irq(ADC1_IRQn); // ConfT::IRQn
 
+	// Todo: ConfT::CommonClockSync
 	if constexpr (ADC123_COMMON_BASE != 0)
 		LL_ADC_SetCommonClock(ADC123_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
 	else if constexpr (ADC12_COMMON_BASE != 0 && (p == AdcPeriphNum::_1 || p == AdcPeriphNum::_2))
-		LL_ADC_SetCommonClock(ADC12_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+		LL_ADC_SetCommonClock(ADC12_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 	else if constexpr (ADC1_COMMON_BASE != 0 && p == AdcPeriphNum::_1)
-		LL_ADC_SetCommonClock(ADC1_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+		LL_ADC_SetCommonClock(ADC1_COMMON, LL_ADC_CLOCK_ASYNC_DIV64);
 	else if constexpr (ADC2_COMMON_BASE != 0 && p == AdcPeriphNum::_2)
 		LL_ADC_SetCommonClock(ADC2_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
 	else if constexpr (ADC3_COMMON_BASE != 0 && p == AdcPeriphNum::_3)
@@ -122,23 +123,23 @@ constexpr uint32_t adc_channum_to_ll_channel(const uint32_t x) {
 }
 
 constexpr uint32_t adc_number_to_ll_rank(const uint32_t x) {
-	return x == 1  ? LL_ADC_REG_RANK_1
-		 : x == 2  ? LL_ADC_REG_RANK_2
-		 : x == 3  ? LL_ADC_REG_RANK_3
-		 : x == 4  ? LL_ADC_REG_RANK_4
-		 : x == 5  ? LL_ADC_REG_RANK_5
-		 : x == 6  ? LL_ADC_REG_RANK_6
-		 : x == 7  ? LL_ADC_REG_RANK_7
-		 : x == 8  ? LL_ADC_REG_RANK_8
-		 : x == 9  ? LL_ADC_REG_RANK_9
-		 : x == 10 ? LL_ADC_REG_RANK_10
-		 : x == 11 ? LL_ADC_REG_RANK_11
-		 : x == 12 ? LL_ADC_REG_RANK_12
-		 : x == 13 ? LL_ADC_REG_RANK_13
-		 : x == 14 ? LL_ADC_REG_RANK_14
-		 : x == 15 ? LL_ADC_REG_RANK_15
-		 : x == 16 ? LL_ADC_REG_RANK_16
-				   : LL_ADC_REG_RANK_1;
+	return x == 0  ? LL_ADC_REG_RANK_1
+		 : x == 1  ? LL_ADC_REG_RANK_2
+		 : x == 2  ? LL_ADC_REG_RANK_3
+		 : x == 3  ? LL_ADC_REG_RANK_4
+		 : x == 4  ? LL_ADC_REG_RANK_5
+		 : x == 5  ? LL_ADC_REG_RANK_6
+		 : x == 6  ? LL_ADC_REG_RANK_7
+		 : x == 7  ? LL_ADC_REG_RANK_8
+		 : x == 8  ? LL_ADC_REG_RANK_9
+		 : x == 9  ? LL_ADC_REG_RANK_10
+		 : x == 10 ? LL_ADC_REG_RANK_11
+		 : x == 11 ? LL_ADC_REG_RANK_12
+		 : x == 12 ? LL_ADC_REG_RANK_13
+		 : x == 13 ? LL_ADC_REG_RANK_14
+		 : x == 14 ? LL_ADC_REG_RANK_15
+		 : x == 15 ? LL_ADC_REG_RANK_16
+				   : 0;
 }
 constexpr uint32_t _LL_ADC_DECIMAL_NB_TO_REG_SEQ_LENGTH(const uint8_t x) {
 	return (x << ADC_SQR1_L_Pos);
@@ -153,9 +154,7 @@ void AdcPeriph<p>::add_channel(const AdcChanNum channel, const uint32_t sampleti
 	LL_ADC_REG_SetDataTransferMode(ADCx, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
 	LL_ADC_REG_SetContinuousMode(ADCx, LL_ADC_REG_CONV_CONTINUOUS);
 
-	uint8_t rank_decimal = num_channels_;
-	num_channels_++;
-	ranks_[channel_int] = rank_decimal;
+	ranks_[channel_int] = num_channels_++;
 }
 
 template<AdcPeriphNum p>
