@@ -12,8 +12,7 @@
 namespace mdrivlib
 {
 
-template<typename ConfT> // requires derives from AdcPeriphConf
-						 // requires ConfT::DmaConf derives from DefaultDMAConf
+template<AdcPeriphConf ConfT>
 class AdcDmaPeriph {
 	using ValueT = typename ConfT::ValueT;
 	using DmaConf = typename ConfT::DmaConf;

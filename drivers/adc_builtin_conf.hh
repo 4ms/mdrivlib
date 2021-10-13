@@ -1,7 +1,9 @@
 #pragma once
+#include "dma_config_struct.hh"
 #include "pin.hh"
 #include "stm32mp1xx_hal_adc.h"
 #include "stm32xx.h"
+#include <concepts>
 
 namespace mdrivlib
 {
@@ -79,7 +81,7 @@ enum AdcClockSourceDiv : uint32_t {
 	APBClk_Div4 = ADC_CLOCK_SYNC_PCLK_DIV4,
 };
 
-struct AdcPeriphConf {
+struct DefaultAdcPeriphConf {
 	static constexpr AdcPeriphNum adc_periph_num = AdcPeriphNum::_1;
 
 	// Data type
@@ -95,26 +97,28 @@ struct AdcPeriphConf {
 	static constexpr AdcOversampleRightBitShift oversampling_right_bitshift = NoShift;
 	// TODO: other os config opts?
 
-	// DMA
-	static constexpr bool use_dma = true;
-	enum DMAPeriph { DMA_1, DMA_2 };
-	static constexpr DMAPeriph dma_periph_num = DMA_1;
-	static constexpr uint32_t stream_num = 0;
-	static constexpr uint32_t request_num = 0;
-	enum Priority { Low = 0, Medium = 1, High = 2, VeryHigh = 3 };
-	static constexpr uint8_t dma_priority = Low;
-
-	static constexpr bool use_dma_fifo = false;
-	// TODO: threshold
-
-	// DMA IRQ
-	static constexpr bool use_dma_irq = false;
-	static constexpr IRQn_Type dma_IRQn = (IRQn_Type)0;
-	static constexpr uint32_t pri = 0;
-	static constexpr uint32_t subpri = 0;
-
 	// Clock
 	static constexpr AdcClockSourceDiv clock_div = PLL_Div2;
+
+	// DMA Conf
+	static constexpr bool use_dma = true;
+	static constexpr bool use_dma_irq = false;
+	struct DmaConf : DefaultDMAConf {
+		static constexpr auto dir = Periph2Mem;
+		static constexpr auto circular = true;
+		static constexpr auto transfer_size_mem = HalfWord;
+		static constexpr auto transfer_size_periph = HalfWord;
+		static constexpr auto dma_priority = Low;
+		static constexpr auto mem_inc = true;
+		static constexpr auto periph_inc = false;
+		static constexpr auto enable_fifo = false;
+	};
+};
+
+template<typename T>
+concept AdcPeriphConf = requires(T) {
+	std::derived_from<T, DefaultAdcPeriphConf>;
+	std::derived_from<DefaultDMAConf, typename T::DmaConf>;
 };
 
 struct AdcChannelConf {
@@ -126,4 +130,5 @@ struct AdcChannelConf {
 	// TODO: Single/diff
 	// TODO: offset
 };
+
 } // namespace mdrivlib
