@@ -11,16 +11,15 @@ struct DefaultDMAConf {
 	static constexpr uint32_t pri = 0;
 	static constexpr uint32_t subpri = 0;
 
-	enum Direction { Mem2Mem, Mem2Periph, Periph2Mem, Periph2Periph };
+	enum Direction { Mem2Mem, Mem2Periph, Periph2Mem }; 
 	static constexpr Direction dir = Mem2Periph;
 
 	static constexpr bool circular = false;
 
 	enum TransferSize { Byte, HalfWord, Word };
-	static constexpr TransferSize transfer_size_mem = Byte;	   // Dest, in P2P
+	static constexpr TransferSize transfer_size_mem = Byte;	   // Dest, in M2M
 	static constexpr TransferSize transfer_size_periph = Byte; // Source, in M2M
 
-	// Todo: Double-buffer mode
 	enum Priority { Low = 0, Medium = 1, High = 2, VeryHigh = 3 };
 	static constexpr uint8_t dma_priority = Low;
 
@@ -28,6 +27,16 @@ struct DefaultDMAConf {
 	static constexpr bool periph_inc = false;
 
 	static constexpr bool half_transfer_interrupt_enable = false;
+
+	static constexpr bool enable_fifo = true;
+	enum FifoThreshold {Fifo1QuarterFull, FifoHalfFull, Fifo3QuarterFull, FifoFull}; 
+	static constexpr FifoThreshold fifo_threshold = FifoHalfFull;
+
+	enum BurstSize {Single, Inc4, Inc8, Inc16};
+	static constexpr BurstSize mem_burst= Single;
+	static constexpr BurstSize periph_burst = Single;
+
+	// Todo: Double-buffer mode
 };
 
 struct DMA_Config {
