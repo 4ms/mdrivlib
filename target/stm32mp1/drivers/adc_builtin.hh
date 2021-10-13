@@ -55,30 +55,9 @@ public:
 		};
 		HAL_ADC_Init(&hadc);
 
-		// DMATransfer<DmaConf> dma;
-		/////////////replace this:
-		hdma_adc1.Instance = DMA2_Stream7;		   // ConfT
-		hdma_adc1.Init.Request = DMA_REQUEST_ADC1; // ConfT
-		hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
-		hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
-		hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
-		hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD; // ConfT
-		hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;	  // ConfT
-		hdma_adc1.Init.Mode = DMA_CIRCULAR;
-		hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;		// ConfT
-		hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE; // ConfT
-		HAL_DMA_Init(&hdma_adc1);
-		__HAL_LINKDMA(&hadc, DMA_Handle, hdma_adc1);
-		/////////
+		DMATransfer<DmaConf> dma;
 
-		// hadc.DMA_Handle = dma.get_hal_ptr(); //&hdma_adc1;
-		// hadc.DMA_Handle->Parent = &hadc;
-
-		// #define __HAL_LINKDMA(__HANDLE__, __PPP_DMA_FIELD__, __DMA_HANDLE__)               \
-                        // do{                                                        \
-                              // (__HANDLE__)->__PPP_DMA_FIELD__ = &(__DMA_HANDLE__); \
-                              // (__DMA_HANDLE__).Parent = (__HANDLE__);             \
-                          // } while(0U)
+		dma.link_periph_to_dma(hadc);
 
 		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
 		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
@@ -91,9 +70,9 @@ public:
 			ADC_ChannelConfTypeDef adc_chan_conf = {
 				.Channel = chan.adc_chan_num,
 				.Rank = adc_number_to_rank(chan.rank),
-				.SamplingTime = chan.sampling_time,
-				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
-				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
+				.SamplingTime = AdcSamplingTime::_387Cycles, // chan.sampling_time,
+				.SingleDiff = ADC_SINGLE_ENDED,				 // Todo: allow conf
+				.OffsetNumber = ADC_OFFSET_NONE,			 // Todo: allow conf
 				.Offset = 0,
 				.OffsetRightShift = DISABLE,
 				.OffsetSignedSaturation = DISABLE,
