@@ -29,7 +29,7 @@ struct DMATransfer {
 	DMAMUX_Channel_TypeDef *dmamux_chan;
 
 	// ST-HAL:
-	DMA_HandleTypeDef hdma_tx;
+	DMA_HandleTypeDef hdma;
 
 	DMATransfer() {
 		RCC_Enable::DMAMUX_::set();
@@ -118,26 +118,50 @@ struct DMATransfer {
 	}
 
 	void init() {
-		// Todo: allow more detailed Configuration in ConfT:
-		// FIFO enable and level
-		// Data alignment: byte, halfword, word
-		// Direction: M->P or P->M or M->M
-		hdma_tx.Init.Request = ConfT::RequestNum;
-		hdma_tx.Instance = stream;
-		hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-		hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-		hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
-		hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-		hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-		hdma_tx.Init.Mode = DMA_NORMAL;
-		hdma_tx.Init.Priority = DMA_PRIORITY_HIGH;
-		hdma_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
-		hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
-		hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
-		hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+		hdma.Instance = stream;
 
-		HAL_DMA_DeInit(&hdma_tx);
-		HAL_DMA_Init(&hdma_tx);
+		hdma.Init.Request = ConfT::RequestNum;
+
+		hdma.Init.Direction = ConfT::dir == DefaultDMAConf::Mem2Periph ? DMA_MEMORY_TO_PERIPH
+							: ConfT::dir == DefaultDMAConf::Periph2Mem ? DMA_PERIPH_TO_MEMORY
+																	   : DMA_MEMORY_TO_MEMORY;
+		hdma.Init.PeriphInc = DMA_PINC_DISABLE;
+
+		hdma.Init.MemInc = DMA_MINC_ENABLE;
+
+		hdma.Init.PeriphDataAlignment = ConfT::transfer_size_periph == DefaultDMAConf::Byte ? DMA_PDATAALIGN_BYTE
+									  : ConfT::transfer_size_periph == DefaultDMAConf::HalfWord
+										  ? DMA_PDATAALIGN_HALFWORD
+										  : DMA_PDATAALIGN_WORD;
+
+		hdma.Init.MemDataAlignment = ConfT::transfer_size_mem == DefaultDMAConf::Byte	  ? DMA_MDATAALIGN_BYTE
+								   : ConfT::transfer_size_mem == DefaultDMAConf::HalfWord ? DMA_MDATAALIGN_HALFWORD
+																						  : DMA_MDATAALIGN_WORD;
+		hdma.Init.Mode = ConfT::circular ? DMA_CIRCULAR : DMA_NORMAL;
+
+		hdma.Init.Priority = ConfT::dma_priority == DefaultDMAConf::Low	   ? DMA_PRIORITY_LOW
+						   : ConfT::dma_priority == DefaultDMAConf::Medium ? DMA_PRIORITY_MEDIUM
+						   : ConfT::dma_priority == DefaultDMAConf::High   ? DMA_PRIORITY_HIGH
+																		   : DMA_PRIORITY_VERY_HIGH;
+		hdma.Init.FIFOMode = ConfT::enable_fifo ? DMA_FIFOMODE_ENABLE : DMA_FIFOMODE_DISABLE;
+
+		hdma.Init.FIFOThreshold =
+			ConfT::fifo_threshold == DefaultDMAConf::Fifo1QuarterFull	? DMA_FIFO_THRESHOLD_1QUARTERFULL
+			: ConfT::fifo_threshold == DefaultDMAConf::FifoHalfFull		? DMA_FIFO_THRESHOLD_HALFFULL
+			: ConfT::fifo_threshold == DefaultDMAConf::Fifo3QuarterFull ? DMA_FIFO_THRESHOLD_3QUARTERSFULL
+																		: DMA_FIFO_THRESHOLD_FULL;
+
+		hdma.Init.MemBurst = ConfT::mem_burst == DefaultDMAConf::Single ? DMA_MBURST_SINGLE
+						   : ConfT::mem_burst == DefaultDMAConf::Inc4	? DMA_MBURST_INC4
+						   : ConfT::mem_burst == DefaultDMAConf::Inc8	? DMA_MBURST_INC8
+																		: DMA_MBURST_INC16;
+
+		hdma.Init.PeriphBurst = ConfT::mem_burst == DefaultDMAConf::Single ? DMA_PBURST_SINGLE
+							  : ConfT::mem_burst == DefaultDMAConf::Inc4   ? DMA_PBURST_INC4
+							  : ConfT::mem_burst == DefaultDMAConf::Inc8   ? DMA_PBURST_INC8
+																		   : DMA_PBURST_INC16;
+		HAL_DMA_DeInit(&hdma);
+		HAL_DMA_Init(&hdma);
 	}
 
 	void register_callback(auto cb) {
@@ -178,9 +202,9 @@ struct DMATransfer {
 	}
 
 	void start_transfer() {
-		hdma_tx.Lock = HAL_UNLOCKED;
-		hdma_tx.State = HAL_DMA_STATE_READY;
-		HAL_DMA_Start_IT(&hdma_tx, _src_addr, _dst_addr, _transfer_size / 2);
+		hdma.Lock = HAL_UNLOCKED;
+		hdma.State = HAL_DMA_STATE_READY;
+		HAL_DMA_Start_IT(&hdma, _src_addr, _dst_addr, _transfer_size / 2);
 		// Todo: replace the HAL command with this:
 		// DMAX::Enable::clear();
 		// while (DMAX::Enable::read())
@@ -204,6 +228,14 @@ struct DMATransfer {
 
 	uint32_t get_transfer_size() {
 		return _transfer_size;
+	}
+
+	DMA_HandleTypeDef *get_hal_ptr() {
+		return &hdma;
+	}
+
+	void set_dma_parent(void *parent) {
+		hdma.Parent = parent;
 	}
 
 private:
