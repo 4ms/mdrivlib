@@ -67,8 +67,17 @@ public:
 	AdcDmaPeriph(std::array<ValueT, N> &dma_buffer, std::array<AdcChannelConf, N> ChanConfs)
 		: _dma_buffer{dma_buffer.data()}
 		, num_channels{N} {
+
+		// for (auto chan : ChanConfs)
+		// 	Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
+		Pin pot2{GPIO::C, 3, PinMode::Analog};
+		Pin pot3{GPIO::A, 3, PinMode::Analog};
+
 		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
+		hadc.Init.NbrOfConversion = num_channels;
+
 		HAL_ADC_Init(&hadc);
+
 		hdma_adc1.Instance = DMA2_Stream7;		   // ConfT
 		hdma_adc1.Init.Request = DMA_REQUEST_ADC1; // ConfT
 		hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -84,13 +93,38 @@ public:
 
 		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
 		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
+
+		// for (auto chan : ChanConfs) {
+		ADC_ChannelConfTypeDef pot_2_conf = {
+			.Channel = ADC_CHANNEL_13,
+			.Rank = ADC_REGULAR_RANK_1,
+			.SamplingTime = ADC_SAMPLETIME_810CYCLES_5,
+			.SingleDiff = ADC_SINGLE_ENDED,
+			.OffsetNumber = ADC_OFFSET_NONE,
+			.Offset = 0,
+			.OffsetRightShift = DISABLE,
+			.OffsetSignedSaturation = DISABLE,
+		};
+		ADC_ChannelConfTypeDef pot_3_conf = {
+			.Channel = ADC_CHANNEL_15,
+			.Rank = ADC_REGULAR_RANK_2,
+			.SamplingTime = ADC_SAMPLETIME_810CYCLES_5,
+			.SingleDiff = ADC_SINGLE_ENDED,
+			.OffsetNumber = ADC_OFFSET_NONE,
+			.Offset = 0,
+			.OffsetRightShift = DISABLE,
+			.OffsetSignedSaturation = DISABLE,
+		};
+		HAL_ADC_ConfigChannel(&hadc, &pot_2_conf);
+		HAL_ADC_ConfigChannel(&hadc, &pot_3_conf);
+		// }
 	}
 
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
 		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
 	}
 
-	static inline ADC_HandleTypeDef hadc = {
+	ADC_HandleTypeDef hadc = {
 		.Instance = ADC1,
 		.Init =
 			{
@@ -100,7 +134,7 @@ public:
 				.EOCSelection = ADC_EOC_SEQ_CONV,
 				.LowPowerAutoWait = DISABLE,
 				.ContinuousConvMode = ENABLE,
-				.NbrOfConversion = 0,
+				.NbrOfConversion = 2,
 				.DiscontinuousConvMode = DISABLE,
 				.NbrOfDiscConversion = 0,
 				.ExternalTrigConv = ADC_SOFTWARE_START,
@@ -118,7 +152,7 @@ public:
 					},
 			},
 	};
-	static inline DMA_HandleTypeDef hdma_adc1;
+	DMA_HandleTypeDef hdma_adc1;
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
