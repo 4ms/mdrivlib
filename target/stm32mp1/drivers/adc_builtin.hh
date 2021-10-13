@@ -1,6 +1,7 @@
 #pragma once
 #include "adc_builtin_conf.hh"
 #include "clocks.hh"
+#include "dma_transfer.hh"
 #include "interrupt.hh"
 #include "interrupt_control.hh"
 #include "pin.hh"
@@ -12,8 +13,10 @@ namespace mdrivlib
 {
 
 template<typename ConfT> // requires derives from AdcPeriphConf
+						 // requires ConfT::DmaConf derives from DefaultDMAConf
 class AdcDmaPeriph {
 	using ValueT = typename ConfT::ValueT;
+	using DmaConf = typename ConfT::DmaConf;
 
 public:
 	template<size_t N>
@@ -52,6 +55,8 @@ public:
 		};
 		HAL_ADC_Init(&hadc);
 
+		// DMATransfer<DmaConf> dma;
+		/////////////replace this:
 		hdma_adc1.Instance = DMA2_Stream7;		   // ConfT
 		hdma_adc1.Init.Request = DMA_REQUEST_ADC1; // ConfT
 		hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -64,6 +69,16 @@ public:
 		hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE; // ConfT
 		HAL_DMA_Init(&hdma_adc1);
 		__HAL_LINKDMA(&hadc, DMA_Handle, hdma_adc1);
+		/////////
+
+		// hadc.DMA_Handle = dma.get_hal_ptr(); //&hdma_adc1;
+		// hadc.DMA_Handle->Parent = &hadc;
+
+		// #define __HAL_LINKDMA(__HANDLE__, __PPP_DMA_FIELD__, __DMA_HANDLE__)               \
+                        // do{                                                        \
+                              // (__HANDLE__)->__PPP_DMA_FIELD__ = &(__DMA_HANDLE__); \
+                              // (__DMA_HANDLE__).Parent = (__HANDLE__);             \
+                          // } while(0U)
 
 		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
 		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
@@ -76,9 +91,9 @@ public:
 			ADC_ChannelConfTypeDef adc_chan_conf = {
 				.Channel = chan.adc_chan_num,
 				.Rank = adc_number_to_rank(chan.rank),
-				.SamplingTime = AdcSamplingTime::_810Cycles, // chan.sampling_time,
-				.SingleDiff = ADC_SINGLE_ENDED,				 // Todo: allow conf
-				.OffsetNumber = ADC_OFFSET_NONE,			 // Todo: allow conf
+				.SamplingTime = chan.sampling_time,
+				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
+				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
 				.Offset = 0,
 				.OffsetRightShift = DISABLE,
 				.OffsetSignedSaturation = DISABLE,
