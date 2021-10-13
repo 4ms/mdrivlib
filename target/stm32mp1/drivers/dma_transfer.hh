@@ -230,12 +230,10 @@ struct DMATransfer {
 		return _transfer_size;
 	}
 
-	DMA_HandleTypeDef *get_hal_ptr() {
-		return &hdma;
-	}
-
-	void set_dma_parent(void *parent) {
-		hdma.Parent = parent;
+	// constrain: param has a .DMA_Handle of type DMA_HandleTypeDef*
+	void link_periph_to_dma(auto &periph_hal_handle) {
+		periph_hal_handle.DMA_Handle = &hdma;
+		hdma.Parent = &periph_hal_handle;
 	}
 
 private:
