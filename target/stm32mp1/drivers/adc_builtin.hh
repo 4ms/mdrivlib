@@ -3,6 +3,7 @@
 #include "pin.hh"
 #include "stm32mp1xx_hal_adc.h"
 #include "stm32xx.h"
+#include "util/math.hh"
 #include <array>
 
 namespace mdrivlib
@@ -39,6 +40,20 @@ enum AdcResolution {
 	Bits14 = ADC_RESOLUTION_14B,
 	Bits16 = ADC_RESOLUTION_16B
 };
+enum AdcOversampleRightBitShift : uint32_t {
+	NoShift = ADC_RIGHTBITSHIFT_NONE,
+	Shift1Right = ADC_RIGHTBITSHIFT_1,
+	Shift2Right = ADC_RIGHTBITSHIFT_2,
+	Shift3Right = ADC_RIGHTBITSHIFT_3,
+	Shift4Right = ADC_RIGHTBITSHIFT_4,
+	Shift5Right = ADC_RIGHTBITSHIFT_5,
+	Shift6Right = ADC_RIGHTBITSHIFT_6,
+	Shift7Right = ADC_RIGHTBITSHIFT_7,
+	Shift8Right = ADC_RIGHTBITSHIFT_8,
+	Shift9Right = ADC_RIGHTBITSHIFT_9,
+	Shift10Right = ADC_RIGHTBITSHIFT_10,
+	Shift11Right = ADC_RIGHTBITSHIFT_11,
+};
 enum AdcClockSourceDiv {
 	PLL_Div1 = ADC_CLOCK_ASYNC_DIV1,
 	PLL_Div2 = ADC_CLOCK_ASYNC_DIV2,
@@ -70,7 +85,7 @@ struct AdcPeriphConf {
 	// Ovesampling
 	static constexpr bool oversample = false;
 	static constexpr uint32_t oversampling_ratio = 0;
-	static constexpr uint32_t oversampling_right_bitshift = 0;
+	static constexpr AdcOversampleRightBitShift oversampling_right_bitshift = NoShift;
 	// TODO: other os config opts?
 
 	// DMA
@@ -119,8 +134,34 @@ public:
 			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
 		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
-		hadc.Init.NbrOfConversion = num_channels;
-
+		hadc = {
+			.Instance = get_ADC_base(ConfT::adc_periph_num),
+			.Init =
+				{
+					.ClockPrescaler = ConfT::clock_div,
+					.Resolution = ConfT::resolution,
+					.ScanConvMode = ADC_SCAN_ENABLE,
+					.EOCSelection = ADC_EOC_SEQ_CONV,
+					.LowPowerAutoWait = DISABLE,
+					.ContinuousConvMode = ENABLE,
+					.NbrOfConversion = num_channels,
+					.DiscontinuousConvMode = DISABLE,
+					.NbrOfDiscConversion = 0,
+					.ExternalTrigConv = ADC_SOFTWARE_START,
+					.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
+					.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR,
+					.Overrun = ADC_OVR_DATA_OVERWRITTEN,
+					.LeftBitShift = ADC_LEFTBITSHIFT_NONE,
+					.OversamplingMode = ConfT::oversample ? ENABLE : DISABLE,
+					.Oversampling =
+						{
+							.Ratio = MathTools::constrain(ConfT::oversampling_ratio, 1, 1024),
+							.RightBitShift = ConfT::oversampling_right_bitshift,
+							.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
+							.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
+						},
+				},
+		};
 		HAL_ADC_Init(&hadc);
 
 		hdma_adc1.Instance = DMA2_Stream7;		   // ConfT
@@ -183,34 +224,7 @@ public:
 					   : 0;
 	}
 
-	ADC_HandleTypeDef hadc = {
-		.Instance = ADC1,
-		.Init =
-			{
-				.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2,
-				.Resolution = ADC_RESOLUTION_16B,
-				.ScanConvMode = ADC_SCAN_ENABLE,
-				.EOCSelection = ADC_EOC_SEQ_CONV,
-				.LowPowerAutoWait = DISABLE,
-				.ContinuousConvMode = ENABLE,
-				.NbrOfConversion = 3,
-				.DiscontinuousConvMode = DISABLE,
-				.NbrOfDiscConversion = 0,
-				.ExternalTrigConv = ADC_SOFTWARE_START,
-				.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
-				.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR,
-				.Overrun = ADC_OVR_DATA_OVERWRITTEN,
-				.LeftBitShift = ADC_LEFTBITSHIFT_NONE,
-				.OversamplingMode = ENABLE,
-				.Oversampling =
-					{
-						.Ratio = 1024,
-						.RightBitShift = ADC_RIGHTBITSHIFT_10,
-						.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
-						.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
-					},
-			},
-	};
+	ADC_HandleTypeDef hadc;
 	DMA_HandleTypeDef hdma_adc1;
 
 	ValueT *_dma_buffer;
