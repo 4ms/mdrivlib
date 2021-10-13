@@ -1,19 +1,24 @@
 #include "clocks.hh"
 #include "interrupt_control.hh"
+#include "pin.hh"
 #include "stm32mp1xx_hal_adc.h"
 #include "stm32xx.h"
+#include <array>
 
 namespace mdrivlib
 {
 
 enum class AdcPeriphNum { _1, _2 };
+enum class AdcChanNum { _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15 };
+enum AdcSamplingTime { _1Cycle = 0b000, _2Cycles, _8Cycles, _16Cycles, _32Cycles, _64Cycles, _128Cycles, __810Cycles };
 
 struct AdcPeriphConf {
 	static constexpr AdcPeriphNum adc_periph_num = AdcPeriphNum::_1;
 
 	// Data type
-	enum DataSize { Byte, HalfWord, Word };
-	static constexpr DataSize data_size = HalfWord;
+	using ValueT = uint16_t;
+	// enum DataSize { Byte, HalfWord, Word };
+	// static constexpr DataSize data_size = HalfWord;
 
 	enum Resolution { Bits8, Bits10, Bits12, Bits14, Bits16 };
 	static constexpr Resolution resolution = Bits16;
@@ -44,34 +49,36 @@ struct AdcPeriphConf {
 };
 
 struct AdcChannelConf {
-	using ADCx = AdcPeriphConf;
-	static constexpr uint32_t adc_chan_num = 0;
-
-	enum SamplingTime { _1Cycle = 0b000, _2Cycles, _8Cycles, _16Cycles, _32Cycles, _64Cycles, _128Cycles, __810Cycles };
-	static constexpr SamplingTime sampling_time = _32Cycles;
-
-	static constexpr bool auto_set_rank = true;
-	// static constexpr uint32_t rank = 1;
-	// TODO: manually set rank
+	PinNoInit pin;
+	AdcChanNum adc_chan_num;
+	uint32_t rank = 0;
+	AdcSamplingTime sampling_time = AdcSamplingTime::_32Cycles;
+	// TODO:? bool auto_set_rank = true;
 	// TODO: Single/diff
 	// TODO: offset
 };
 
-template<AdcPeriphNum PeriphNum>
-class AdcPeriph {
-	AdcPeriph() {
-		Clocks::ADC::enable(ADCx);
+template<typename ConfT> // requires derives from AdcPeriphConf
+class AdcDmaPeriph {
+	using ValueT = typename ConfT::ValueT;
+
+public:
+	template<size_t N>
+	AdcDmaPeriph(std::array<ValueT, N> &dma_buffer, std::array<AdcChannelConf, N> ChanConfs)
+		: _dma_buffer{dma_buffer.data()}
+		, num_channels{N} {
+		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
 		HAL_ADC_Init(&hadc);
-		hdma_adc1.Instance = DMA2_Stream7;
-		hdma_adc1.Init.Request = DMA_REQUEST_ADC1;
+		hdma_adc1.Instance = DMA2_Stream7;		   // ConfT
+		hdma_adc1.Init.Request = DMA_REQUEST_ADC1; // ConfT
 		hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
 		hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
 		hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
-		hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-		hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+		hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD; // ConfT
+		hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;	  // ConfT
 		hdma_adc1.Init.Mode = DMA_CIRCULAR;
-		hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
-		hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+		hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;		// ConfT
+		hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE; // ConfT
 		HAL_DMA_Init(&hdma_adc1);
 		__HAL_LINKDMA(&hadc, DMA_Handle, hdma_adc1);
 
@@ -79,15 +86,9 @@ class AdcPeriph {
 		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
 	}
 
-	AdcPeriph<PeriphNum> &AdcInstance() {
-		static AdcPeriph<PeriphNum> Adc_;
-		return Adc_;
-	}
-
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
 		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
 	}
-	static inline ADC_TypeDef *ADCx = get_ADC_base(PeriphNum);
 
 	static inline ADC_HandleTypeDef hadc = {
 		.Instance = ADC1,
@@ -119,38 +120,12 @@ class AdcPeriph {
 	};
 	static inline DMA_HandleTypeDef hdma_adc1;
 
-	template<typename ChannelConf>
-	void add_channel() {
-		//
-	}
-
 	void start() {
-		HAL_ADC_Start_DMA(&hadc, (uint32_t *)values, 2);
+		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
 	}
 
-	uint32_t values[16];
-};
-
-// Todo concept requires for ConfT
-template<typename ConfT>
-class AdcChannel {
-	//
-	AdcChannel() {
-		auto init_adc_once = AdcPeriph<ConfT::adc_periph_num>::AdcInstance();
-		// AdcPeriph<ADCN>::add_channel(c, sampletime);
-		// add_channel
-		ADC_ChannelConfTypeDef pot_2_conf = {
-			.Channel = ADC_CHANNEL_13,
-			.Rank = ADC_REGULAR_RANK_1,
-			.SamplingTime = ADC_SAMPLETIME_810CYCLES_5,
-			.SingleDiff = ADC_SINGLE_ENDED,
-			.OffsetNumber = ADC_OFFSET_NONE,
-			.Offset = 0,
-			.OffsetRightShift = DISABLE,
-			.OffsetSignedSaturation = DISABLE,
-		};
-		HAL_ADC_ConfigChannel(&AdcPeriph<ConfT::adc_periph_num>::hadc, &pot_2_conf);
-	}
+	ValueT *_dma_buffer;
+	const size_t num_channels;
 };
 
 } // namespace mdrivlib
