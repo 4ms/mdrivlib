@@ -9,7 +9,29 @@ namespace mdrivlib
 {
 
 enum class AdcPeriphNum { _1, _2 };
-enum class AdcChanNum { _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15 };
+enum AdcChanNum : uint32_t {
+	_0 = ADC_CHANNEL_0,
+	_1 = ADC_CHANNEL_1,
+	_2 = ADC_CHANNEL_2,
+	_3 = ADC_CHANNEL_3,
+	_4 = ADC_CHANNEL_4,
+	_5 = ADC_CHANNEL_5,
+	_6 = ADC_CHANNEL_6,
+	_7 = ADC_CHANNEL_7,
+	_8 = ADC_CHANNEL_8,
+	_9 = ADC_CHANNEL_9,
+	_10 = ADC_CHANNEL_10,
+	_11 = ADC_CHANNEL_11,
+	_12 = ADC_CHANNEL_12,
+	_13 = ADC_CHANNEL_13,
+	_14 = ADC_CHANNEL_14,
+	_15 = ADC_CHANNEL_15,
+	_16 = ADC_CHANNEL_16,
+	_17 = ADC_CHANNEL_17,
+	_18 = ADC_CHANNEL_18,
+	_19 = ADC_CHANNEL_19,
+};
+
 enum AdcSamplingTime { _1Cycle = 0b000, _2Cycles, _8Cycles, _16Cycles, _32Cycles, _64Cycles, _128Cycles, __810Cycles };
 
 struct AdcPeriphConf {
@@ -51,9 +73,9 @@ struct AdcPeriphConf {
 struct AdcChannelConf {
 	PinNoInit pin;
 	AdcChanNum adc_chan_num;
-	uint32_t rank = 0;
+	uint32_t rank;
 	AdcSamplingTime sampling_time = AdcSamplingTime::_32Cycles;
-	// TODO:? bool auto_set_rank = true;
+	// TODO: bool auto_set_rank = false;
 	// TODO: Single/diff
 	// TODO: offset
 };
@@ -68,10 +90,8 @@ public:
 		: _dma_buffer{dma_buffer.data()}
 		, num_channels{N} {
 
-		// for (auto chan : ChanConfs)
-		// 	Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
-		Pin pot2{GPIO::C, 3, PinMode::Analog};
-		Pin pot3{GPIO::A, 3, PinMode::Analog};
+		for (auto chan : ChanConfs)
+			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
 		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
 		hadc.Init.NbrOfConversion = num_channels;
@@ -94,34 +114,48 @@ public:
 		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
 		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
 
-		// for (auto chan : ChanConfs) {
-		ADC_ChannelConfTypeDef pot_2_conf = {
-			.Channel = ADC_CHANNEL_13,
-			.Rank = ADC_REGULAR_RANK_1,
-			.SamplingTime = ADC_SAMPLETIME_810CYCLES_5,
-			.SingleDiff = ADC_SINGLE_ENDED,
-			.OffsetNumber = ADC_OFFSET_NONE,
-			.Offset = 0,
-			.OffsetRightShift = DISABLE,
-			.OffsetSignedSaturation = DISABLE,
-		};
-		ADC_ChannelConfTypeDef pot_3_conf = {
-			.Channel = ADC_CHANNEL_15,
-			.Rank = ADC_REGULAR_RANK_2,
-			.SamplingTime = ADC_SAMPLETIME_810CYCLES_5,
-			.SingleDiff = ADC_SINGLE_ENDED,
-			.OffsetNumber = ADC_OFFSET_NONE,
-			.Offset = 0,
-			.OffsetRightShift = DISABLE,
-			.OffsetSignedSaturation = DISABLE,
-		};
-		HAL_ADC_ConfigChannel(&hadc, &pot_2_conf);
-		HAL_ADC_ConfigChannel(&hadc, &pot_3_conf);
-		// }
+		// Todo: allow auto rank.
+		// Todo: what if we manually set rank but skip some numbers?
+		for (auto chan : ChanConfs) {
+			ADC_ChannelConfTypeDef adc_chan_conf = {
+				.Channel = chan.adc_chan_num,
+				.Rank = adc_number_to_rank(chan.rank),
+				.SamplingTime = chan.sampling_time,
+				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
+				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
+				.Offset = 0,
+				.OffsetRightShift = DISABLE,
+				.OffsetSignedSaturation = DISABLE,
+			};
+			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
+		}
+	}
+
+	void start() {
+		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
 	}
 
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
 		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
+	}
+	static constexpr uint32_t adc_number_to_rank(const uint32_t x) {
+		return x == 0  ? ADC_REGULAR_RANK_1
+			 : x == 1  ? ADC_REGULAR_RANK_2
+			 : x == 2  ? ADC_REGULAR_RANK_3
+			 : x == 3  ? ADC_REGULAR_RANK_4
+			 : x == 4  ? ADC_REGULAR_RANK_5
+			 : x == 5  ? ADC_REGULAR_RANK_6
+			 : x == 6  ? ADC_REGULAR_RANK_7
+			 : x == 7  ? ADC_REGULAR_RANK_8
+			 : x == 8  ? ADC_REGULAR_RANK_9
+			 : x == 9  ? ADC_REGULAR_RANK_10
+			 : x == 10 ? ADC_REGULAR_RANK_11
+			 : x == 11 ? ADC_REGULAR_RANK_12
+			 : x == 12 ? ADC_REGULAR_RANK_13
+			 : x == 13 ? ADC_REGULAR_RANK_14
+			 : x == 14 ? ADC_REGULAR_RANK_15
+			 : x == 15 ? ADC_REGULAR_RANK_16
+					   : 0;
 	}
 
 	ADC_HandleTypeDef hadc = {
@@ -134,7 +168,7 @@ public:
 				.EOCSelection = ADC_EOC_SEQ_CONV,
 				.LowPowerAutoWait = DISABLE,
 				.ContinuousConvMode = ENABLE,
-				.NbrOfConversion = 2,
+				.NbrOfConversion = 3,
 				.DiscontinuousConvMode = DISABLE,
 				.NbrOfDiscConversion = 0,
 				.ExternalTrigConv = ADC_SOFTWARE_START,
@@ -153,10 +187,6 @@ public:
 			},
 	};
 	DMA_HandleTypeDef hdma_adc1;
-
-	void start() {
-		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
-	}
 
 	ValueT *_dma_buffer;
 	const size_t num_channels;
