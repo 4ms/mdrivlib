@@ -70,9 +70,9 @@ public:
 			ADC_ChannelConfTypeDef adc_chan_conf = {
 				.Channel = chan.adc_chan_num,
 				.Rank = adc_number_to_rank(chan.rank),
-				.SamplingTime = AdcSamplingTime::_387Cycles, // chan.sampling_time,
-				.SingleDiff = ADC_SINGLE_ENDED,				 // Todo: allow conf
-				.OffsetNumber = ADC_OFFSET_NONE,			 // Todo: allow conf
+				.SamplingTime = chan.sampling_time,
+				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
+				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
 				.Offset = 0,
 				.OffsetRightShift = DISABLE,
 				.OffsetSignedSaturation = DISABLE,
