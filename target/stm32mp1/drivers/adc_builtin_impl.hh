@@ -2,8 +2,7 @@
 #include "adc_builtin_conf.hh"
 #include "clocks.hh"
 #include "dma_transfer.hh"
-#include "interrupt.hh"
-#include "interrupt_control.hh"
+#include "periph.hh"
 #include "pin.hh"
 #include "stm32xx.h"
 #include "util/math.hh"
@@ -13,19 +12,16 @@ namespace mdrivlib
 {
 
 template<AdcPeriphConf ConfT>
-class AdcDmaPeriph {
-	using ValueT = typename ConfT::ValueT;
-	using DmaConf = typename ConfT::DmaConf;
+class AdcDmaImpl {
+	ADC_HandleTypeDef hadc;
+	DMA_HandleTypeDef hdma;
 
 public:
-	template<size_t N>
-	AdcDmaPeriph(std::array<ValueT, N> &dma_buffer, std::array<AdcChannelConf, N> ChanConfs)
-		: _dma_buffer{dma_buffer.data()}
-		, num_channels{N} {
+	AdcDmaImpl() = default;
 
-		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
+	void init_adc_dma(uint32_t num_channels) {
 		hadc = {
-			.Instance = get_ADC_base(ConfT::adc_periph_num),
+			.Instance = PeriphUtil::ADC::to_periph(static_cast<uint32_t>(ConfT::adc_periph_num)),
 			.Init =
 				{
 					.ClockPrescaler = ConfT::clock_div,
@@ -54,12 +50,16 @@ public:
 		};
 		HAL_ADC_Init(&hadc);
 
-		DMATransfer<DmaConf> dma;
+		DMATransfer<typename ConfT::DmaConf> dma;
 
 		dma.link_periph_to_dma(hadc);
 
 		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
 		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
+	}
+
+	template<size_t N>
+	void init_adc_channels(std::array<AdcChannelConf, N> &ChanConfs) {
 
 		// Todo: allow auto rank.
 		// Todo: what if we manually set rank but skip some numbers?
@@ -80,13 +80,10 @@ public:
 		}
 	}
 
-	void start() {
-		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+	void start(typename ConfT::ValueT *dma_buffer, int num_channels) {
+		HAL_ADC_Start_DMA(&hadc, (uint32_t *)dma_buffer, num_channels);
 	}
 
-	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
-		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
-	}
 	static constexpr uint32_t adc_number_to_rank(const uint32_t x) {
 		return x == 0  ? ADC_REGULAR_RANK_1
 			 : x == 1  ? ADC_REGULAR_RANK_2
@@ -106,12 +103,6 @@ public:
 			 : x == 15 ? ADC_REGULAR_RANK_16
 					   : 0;
 	}
-
-	ADC_HandleTypeDef hadc;
-	DMA_HandleTypeDef hdma_adc1;
-
-	ValueT *_dma_buffer;
-	const size_t num_channels;
 };
 
 } // namespace mdrivlib

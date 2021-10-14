@@ -17,6 +17,9 @@ struct ADC {
 			return 2;
 		return 0;
 	}
+	static constexpr ADC_TypeDef *to_periph(int p) {
+		return (p == 1) ? ADC1 : (p == 2) ? ADC2 : nullptr;
+	}
 };
 struct SAI {
 	const static inline uint32_t NumPeriph = 4;
