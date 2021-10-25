@@ -1,22 +1,19 @@
 BasedOnStyle : "LLVM"
-Standard : "c++17"
+Standard : "c++20"
 UseTab : "Always"
 TabWidth : 4
 IndentWidth : 4
 ColumnLimit : 120
 AccessModifierOffset : -4
 AlignAfterOpenBracket: "Align"
+AlignOperands : "AlignAfterOperator"
+AllowAllArgumentsOnNextLine : "true"
+AllowShortBlocksOnASingleLine : "true"
 AllowShortFunctionsOnASingleLine: "false"
 AllowShortIfStatementsOnASingleLine : "Never"
-AllowShortBlocksOnASingleLine : "true"
 AlwaysBreakTemplateDeclarations : "true"
-AllowAllArgumentsOnNextLine : "true"
-AlignOperands : "AlignAfterOperator"
 BinPackArguments: false
 BinPackParameters: false
-BreakConstructorInitializers : "BeforeComma"
-BreakInheritanceList : "AfterColon"
-BreakBeforeBraces: "Custom"
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
@@ -33,14 +30,21 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
+BreakBeforeBraces: "Custom"
+BreakBeforeTernaryOperators : true
+BreakConstructorInitializers : "BeforeComma"
+BreakInheritanceList : "AfterColon"
 ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth : 0 
 IndentCaseLabels : "true"
-IndentPPDirectives : "None"
-SpaceBeforeInheritanceColon : "true"
-SpaceBeforeCtorInitializerColon : "true"
-SpaceBeforeAssignmentOperators : "true"
-SpaceAfterTemplateKeyword : "false"
+IndentPPDirectives : "BeforeHash"
+LambdaBodyIndentation : "OuterScope"
+ReflowComments : "false"
 SpaceAfterCStyleCast : "false"
+SpaceAfterTemplateKeyword : "false"
+SpaceBeforeAssignmentOperators : "true"
+SpaceBeforeCtorInitializerColon : "true"
+SpaceBeforeInheritanceColon : "true"
 SpaceBeforeParens : "ControlStatements"
 SpaceBeforeRangeBasedForLoopColon : "true"
 SpaceInEmptyParentheses : "false"
