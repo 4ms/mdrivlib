@@ -25,32 +25,32 @@ public:
 
 		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
 		hadc = {
-			.Instance = get_ADC_base(ConfT::adc_periph_num),
-			.Init =
-				{
-					.ClockPrescaler = ConfT::clock_div,
-					.Resolution = ConfT::resolution,
-					.ScanConvMode = ADC_SCAN_ENABLE,
-					.EOCSelection = ADC_EOC_SEQ_CONV,
-					.LowPowerAutoWait = DISABLE,
-					.ContinuousConvMode = ENABLE,
-					.NbrOfConversion = num_channels,
-					.DiscontinuousConvMode = DISABLE,
-					.NbrOfDiscConversion = 0,
-					.ExternalTrigConv = ADC_SOFTWARE_START,
-					.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
-					.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR,
-					.Overrun = ADC_OVR_DATA_OVERWRITTEN,
-					.LeftBitShift = ADC_LEFTBITSHIFT_NONE,
-					.OversamplingMode = ConfT::oversample ? ENABLE : DISABLE,
-					.Oversampling =
-						{
-							.Ratio = MathTools::constrain(ConfT::oversampling_ratio, 1, 1024),
-							.RightBitShift = ConfT::oversampling_right_bitshift,
-							.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
-							.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
-						},
-				},
+		.Instance = get_ADC_base(ConfT::adc_periph_num),
+		.Init =
+		{
+		.ClockPrescaler = ConfT::clock_div,
+		.Resolution = ConfT::resolution,
+		.ScanConvMode = ADC_SCAN_ENABLE,
+		.EOCSelection = ADC_EOC_SEQ_CONV,
+		.LowPowerAutoWait = DISABLE,
+		.ContinuousConvMode = ENABLE,
+		.NbrOfConversion = num_channels,
+		.DiscontinuousConvMode = DISABLE,
+		.NbrOfDiscConversion = 0,
+		.ExternalTrigConv = ADC_SOFTWARE_START,
+		.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
+		.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR,
+		.Overrun = ADC_OVR_DATA_OVERWRITTEN,
+		.LeftBitShift = ADC_LEFTBITSHIFT_NONE,
+		.OversamplingMode = ConfT::oversample ? ENABLE : DISABLE,
+		.Oversampling =
+		{
+		.Ratio = MathTools::constrain(ConfT::oversampling_ratio, 1, 1024),
+		.RightBitShift = ConfT::oversampling_right_bitshift,
+		.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
+		.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
+		},
+		},
 		};
 		HAL_ADC_Init(&hadc);
 
@@ -67,14 +67,14 @@ public:
 			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
 			ADC_ChannelConfTypeDef adc_chan_conf = {
-				.Channel = chan.adc_chan_num,
-				.Rank = adc_number_to_rank(chan.rank),
-				.SamplingTime = chan.sampling_time,
-				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
-				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
-				.Offset = 0,
-				.OffsetRightShift = DISABLE,
-				.OffsetSignedSaturation = DISABLE,
+			.Channel = chan.adc_chan_num,
+			.Rank = adc_number_to_rank(chan.rank),
+			.SamplingTime = chan.sampling_time,
+			.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
+			.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
+			.Offset = 0,
+			.OffsetRightShift = DISABLE,
+			.OffsetSignedSaturation = DISABLE,
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
 		}
@@ -82,6 +82,11 @@ public:
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_OVRIE;	//overrun
+		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_EOSMPIE; //end of sampling phase of any channel
+		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_ADRDYIE; //adc ready after being turned on
+		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_EOCIE;	//end of conversion (DR is ready with data)
+		hadc.Instance->IER = hadc.Instance->IER | ADC_IER_EOSIE;	//end of sequence of conversions
 	}
 
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
