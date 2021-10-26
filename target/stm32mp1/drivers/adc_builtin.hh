@@ -82,11 +82,24 @@ public:
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
-		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_OVRIE;	//overrun
-		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_EOSMPIE; //end of sampling phase of any channel
-		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_ADRDYIE; //adc ready after being turned on
-		hadc.Instance->IER = hadc.Instance->IER & ~ADC_IER_EOCIE;	//end of conversion (DR is ready with data)
-		hadc.Instance->IER = hadc.Instance->IER | ADC_IER_EOSIE;	//end of sequence of conversions
+
+		uint32_t reg = hadc.Instance->IER;
+
+		if constexpr (ConfT::enable_end_of_sequence_isr)
+			reg |= ADC_IER_EOSIE;
+		else
+			reg &= ~ADC_IER_EOSIE;
+
+		if constexpr (ConfT::enable_end_of_conversion_isr)
+			reg |= ADC_IER_EOCIE;
+		else
+			reg &= ~ADC_IER_EOCIE;
+
+		reg &= ~ADC_IER_OVRIE;	 //overrun
+		reg &= ~ADC_IER_EOSMPIE; //end of sampling phase of any channel
+		reg &= ~ADC_IER_ADRDYIE; //adc ready after being turned on
+
+		hadc.Instance->IER = reg;
 	}
 
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {

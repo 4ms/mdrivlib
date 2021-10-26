@@ -113,6 +113,9 @@ struct DefaultAdcPeriphConf {
 		static constexpr auto periph_inc = false;
 		static constexpr auto enable_fifo = false;
 	};
+
+	static constexpr bool enable_end_of_sequence_isr = false;
+	static constexpr bool enable_end_of_conversion_isr = false;
 };
 
 template<typename T>
