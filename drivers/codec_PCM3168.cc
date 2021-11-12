@@ -34,7 +34,7 @@
 namespace mdrivlib
 {
 
-static constexpr bool DISABLE_I2C = false;
+static constexpr bool DISABLE_I2C = true;
 
 using namespace CodecPCM3168Register;
 
@@ -44,17 +44,17 @@ struct RegisterData {
 };
 
 static RegisterData default_codec_init[] = {
-	{ResetControl::Address, bitfield8(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
-	{DacControl1::Address, bitfield8(DacControl1::I2S_TDM_24bit, DacControl1::SlaveMode)},
-	{DacControl2::Address, bitfield8(DacControl2::DacAllEnable)},
-	{DacSoftMute::Address, bitfield8(DacSoftMute::NoDacMuted)},
-	{DacAllAtten::Address, bitfield8(DacAtten::ZeroDB)},
-	{AdcSamplingMode::Address, bitfield8(AdcSamplingMode::Single)},
-	{AdcControl1::Address, bitfield8(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
-	{AdcControl2::Address, bitfield8(AdcControl2::AdcAllHPFDisabled)},
-	{AdcSoftMute::Address, bitfield8(AdcSoftMute::NoAdcMuted)},
-	{AdcAllAtten::Address, bitfield8(AdcAtten::ZeroDB)},
-	{AdcInputType::Address, bitfield8(AdcInputType::Adc1SingleEnded, AdcInputType::AllAdcDifferential)},
+{ResetControl::Address, bitfield8(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
+{DacControl1::Address, bitfield8(DacControl1::I2S_TDM_24bit, DacControl1::SlaveMode)},
+{DacControl2::Address, bitfield8(DacControl2::DacAllEnable)},
+{DacSoftMute::Address, bitfield8(DacSoftMute::NoDacMuted)},
+{DacAllAtten::Address, bitfield8(DacAtten::ZeroDB)},
+{AdcSamplingMode::Address, bitfield8(AdcSamplingMode::Single)},
+{AdcControl1::Address, bitfield8(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
+{AdcControl2::Address, bitfield8(AdcControl2::AdcAllHPFDisabled)},
+{AdcSoftMute::Address, bitfield8(AdcSoftMute::NoAdcMuted)},
+{AdcAllAtten::Address, bitfield8(AdcAtten::ZeroDB)},
+{AdcInputType::Address, bitfield8(AdcInputType::Adc1SingleEnded, AdcInputType::AllAdcDifferential)},
 
 };
 
