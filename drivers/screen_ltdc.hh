@@ -1,33 +1,35 @@
 #pragma once
 #include "RGB565_480x272.h"
 #include "drivers/pin.hh"
+#include "spi_screen_ST77XX.hh"
 #include "stm32xx.h"
 
 // #define  RK043FN48H_WIDTH    ((uint16_t)480)          /* LCD PIXEL WIDTH            */
 // #define  RK043FN48H_HEIGHT   ((uint16_t)272)          /* LCD PIXEL HEIGHT           */
+//TODO get these values for ST7789
 #define RK043FN48H_HSYNC ((uint16_t)41) /* Horizontal synchronization */
 #define RK043FN48H_HBP ((uint16_t)13)	/* Horizontal back porch      */
 #define RK043FN48H_HFP ((uint16_t)32)	/* Horizontal front porch     */
 #define RK043FN48H_VSYNC ((uint16_t)10) /* Vertical synchronization   */
 #define RK043FN48H_VBP ((uint16_t)2)	/* Vertical back porch        */
 #define RK043FN48H_VFP ((uint16_t)2)	/* Vertical front porch       */
-#define RK043FN48H_FREQUENCY_DIVIDER 5	/* LCD Frequency divider      */
+//#define RK043FN48H_FREQUENCY_DIVIDER 5	/* LCD Frequency divider      */
 
+template<typename ConfT>
 class ScreenParallelWriter {
 	using GPIO = mdrivlib::GPIO;
 	using PinMode = mdrivlib::PinMode;
 	using Pin = mdrivlib::Pin;
 
 	LTDC_HandleTypeDef hltdc_F;
-	const uint32_t _height;
-	const uint32_t _width;
 	uint32_t _buffer_addr;
 
+	static constexpr size_t _width = ConfT::viewWidth;
+	static constexpr size_t _height = ConfT::viewHeight;
+
 public:
-	ScreenParallelWriter(uint32_t height, uint32_t width, auto *buffer)
-		: _height(height)
-		, _width(width)
-		, _buffer_addr{reinterpret_cast<uint32_t>(buffer)} {
+	ScreenParallelWriter(auto *buffer)
+		: _buffer_addr{reinterpret_cast<uint32_t>(buffer)} {
 	}
 
 	void set_buffer(void *buffer) {
@@ -39,10 +41,6 @@ public:
 		//init pins
 		__HAL_RCC_LTDC_CLK_ENABLE();
 
-		// 	PinPull pull = PinPull::None,
-		// 	PinPolarity polarity = PinPolarity::Normal,
-		// 	PinSpeed speed = PinSpeed::High,
-		// 	PinOType otype = PinOType::PushPull);
 		Pin ltdc_pin_init[] = {
 		Pin{GPIO::D, 10, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_B3
 		Pin{GPIO::I, 4, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_B4
@@ -99,11 +97,11 @@ public:
 		/* Layer1 Configuration ------------------------------------------------------*/
 
 		/* Windowing configuration */
-		/* In this case all the active display area is used to display a picture then :
-     Horizontal start = horizontal synchronization + Horizontal back porch = 43 
-     Vertical start   = vertical synchronization + vertical back porch     = 12
-     Horizontal stop = Horizontal start + window width -1 = 43 + 480 -1 
-     Vertical stop   = Vertical start + window height -1  = 12 + 272 -1      */
+		/* In this case all the active display area is used to display a picture then 
+		 Horizontal start = horizontal synchronization + Horizontal back porch = 43 
+		 Vertical start   = vertical synchronization + vertical back porch     = 12
+		 Horizontal stop = Horizontal start + window width -1 = 43 + 480 -1 
+		 Vertical stop   = Vertical start + window height -1  = 12 + 272 -1      */
 		pLayerCfg.WindowX0 = 0;
 		pLayerCfg.WindowX1 = _width;
 		pLayerCfg.WindowY0 = 0;
@@ -140,6 +138,15 @@ public:
 		if (HAL_LTDC_ConfigLayer(&hltdc_F, &pLayerCfg, 1) != HAL_OK) {
 			__BKPT(123);
 		}
+
+		init_driver_chip();
+	}
+
+	void init_driver_chip() {
+		//TODO
+		using InitCommands = mdrivlib::ST7789Init<_width, _height, mdrivlib::ST77XX::NotInverted>;
+		init_display_driver<InitCommands>();
+		set_rotation(ConfT::rotation);
 	}
 
 	// void register_frame_cb(auto cb) {
