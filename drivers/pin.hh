@@ -76,6 +76,7 @@ enum class GPIO : uint32_t {
 #ifdef GPIOZ_BASE
 	Z = GPIOZ_BASE,
 #endif
+	Unused = 0,
 };
 
 enum PinAF {
@@ -155,7 +156,7 @@ using PinSetHigh = RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offseto
 
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinSetLow =
-	RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
+RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
 
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, IDR), (1UL << PinNum)>;
