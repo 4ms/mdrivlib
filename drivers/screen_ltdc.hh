@@ -1,11 +1,11 @@
 #pragma once
 #include "RGB565_480x272.h"
+#include "drivers/ltdc_screen_config_struct.hh"
 #include "drivers/pin.hh"
 #include "spi_screen_ST77XX.hh"
 #include "stm32xx.h"
+#include "util/base_concepts.hh"
 
-// #define  RK043FN48H_WIDTH    ((uint16_t)480)          /* LCD PIXEL WIDTH            */
-// #define  RK043FN48H_HEIGHT   ((uint16_t)272)          /* LCD PIXEL HEIGHT           */
 //TODO get these values for ST7789
 #define RK043FN48H_HSYNC ((uint16_t)41) /* Horizontal synchronization */
 #define RK043FN48H_HBP ((uint16_t)13)	/* Horizontal back porch      */
@@ -13,9 +13,47 @@
 #define RK043FN48H_VSYNC ((uint16_t)10) /* Vertical synchronization   */
 #define RK043FN48H_VBP ((uint16_t)2)	/* Vertical back porch        */
 #define RK043FN48H_VFP ((uint16_t)2)	/* Vertical front porch       */
-//#define RK043FN48H_FREQUENCY_DIVIDER 5	/* LCD Frequency divider      */
 
-template<typename ConfT>
+template<Derived<mdrivlib::LTDCScreenControlConf> ConfT>
+class ST77XXParallelSetup {
+
+public:
+	void setup_driver_chip() {
+		//TODO
+		using InitCommands = mdrivlib::ST7789Init<ConfT::width, ConfT::height, mdrivlib::ST77XX::NotInverted>;
+		_init_display_driver<InitCommands>();
+		set_rotation(ConfT::rotation);
+	}
+
+private:
+	void _init_pins_as_gpios() {
+	}
+
+	template<typename InitCmds>
+	void _init_display_driver() {
+		for (auto c : InitCmds::cmds) {
+			transmit_blocking<Cmd>(c.cmd);
+			int numArgs = c.num_args;
+			uint32_t args = c.args;
+			while (numArgs--) {
+				transmit_blocking<Data>(args & 0x000000FF);
+				args >>= 8;
+			}
+			if (c.delay_ms)
+				HAL_Delay(c.delay_ms);
+		}
+	}
+
+	enum DataCmd { Data, Cmd };
+	template<DataCmd Mode>
+	void transmit_blocking(uint8_t d) {
+	}
+	template<DataCmd Mode>
+	void transmit_blocking(uint16_t d) {
+	}
+};
+
+template<Derived<mdrivlib::LTDCScreenConf> ConfT>
 class ScreenParallelWriter {
 	using GPIO = mdrivlib::GPIO;
 	using PinMode = mdrivlib::PinMode;
@@ -38,7 +76,14 @@ public:
 	}
 
 	void init() {
-		//init pins
+		init_pins_as_gpios();
+		init_driver_chip();
+
+		init_pins_as_ltdc();
+		init_ltdc();
+	}
+
+	void init_pins_as_ltdc() {
 		__HAL_RCC_LTDC_CLK_ENABLE();
 
 		Pin ltdc_pin_init[] = {
@@ -63,6 +108,9 @@ public:
 		Pin{GPIO::G, 6, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_R7
 		Pin{GPIO::I, 9, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_VSYNC
 		};
+	}
+
+	void init_ltdc() {
 
 		RCC_PeriphCLKInitTypeDef periph_clk_init_struct;
 		HAL_LTDC_DeInit(&hltdc_F);
@@ -138,24 +186,5 @@ public:
 		if (HAL_LTDC_ConfigLayer(&hltdc_F, &pLayerCfg, 1) != HAL_OK) {
 			__BKPT(123);
 		}
-
-		init_driver_chip();
 	}
-
-	void init_driver_chip() {
-		//TODO
-		using InitCommands = mdrivlib::ST7789Init<_width, _height, mdrivlib::ST77XX::NotInverted>;
-		init_display_driver<InitCommands>();
-		set_rotation(ConfT::rotation);
-	}
-
-	// void register_frame_cb(auto cb) {
-	//register_callback(cb);->
-	// mdrivlib::InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = cb, this]() {
-	// 	callback();
-	// });
-	// }
-
-	// void transfer_screen() {
-	// }
 };

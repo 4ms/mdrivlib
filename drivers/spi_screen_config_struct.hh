@@ -1,5 +1,4 @@
 #pragma once
-#include "interrupt.hh"
 #include "pin.hh"
 #include "spi_config_struct.hh"
 #include "stm32xx.h"
