@@ -1,25 +1,20 @@
 #pragma once
 #include "RGB565_480x272.h"
 #include "drivers/ltdc_screen_config_struct.hh"
+#include "drivers/parallel_writer.hh"
 #include "drivers/pin.hh"
 #include "spi_screen_ST77XX.hh"
 #include "stm32xx.h"
 #include "util/base_concepts.hh"
 
-//TODO get these values for ST7789
-#define RK043FN48H_HSYNC ((uint16_t)41) /* Horizontal synchronization */
-#define RK043FN48H_HBP ((uint16_t)13)	/* Horizontal back porch      */
-#define RK043FN48H_HFP ((uint16_t)32)	/* Horizontal front porch     */
-#define RK043FN48H_VSYNC ((uint16_t)10) /* Vertical synchronization   */
-#define RK043FN48H_VBP ((uint16_t)2)	/* Vertical back porch        */
-#define RK043FN48H_VFP ((uint16_t)2)	/* Vertical front porch       */
-
-template<Derived<mdrivlib::LTDCScreenControlConf> ConfT>
+//TODO: use a single base class and swap out ParallelWriter for Spi version
+template<Derived<mdrivlib::ParallelWriterConf> ConfT>
 class ST77XXParallelSetup {
+
+	mdrivlib::ParallelWriter<ConfT> writer;
 
 public:
 	void setup_driver_chip() {
-		//TODO
 		using InitCommands = mdrivlib::ST7789Init<ConfT::width, ConfT::height, mdrivlib::ST77XX::NotInverted>;
 		_init_display_driver<InitCommands>();
 		set_rotation(ConfT::rotation);
@@ -47,9 +42,10 @@ private:
 	enum DataCmd { Data, Cmd };
 	template<DataCmd Mode>
 	void transmit_blocking(uint8_t d) {
-	}
-	template<DataCmd Mode>
-	void transmit_blocking(uint16_t d) {
+		if constexpr (Mode == Data)
+			writer.write_data(d);
+		else
+			writer.write_cmd(d);
 	}
 };
 
