@@ -1,6 +1,5 @@
 #pragma once
 #include "pin.hh"
-#include "stm32xx.h"
 
 namespace mdrivlib
 {
@@ -33,12 +32,4 @@ struct LTDCScreenConf {
 	static constexpr uint32_t VFrontPorch = 0;
 };
 
-struct LTDCScreenControlConf {
-	static constexpr PinNoInit cs{};
-	static constexpr PinNoInit serial_data_out{};
-	static constexpr PinNoInit serial_write{};
-	static constexpr PinNoInit serial_datacmd_sel{};
-
-	using ScreenConf = LTDCScreenConf;
-};
 } // namespace mdrivlib
