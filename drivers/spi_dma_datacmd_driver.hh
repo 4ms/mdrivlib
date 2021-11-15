@@ -11,10 +11,10 @@ namespace mdrivlib
 
 // Todo: pass dma as reference in ctor, rather than passing its type in the template params?
 template<typename ConfT, typename DmaTransferT>
-struct DmaSpiScreenDriver {
+struct SpiDmaDataCmdDriver {
 	enum PacketType { Cmd, Data };
 
-	DmaSpiScreenDriver() = default;
+	SpiDmaDataCmdDriver() = default;
 
 	void init() {
 		spi.disable();
