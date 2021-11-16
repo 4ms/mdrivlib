@@ -34,6 +34,7 @@ enum Command : uint8_t {
 	TEOFF = 0x34,
 	TEON = 0x35,
 	MADCTL = 0x36,
+	IDMOFF = 0x38,
 	COLMOD = 0x3A,
 
 	WRDISBV = 0x51,
@@ -42,6 +43,10 @@ enum Command : uint8_t {
 	RAMCTRL = 0xB0,
 	RGBCTRL = 0xB1,
 	PORCTRL = 0xB2,
+
+	FRCTRL2 = 0xC6,
+
+	CMD2EN = 0xDF,
 };
 
 enum Arg {
@@ -90,14 +95,6 @@ struct InitCommand {
 
 enum InvertState { NotInverted, Inverted };
 
-constexpr uint32_t make_RGBCTRL_args(uint8_t v_back_porch, uint8_t h_back_porch) {
-	constexpr uint8_t all_polarities_low = 0;
-	constexpr uint8_t de_mode = 0b10 << 5;
-	constexpr uint8_t use_ram = 0b00 << 7;
-	return InitCommand::makecmd(all_polarities_low | de_mode | use_ram, v_back_porch & 127, h_back_porch & 31, 0);
-}
-
-// TODO: incorporate Rotation into the MADCTL commands
 template<uint16_t WIDTH, uint16_t HEIGHT, enum InvertState ISINVERTED>
 struct ST7789Init {
 	static constexpr InitCommand cmds[] =
@@ -141,53 +138,61 @@ struct ST7789Init {
 	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(InitCommand);
 };
 
+//Sec 8.9.1: RIM = 0 in B0h, DB[6:4] in 3Ah = 0b101
+constexpr uint32_t make_RGBCTRL_args(uint8_t v_back_porch, uint8_t h_back_porch) {
+	constexpr uint8_t all_polarities_low = 0;
+	constexpr uint8_t de_mode = 0b10 << 5;
+	constexpr uint8_t use_shiftreg = 0 << 7;
+	//0x42 0x08 0x3C
+	return InitCommand::makecmd(all_polarities_low | de_mode | use_shiftreg, v_back_porch & 127, h_back_porch & 31, 0);
+}
+
 template<typename ConfT>
 struct ST7789RGBInit {
-	static constexpr std::array<InitCommand, 12> cmds = {
-		//  1: Software reset, no args, w/delay
+	static constexpr std::array cmds = {
+		InitCommand{SLPIN, 0, 10},
 		InitCommand{SWRESET, 0, 150},
+		InitCommand{SLPOUT, 0, 120},
 
-		//  2: Out of sleep mode, no args, w/delay
-		{SLPOUT, 0, 10},
+		InitCommand{CMD2EN, 3, 100, InitCommand::makecmd(0x5A, 0x69, 0x02, 0x01)},
 
-		//  3: Set color mode, 1 arg, 10ms delay, 0x55 = 16-bit color
-		{COLMOD, 1, 10, COLMOD_16B},
+		InitCommand{MADCTL,
+					1,
+					0,
+					ConfT::rotation == ConfT::NoRotation ? MADCTL_ROT0
+					: ConfT::rotation == ConfT::CW90	 ? MADCTL_ROTCW90
+					: ConfT::rotation == ConfT::Flip180	 ? MADCTL_ROT180
+														 : MADCTL_ROTCCW90},
 
-		//  4: Mem access ctrl (directions),
-		{MADCTL,
-		 1,
-		 0,
-		 ConfT::rotation == ConfT::NoRotation ? MADCTL_ROT0
-		 : ConfT::rotation == ConfT::CW90	  ? MADCTL_ROTCW90
-		 : ConfT::rotation == ConfT::Flip180  ? MADCTL_ROT180
-											  : MADCTL_ROTCCW90},
+		InitCommand{COLMOD, 1, 0, 0x55},
 
-		//  5: Column addr set, 4 args, no delay
-		// 		XSTART = 0, XEND = WIDTH
-		{CASET, 4, 0, InitCommand::makecmd(0, ConfT::viewWidth)},
+		InitCommand{ConfT::IsInverted == Inverted ? INVON : INVOFF, 0, 0},
 
-		//  6: Row addr set, 4 args, no delay:
-		// 		YSTART = 0, YEND = HEIGHT
-		{RASET, 4, 0, InitCommand::makecmd(0, ConfT::viewHeight)},
+		InitCommand{CASET, 4, 0, InitCommand::makecmd(0, ConfT::viewWidth)},
+		InitCommand{RASET, 4, 0, InitCommand::makecmd(0, ConfT::viewHeight)},
 
-		//  7: Inverted or not
-		{ConfT::IsInverted == Inverted ? INVON : INVOFF, 0, 10},
+		InitCommand{FRCTRL2, 1, 10, 0x0F},
 
-		// RAM Control: set RGB mode. EPF and MTD don't matter
-		{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, RAMCTRL_EPF_DEFAULT, 0, 0)},
+		//// seq 2
 
 		// RGB Control: V/H back porch
-		{RGBCTRL, 3, 0, make_RGBCTRL_args(ConfT::VBackPorch, ConfT::HBackPorch)},
+		InitCommand{RGBCTRL, 3, 0, make_RGBCTRL_args(ConfT::VBackPorch, ConfT::HBackPorch)},
+
+		// RAM Control: set RGB mode. EPF and MTD don't matter
+		InitCommand{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, 0xC2 /*RAMCTRL_EPF_DEFAULT*/, 0, 0)},
 
 		// Porch setting: Not sure if this wants V or H porch?
-		{PORCTRL, 3, 0, InitCommand::makecmd(ConfT::HBackPorch, ConfT::HFrontPorch, 0, 0)},
+		// {PORCTRL, 3, 0, InitCommand::makecmd(ConfT::HBackPorch, ConfT::HFrontPorch, 0, 0)},
 
-		// Normal display on, no args, w/delay
-		{NORON, 0, 10},
+		//Max brightness
+		// InitCommand{WRDISBV, 1, 0, 0xFF0000FF},
 
-		// Main screen turn on, no args, delay
-		{DISPON, 0, 10},
+		// Normal display on
+		// InitCommand{NORON, 0, 10},
 
+		InitCommand{DISPON, 0, 100},
+		InitCommand{SLPOUT, 0, 100},
+		InitCommand{RAMWR, 0, 50},
 	};
 };
 
