@@ -23,7 +23,6 @@ public:
 	}
 
 private:
-	GCC_OPTIMIZE_OFF
 	void _init_display_driver(std::span<ST77XX::InitCommand> cmds) {
 		writer.start_sequence();
 		for (auto &c : cmds) {
@@ -31,7 +30,7 @@ private:
 			int numArgs = c.num_args;
 			uint32_t args = c.args;
 			while (numArgs--) {
-				writer.send_arg(args & 0xFF);
+				writer.send_arg(args & 0x000000FF);
 				args >>= 8;
 			}
 			if (c.delay_ms)

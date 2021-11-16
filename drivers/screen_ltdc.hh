@@ -9,9 +9,9 @@
 // General LTDC driver, setup for double-buffering.
 // Uses STM32-HAL.
 //
-// Provide a configuration struct that derives from LTDCScreenConf.
+// You must provide a configuration type that derives from LTDCScreenConf.
 // Does not handle configuring the display driver chip, that typically needs to be done before calling init()
-// Call set_buffer
+// To use: call init() to begin. Call set_buffer() to change the framebuffer on the next Vsync
 template<Derived<mdrivlib::LTDCScreenConf> ConfT>
 class ScreenParallelWriter {
 	using GPIO = mdrivlib::GPIO;
@@ -27,7 +27,7 @@ class ScreenParallelWriter {
 public:
 	ScreenParallelWriter() = default;
 
-	void set_buffer(void *buffer) {
+	void set_buffer(auto *buffer) {
 		_buffer_addr = reinterpret_cast<uint32_t>(buffer);
 		HAL_LTDC_SetAddress_NoReload(&hltdc_F, _buffer_addr, 0);
 		HAL_LTDC_Reload(&hltdc_F, LTDC_RELOAD_VERTICAL_BLANKING);
@@ -64,16 +64,10 @@ private:
 		HAL_LTDC_DeInit(&hltdc_F);
 
 		LTDC_LayerCfgTypeDef pLayerCfg;
-		/* Polarity configuration */
-		/* Initialize the horizontal synchronization polarity as active low */
 		hltdc_F.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-		/* Initialize the vertical synchronization polarity as active low */
 		hltdc_F.Init.VSPolarity = LTDC_VSPOLARITY_AL;
-		/* Initialize the data enable polarity as active low */
 		hltdc_F.Init.DEPolarity = LTDC_DEPOLARITY_AL;
-		/* Initialize the pixel clock polarity as input pixel clock */
 		hltdc_F.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-		/* Timing configuration */
 		hltdc_F.Init.HorizontalSync = (ConfT::HSyncWidth - 1);
 		hltdc_F.Init.VerticalSync = (ConfT::VSyncWidth - 1);
 		hltdc_F.Init.AccumulatedHBP = (ConfT::HSyncWidth + ConfT::HBackPorch - 1);
@@ -83,34 +77,19 @@ private:
 		hltdc_F.Init.TotalHeigh = (_height + ConfT::VSyncWidth + ConfT::VBackPorch + ConfT::VFrontPorch - 1);
 		hltdc_F.Init.TotalWidth = (_width + ConfT::HSyncWidth + ConfT::HBackPorch + ConfT::HFrontPorch - 1);
 
-		/* Configure R,G,B component values for LCD background color */
 		hltdc_F.Init.Backcolor.Blue = 0x00;
 		hltdc_F.Init.Backcolor.Green = 0x3F;
 		hltdc_F.Init.Backcolor.Red = 0;
 
 		hltdc_F.Instance = LTDC;
 
-		/* Layer1 Configuration ------------------------------------------------------*/
-
-		/* Windowing configuration */
-		/* In this case all the active display area is used to display a picture then 
-		 Horizontal start = horizontal synchronization + Horizontal back porch = 43 
-		 Vertical start   = vertical synchronization + vertical back porch     = 12
-		 Horizontal stop = Horizontal start + window width -1 = 43 + 480 -1 
-		 Vertical stop   = Vertical start + window height -1  = 12 + 272 -1      */
 		pLayerCfg.WindowX0 = 0;
 		pLayerCfg.WindowX1 = _width;
 		pLayerCfg.WindowY0 = 0;
 		pLayerCfg.WindowY1 = _height;
-
-		/* Pixel Format configuration*/
 		pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
-
-		/* Start Address configuration : frame buffer */
 		pLayerCfg.FBStartAdress = _buffer_addr;
 		//pLayerCfg.FBStartAdress = (uint32_t)&RGB565_480x272;
-
-		/* Alpha constant (255 == totally opaque) */
 		pLayerCfg.Alpha = 255;
 
 		/* Default Color configuration (configure A,R,G,B component values) : no background color */
@@ -119,11 +98,9 @@ private:
 		pLayerCfg.Backcolor.Green = 0;
 		pLayerCfg.Backcolor.Red = 0;
 
-		/* Configure blending factors */
 		pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
 		pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
 
-		/* Configure the number of lines and number of pixels per line */
 		pLayerCfg.ImageWidth = _width;
 		pLayerCfg.ImageHeight = _height;
 

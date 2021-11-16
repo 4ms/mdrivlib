@@ -5,7 +5,6 @@
 #include "util/countzip.hh"
 #include "util/zip.hh"
 
-#include "debug.hh"
 namespace mdrivlib
 {
 
@@ -36,30 +35,25 @@ struct ParallelWriter {
 		end_sequence();
 	}
 
-	GCC_OPTIMIZE_OFF
 	void start_sequence() {
 		cs.low();
 	}
 
-	GCC_OPTIMIZE_OFF
 	void send_cmd(size_t cmd) {
 		dc.low();
 		_send_data(cmd);
 	}
 
-	GCC_OPTIMIZE_OFF
 	void send_arg(size_t d) {
 		dc.high();
 		_send_data(d);
 	}
 
-	GCC_OPTIMIZE_OFF
 	void end_sequence() {
 		cs.high();
 	}
 
 private:
-	GCC_OPTIMIZE_OFF
 	void _send_data(size_t data) {
 		wrx.low();
 		for (auto [i, pin] : enumerate(datapin))
