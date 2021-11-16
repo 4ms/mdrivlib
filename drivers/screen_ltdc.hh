@@ -1,54 +1,17 @@
 #pragma once
 #include "RGB565_480x272.h"
+#include "debug.hh"
 #include "drivers/ltdc_screen_config_struct.hh"
-#include "drivers/parallel_writer.hh"
 #include "drivers/pin.hh"
-#include "spi_screen_ST77XX.hh"
 #include "stm32xx.h"
 #include "util/base_concepts.hh"
 
-//TODO: use a single base class and swap out ParallelWriter for Spi version
-template<Derived<mdrivlib::ParallelWriterConf> ConfT>
-class ST77XXParallelSetup {
-
-	mdrivlib::ParallelWriter<ConfT> writer;
-
-public:
-	void setup_driver_chip() {
-		using InitCommands = mdrivlib::ST7789Init<ConfT::width, ConfT::height, mdrivlib::ST77XX::NotInverted>;
-		_init_display_driver<InitCommands>();
-		set_rotation(ConfT::rotation);
-	}
-
-private:
-	void _init_pins_as_gpios() {
-	}
-
-	template<typename InitCmds>
-	void _init_display_driver() {
-		for (auto c : InitCmds::cmds) {
-			transmit_blocking<Cmd>(c.cmd);
-			int numArgs = c.num_args;
-			uint32_t args = c.args;
-			while (numArgs--) {
-				transmit_blocking<Data>(args & 0x000000FF);
-				args >>= 8;
-			}
-			if (c.delay_ms)
-				HAL_Delay(c.delay_ms);
-		}
-	}
-
-	enum DataCmd { Data, Cmd };
-	template<DataCmd Mode>
-	void transmit_blocking(uint8_t d) {
-		if constexpr (Mode == Data)
-			writer.write_data(d);
-		else
-			writer.write_cmd(d);
-	}
-};
-
+// General LTDC driver, setup for double-buffering.
+// Uses STM32-HAL.
+//
+// Provide a configuration struct that derives from LTDCScreenConf.
+// Does not handle configuring the display driver chip, that typically needs to be done before calling init()
+// Call set_buffer
 template<Derived<mdrivlib::LTDCScreenConf> ConfT>
 class ScreenParallelWriter {
 	using GPIO = mdrivlib::GPIO;
@@ -68,47 +31,42 @@ public:
 
 	void set_buffer(void *buffer) {
 		_buffer_addr = reinterpret_cast<uint32_t>(buffer);
-		//Do something with LTDC peripheral?
+		HAL_LTDC_SetAddress_NoReload(&hltdc_F, _buffer_addr, 0);
+		HAL_LTDC_Reload(&hltdc_F, LTDC_RELOAD_VERTICAL_BLANKING);
 	}
 
 	void init() {
-		init_pins_as_gpios();
-		init_driver_chip();
-
-		init_pins_as_ltdc();
-		init_ltdc();
+		_init_pins_as_ltdc();
+		_init_ltdc();
 	}
 
-	void init_pins_as_ltdc() {
+private:
+	GCC_OPTIMIZE_OFF
+	void _init_pins_as_ltdc() {
 		__HAL_RCC_LTDC_CLK_ENABLE();
-
-		Pin ltdc_pin_init[] = {
-		Pin{GPIO::D, 10, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_B3
-		Pin{GPIO::I, 4, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_B4
-		Pin{GPIO::I, 5, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_B5
-		Pin{GPIO::I, 6, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_B6
-		Pin{GPIO::I, 7, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_B7
-		Pin{GPIO::E, 14, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_CLK
-		Pin{GPIO::E, 13, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_DE
-		Pin{GPIO::H, 13, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_G2
-		Pin{GPIO::H, 14, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_G3
-		Pin{GPIO::H, 15, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_G4
-		Pin{GPIO::H, 4, PinMode::Analog, LL_GPIO_AF_9},	  // LTDC_G5 Note: this one is AF9
-		Pin{GPIO::C, 7, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_G6
-		Pin{GPIO::D, 3, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_G7
-		Pin{GPIO::C, 6, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_HSYNC
-		Pin{GPIO::H, 9, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_R3
-		Pin{GPIO::H, 10, PinMode::Analog, LL_GPIO_AF_14}, // LTDC_R4
-		Pin{GPIO::A, 9, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_R5
-		Pin{GPIO::A, 8, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_R6
-		Pin{GPIO::G, 6, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_R7
-		Pin{GPIO::I, 9, PinMode::Analog, LL_GPIO_AF_14},  // LTDC_VSYNC
-		};
+		for (auto &p : ConfT::r) {
+			if (p.gpio != GPIO::Unused)
+				Pin _init{p, PinMode::Alt};
+		}
+		for (auto &p : ConfT::g) {
+			if (p.gpio != GPIO::Unused)
+				Pin _init{p, PinMode::Alt};
+		}
+		for (auto &p : ConfT::b) {
+			if (p.gpio != GPIO::Unused)
+				Pin _init{p, PinMode::Alt};
+		}
+		Pin{ConfT::de.gpio, ConfT::de.pin, PinMode::Alt, ConfT::de.af};
+		Pin{ConfT::clk.gpio, ConfT::clk.pin, PinMode::Alt, ConfT::clk.af};
+		Pin{ConfT::vsync.gpio, ConfT::vsync.pin, PinMode::Alt, ConfT::vsync.af};
+		Pin{ConfT::hsync.gpio, ConfT::hsync.pin, PinMode::Alt, ConfT::hsync.af};
 	}
 
-	void init_ltdc() {
+	GCC_OPTIMIZE_OFF
+	void _init_ltdc() {
+		//RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+		//RCCEx_PLL4_Config()
 
-		RCC_PeriphCLKInitTypeDef periph_clk_init_struct;
 		HAL_LTDC_DeInit(&hltdc_F);
 
 		LTDC_LayerCfgTypeDef pLayerCfg;
@@ -122,18 +80,18 @@ public:
 		/* Initialize the pixel clock polarity as input pixel clock */
 		hltdc_F.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
 		/* Timing configuration */
-		hltdc_F.Init.HorizontalSync = (RK043FN48H_HSYNC - 1);
-		hltdc_F.Init.VerticalSync = (RK043FN48H_VSYNC - 1);
-		hltdc_F.Init.AccumulatedHBP = (RK043FN48H_HSYNC + RK043FN48H_HBP - 1);
-		hltdc_F.Init.AccumulatedVBP = (RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
-		hltdc_F.Init.AccumulatedActiveH = (_height + RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
-		hltdc_F.Init.AccumulatedActiveW = (_width + RK043FN48H_HSYNC + RK043FN48H_HBP - 1);
-		hltdc_F.Init.TotalHeigh = (_height + RK043FN48H_VSYNC + RK043FN48H_VBP + RK043FN48H_VFP - 1);
-		hltdc_F.Init.TotalWidth = (_width + RK043FN48H_HSYNC + RK043FN48H_HBP + RK043FN48H_HFP - 1);
+		hltdc_F.Init.HorizontalSync = (ConfT::HSyncWidth - 1);
+		hltdc_F.Init.VerticalSync = (ConfT::VSyncWidth - 1);
+		hltdc_F.Init.AccumulatedHBP = (ConfT::HSyncWidth + ConfT::HBackPorch - 1);
+		hltdc_F.Init.AccumulatedVBP = (ConfT::VSyncWidth + ConfT::VBackPorch - 1);
+		hltdc_F.Init.AccumulatedActiveH = (_height + ConfT::VSyncWidth + ConfT::VBackPorch - 1);
+		hltdc_F.Init.AccumulatedActiveW = (_width + ConfT::HSyncWidth + ConfT::HBackPorch - 1);
+		hltdc_F.Init.TotalHeigh = (_height + ConfT::VSyncWidth + ConfT::VBackPorch + ConfT::VFrontPorch - 1);
+		hltdc_F.Init.TotalWidth = (_width + ConfT::HSyncWidth + ConfT::HBackPorch + ConfT::HFrontPorch - 1);
 
 		/* Configure R,G,B component values for LCD background color */
-		hltdc_F.Init.Backcolor.Blue = 0;
-		hltdc_F.Init.Backcolor.Green = 0;
+		hltdc_F.Init.Backcolor.Blue = 0x00;
+		hltdc_F.Init.Backcolor.Green = 0x3F;
 		hltdc_F.Init.Backcolor.Red = 0;
 
 		hltdc_F.Instance = LTDC;

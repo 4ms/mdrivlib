@@ -18,8 +18,8 @@ struct LTDCScreenConf {
 	static constexpr uint32_t rowstart = 80;
 	static constexpr uint32_t colstart = 0;
 
-	enum Rotation { None, CW90, Flip180, CCW90 };
-	static constexpr Rotation rotation = None;
+	enum Rotation { NoRotation, CW90, Flip180, CCW90 };
+	static constexpr Rotation rotation = NoRotation;
 
 	enum ColorFormat { RGBA8888, RGB888, RGB565 };
 	static constexpr ColorFormat color_format = RGB565;
