@@ -25,9 +25,7 @@ class ScreenParallelWriter {
 	static constexpr size_t _height = ConfT::viewHeight;
 
 public:
-	ScreenParallelWriter(auto *buffer)
-		: _buffer_addr{reinterpret_cast<uint32_t>(buffer)} {
-	}
+	ScreenParallelWriter() = default;
 
 	void set_buffer(void *buffer) {
 		_buffer_addr = reinterpret_cast<uint32_t>(buffer);
@@ -35,13 +33,13 @@ public:
 		HAL_LTDC_Reload(&hltdc_F, LTDC_RELOAD_VERTICAL_BLANKING);
 	}
 
-	void init() {
+	void init(auto *buffer) {
+		_buffer_addr = reinterpret_cast<uint32_t>(buffer);
 		_init_pins_as_ltdc();
 		_init_ltdc();
 	}
 
 private:
-	GCC_OPTIMIZE_OFF
 	void _init_pins_as_ltdc() {
 		__HAL_RCC_LTDC_CLK_ENABLE();
 		for (auto &p : ConfT::r) {
@@ -62,11 +60,7 @@ private:
 		Pin{ConfT::hsync.gpio, ConfT::hsync.pin, PinMode::Alt, ConfT::hsync.af};
 	}
 
-	GCC_OPTIMIZE_OFF
 	void _init_ltdc() {
-		//RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
-		//RCCEx_PLL4_Config()
-
 		HAL_LTDC_DeInit(&hltdc_F);
 
 		LTDC_LayerCfgTypeDef pLayerCfg;
@@ -113,8 +107,8 @@ private:
 		pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
 
 		/* Start Address configuration : frame buffer */
-		// pLayerCfg.FBStartAdress = _buffer_addr;
-		pLayerCfg.FBStartAdress = (uint32_t)&RGB565_480x272;
+		pLayerCfg.FBStartAdress = _buffer_addr;
+		//pLayerCfg.FBStartAdress = (uint32_t)&RGB565_480x272;
 
 		/* Alpha constant (255 == totally opaque) */
 		pLayerCfg.Alpha = 255;

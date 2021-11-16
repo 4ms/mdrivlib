@@ -164,11 +164,11 @@ struct ST7789RGBInit {
 
 		//  5: Column addr set, 4 args, no delay
 		// 		XSTART = 0, XEND = WIDTH
-		{CASET, 4, 0, InitCommand::makecmd(0, ConfT::width)},
+		{CASET, 4, 0, InitCommand::makecmd(0, ConfT::viewWidth)},
 
 		//  6: Row addr set, 4 args, no delay:
 		// 		YSTART = 0, YEND = HEIGHT
-		{RASET, 4, 0, InitCommand::makecmd(0, ConfT::height)},
+		{RASET, 4, 0, InitCommand::makecmd(0, ConfT::viewHeight)},
 
 		//  7: Inverted or not
 		{ConfT::IsInverted == Inverted ? INVON : INVOFF, 0, 10},

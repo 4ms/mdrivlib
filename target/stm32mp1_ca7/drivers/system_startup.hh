@@ -5,7 +5,6 @@ namespace mdrivlib
 {
 
 struct SystemStartup {
-	// Todo: Put this into mdrivlib
 	//FIXME: osc_def is not used
 	static void init_clocks(const RCC_OscInitTypeDef &osc_def,
 							const RCC_ClkInitTypeDef &clk_def,
