@@ -1,6 +1,4 @@
 #pragma once
-#include "conf/qspi_flash_conf.hh"
-#include "math.hh"
 #include "qspi_flash_registers.h"
 #include "qspi_flash_struct.hh"
 #include "stm32xx.h"
@@ -29,15 +27,15 @@ private:
 	QSPI_HandleTypeDef handle;
 	QSPI_CommandTypeDef s_command;
 
-	HAL_StatusTypeDef WriteEnable(void);
+	HAL_StatusTypeDef WriteEnable();
 	void GPIO_Init_IO0_IO1(const QSPIFlashConfig &defs);
 	void GPIO_Init_IO2_IO3_AF(const QSPIFlashConfig &defs);
 	HAL_StatusTypeDef AutoPollingMemReady(uint32_t Timeout);
-	HAL_StatusTypeDef AutoPollingMemReady_IT(void);
-	HAL_StatusTypeDef EnterMemory_QPI(void);
+	HAL_StatusTypeDef AutoPollingMemReady_IT();
+	HAL_StatusTypeDef EnterMemory_QPI();
 	void init_command(QSPI_CommandTypeDef *s_command);
 
-	bool done_TXing(void) {
+	bool done_TXing() {
 		return QSPI_status == STATUS_TX_COMPLETE;
 	}
 
@@ -46,18 +44,18 @@ private:
 public:
 	QSpiFlash(const QSPIFlashConfig &defs);
 
-	bool is_ready(void) {
+	bool is_ready() {
 		return QSPI_status == STATUS_READY;
 	}
 
-	bool Test(void);
+	bool Test();
 	bool Test_Sector(uint8_t sector_num);
 
 	static constexpr uint32_t get_64kblock_addr(uint8_t block64k_num);
 	static constexpr uint32_t get_32kblock_addr(uint8_t block32k_num);
 	static constexpr uint32_t get_sector_addr(uint8_t sector_num);
 
-	HAL_StatusTypeDef Reset(void);
+	HAL_StatusTypeDef Reset();
 
 	bool Read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, UseInterruptFlags use_interrupt);
 	bool Read_Background(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes) {

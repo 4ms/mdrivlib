@@ -2,14 +2,19 @@
 
 // Todo: make this a const struct, which is passed to QSPI ctor
 
+// IS25LQ040B
+#define QSPI_FLASH_SIZE_ADDRESSBITS 25 // 25 address bits = 4 Mbits
+#define QSPI_FLASH_SIZE_BYTES 0x80000  // 4mbit = 512 KBytes
+
 // IS25LQ020B
-#define QSPI_FLASH_SIZE_ADDRESSBITS 24 // 24 address bits = 2 Mbits
-#define QSPI_FLASH_SIZE_BYTES 0x40000  // 256 KBytes
-#define QSPI_64KBLOCK_SIZE 0x10000	   // 64 KBytes, hence the name "64K Block" :)
-#define QSPI_32KBLOCK_SIZE 0x8000	   // 32 KBytes, hence the name "32K Block" :)
-#define QSPI_SECTOR_SIZE 0x1000		   // 4 KBytes sectors
-#define QSPI_PAGE_SIZE 0x100		   // 256 Byte pages
-#define QSPI_PAGE_ADDRESS_BITS 8	   // 8 bits = 256 addresses per page
+// #define QSPI_FLASH_SIZE_ADDRESSBITS 24 // 24 address bits = 2 Mbits
+// #define QSPI_FLASH_SIZE_BYTES 0x40000  // 256 KBytes
+
+#define QSPI_64KBLOCK_SIZE 0x10000 // 64 KBytes, hence the name "64K Block" :)
+#define QSPI_32KBLOCK_SIZE 0x8000  // 32 KBytes, hence the name "32K Block" :)
+#define QSPI_SECTOR_SIZE 0x1000	   // 4 KBytes sectors
+#define QSPI_PAGE_SIZE 0x100	   // 256 Byte pages
+#define QSPI_PAGE_ADDRESS_BITS 8   // 8 bits = 256 addresses per page
 
 #define QSPI_NUM_64KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_64KBLOCK_SIZE)
 #define QSPI_NUM_32KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_32KBLOCK_SIZE)
@@ -20,12 +25,11 @@
 #define QSPI_DUMMY_CYCLES_READ_QUAD 8
 #define QSPI_DUMMY_CYCLES_READ_QUAD_IO 4
 
-// Number of systicks (default values assume 20ms = 1 HAL systick (kUiUpdateRate = 200Hz))
 // TODO: lock these to kUpdateRate
-#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 100	 // 2000ms
-#define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 50 // 1000ms
-#define QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS 25 // 500ms
-#define QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS 15	 // 300ms
+#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 2000	   // 2000ms
+#define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 1000 // 1000ms
+#define QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS 500  // 500ms
+#define QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS 300	   // 300ms
 
 /**
  * @brief  QSPI Commands
@@ -80,4 +84,3 @@
 #define QSPI_SR_PRBOTTOM ((uint8_t)0x20) /*!< Protected memory area defined by BLOCKPR starts from top or bottom */
 #define QSPI_SR_QUADEN ((uint8_t)0x40)	 /*!< Quad IO mode enabled if =1 */
 #define QSPI_SR_SRWREN ((uint8_t)0x80)	 /*!< Status register write enable/disable */
-

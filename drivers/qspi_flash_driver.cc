@@ -1,6 +1,8 @@
 #include "qspi_flash_driver.hh"
 #include "interrupt.hh"
+#include "interrupt_control.hh"
 #include "qspi_flash_registers.h"
+#include "stm32xx.h"
 
 // #define QSPI_DO_TESTS
 
@@ -45,12 +47,12 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
 	// Initialize chip pins in single IO mode
 	GPIO_Init_IO0_IO1(defs);
 
-	HAL_NVIC_SetPriority(QUADSPI_IRQn, defs.IRQ_pri, defs.IRQ_subpri);
-	HAL_NVIC_EnableIRQ(QUADSPI_IRQn);
+	InterruptControl::set_irq_priority(QUADSPI_IRQn, defs.IRQ_pri, defs.IRQ_subpri);
 	InterruptManager::register_isr(QUADSPI_IRQn, [hal_handle_ptr = &handle]() {
-		// Todo: use our own handler, so can get rid of the status instance_ and extern "C" functions
+		// Todo: use our own handler, so can get rid of the static instance_ and extern "C" functions
 		HAL_QSPI_IRQHandler(hal_handle_ptr);
 	});
+	InterruptControl::enable_irq(QUADSPI_IRQn);
 
 	handle.Init.ClockPrescaler = defs.clock_division;
 	handle.Init.FifoThreshold = 1;
@@ -106,7 +108,7 @@ void QSpiFlash::init_command(QSPI_CommandTypeDef *s_command) {
 	s_command->SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
 }
 
-HAL_StatusTypeDef QSpiFlash::Reset(void) {
+HAL_StatusTypeDef QSpiFlash::Reset() {
 	// Enable Reset
 	s_command.Instruction = RESET_ENABLE_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_NONE;
@@ -381,7 +383,7 @@ bool QSpiFlash::Read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, Use
 	return true;
 }
 
-HAL_StatusTypeDef QSpiFlash::WriteEnable(void) {
+HAL_StatusTypeDef QSpiFlash::WriteEnable() {
 	QSPI_AutoPollingTypeDef s_config;
 
 	/* Enable write operations */
@@ -447,7 +449,7 @@ HAL_StatusTypeDef QSpiFlash::AutoPollingMemReady(uint32_t Timeout) {
  * @retval None
  */
 
-HAL_StatusTypeDef QSpiFlash::AutoPollingMemReady_IT(void) {
+HAL_StatusTypeDef QSpiFlash::AutoPollingMemReady_IT() {
 	QSPI_AutoPollingTypeDef s_config;
 
 	/* Configure automatic polling mode to wait for memory ready */
@@ -476,7 +478,7 @@ HAL_StatusTypeDef QSpiFlash::AutoPollingMemReady_IT(void) {
  * @brief	This function put QSPI memory in QPI mode (quad I/O).
  * @retval None
  */
-HAL_StatusTypeDef QSpiFlash::EnterMemory_QPI(void) {
+HAL_StatusTypeDef QSpiFlash::EnterMemory_QPI() {
 	QSPI_AutoPollingTypeDef s_config;
 	uint8_t reg;
 
