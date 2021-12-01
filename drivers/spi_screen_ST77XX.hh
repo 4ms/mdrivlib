@@ -179,7 +179,7 @@ struct ST7789RGBInit {
 		InitCommand{RGBCTRL, 3, 0, make_RGBCTRL_args(ConfT::VBackPorch, ConfT::HBackPorch)},
 
 		// RAM Control: set RGB mode. EPF and MTD don't matter
-		InitCommand{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, 0xC2 /*RAMCTRL_EPF_DEFAULT*/, 0, 0)},
+		InitCommand{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, RAMCTRL_EPF_DEFAULT, 0, 0)},
 
 		// Porch setting: Not sure if this wants V or H porch?
 		// {PORCTRL, 3, 0, InitCommand::makecmd(ConfT::HBackPorch, ConfT::HFrontPorch, 0, 0)},
