@@ -69,5 +69,25 @@ private:
 		while (delay)
 			delay = delay - 1;
 	}
+
+	void _test_pins() {
+		cs.low();
+		cs.high();
+		cs.low();
+
+		dc.low();
+		dc.high();
+		dc.low();
+
+		wrx.low();
+		wrx.high();
+		wrx.low();
+
+		for (auto &pin : datapin) {
+			pin.low();
+			pin.high();
+			pin.low();
+		}
+	}
 };
 } // namespace mdrivlib
