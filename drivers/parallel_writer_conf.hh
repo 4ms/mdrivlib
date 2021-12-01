@@ -10,6 +10,7 @@ struct ParallelWriterConf {
 	static constexpr PinNoInit chip_sel{};
 	static constexpr PinNoInit write_latch{};
 	static constexpr PinNoInit datacmd_sel{};
+	static constexpr PinNoInit reset{};
 
 	static constexpr uint32_t DataSetupTime = 0;
 	static constexpr uint32_t WriteLatchAfterDelay = 0;

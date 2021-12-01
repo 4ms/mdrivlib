@@ -15,15 +15,14 @@ class ST77XXParallelSetup {
 	mdrivlib::ParallelWriter<ConfT> writer;
 
 public:
-	template<Derived<LTDCScreenConf> ScreenConfT>
-	void setup_driver_chip() {
+	void setup_driver_chip(std::span<const ST77XX::InitCommand> cmds) {
 		writer.init_pins();
-		auto cmds = ST77XX::ST7789RGBInit<ScreenConfT>::cmds;
+		_reset();
 		_init_display_driver(cmds);
 	}
 
 private:
-	void _init_display_driver(std::span<ST77XX::InitCommand> cmds) {
+	void _init_display_driver(std::span<const ST77XX::InitCommand> cmds) {
 		writer.start_sequence();
 		for (auto &c : cmds) {
 			writer.send_cmd(c.cmd);
@@ -37,6 +36,19 @@ private:
 				HAL_Delay(c.delay_ms);
 		}
 		writer.end_sequence();
+	}
+
+	void _reset() {
+		Pin reset_pin{ConfT::reset, PinMode::Output};
+		reset_pin.high();
+		volatile int i = 10000; //10000 = high for 123us
+		while (i)
+			i = i - 1;
+		reset_pin.low();
+		i = 1000; //1000 = low for 12.6us
+		while (i)
+			i = i - 1;
+		reset_pin.high();
 	}
 };
 } // namespace mdrivlib
