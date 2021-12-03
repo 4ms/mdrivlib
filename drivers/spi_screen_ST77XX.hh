@@ -3,11 +3,9 @@
 #include <array>
 #include <cstdint>
 
-namespace mdrivlib
+namespace mdrivlib::ST77XX
 {
 
-namespace ST77XX
-{
 enum Command : uint8_t {
 	ST_CMD_DELAY = 0x80,
 
@@ -43,23 +41,21 @@ enum Command : uint8_t {
 	RAMCTRL = 0xB0,
 	RGBCTRL = 0xB1,
 	PORCTRL = 0xB2,
+	GCTRL = 0xB8,
 
 	FRCTRL2 = 0xC6,
+	CABCCTRL = 0xC7,
+	PWMFRSEL = 0xCC,
 
 	CMD2EN = 0xDF,
 };
 
-enum Arg {
+enum MADCTL_Arg {
 	MADCTL_MY = 0x80,
 	MADCTL_MX = 0x40,
 	MADCTL_MV = 0x20,
 	MADCTL_ML = 0x10,
 	MADCTL_RGB = 0x00,
-
-	RDID1 = 0xDA,
-	RDID2 = 0xDB,
-	RDID3 = 0xDC,
-	RDID4 = 0xDD,
 };
 
 enum MADCTL_Rotation {
@@ -67,6 +63,13 @@ enum MADCTL_Rotation {
 	MADCTL_ROTCW90 = ST77XX::MADCTL_MY | ST77XX::MADCTL_MV,
 	MADCTL_ROT180 = 0,
 	MADCTL_ROTCCW90 = ST77XX::MADCTL_MX | ST77XX::MADCTL_MV,
+};
+
+enum RDID_Arg {
+	RDID1 = 0xDA,
+	RDID2 = 0xDB,
+	RDID3 = 0xDC,
+	RDID4 = 0xDD,
 };
 
 enum COLMOD_Args {
@@ -77,6 +80,14 @@ enum RAMCTRL_Args {
 	RAMCTRL_RGB_IF = 0b00010001,
 	RAMCTRL_EPF_DEFAULT = 0xF0,
 	RAMCTRL_MDT_16B_16B = 0b00,
+};
+
+enum RGBCTRL_Args {
+	//RGBCTRL_AllPolaritiesLow = 0,
+	RGBCTRL_DE_Mode = 0b10 << 5,
+	RGBCTRL_HV_Mode = 0b11 << 5,
+	RGBCTRL_UseShiftReg = 1 << 7,
+	RGBCTRL_UseRAM = 0 << 7,
 };
 
 struct InitCommand {
@@ -138,15 +149,6 @@ struct ST7789Init {
 	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(InitCommand);
 };
 
-//Sec 8.9.1: RIM = 0 in B0h, DB[6:4] in 3Ah = 0b101
-constexpr uint32_t make_RGBCTRL_args(uint8_t v_back_porch, uint8_t h_back_porch) {
-	constexpr uint8_t all_polarities_low = 0;
-	constexpr uint8_t de_mode = 0b10 << 5;
-	constexpr uint8_t use_shiftreg = 0 << 7;
-	//0x42 0x08 0x3C
-	return InitCommand::makecmd(all_polarities_low | de_mode | use_shiftreg, v_back_porch & 127, h_back_porch & 31, 0);
-}
-
 template<typename ConfT>
 struct ST7789RGBInit {
 	static constexpr std::array cmds = {
@@ -176,7 +178,8 @@ struct ST7789RGBInit {
 		//// seq 2
 
 		// RGB Control: V/H back porch
-		InitCommand{RGBCTRL, 3, 0, make_RGBCTRL_args(ConfT::VBackPorch, ConfT::HBackPorch)},
+		// InitCommand{RGBCTRL, 3, 0, make_RGBCTRL_args(ConfT::VBackPorch, ConfT::HBackPorch)},
+		// InitCommand::makecmd(all_polarities_low | de_mode | use_shiftreg, v_back_porch & 127, h_back_porch & 31, 0);
 
 		// RAM Control: set RGB mode. EPF and MTD don't matter
 		InitCommand{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, RAMCTRL_EPF_DEFAULT, 0, 0)},
@@ -196,5 +199,4 @@ struct ST7789RGBInit {
 	};
 };
 
-} // namespace ST77XX
-} // namespace mdrivlib
+} // namespace mdrivlib::ST77XX
