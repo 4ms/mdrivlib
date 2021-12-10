@@ -156,8 +156,6 @@ struct ST7789RGBInit {
 		InitCommand{SWRESET, 0, 150},
 		InitCommand{SLPOUT, 0, 120},
 
-		InitCommand{CMD2EN, 3, 100, InitCommand::makecmd(0x5A, 0x69, 0x02, 0x01)},
-
 		InitCommand{MADCTL,
 					1,
 					0,
@@ -168,24 +166,36 @@ struct ST7789RGBInit {
 
 		InitCommand{COLMOD, 1, 0, 0x55},
 
-		InitCommand{ConfT::IsInverted == Inverted ? INVON : INVOFF, 0, 0},
+		InitCommand{ConfT::IsInverted == mdrivlib::ST77XX::Inverted ? INVON : INVOFF, 0, 0},
 
 		InitCommand{CASET, 4, 0, InitCommand::makecmd(0, ConfT::viewWidth)},
 		InitCommand{RASET, 4, 0, InitCommand::makecmd(0, ConfT::viewHeight)},
 
-		InitCommand{FRCTRL2, 1, 10, 0x0F},
-
 		//// seq 2
+		//Enable Table 2 Commands:
+		InitCommand{CMD2EN, 4, 1, InitCommand::makecmd(0x5A, 0x69, 0x02, 0x01)},
 
 		// RGB Control: V/H back porch
-		// InitCommand{RGBCTRL, 3, 0, make_RGBCTRL_args(ConfT::VBackPorch, ConfT::HBackPorch)},
-		// InitCommand::makecmd(all_polarities_low | de_mode | use_shiftreg, v_back_porch & 127, h_back_porch & 31, 0);
+		InitCommand{
+			RGBCTRL,
+			3,
+			0,
+			InitCommand::makecmd(
+				RGBCTRL_DE_Mode | RGBCTRL_UseRAM, ConfT::VBackPorch, ConfT::HBackPorch /*+ ConfT::HSyncWidth*/, 0)},
 
 		// RAM Control: set RGB mode. EPF and MTD don't matter
 		InitCommand{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, RAMCTRL_EPF_DEFAULT, 0, 0)},
 
+		InitCommand{FRCTRL2, 1, 10, 0x0F}, //0x0F = 60Hz, 0x0E = 62Hz
+
+		//InitCommand{GCTRL, 4, 10, InitCommand::makecmd(0x2A, 0x2B, 0x22 + 6, 0x75)},
+
+		//InitCommand{CABCCTRL, 1, 10, 0b0010}, //LED no reversed, init state LEDPWM low, LEDPWM fixed to on, LEDPWM Polarity 0/high
+
+		//InitCommand{PWMFRSEL, 1, 10, (0x04 << 3) | 0x00}, //CS = 4, CLK = 0 => 666kHz PWM
+
 		// Porch setting: Not sure if this wants V or H porch?
-		// {PORCTRL, 3, 0, InitCommand::makecmd(ConfT::HBackPorch, ConfT::HFrontPorch, 0, 0)},
+		// InitCommand{PORCTRL, 3, 0, InitCommand::makecmd(ConfT::HBackPorch, ConfT::HFrontPorch, 0, 0)},
 
 		//Max brightness
 		// InitCommand{WRDISBV, 1, 0, 0xFF0000FF},
