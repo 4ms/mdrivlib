@@ -46,6 +46,17 @@ private:
 
 	void _reset() {
 		Pin reset_pin{ConfT::reset, PinMode::Output};
+
+		// reset_pin.high();
+		// volatile int i = 10000; //10000 = high for 123us
+		// while (i)
+		// 	i = i - 1;
+		// reset_pin.low();
+		// i = 1000; //1000 = low for 12.6us
+		// while (i)
+		// 	i = i - 1;
+		// reset_pin.high();
+
 		reset_pin.high();
 		HAL_Delay(1);
 		reset_pin.low();

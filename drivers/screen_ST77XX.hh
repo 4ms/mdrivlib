@@ -113,11 +113,11 @@ struct ST7789Init {
 
 			//  5: Column addr set, 4 args, no delay
 			// 		XSTART = 0, XEND = WIDTH
-			{CASET, 4, 0, {0, WIDTH >> 8, 0, WIDTH & 0xFF}},
+			{CASET, 4, 0, {0, 0, WIDTH >> 8, WIDTH & 0xFF}},
 
 			//  6: Row addr set, 4 args, no delay:
 			// 		YSTART = 0, YEND = HEIGHT
-			{RASET, 4, 0, {0, HEIGHT >> 8, 0, HEIGHT & 0xFF}},
+			{RASET, 4, 0, {0, 0, HEIGHT >> 8, HEIGHT & 0xFF}},
 
 			//  7: Inverted or not
 			{ISINVERTED == Inverted ? INVON : INVOFF, 0, 10},
@@ -156,8 +156,8 @@ struct ST7789InitLTDC {
 
 		{.cmd = ConfT::IsInverted == mdrivlib::ST77XX::Inverted ? INVON : INVOFF, .num_args = 0, .delay_ms = 0},
 
-		{.cmd = CASET, .num_args = 4, .delay_ms = 0, .args = {0, ConfT::viewWidth >> 8, 0, ConfT::viewWidth & 0xFF}},
-		{.cmd = RASET, .num_args = 4, .delay_ms = 0, .args = {0, ConfT::viewHeight >> 8, 0, ConfT::viewHeight & 0xFF}},
+		{.cmd = CASET, .num_args = 4, .delay_ms = 0, .args = {0, 0, ConfT::viewWidth >> 8, ConfT::viewWidth & 0xFF}},
+		{.cmd = RASET, .num_args = 4, .delay_ms = 0, .args = {0, 0, ConfT::viewHeight >> 8, ConfT::viewHeight & 0xFF}},
 
 		//// seq 2
 		//Enable Table 2 Commands:

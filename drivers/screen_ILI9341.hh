@@ -83,7 +83,7 @@ struct ILI9341InitLTDC {
 		{.cmd = SleepOut, .num_args = 0, .delay_ms = 120},
 		{.cmd = DisplayOn, .num_args = 0, .delay_ms = 50},
 
-		{.cmd = RowSet, .num_args = 4, .delay_ms = 0, .args = {0, (320 >> 8), 0, 320 & 0x00FF}},
+		{.cmd = RowSet, .num_args = 4, .delay_ms = 0, .args = {0, 0, (320 >> 8), 320 & 0x00FF}},
 		{.cmd = ColSet, .num_args = 4, .delay_ms = 0, .args = {0, 0, 0, 240}},
 
 		//{.cmd = Reset, .num_args = 0, .delay_ms = 5000},
