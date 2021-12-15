@@ -1,7 +1,9 @@
 #pragma once
+#include "drivers/screen_ltdc_setup.hh"
 #include "util/math.hh"
 #include <array>
 #include <cstdint>
+#include <span>
 
 namespace mdrivlib::ST77XX
 {
@@ -90,25 +92,11 @@ enum RGBCTRL_Args {
 	RGBCTRL_UseRAM = 0 << 7,
 };
 
-struct InitCommand {
-	ST77XX::Command cmd;
-	uint8_t num_args;
-	uint16_t delay_ms;
-	uint32_t args;
-
-	static constexpr uint32_t makecmd(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
-		return (d << 24) | (c << 16) | (b << 8) | a;
-	}
-	static constexpr uint32_t makecmd(uint16_t a, uint16_t b) {
-		return MathTools::swap_bytes_and_combine(b, a);
-	}
-};
-
 enum InvertState { NotInverted, Inverted };
 
 template<uint16_t WIDTH, uint16_t HEIGHT, enum InvertState ISINVERTED>
 struct ST7789Init {
-	static constexpr InitCommand cmds[] =
+	static constexpr ScreenInitCommand cmds[] =
 		{
 			//  1: Software reset, no args, w/delay
 			{SWRESET, 0, 150},
@@ -117,19 +105,19 @@ struct ST7789Init {
 			{SLPOUT, 0, 10},
 
 			//  3: Set color mode, 1 arg, 10ms delay, 0x55 = 16-bit color
-			{COLMOD, 1, 10, 0x55},
+			{COLMOD, 1, 10, {0x55}},
 
 			//  4: Mem access ctrl (directions),
 			//	 	0x08 =  Row/col addr, bottom-top refresh, BGR not RGB
-			{MADCTL, 1, 0, 0x08},
+			{MADCTL, 1, 0, {0x08}},
 
 			//  5: Column addr set, 4 args, no delay
 			// 		XSTART = 0, XEND = WIDTH
-			{CASET, 4, 0, InitCommand::makecmd(0, WIDTH)},
+			{CASET, 4, 0, {0, WIDTH >> 8, 0, WIDTH & 0xFF}},
 
 			//  6: Row addr set, 4 args, no delay:
 			// 		YSTART = 0, YEND = HEIGHT
-			{RASET, 4, 0, InitCommand::makecmd(0, HEIGHT)},
+			{RASET, 4, 0, {0, HEIGHT >> 8, 0, HEIGHT & 0xFF}},
 
 			//  7: Inverted or not
 			{ISINVERTED == Inverted ? INVON : INVOFF, 0, 10},
@@ -146,66 +134,64 @@ struct ST7789Init {
 
 		};
 
-	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(InitCommand);
+	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(ScreenInitCommand);
 };
 
 template<typename ConfT>
-struct ST7789RGBInit {
-	static constexpr std::array cmds = {
-		InitCommand{SLPIN, 0, 10},
-		InitCommand{SWRESET, 0, 150},
-		InitCommand{SLPOUT, 0, 120},
+struct ST7789InitLTDC {
+	static constexpr ScreenInitCommand cmds[] = {
+		{.cmd = SLPIN, .num_args = 0, .delay_ms = 10},
+		{.cmd = SWRESET, .num_args = 0, .delay_ms = 150},
+		{.cmd = SLPOUT, .num_args = 0, .delay_ms = 120},
 
-		InitCommand{MADCTL,
-					1,
-					0,
-					ConfT::rotation == ConfT::NoRotation ? MADCTL_ROT0
-					: ConfT::rotation == ConfT::CW90	 ? MADCTL_ROTCW90
-					: ConfT::rotation == ConfT::Flip180	 ? MADCTL_ROT180
-														 : MADCTL_ROTCCW90},
+		{.cmd = MADCTL,
+		 .num_args = 1,
+		 .delay_ms = 0,
+		 .args = {ConfT::rotation == ConfT::NoRotation ? MADCTL_ROT0
+				  : ConfT::rotation == ConfT::CW90	   ? MADCTL_ROTCW90
+				  : ConfT::rotation == ConfT::Flip180  ? MADCTL_ROT180
+													   : MADCTL_ROTCCW90}},
 
-		InitCommand{COLMOD, 1, 0, 0x55},
+		{.cmd = COLMOD, .num_args = 1, .delay_ms = 0, .args = {0x55}},
 
-		InitCommand{ConfT::IsInverted == mdrivlib::ST77XX::Inverted ? INVON : INVOFF, 0, 0},
+		{.cmd = ConfT::IsInverted == mdrivlib::ST77XX::Inverted ? INVON : INVOFF, .num_args = 0, .delay_ms = 0},
 
-		InitCommand{CASET, 4, 0, InitCommand::makecmd(0, ConfT::viewWidth)},
-		InitCommand{RASET, 4, 0, InitCommand::makecmd(0, ConfT::viewHeight)},
+		{.cmd = CASET, .num_args = 4, .delay_ms = 0, .args = {0, ConfT::viewWidth >> 8, 0, ConfT::viewWidth & 0xFF}},
+		{.cmd = RASET, .num_args = 4, .delay_ms = 0, .args = {0, ConfT::viewHeight >> 8, 0, ConfT::viewHeight & 0xFF}},
 
 		//// seq 2
 		//Enable Table 2 Commands:
-		InitCommand{CMD2EN, 4, 1, InitCommand::makecmd(0x5A, 0x69, 0x02, 0x01)},
+		{.cmd = CMD2EN, .num_args = 4, .delay_ms = 1, .args = {0x5A, 0x69, 0x02, 0x01}},
 
 		// RGB Control: V/H back porch
-		InitCommand{
-			RGBCTRL,
-			3,
-			0,
-			InitCommand::makecmd(
-				RGBCTRL_DE_Mode | RGBCTRL_UseRAM, ConfT::VBackPorch, ConfT::HBackPorch /*+ ConfT::HSyncWidth*/, 0)},
+		{.cmd = RGBCTRL,
+		 .num_args = 3,
+		 .delay_ms = 0,
+		 .args = {RGBCTRL_DE_Mode | RGBCTRL_UseRAM, ConfT::VBackPorch, ConfT::HBackPorch /*+ ConfT::HSyncWidth*/}},
 
 		// RAM Control: set RGB mode. EPF and MTD don't matter
-		InitCommand{RAMCTRL, 2, 0, InitCommand::makecmd(RAMCTRL_RGB_IF, RAMCTRL_EPF_DEFAULT, 0, 0)},
+		{.cmd = RAMCTRL, .num_args = 2, .delay_ms = 0, .args = {RAMCTRL_RGB_IF, RAMCTRL_EPF_DEFAULT}},
 
-		InitCommand{FRCTRL2, 1, 10, 0x0F}, //0x0F = 60Hz, 0x0E = 62Hz
+		{.cmd = FRCTRL2, .num_args = 1, .delay_ms = 10, .args = {0x0F}}, //0x0F = 60Hz, 0x0E = 62Hz
 
-		//InitCommand{GCTRL, 4, 10, InitCommand::makecmd(0x2A, 0x2B, 0x22 + 6, 0x75)},
+		//{.cmd = GCTRL, .num_args = 4, .delay_ms = 10, .args = {0x2A, 0x2B, 0x22 + 6, 0x75}},
 
-		//InitCommand{CABCCTRL, 1, 10, 0b0010}, //LED no reversed, init state LEDPWM low, LEDPWM fixed to on, LEDPWM Polarity 0/high
+		//{.cmd = CABCCTRL, .num_args = 1, .delay_ms = 10, .args = {0b0010}}, //LED no reversed, init state LEDPWM low, LEDPWM fixed to on, LEDPWM Polarity 0/high
 
-		//InitCommand{PWMFRSEL, 1, 10, (0x04 << 3) | 0x00}, //CS = 4, CLK = 0 => 666kHz PWM
+		//{.cmd = PWMFRSEL, .num_args = 1, .delay_ms = 10, .args = {(0x04 << 3) | 0x00}}, //CS = 4, CLK = 0 => 666kHz PWM
 
 		// Porch setting: Not sure if this wants V or H porch?
-		// InitCommand{PORCTRL, 3, 0, InitCommand::makecmd(ConfT::HBackPorch, ConfT::HFrontPorch, 0, 0)},
+		// {.cmd = PORCTRL, .num_args = 3, .delay_ms = 0, .args = {ConfT::HBackPorch, ConfT::HFrontPorch, 0}},
 
 		//Max brightness
-		// InitCommand{WRDISBV, 1, 0, 0xFF0000FF},
+		// {.cmd = WRDISBV, .num_args = 4, .delay_ms = 0, .args = {0xFF,0,0,0xFF}},
 
 		// Normal display on
-		// InitCommand{NORON, 0, 10},
+		// {.cmd = NORON, .num_args = 0, .delay_ms = 10},
 
-		InitCommand{DISPON, 0, 100},
-		InitCommand{SLPOUT, 0, 100},
-		InitCommand{RAMWR, 0, 50},
+		{.cmd = DISPON, .num_args = 0, .delay_ms = 100},
+		{.cmd = SLPOUT, .num_args = 0, .delay_ms = 100},
+		{.cmd = RAMWR, .num_args = 0, .delay_ms = 50},
 	};
 };
 

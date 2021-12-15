@@ -49,7 +49,7 @@ struct ILI9341InitSPI {
 //FIXME: Doesn't work!
 // template<uint16_t WIDTH, uint16_t HEIGHT, enum InvertState ISINVERTED>
 struct ILI9341InitLTDC {
-	static constexpr LTDCInitCommand cmds[] = {
+	static constexpr ScreenInitCommand cmds[] = {
 		{.cmd = 0xCF, .num_args = 3, .delay_ms = 0, .args = {0x00, 0xc3, 0x30}},
 		{.cmd = 0xED, .num_args = 4, .delay_ms = 0, .args = {0x64, 0x03, 0x12, 0x81}},
 		{.cmd = 0xE8, .num_args = 3, .delay_ms = 0, .args = {0x85, 0x10, 0x79}},
@@ -99,7 +99,7 @@ struct ILI9341InitLTDC {
 		//{.cmd = DisplayOn, .num_args = 0},
 	};
 
-	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(LTDCInitCommand);
+	static constexpr uint32_t num_commands = sizeof(cmds) / sizeof(ScreenInitCommand);
 };
 
 } // namespace mdrivlib::ILI9341

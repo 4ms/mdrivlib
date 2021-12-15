@@ -1,6 +1,4 @@
 #pragma once
-#include "RGB565_480x272.h"
-#include "debug.hh"
 #include "drivers/ltdc_screen_config_struct.hh"
 #include "drivers/pin.hh"
 #include "stm32xx.h"

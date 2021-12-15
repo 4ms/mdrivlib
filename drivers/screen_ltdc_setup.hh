@@ -9,7 +9,7 @@
 namespace mdrivlib
 {
 
-struct LTDCInitCommand {
+struct ScreenInitCommand {
 	uint8_t cmd;
 	uint8_t num_args = 0;
 	uint16_t delay_ms = 0;
@@ -24,14 +24,14 @@ class LTDCParallelSetup {
 	mdrivlib::ParallelWriter<ConfT> writer;
 
 public:
-	void setup_driver_chip(std::span<const LTDCInitCommand> cmds) {
+	void setup_driver_chip(std::span<const ScreenInitCommand> cmds) {
 		writer.init_pins();
 		_reset();
 		_init_display_driver(cmds);
 	}
 
 private:
-	void _init_display_driver(std::span<const LTDCInitCommand> cmds) {
+	void _init_display_driver(std::span<const ScreenInitCommand> cmds) {
 		writer.start_sequence();
 		for (auto &c : cmds) {
 			writer.send_cmd(c.cmd);
