@@ -1,10 +1,13 @@
 #pragma once
 
 // Todo: make this a const struct, which is passed to QSPI ctor
+// S25FL127: 16MByte
+#define QSPI_FLASH_SIZE_ADDRESSBITS 30
+#define QSPI_FLASH_SIZE_BYTES 0x01000000 // 128Mbit = 16MByte
 
 // IS25LQ040B
-#define QSPI_FLASH_SIZE_ADDRESSBITS 25 // 25 address bits = 4 Mbits
-#define QSPI_FLASH_SIZE_BYTES 0x80000  // 4mbit = 512 KBytes
+// #define QSPI_FLASH_SIZE_ADDRESSBITS 25 // 25 address bits = 4 Mbits
+// #define QSPI_FLASH_SIZE_BYTES 0x80000  // 4mbit = 512 KBytes
 
 // IS25LQ020B
 // #define QSPI_FLASH_SIZE_ADDRESSBITS 24 // 24 address bits = 2 Mbits
@@ -26,7 +29,7 @@
 #define QSPI_DUMMY_CYCLES_READ_QUAD_IO 4
 
 // TODO: lock these to kUpdateRate
-#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 2000	   // 2000ms
+#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 10000	   // 2000ms
 #define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 1000 // 1000ms
 #define QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS 500  // 500ms
 #define QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS 300	   // 300ms
