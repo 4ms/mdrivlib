@@ -51,9 +51,9 @@ public:
 	bool Test();
 	bool Test_Sector(uint8_t sector_num);
 
-	static constexpr uint32_t get_64kblock_addr(uint8_t block64k_num);
-	static constexpr uint32_t get_32kblock_addr(uint8_t block32k_num);
-	static constexpr uint32_t get_sector_addr(uint8_t sector_num);
+	static constexpr uint32_t get_64kblock_addr(int block64k_num);
+	static constexpr uint32_t get_32kblock_addr(int block32k_num);
+	static constexpr uint32_t get_sector_addr(int sector_num);
 
 	HAL_StatusTypeDef Reset();
 

@@ -4,26 +4,26 @@
 #include "qspi_flash_registers.h"
 #include "stm32xx.h"
 
-// #define QSPI_DO_TESTS
+//#define QSPI_DO_TESTS
 
 namespace mdrivlib
 {
 
-constexpr uint32_t QSpiFlash::get_64kblock_addr(uint8_t block64k_num) {
+constexpr uint32_t QSpiFlash::get_64kblock_addr(int block64k_num) {
 	if (block64k_num >= QSPI_NUM_64KBLOCKS)
 		return 0;
 
 	return block64k_num * QSPI_64KBLOCK_SIZE;
 }
 
-constexpr uint32_t QSpiFlash::get_32kblock_addr(uint8_t block32k_num) {
+constexpr uint32_t QSpiFlash::get_32kblock_addr(int block32k_num) {
 	if (block32k_num >= QSPI_NUM_32KBLOCKS)
 		return 0;
 
 	return block32k_num * QSPI_32KBLOCK_SIZE;
 }
 
-constexpr uint32_t QSpiFlash::get_sector_addr(uint8_t sector_num) {
+constexpr uint32_t QSpiFlash::get_sector_addr(int sector_num) {
 	if (sector_num >= QSPI_NUM_SECTORS)
 		return 0;
 
@@ -90,6 +90,7 @@ void QSpiFlash::GPIO_Init_IO0_IO1(const QSPIFlashConfig &defs) {
 	Pin io1{defs.io1.gpio, defs.io1.pin, PinMode::Alt, defs.io1.af, PinPull::None};
 	Pin wp{defs.io2.gpio, defs.io2.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
 	Pin hold{defs.io3.gpio, defs.io3.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
+
 	// Set /HOLD and /WP pins high to disable holding and write protection, until we enter QPI mode
 	hold.high();
 	wp.high();
@@ -131,7 +132,7 @@ HAL_StatusTypeDef QSpiFlash::Reset() {
 // Tests entire chip sector-by-sector
 // Returns 1 if passed, 0 if failed
 bool QSpiFlash::Test() {
-	uint8_t sector;
+	int sector;
 	for (sector = 0; sector < QSPI_NUM_SECTORS; sector++) {
 		if (!Test_Sector(sector))
 			return false; // fail
