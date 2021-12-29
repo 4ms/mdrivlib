@@ -1,16 +1,16 @@
 #pragma once
 
 // Todo: make this a const struct, which is passed to QSPI ctor
-// S25FL127: 16MByte
-#define QSPI_FLASH_SIZE_ADDRESSBITS 30
+// S25FL127/128: 16MByte
+#define QSPI_FLASH_SIZE_ADDRESSBITS 24
 #define QSPI_FLASH_SIZE_BYTES 0x01000000 // 128Mbit = 16MByte
 
 // IS25LQ040B
-// #define QSPI_FLASH_SIZE_ADDRESSBITS 25 // 25 address bits = 4 Mbits
+// #define QSPI_FLASH_SIZE_ADDRESSBITS 25 // 25 address bits = 4 Mbits :: FIXME: shouldn't this be 22? 2^22 = 4 * 1024 * 1024
 // #define QSPI_FLASH_SIZE_BYTES 0x80000  // 4mbit = 512 KBytes
 
 // IS25LQ020B
-// #define QSPI_FLASH_SIZE_ADDRESSBITS 24 // 24 address bits = 2 Mbits
+// #define QSPI_FLASH_SIZE_ADDRESSBITS 24 // 24 address bits = 2 Mbits :: FIXME: shouldn't this be 21? 2^21 = 2 * 1024 * 1024
 // #define QSPI_FLASH_SIZE_BYTES 0x40000  // 256 KBytes
 
 #define QSPI_64KBLOCK_SIZE 0x10000 // 64 KBytes, hence the name "64K Block" :)
@@ -23,16 +23,20 @@
 #define QSPI_NUM_32KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_32KBLOCK_SIZE)
 #define QSPI_NUM_SECTORS (QSPI_FLASH_SIZE_BYTES / QSPI_SECTOR_SIZE)
 
+// S25FL127/128:
+static_assert(QSPI_NUM_64KBLOCKS == 256);
+static_assert(QSPI_NUM_SECTORS == 4096);
+
 #define QSPI_DUMMY_CYCLES_READ 0
 #define QSPI_DUMMY_CYCLES_FAST_READ 8
 #define QSPI_DUMMY_CYCLES_READ_QUAD 8
 #define QSPI_DUMMY_CYCLES_READ_QUAD_IO 4
 
-// TODO: lock these to kUpdateRate
-#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 10000	   // 2000ms
-#define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 1000 // 1000ms
-#define QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS 500  // 500ms
-#define QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS 300	   // 300ms
+// TODO: lock these to kUpdateRate. Currently in ms
+#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 20000
+#define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 5000 //datasheet says 720ms
+#define QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS 500
+#define QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS 300
 
 /**
  * @brief  QSPI Commands
