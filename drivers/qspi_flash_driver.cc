@@ -9,28 +9,32 @@
 namespace mdrivlib
 {
 
-constexpr uint32_t QSpiFlash::get_64kblock_addr(int block64k_num) {
-	if (block64k_num >= QSPI_NUM_64KBLOCKS)
+uint32_t QSpiFlash::get_64kblock_addr(int block64k_num) {
+	if (block64k_num >= defs.flash_size_bytes / QSPI_64KBLOCK_SIZE)
 		return 0;
 
 	return block64k_num * QSPI_64KBLOCK_SIZE;
 }
 
-constexpr uint32_t QSpiFlash::get_32kblock_addr(int block32k_num) {
-	if (block32k_num >= QSPI_NUM_32KBLOCKS)
+uint32_t QSpiFlash::get_32kblock_addr(int block32k_num) {
+	if (block32k_num >= defs.flash_size_bytes / QSPI_32KBLOCK_SIZE)
 		return 0;
 
 	return block32k_num * QSPI_32KBLOCK_SIZE;
 }
 
-constexpr uint32_t QSpiFlash::get_sector_addr(int sector_num) {
-	if (sector_num >= QSPI_NUM_SECTORS)
+uint32_t QSpiFlash::get_sector_addr(int sector_num) {
+	if (sector_num >= defs.flash_size_bytes / QSPI_SECTOR_SIZE)
 		return 0;
 
 	return sector_num * QSPI_SECTOR_SIZE;
 }
 
-QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
+QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
+	: defs{config_defs}
+	, data_mode{config_defs.io_mode == QSPIFlashConfig::QPI	  ? QSPI_DATA_4_LINES
+				: config_defs.io_mode == QSPIFlashConfig::DDR ? QSPI_DATA_2_LINES
+															  : QSPI_DATA_1_LINE} {
 	instance_ = this;
 
 	handle.Instance = QUADSPI;
@@ -45,7 +49,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
 	__HAL_RCC_QSPI_RELEASE_RESET();
 
 	// Initialize chip pins in single IO mode
-	GPIO_Init_IO0_IO1(defs);
+	GPIO_Init_IO0_IO1();
 
 	InterruptControl::set_irq_priority(QUADSPI_IRQn, defs.IRQ_pri, defs.IRQ_subpri);
 	InterruptManager::register_isr(QUADSPI_IRQn, [hal_handle_ptr = &handle]() {
@@ -57,7 +61,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
 	handle.Init.ClockPrescaler = defs.clock_division;
 	handle.Init.FifoThreshold = 1;
 	handle.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_HALFCYCLE;
-	handle.Init.FlashSize = QSPI_FLASH_SIZE_ADDRESSBITS - 1;
+	handle.Init.FlashSize = defs.flash_size_address_bits - 1;
 	handle.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
 	handle.Init.ClockMode = QSPI_CLOCK_MODE_0;
 	handle.Init.FlashID = QSPI_FLASH_ID_1;
@@ -72,8 +76,10 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
 	Reset();
 	EnterMemory_QPI();
 
-	// Now that chip is in QSPI mode, IO2 and IO3 can be initialized
-	GPIO_Init_IO2_IO3_AF(defs);
+	if (defs.io_mode == QSPIFlashConfig::IOMode::QPI) {
+		// Now that chip is in QSPI mode, IO2 and IO3 can be initialized
+		GPIO_Init_IO2_IO3_AF();
+	}
 
 #ifdef QSPI_DO_TESTS
 	// Erase(ENTIRE_CHIP, 0, EXECUTE_FOREGROUND);
@@ -83,27 +89,32 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &defs) {
 #endif
 }
 
-void QSpiFlash::GPIO_Init_IO0_IO1(const QSPIFlashConfig &defs) {
+void QSpiFlash::GPIO_Init_IO0_IO1() {
 	Pin cs{defs.cs.gpio, defs.cs.pin, PinMode::Alt, defs.cs.af, PinPull::Up};
 	Pin clk{defs.clk.gpio, defs.clk.pin, PinMode::Alt, defs.clk.af, PinPull::None};
 	Pin io0{defs.io0.gpio, defs.io0.pin, PinMode::Alt, defs.io0.af, PinPull::None};
 	Pin io1{defs.io1.gpio, defs.io1.pin, PinMode::Alt, defs.io1.af, PinPull::None};
-	Pin wp{defs.io2.gpio, defs.io2.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
-	Pin hold{defs.io3.gpio, defs.io3.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
 
 	// Set /HOLD and /WP pins high to disable holding and write protection, until we enter QPI mode
-	hold.high();
-	wp.high();
+	if (defs.io2.gpio != GPIO::Unused) {
+		Pin wp{defs.io2.gpio, defs.io2.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
+		wp.high();
+	}
+
+	if (defs.io3.gpio != GPIO::Unused) {
+		Pin hold{defs.io3.gpio, defs.io3.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
+		hold.high();
+	}
 }
 
-void QSpiFlash::GPIO_Init_IO2_IO3_AF(const QSPIFlashConfig &defs) {
+void QSpiFlash::GPIO_Init_IO2_IO3_AF() {
 	Pin io2{defs.io2.gpio, defs.io2.pin, PinMode::Alt, defs.io2.af, PinPull::None};
 	Pin io3{defs.io3.gpio, defs.io3.pin, PinMode::Alt, defs.io3.af, PinPull::None};
 }
 
 void QSpiFlash::init_command(QSPI_CommandTypeDef *s_command) {
 	s_command->InstructionMode = QSPI_INSTRUCTION_1_LINE;
-	s_command->AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command->AddressSize = QSPI_ADDRESS_24_BITS; //TODO: make this 32 if defs.AddrBits == 32?
 	s_command->DdrMode = QSPI_DDR_MODE_DISABLE;
 	s_command->DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
 	s_command->SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
@@ -133,7 +144,7 @@ HAL_StatusTypeDef QSpiFlash::Reset() {
 // Returns 1 if passed, 0 if failed
 bool QSpiFlash::Test() {
 	int sector;
-	for (sector = 0; sector < QSPI_NUM_SECTORS; sector++) {
+	for (sector = 0; sector < defs.flash_size_bytes / QSPI_SECTOR_SIZE; sector++) {
 		if (!Test_Sector(sector))
 			return false; // fail
 	}
@@ -153,7 +164,6 @@ bool QSpiFlash::Test_Sector(uint8_t sector_num) {
 	while (!is_ready())
 		;
 
-	// Benchmark: ~38ms/sector
 	if (!Erase(SECTOR, test_addr, EXECUTE_BACKGROUND))
 		return false;
 
@@ -172,7 +182,6 @@ bool QSpiFlash::Test_Sector(uint8_t sector_num) {
 	for (i = 0; i < QSPI_SECTOR_SIZE; i++)
 		test_buffer[i] = 0;
 
-	// Benchmark: ~680-850us/sector
 	if (!Read(test_buffer, test_addr, QSPI_SECTOR_SIZE, EXECUTE_BACKGROUND))
 		return false;
 
@@ -191,7 +200,7 @@ uint8_t QSpiFlash::test_encode_num(uint32_t num) {
 	return (num * 7) + (num >> 7);
 }
 
-bool QSpiFlash::Erase(uint32_t size, uint32_t BaseAddress, UseInterruptFlags use_interrupt) {
+bool QSpiFlash::Erase(uint32_t size, uint32_t base_addr, UseInterruptFlags use_interrupt) {
 	uint8_t status;
 	uint32_t timeout;
 
@@ -200,17 +209,17 @@ bool QSpiFlash::Erase(uint32_t size, uint32_t BaseAddress, UseInterruptFlags use
 
 	if (size == SECTOR) {
 		s_command.Instruction = SECTOR_ERASE_CMD;
-		s_command.Address = BaseAddress;
+		s_command.Address = base_addr;
 		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 		timeout = QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS;
 	} else if (size == BLOCK_32K) {
 		s_command.Instruction = BLOCK_ERASE_32K_CMD;
-		s_command.Address = BaseAddress;
+		s_command.Address = base_addr;
 		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 		timeout = QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS;
 	} else if (size == BLOCK_64K) {
 		s_command.Instruction = BLOCK_ERASE_64K_CMD;
-		s_command.Address = BaseAddress;
+		s_command.Address = base_addr;
 		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 		timeout = QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS;
 	} else if (size == ENTIRE_CHIP) {
@@ -242,10 +251,10 @@ bool QSpiFlash::Erase(uint32_t size, uint32_t BaseAddress, UseInterruptFlags use
 bool QSpiFlash::Write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
 	uint32_t end_addr, current_size, current_addr;
 
-	if (write_addr >= QSPI_FLASH_SIZE_BYTES)
+	if (write_addr >= defs.flash_size_bytes)
 		return false;
 
-	if (write_addr + num_bytes >= QSPI_FLASH_SIZE_BYTES)
+	if (write_addr + num_bytes >= defs.flash_size_bytes)
 		return false;
 
 	// Calculation of the size between the write address and the end of the page
@@ -268,10 +277,17 @@ bool QSpiFlash::Write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
 		if (WriteEnable() != HAL_OK)
 			return false;
 
-		s_command.Instruction = QUAD_IN_FAST_PROG_CMD;
+		if (defs.io_mode == QSPIFlashConfig::QPI) {
+			//TODO: chip used in EnOsc uses 0x38 for this cmd, while S25FL128L/256L uses 0x32
+			// Or, on the latter, use PAGE_PROG_CMD (0x02) and 4 Address lines
+			s_command.Instruction = QUAD_IN_FAST_PROG_CMD;
+		} else {
+			//This is for DDR mode also, on S25FL128L/256L
+			s_command.Instruction = PAGE_PROG_CMD;
+		}
 		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-		s_command.DataMode = QSPI_DATA_4_LINES;
+		s_command.DataMode = data_mode;
 		s_command.DummyCycles = 0;
 		s_command.Address = current_addr;
 		s_command.NbData = current_size;
@@ -313,11 +329,17 @@ bool QSpiFlash::Write_Page(uint8_t *pData, uint32_t write_addr, uint32_t num_byt
 	if (WriteEnable() != HAL_OK)
 		return false;
 
-	// Initialize the program command
-	s_command.Instruction = QUAD_IN_FAST_PROG_CMD;
+	if (defs.io_mode == QSPIFlashConfig::QPI) {
+		//TODO: chip used in EnOsc uses 0x38 for this cmd, while S25FL128L/256L uses 0x32
+		// Or, on the latter, use PAGE_PROG_CMD (0x02) and 4 Address lines
+		s_command.Instruction = QUAD_IN_FAST_PROG_CMD;
+	} else {
+		//This is for DDR mode also, on S25FL128L/256L
+		s_command.Instruction = PAGE_PROG_CMD;
+	}
 	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-	s_command.DataMode = QSPI_DATA_4_LINES;
+	s_command.DataMode = data_mode;
 	s_command.DummyCycles = 0;
 	s_command.Address = write_addr;
 	s_command.NbData = num_bytes;
@@ -358,14 +380,27 @@ bool QSpiFlash::Read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, Use
 	// s_command.AlternateBytesSize 	= QSPI_ALTERNATE_BYTES_8_BITS;
 	// s_command.AlternateBytes 		= 0xA0;
 
-	s_command.Instruction = QUAD_INOUT_FAST_READ_CMD;
-	s_command.AddressMode = QSPI_ADDRESS_4_LINES;
+	if (defs.io_mode == QSPIFlashConfig::QPI) {
+		s_command.Instruction = QUAD_INOUT_FAST_READ_CMD;
+		s_command.AddressMode = QSPI_ADDRESS_4_LINES;
+		s_command.DummyCycles = QSPI_DUMMY_CYCLES_READ_QUAD_IO;
+		s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+		//TODO: if chip == IS25LQ0x0B, then:
+		//s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
+		// ... else if it's S25FL128L/256L:
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+
+		//TODO:: DDR Mode: DUAL_OUT_FAST_READ_CMD
+	} else {
+		s_command.Instruction = FAST_READ_CMD;
+		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
+		s_command.DummyCycles = QSPI_DUMMY_CYCLES_FAST_READ;
+		s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	}
 	s_command.Address = read_addr;
-	s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
-	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
 	s_command.AlternateBytes = 0x00;
-	s_command.DataMode = QSPI_DATA_4_LINES;
-	s_command.DummyCycles = QSPI_DUMMY_CYCLES_READ_QUAD_IO;
+	s_command.DataMode = data_mode;
 	s_command.NbData = num_bytes;
 
 	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
@@ -379,6 +414,40 @@ bool QSpiFlash::Read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, Use
 		status = HAL_QSPI_Receive(&handle, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE);
 
 	if (status != HAL_OK)
+		return false;
+
+	return true;
+}
+
+bool QSpiFlash::read_chip_id(uint32_t *chip_id_ptr) {
+	s_command.Instruction = READ_ID_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_NONE;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_1_LINE;
+	s_command.DummyCycles = 0;
+	s_command.NbData = 3;
+
+	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return false;
+
+	if (HAL_QSPI_Receive(&handle, (uint8_t *)chip_id_ptr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return false;
+
+	return true;
+}
+
+bool QSpiFlash::read_config(uint32_t *data) {
+	s_command.Instruction = READ_STATUS_REG_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_NONE;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_1_LINE;
+	s_command.DummyCycles = 0;
+	s_command.NbData = 4;
+
+	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return false;
+
+	if (HAL_QSPI_Receive(&handle, (uint8_t *)data, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 		return false;
 
 	return true;
@@ -400,6 +469,57 @@ HAL_StatusTypeDef QSpiFlash::WriteEnable() {
 	/* Configure automatic polling mode to wait for write enabling */
 	s_config.Match = QSPI_SR_WREN;
 	s_config.Mask = QSPI_SR_WREN;
+	s_config.MatchMode = QSPI_MATCH_MODE_AND;
+	s_config.StatusBytesSize = 1;
+	s_config.Interval = 0x10;
+	s_config.AutomaticStop = QSPI_AUTOMATIC_STOP_ENABLE;
+
+	s_command.Instruction = READ_STATUS_REG_CMD;
+	s_command.DataMode = QSPI_DATA_1_LINE;
+
+	if (HAL_QSPI_AutoPolling(&handle, &s_command, &s_config, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return HAL_ERROR;
+
+	return HAL_OK;
+}
+
+/**
+ * @brief	This function put QSPI memory in QPI mode (quad I/O).
+ * @retval None
+ */
+HAL_StatusTypeDef QSpiFlash::EnterMemory_QPI() {
+	QSPI_AutoPollingTypeDef s_config;
+
+	s_command.Instruction = WRITE_ENABLE_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_NONE;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_NONE;
+	s_command.DummyCycles = 0;
+
+	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return HAL_ERROR;
+
+	//FIXME: Some chips need this: some use 0x38 enter QSPI mode
+	s_command.Instruction = WRITE_STATUS_REG_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_NONE;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_1_LINE;
+	s_command.DummyCycles = 0;
+	s_command.NbData = 1;
+
+	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return HAL_ERROR;
+
+	uint8_t reg = QSPI_SR_QUADEN;
+	if (HAL_QSPI_Transmit(&handle, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		return HAL_ERROR;
+
+	/* 40ms	Write Status/Configuration Register Cycle Time */
+	HAL_Delay(8);
+
+	/* Configure automatic polling mode to wait the QUADEN bit=1 and WIP bit=0 */
+	s_config.Match = QSPI_SR_QUADEN;
+	s_config.Mask = QSPI_SR_QUADEN /*|QSPI_SR_WIP*/;
 	s_config.MatchMode = QSPI_MATCH_MODE_AND;
 	s_config.StatusBytesSize = 1;
 	s_config.Interval = 0x10;
@@ -470,58 +590,6 @@ HAL_StatusTypeDef QSpiFlash::AutoPollingMemReady_IT() {
 	QSPI_status = STATUS_WIP;
 
 	if (HAL_QSPI_AutoPolling_IT(&handle, &s_command, &s_config) != HAL_OK)
-		return HAL_ERROR;
-
-	return HAL_OK;
-}
-
-/**
- * @brief	This function put QSPI memory in QPI mode (quad I/O).
- * @retval None
- */
-HAL_StatusTypeDef QSpiFlash::EnterMemory_QPI() {
-	QSPI_AutoPollingTypeDef s_config;
-	uint8_t reg;
-
-	reg = QSPI_SR_QUADEN;
-
-	s_command.Instruction = WRITE_ENABLE_CMD;
-	s_command.AddressMode = QSPI_ADDRESS_NONE;
-	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-	s_command.DataMode = QSPI_DATA_NONE;
-	s_command.DummyCycles = 0;
-
-	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-		return HAL_ERROR;
-
-	s_command.Instruction = WRITE_STATUS_REG_CMD;
-	s_command.AddressMode = QSPI_ADDRESS_NONE;
-	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-	s_command.DataMode = QSPI_DATA_1_LINE;
-	s_command.DummyCycles = 0;
-	s_command.NbData = 1;
-
-	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-		return HAL_ERROR;
-
-	if (HAL_QSPI_Transmit(&handle, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-		return HAL_ERROR;
-
-	/* 40ms	Write Status/Configuration Register Cycle Time */
-	HAL_Delay(8);
-
-	/* Configure automatic polling mode to wait the QUADEN bit=1 and WIP bit=0 */
-	s_config.Match = QSPI_SR_QUADEN;
-	s_config.Mask = QSPI_SR_QUADEN /*|QSPI_SR_WIP*/;
-	s_config.MatchMode = QSPI_MATCH_MODE_AND;
-	s_config.StatusBytesSize = 1;
-	s_config.Interval = 0x10;
-	s_config.AutomaticStop = QSPI_AUTOMATIC_STOP_ENABLE;
-
-	s_command.Instruction = READ_STATUS_REG_CMD;
-	s_command.DataMode = QSPI_DATA_1_LINE;
-
-	if (HAL_QSPI_AutoPolling(&handle, &s_command, &s_config, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 		return HAL_ERROR;
 
 	return HAL_OK;

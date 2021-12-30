@@ -1,17 +1,8 @@
 #pragma once
 
-// Todo: make this a const struct, which is passed to QSPI ctor
 // S25FL127/128: 16MByte
-#define QSPI_FLASH_SIZE_ADDRESSBITS 24
-#define QSPI_FLASH_SIZE_BYTES 0x01000000 // 128Mbit = 16MByte
-
-// IS25LQ040B
-// #define QSPI_FLASH_SIZE_ADDRESSBITS 25 // 25 address bits = 4 Mbits :: FIXME: shouldn't this be 22? 2^22 = 4 * 1024 * 1024
-// #define QSPI_FLASH_SIZE_BYTES 0x80000  // 4mbit = 512 KBytes
-
-// IS25LQ020B
-// #define QSPI_FLASH_SIZE_ADDRESSBITS 24 // 24 address bits = 2 Mbits :: FIXME: shouldn't this be 21? 2^21 = 2 * 1024 * 1024
-// #define QSPI_FLASH_SIZE_BYTES 0x40000  // 256 KBytes
+// IS25LQ040B: 512kBytes
+// IS25LQ020B: 256kBytes
 
 #define QSPI_64KBLOCK_SIZE 0x10000 // 64 KBytes, hence the name "64K Block" :)
 #define QSPI_32KBLOCK_SIZE 0x8000  // 32 KBytes, hence the name "32K Block" :)
@@ -19,13 +10,9 @@
 #define QSPI_PAGE_SIZE 0x100	   // 256 Byte pages
 #define QSPI_PAGE_ADDRESS_BITS 8   // 8 bits = 256 addresses per page
 
-#define QSPI_NUM_64KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_64KBLOCK_SIZE)
-#define QSPI_NUM_32KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_32KBLOCK_SIZE)
-#define QSPI_NUM_SECTORS (QSPI_FLASH_SIZE_BYTES / QSPI_SECTOR_SIZE)
-
-// S25FL127/128:
-static_assert(QSPI_NUM_64KBLOCKS == 256);
-static_assert(QSPI_NUM_SECTORS == 4096);
+// #define QSPI_NUM_64KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_64KBLOCK_SIZE)
+// #define QSPI_NUM_32KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_32KBLOCK_SIZE)
+// #define QSPI_NUM_SECTORS (QSPI_FLASH_SIZE_BYTES / QSPI_SECTOR_SIZE)
 
 #define QSPI_DUMMY_CYCLES_READ 0
 #define QSPI_DUMMY_CYCLES_FAST_READ 8
