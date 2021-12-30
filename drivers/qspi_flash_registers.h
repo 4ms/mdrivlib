@@ -60,7 +60,8 @@
 
 /* Program Operations */
 #define PAGE_PROG_CMD 0x02
-#define QUAD_IN_FAST_PROG_CMD 0x38
+//#define QUAD_IN_FAST_PROG_CMD 0x38 //Only for some chips, e.g. IS25LQ0x0B
+#define QUAD_IN_FAST_PROG_CMD 0x32 //For S25FL128L/256L
 
 /* Erase Operations */
 #define SECTOR_ERASE_CMD 0x20
