@@ -26,6 +26,8 @@ private:
 
 	const QSPIFlashConfig &defs;
 	const uint32_t data_mode;
+	const int quad_write_cmd;
+	const int quad_read_dummy_cycles;
 
 	HAL_StatusTypeDef WriteEnable();
 	void GPIO_Init_IO0_IO1();

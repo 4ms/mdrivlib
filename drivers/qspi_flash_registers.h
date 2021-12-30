@@ -4,24 +4,22 @@
 // IS25LQ040B: 512kBytes
 // IS25LQ020B: 256kBytes
 
-#define QSPI_64KBLOCK_SIZE 0x10000 // 64 KBytes, hence the name "64K Block" :)
-#define QSPI_32KBLOCK_SIZE 0x8000  // 32 KBytes, hence the name "32K Block" :)
+#define QSPI_64KBLOCK_SIZE 0x10000 // 64 KByte Blocks
+#define QSPI_32KBLOCK_SIZE 0x8000  // 32 KByte Half-blocks
 #define QSPI_SECTOR_SIZE 0x1000	   // 4 KBytes sectors
 #define QSPI_PAGE_SIZE 0x100	   // 256 Byte pages
 #define QSPI_PAGE_ADDRESS_BITS 8   // 8 bits = 256 addresses per page
 
-// #define QSPI_NUM_64KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_64KBLOCK_SIZE)
-// #define QSPI_NUM_32KBLOCKS (QSPI_FLASH_SIZE_BYTES / QSPI_32KBLOCK_SIZE)
-// #define QSPI_NUM_SECTORS (QSPI_FLASH_SIZE_BYTES / QSPI_SECTOR_SIZE)
-
 #define QSPI_DUMMY_CYCLES_READ 0
 #define QSPI_DUMMY_CYCLES_FAST_READ 8
 #define QSPI_DUMMY_CYCLES_READ_QUAD 8
-#define QSPI_DUMMY_CYCLES_READ_QUAD_IO 4
 
-// TODO: lock these to kUpdateRate. Currently in ms
-#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 20000
-#define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 5000 //datasheet says 720ms
+//TODO: have a struct for each chip type with its commands and constants
+#define IS25LQ0x0B_QSPI_DUMMY_CYCLES_READ_QUAD_IO 4
+#define S25FLxxxL__QSPI_DUMMY_CYCLES_READ_QUAD_IO 8
+
+#define QSPI_CHIP_ERASE_MAX_TIME_SYSTICKS 200000
+#define QSPI_64KBLOCK_ERASE_MAX_TIME_SYSTICKS 2000
 #define QSPI_32KBLOCK_ERASE_MAX_TIME_SYSTICKS 500
 #define QSPI_SECTOR_ERASE_MAX_TIME_SYSTICKS 300
 
@@ -60,8 +58,9 @@
 
 /* Program Operations */
 #define PAGE_PROG_CMD 0x02
-//#define QUAD_IN_FAST_PROG_CMD 0x38 //Only for some chips, e.g. IS25LQ0x0B
-#define QUAD_IN_FAST_PROG_CMD 0x32 //For S25FL128L/256L
+
+#define IS25LQ0x0B_QUAD_IN_FAST_PROG_CMD 0x38
+#define S25FLxxxL_QUAD_IN_FAST_PROG_CMD 0x32
 
 /* Erase Operations */
 #define SECTOR_ERASE_CMD 0x20

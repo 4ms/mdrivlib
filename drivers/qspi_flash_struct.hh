@@ -16,12 +16,18 @@ struct QSPIFlashConfig {
 	uint32_t IRQ_subpri = 2;
 
 	uint32_t flash_size_bytes = 0x40000;
+
 	enum AddressBits { AddrBits24 = 24, AddrBits32 = 32 };
 	AddressBits flash_size_address_bits = AddrBits24;
+
+	enum ChipID { IS25L, S25FLxxxL };
+	ChipID chip_id = IS25L;
 
 	enum IOMode { SDR, DDR, QPI };
 	IOMode io_mode = QPI;
 };
+
+//TODO: constexpr struct for config
 // struct QSPIFlashConfig {
 // 	static constexpr PinNoInit io0{};
 // 	static constexpr PinNoInit io1{};

@@ -34,7 +34,12 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 	: defs{config_defs}
 	, data_mode{config_defs.io_mode == QSPIFlashConfig::QPI	  ? QSPI_DATA_4_LINES
 				: config_defs.io_mode == QSPIFlashConfig::DDR ? QSPI_DATA_2_LINES
-															  : QSPI_DATA_1_LINE} {
+															  : QSPI_DATA_1_LINE}
+	, quad_write_cmd{config_defs.chip_id == QSPIFlashConfig::IS25L ? IS25LQ0x0B_QUAD_IN_FAST_PROG_CMD
+																   : S25FLxxxL_QUAD_IN_FAST_PROG_CMD}
+	, quad_read_dummy_cycles{config_defs.chip_id == QSPIFlashConfig::IS25L
+								 ? IS25LQ0x0B_QSPI_DUMMY_CYCLES_READ_QUAD_IO
+								 : S25FLxxxL__QSPI_DUMMY_CYCLES_READ_QUAD_IO} {
 	instance_ = this;
 
 	handle.Instance = QUADSPI;
@@ -278,9 +283,7 @@ bool QSpiFlash::Write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
 			return false;
 
 		if (defs.io_mode == QSPIFlashConfig::QPI) {
-			//TODO: chip used in EnOsc uses 0x38 for this cmd, while S25FL128L/256L uses 0x32
-			// Or, on the latter, use PAGE_PROG_CMD (0x02) and 4 Address lines
-			s_command.Instruction = QUAD_IN_FAST_PROG_CMD;
+			s_command.Instruction = quad_write_cmd;
 		} else {
 			//This is for DDR mode also, on S25FL128L/256L
 			s_command.Instruction = PAGE_PROG_CMD;
@@ -330,9 +333,7 @@ bool QSpiFlash::Write_Page(uint8_t *pData, uint32_t write_addr, uint32_t num_byt
 		return false;
 
 	if (defs.io_mode == QSPIFlashConfig::QPI) {
-		//TODO: chip used in EnOsc uses 0x38 for this cmd, while S25FL128L/256L uses 0x32
-		// Or, on the latter, use PAGE_PROG_CMD (0x02) and 4 Address lines
-		s_command.Instruction = QUAD_IN_FAST_PROG_CMD;
+		s_command.Instruction = quad_write_cmd;
 	} else {
 		//This is for DDR mode also, on S25FL128L/256L
 		s_command.Instruction = PAGE_PROG_CMD;
@@ -383,23 +384,19 @@ bool QSpiFlash::Read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, Use
 	if (defs.io_mode == QSPIFlashConfig::QPI) {
 		s_command.Instruction = QUAD_INOUT_FAST_READ_CMD;
 		s_command.AddressMode = QSPI_ADDRESS_4_LINES;
-		s_command.DummyCycles = QSPI_DUMMY_CYCLES_READ_QUAD_IO;
+		s_command.DummyCycles = quad_read_dummy_cycles;
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
 		s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
-		//TODO: if chip == IS25LQ0x0B, then:
-		//s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
-		// ... else if it's S25FL128L/256L:
-		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+		s_command.AlternateBytes = 0x00;
 
 		//TODO:: DDR Mode: DUAL_OUT_FAST_READ_CMD
 	} else {
 		s_command.Instruction = FAST_READ_CMD;
 		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 		s_command.DummyCycles = QSPI_DUMMY_CYCLES_FAST_READ;
-		s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
 		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
 	}
 	s_command.Address = read_addr;
-	s_command.AlternateBytes = 0x00;
 	s_command.DataMode = data_mode;
 	s_command.NbData = num_bytes;
 
