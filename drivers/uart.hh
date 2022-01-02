@@ -38,6 +38,11 @@ public:
 		}
 	}
 
+	void putchar(char c) {
+		uart->TDR = c;
+		delay_for_write();
+	}
+
 	void write(const char *str) {
 		while (*str) {
 			uart->TDR = *str++;
