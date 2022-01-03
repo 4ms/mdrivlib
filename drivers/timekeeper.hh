@@ -23,7 +23,9 @@ public:
 private:
 	TIM_TypeDef *timx;
 	IRQn_Type irqn;
-	bool is_running;
+
+	// Note: is_running must be volatile so compiler doesn't optimize out calls to start();
+	volatile bool is_running;
 	std::function<void(void)> task_func;
 
 	void _set_periph(TIM_TypeDef *timx);
@@ -31,8 +33,8 @@ private:
 	void _register_task();
 	void _init(const TimekeeperConfig &config);
 
-	bool tim_update_IT_is_set() const;
-	bool tim_update_IT_is_source() const;
+	[[nodiscard]] bool tim_update_IT_is_set() const;
+	[[nodiscard]] bool tim_update_IT_is_source() const;
 	void tim_update_IT_clear() const;
 };
 } // namespace mdrivlib
