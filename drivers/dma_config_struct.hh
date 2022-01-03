@@ -11,7 +11,7 @@ struct DefaultDMAConf {
 	static constexpr uint32_t pri = 0;
 	static constexpr uint32_t subpri = 0;
 
-	enum Direction { Mem2Mem, Mem2Periph, Periph2Mem }; 
+	enum Direction { Mem2Mem, Mem2Periph, Periph2Mem };
 	static constexpr Direction dir = Mem2Periph;
 
 	static constexpr bool circular = false;
@@ -29,11 +29,11 @@ struct DefaultDMAConf {
 	static constexpr bool half_transfer_interrupt_enable = false;
 
 	static constexpr bool enable_fifo = true;
-	enum FifoThreshold {Fifo1QuarterFull, FifoHalfFull, Fifo3QuarterFull, FifoFull}; 
+	enum FifoThreshold { Fifo1QuarterFull, FifoHalfFull, Fifo3QuarterFull, FifoFull };
 	static constexpr FifoThreshold fifo_threshold = FifoHalfFull;
 
-	enum BurstSize {Single, Inc4, Inc8, Inc16};
-	static constexpr BurstSize mem_burst= Single;
+	enum BurstSize { Single, Inc4, Inc8, Inc16 };
+	static constexpr BurstSize mem_burst = Single;
 	static constexpr BurstSize periph_burst = Single;
 
 	// Todo: Double-buffer mode
@@ -220,6 +220,28 @@ constexpr uint32_t dma_get_FE_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_FEIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_FEIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_FEIF3_7
-										  : 0x00000000;
+										 : 0x00000000;
+}
+
+template<typename T>
+constexpr uint32_t dma_get_DME_flag_index(T stream) {
+	auto s = (uint32_t)stream;
+	return s == ((uint32_t)DMA1_Stream0) ? DMA_FLAG_DMEIF0_4
+		 : s == ((uint32_t)DMA2_Stream0) ? DMA_FLAG_DMEIF0_4
+		 : s == ((uint32_t)DMA1_Stream4) ? DMA_FLAG_DMEIF0_4
+		 : s == ((uint32_t)DMA2_Stream4) ? DMA_FLAG_DMEIF0_4
+		 : s == ((uint32_t)DMA1_Stream1) ? DMA_FLAG_DMEIF1_5
+		 : s == ((uint32_t)DMA2_Stream1) ? DMA_FLAG_DMEIF1_5
+		 : s == ((uint32_t)DMA1_Stream5) ? DMA_FLAG_DMEIF1_5
+		 : s == ((uint32_t)DMA2_Stream5) ? DMA_FLAG_DMEIF1_5
+		 : s == ((uint32_t)DMA1_Stream2) ? DMA_FLAG_DMEIF2_6
+		 : s == ((uint32_t)DMA2_Stream2) ? DMA_FLAG_DMEIF2_6
+		 : s == ((uint32_t)DMA1_Stream6) ? DMA_FLAG_DMEIF2_6
+		 : s == ((uint32_t)DMA2_Stream6) ? DMA_FLAG_DMEIF2_6
+		 : s == ((uint32_t)DMA1_Stream3) ? DMA_FLAG_DMEIF3_7
+		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_DMEIF3_7
+		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_DMEIF3_7
+		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_DMEIF3_7
+										 : 0x00000000;
 }
 } // namespace mdrivlib
