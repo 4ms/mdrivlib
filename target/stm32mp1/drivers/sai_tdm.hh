@@ -61,6 +61,7 @@ private:
 	uint32_t dma_ht_flag_index;
 	uint32_t dma_te_flag_index;
 	uint32_t dma_fe_flag_index;
+	uint32_t dma_dme_flag_index;
 	volatile uint32_t *dma_isr_reg;
 	volatile uint32_t *dma_ifcr_reg;
 };

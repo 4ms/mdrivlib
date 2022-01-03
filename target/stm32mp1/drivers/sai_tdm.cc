@@ -310,6 +310,7 @@ void SaiTdmPeriph::start() {
 		dma_ht_flag_index = dma_get_HT_flag_index(hdma_rx.Instance);
 		dma_te_flag_index = dma_get_TE_flag_index(hdma_rx.Instance);
 		dma_fe_flag_index = dma_get_FE_flag_index(hdma_rx.Instance);
+		dma_dme_flag_index = dma_get_DME_flag_index(hdma_rx.Instance);
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_rx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_rx.stream);
 		_start_irq(rx_irqn);
@@ -319,6 +320,7 @@ void SaiTdmPeriph::start() {
 		dma_ht_flag_index = dma_get_HT_flag_index(hdma_tx.Instance);
 		dma_te_flag_index = dma_get_TE_flag_index(hdma_tx.Instance);
 		dma_fe_flag_index = dma_get_FE_flag_index(hdma_tx.Instance);
+		dma_dme_flag_index = dma_get_DME_flag_index(hdma_tx.Instance);
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_tx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
 		_start_irq(tx_irqn);
@@ -341,13 +343,18 @@ void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 		}
 
 		if (*dma_isr_reg & dma_te_flag_index) {
-			*dma_ifcr_reg = dma_te_flag_index;
-			__BKPT();
+			//*dma_ifcr_reg = dma_te_flag_index;
+			__BKPT(21);
 			// Error: debug breakpoint or logging here
 		}
 		if (*dma_isr_reg & dma_fe_flag_index) {
-			*dma_ifcr_reg = dma_fe_flag_index;
-			__BKPT();
+			//*dma_ifcr_reg = dma_fe_flag_index;
+			__BKPT(22);
+			// Error: debug breakpoint or logging here
+		}
+		if (*dma_isr_reg & dma_dme_flag_index) {
+			//*dma_ifcr_reg = dma_dme_flag_index;
+			__BKPT(23);
 			// Error: debug breakpoint or logging here
 		}
 	});
