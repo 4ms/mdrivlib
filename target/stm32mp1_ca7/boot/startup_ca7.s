@@ -10,6 +10,8 @@
 
 .equ UART4_TDR, 0x40010028
 
+.equ GICC_BASE, 0xA0022000
+
 .section .vector_table, "x"
 .global _Reset
 _Reset:
@@ -42,6 +44,10 @@ Reset_Handler:
 													// Set Vector Base Address Register (VBAR) to point to this application's vector table
 	ldr    R0, =0xC2000040
 	mcr    p15, 0, R0, c12, c0, 0
+
+	ldr r4, =GICC_BASE 								// Clear all bits in GICC (disables GROUP0 and GROUP1), 
+	mov r0, #0 										// this prevents jumping to non-existant vector table when we switch to FIQ mode
+	str r0, [r4]
 
 	ldr r4, =UART4_TDR 								// UART: print 'A'
 	mov r0, #65
