@@ -32,7 +32,8 @@ struct DacStream : DACType {
 	uint32_t cur_chip = 0;
 };
 
-template<typename PinT, typename BufferT>
+//TODO: proper concept for CircBufferT (needs set_head, put, get, capacity)
+template<typename PinT, typename CircBufferT>
 struct GPIOStream {
 	GPIOStream() {
 		state_buffer.set_head(state_buffer.capacity() / 2);
@@ -49,7 +50,7 @@ struct GPIOStream {
 			PinT::low();
 	}
 
-	BufferT state_buffer;
+	CircBufferT state_buffer;
 	PinT init_pin;
 };
 } // namespace mdrivlib
