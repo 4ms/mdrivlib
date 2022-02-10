@@ -46,6 +46,8 @@ private:
 	void i2c_error_handler();
 	void i2c_event_handler();
 
+	uint32_t _check_errors(uint32_t retries);
+
 	Error _init_periph(I2C_TypeDef *periph, const I2CTimingConfig &timing);
 	Error _init_periph(I2C_TypeDef *periph) {
 		return _init_periph(periph, I2CTimingConfig{.PRESC = 0x50, .SCLDEL_SDADEL = 0x70, .SCLH = 0x75, .SCLL = 0xB1});
