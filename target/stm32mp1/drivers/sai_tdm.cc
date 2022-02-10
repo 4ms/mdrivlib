@@ -289,12 +289,12 @@ void SaiTdmPeriph::_init_pins() {
 					PinOType::PushPull};
 }
 
-void SaiTdmPeriph::set_tx_buffers(uint8_t *tx_buf_ptr, uint32_t block_size) {
+void SaiTdmPeriph::set_tx_buffer_start(uint8_t *tx_buf_ptr, uint32_t block_size) {
 	tx_buf_ptr_ = tx_buf_ptr;
 	tx_block_size_ = block_size;
 }
 
-void SaiTdmPeriph::set_rx_buffers(uint8_t *rx_buf_ptr, uint32_t block_size) {
+void SaiTdmPeriph::set_rx_buffer_start(uint8_t *rx_buf_ptr, uint32_t block_size) {
 	rx_buf_ptr_ = rx_buf_ptr;
 	rx_block_size_ = block_size;
 }
