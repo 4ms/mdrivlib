@@ -325,6 +325,9 @@ void SaiTdmPeriph::start() {
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
 		_start_irq(tx_irqn);
 	}
+	if (saidef_.mode == SaiConfig::ExtSynced) {
+		stop(); //disable interrupts for synced SAI
+	}
 
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
