@@ -53,6 +53,11 @@ struct GPIOExpander {
 		return Error::None;
 	}
 
+	bool is_present() {
+		auto err = _i2c.read(_device_addr, _data, 1);
+		return err == I2CPeriph::I2C_NO_ERR;
+	}
+
 	// Todo:
 	// Create an EXTI interrupt to respond to chip telling us there's a pin change
 	// void start_ISR(std::function<void(void)> &&cb) {
