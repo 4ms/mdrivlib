@@ -28,10 +28,10 @@ struct InterruptControl {
 		GIC_DisableIRQ(irqn);
 	}
 
-	enum { LevelTriggered = 0b00, EdgeTriggered = 0b10 };
-	static void enable_irq(IRQn_Type irqn) {
+	enum TriggerType { LevelTriggered = 0b01, EdgeTriggered = 0b10 };
+	static void enable_irq(IRQn_Type irqn, TriggerType trig = EdgeTriggered) {
 		GIC_SetTarget(irqn, 1); // Todo: Use current CPU number
-		GIC_SetConfiguration(irqn, EdgeTriggered);
+		GIC_SetConfiguration(irqn, trig);
 		GIC_ClearPendingIRQ(irqn);
 		GIC_EnableIRQ(irqn);
 	}
