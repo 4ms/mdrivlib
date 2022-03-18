@@ -69,7 +69,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 	handle.Init.FlashSize = defs.flash_size_address_bits - 1;
 	handle.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
 	handle.Init.ClockMode = QSPI_CLOCK_MODE_0;
-	handle.Init.FlashID = QSPI_FLASH_ID_1;
+	handle.Init.FlashID = defs.bank == QSPIFlashConfig::Bank1 ? QSPI_FLASH_ID_1 : QSPI_FLASH_ID_2;
 	handle.Init.DualFlash = QSPI_DUALFLASH_DISABLE;
 
 	HAL_QSPI_Init(&handle);

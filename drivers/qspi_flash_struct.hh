@@ -25,6 +25,8 @@ struct QSPIFlashConfig {
 
 	enum IOMode { SDR, DDR, QPI };
 	IOMode io_mode = QPI;
+	enum Bank { Bank1, Bank2 };
+	Bank bank = Bank1;
 };
 
 //TODO: constexpr struct for config
