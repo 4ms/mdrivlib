@@ -15,16 +15,15 @@ Pin::Pin(GPIO port,
 	: port_(port)
 	, pin_(static_cast<uint16_t>(1 << (pin & 0x0F)))
 	, polarity_(polarity) {
-	// Todo: test this next line instead of the rest of the function
-	// _init(mode, other.af, pull, speed, otype);
-	RCC_Enable::GPIO::enable(GPIOPort(port_));
-	set_mode(mode);
-	set_pull(pull);
-	set_speed(speed);
-	if (mode == PinMode::Alt || mode == PinMode::Output)
-		set_otype(otype);
-	if (mode == PinMode::Alt)
-		set_alt(af);
+	_init(mode, af, pull, speed, otype);
+	// RCC_Enable::GPIO::enable(GPIOPort(port_));
+	// set_mode(mode);
+	// set_pull(pull);
+	// set_speed(speed);
+	// if (mode == PinMode::Alt || mode == PinMode::Output)
+	// 	set_otype(otype);
+	// if (mode == PinMode::Alt)
+	// 	set_alt(af);
 }
 Pin::Pin(const PinNoInit &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype)
 	: port_(other.gpio)
@@ -42,6 +41,8 @@ void Pin::init(
 }
 
 void Pin::_init(PinMode mode, uint8_t af, PinPull pull, PinSpeed speed, PinOType otype) {
+	if (port_ == GPIO::Unused)
+		return;
 	RCC_Enable::GPIO::enable(GPIOPort(port_));
 	set_mode(mode);
 	set_pull(pull);
