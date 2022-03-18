@@ -29,12 +29,12 @@ private:
 	const int quad_write_cmd;
 	const int quad_read_dummy_cycles;
 
-	HAL_StatusTypeDef WriteEnable();
-	void GPIO_Init_IO0_IO1();
-	void GPIO_Init_IO2_IO3_AF();
-	HAL_StatusTypeDef AutoPollingMemReady(uint32_t Timeout);
-	HAL_StatusTypeDef AutoPollingMemReady_IT();
-	HAL_StatusTypeDef EnterMemory_QPI();
+	HAL_StatusTypeDef write_enable();
+	void GPIO_init_IO0_IO1();
+	void GPIO_init_IO2_IO3_AF();
+	HAL_StatusTypeDef auto_polling_mem_ready(uint32_t Timeout);
+	HAL_StatusTypeDef auto_polling_mem_ready_it();
+	HAL_StatusTypeDef enter_memory_QPI();
 	void init_command(QSPI_CommandTypeDef *s_command);
 
 	bool done_TXing() {
@@ -50,8 +50,8 @@ public:
 		return QSPI_status == STATUS_READY;
 	}
 
-	bool Test();
-	bool Test_Sector(uint8_t sector_num);
+	bool test();
+	bool test_sector(uint8_t sector_num);
 
 	uint32_t get_64kblock_addr(int block64k_num);
 	uint32_t get_32kblock_addr(int block32k_num);
@@ -59,20 +59,20 @@ public:
 
 	HAL_StatusTypeDef Reset();
 
-	bool Read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, UseInterruptFlags use_interrupt);
-	bool Read_Background(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes) {
-		return Read(pData, read_addr, num_bytes, EXECUTE_BACKGROUND);
+	bool read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, UseInterruptFlags use_interrupt);
+	bool read_background(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes) {
+		return read(pData, read_addr, num_bytes, EXECUTE_BACKGROUND);
 	}
 
-	bool Write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes);
-	bool Write_Page(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes, UseInterruptFlags use_interrupt);
+	bool write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes);
+	bool write_page(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes, UseInterruptFlags use_interrupt);
 
-	bool Erase(uint32_t size, uint32_t base_addr, UseInterruptFlags use_interrupt);
-	bool Erase_Background(ErasableSizes size, uint32_t base_addr) {
-		return Erase(size, base_addr, EXECUTE_FOREGROUND);
+	bool erase(uint32_t size, uint32_t base_addr, UseInterruptFlags use_interrupt);
+	bool erase_background(ErasableSizes size, uint32_t base_addr) {
+		return erase(size, base_addr, EXECUTE_FOREGROUND);
 	}
-	bool Erase_Block_Background(uint32_t base_addr) {
-		return Erase(BLOCK_32K, base_addr, EXECUTE_BACKGROUND);
+	bool erase_block_background(uint32_t base_addr) {
+		return erase(BLOCK_32K, base_addr, EXECUTE_BACKGROUND);
 	}
 
 	bool read_config(uint32_t *data);

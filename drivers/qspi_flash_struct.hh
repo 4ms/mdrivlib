@@ -23,8 +23,9 @@ struct QSPIFlashConfig {
 	enum ChipID { IS25L, S25FLxxxL };
 	ChipID chip_id = IS25L;
 
-	enum IOMode { SDR, DDR, QPI };
-	IOMode io_mode = QPI;
+	enum IOMode { SingleSPI, DualSPI, QuadSPI };
+	IOMode io_mode = QuadSPI;
+
 	enum Bank { Bank1, Bank2 };
 	Bank bank = Bank1;
 };
