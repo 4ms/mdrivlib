@@ -23,7 +23,7 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 											// these are expected to be clobbered by the bl ISRHandler call
 		"and r3, sp, #4  	 			\n" // Ensure stack is 8-byte aligned.
 		"sub sp, sp, r3  				\n" //
-		"push {r3}  					\n" // Store adjustment to stack
+		"push {r2, r3}  				\n" // Store adjustment to stack plus a dummy reg to maintain alignment
 
 		//////////FPU
 		"vmrs r1, FPSCR 				\n" // Copy FPU status reg to r1
@@ -59,7 +59,7 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 		"vmsr FPSCR, r1 				\n" // Restore FPU status reg from popped r1
 											////////////
 
-		"pop {r3} 						\n" // Pop the stack adjustment
+		"pop {r2, r3} 					\n" // Pop the stack adjustment and dummy register
 		"add sp, sp, r3  				\n" // Restore previous stack pointer
 		"pop {r0-r3, r12, lr} 			\n" //
 		"rfeia sp! 						\n" // Return to address on stack, and pop SPSR (which restores the en/disable
