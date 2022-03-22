@@ -255,7 +255,7 @@ bool QSpiFlash::erase(uint32_t size, uint32_t base_addr, UseInterruptFlags use_i
 	s_command.DataMode = QSPI_DATA_NONE;
 	s_command.DummyCycles = 0;
 
-	if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+	if (HAL_QSPI_Command(&handle, &s_command, 200 /*HAL_QPSI_TIMEOUT_DEFAULT_VALUE*/) != HAL_OK)
 		return false;
 
 	if (use_interrupt == EXECUTE_BACKGROUND)
