@@ -448,6 +448,18 @@ bool QSpiFlash::read_chip_id(uint32_t *chip_id_ptr) {
 
 	return true;
 }
+bool QSpiFlash::check_chip_id(uint32_t expected_id, uint32_t mask) {
+	uint32_t timeout = 100;
+	uint32_t id = 0;
+	do {
+		HAL_Delay(1);
+		read_chip_id(&id);
+		id &= mask;
+		if (id == expected_id)
+			return true;
+	} while (timeout--);
+	return false;
+}
 
 bool QSpiFlash::read_config(uint32_t *data) {
 	s_command.Instruction = READ_STATUS_REG_CMD;

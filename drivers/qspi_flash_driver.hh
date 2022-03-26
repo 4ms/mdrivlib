@@ -6,6 +6,12 @@
 namespace mdrivlib
 {
 
+//TODO: Add chip profiles
+// - chip id (so we can have check_id() that calls read_chip_id() and checks result
+// - flash size
+// - timeouts required for erasing
+// - Enter QPI mode method and commands
+// - preferred READ and WRITE commands for Single/Dual/Quad modes
 class QSpiFlash {
 
 public:
@@ -77,6 +83,8 @@ public:
 
 	bool read_config(uint32_t *data);
 	bool read_chip_id(uint32_t *chip_id_ptr);
+	// Attempts a few times to read the ID, returns true if it matches the expected
+	bool check_chip_id(uint32_t expected_id, uint32_t mask);
 
 	// public for use in callbacks and IRQ
 	volatile enum FlashStatus QSPI_status = STATUS_READY;
