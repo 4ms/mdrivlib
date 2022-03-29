@@ -12,6 +12,9 @@
 #elif defined(STM32F4)
 #include "stm32f4xx.h"
 
+#elif defined(STM32F0)
+#include "stm32f0xx.h"
+
 #elif defined(STM32MP1)
 
 #if defined(CORE_CM4)
@@ -26,7 +29,7 @@
 #include "stubs/stm32/cmsis_periphs.hh"
 #else
 #error                                                                                                                 \
-	"Please #define STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile. Other targets are not yet supported."
+	"Please #define STM32F0, STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile. Other targets are not yet supported."
 #endif
 
 // Peripheral names not defined in CMSIS header will be set to nullptr or 0
@@ -168,6 +171,10 @@
 #define BDMA 0
 #else
 #define HAS_BDMA
+#endif
+
+#ifndef LL_GPIO_SPEED_FREQ_VERY_HIGH
+#define LL_GPIO_SPEED_FREQ_VERY_HIGH LL_GPIO_SPEED_FREQ_HIGH
 #endif
 
 #endif //#ifndef STM32XX_H_INCLUDE_ONCE

@@ -8,6 +8,7 @@ enum class Targets {
 	stm32h7x5,
 	stm32f7,
 	stm32f4,
+	stm32f0,
 	simulator,
 };
 
@@ -36,6 +37,14 @@ constexpr auto TargetName = Targets::stm32h7x5;
 #endif
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::stm32f7;
+
+// STM32F030
+#elif defined(STM32F030)
+#ifndef STM32F0xx
+#define STM32F0xx
+#endif
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::stm32f0;
 
 // Simulator
 #elif defined(SIMULATOR)

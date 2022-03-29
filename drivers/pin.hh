@@ -1,7 +1,7 @@
 /*
  * pin.hh
  *
- * copyright (c) 2020 Dan Green <danngreen1@gmail.com>
+ * copyright (c) 2022 Dan Green <danngreen1@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,10 +60,18 @@ enum class GPIO : uint32_t {
 	B = GPIOB_BASE,
 	C = GPIOC_BASE,
 	D = GPIOD_BASE,
+#ifdef GPIOE_BASE
 	E = GPIOE_BASE,
+#endif
+#ifdef GPIOF_BASE
 	F = GPIOF_BASE,
+#endif
+#ifdef GPIOG_BASE
 	G = GPIOG_BASE,
+#endif
+#ifdef GPIOH_BASE
 	H = GPIOH_BASE,
+#endif
 #ifdef GPIOI_BASE
 	I = GPIOI_BASE,
 #endif
@@ -156,7 +164,7 @@ using PinSetHigh = RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offseto
 
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinSetLow =
-RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
+	RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
 
 template<enum GPIO Gpio, uint16_t PinNum>
 using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, IDR), (1UL << PinNum)>;
