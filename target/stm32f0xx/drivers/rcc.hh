@@ -30,6 +30,32 @@ using WWDG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR),
 /*
 s/\v#define RCC_(.{-}ENR)_([^ ]{-})EN[^_] /using \2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, \1), RCC_\1_\2EN>;\r\0
 */
+using ADC1_ = ADC_;
+using ADC2_ = NonexistantRegister;
+using ADC3_ = NonexistantRegister;
+using DMA1_ = DMA_;
+using DMA2_ = NonexistantRegister;
+using BDMA_ = NonexistantRegister;
+using DMAMUX_ = NonexistantRegister;
+using I2C2_ = NonexistantRegister;
+using I2C3_ = NonexistantRegister;
+using SAI1_ = NonexistantRegister;
+using SAI2_ = NonexistantRegister;
+using SAI3_ = NonexistantRegister;
+using SAI4_ = NonexistantRegister;
+using TIM2_ = NonexistantRegister;
+using TIM4_ = NonexistantRegister;
+using TIM5_ = NonexistantRegister;
+using TIM6_ = NonexistantRegister;
+using TIM7_ = NonexistantRegister;
+using TIM8_ = NonexistantRegister;
+using TIM9_ = NonexistantRegister;
+using TIM10_ = NonexistantRegister;
+using TIM11_ = NonexistantRegister;
+using TIM12_ = NonexistantRegister;
+using TIM13_ = NonexistantRegister;
+using TIM15_ = NonexistantRegister;
+
 } // namespace RCC_Enable
 
 namespace RCC_Reset
@@ -55,6 +81,17 @@ using WWDG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTR)
 /*
 s/\v#define RCC_(.{-}ENR)_([^ ]{-})EN[^_] /using \2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, \1), RCC_\1_\2EN>;\r\0
 */
+using ADC1_ = ADC_;
+using ADC2_ = NonexistantRegister;
+using ADC3_ = NonexistantRegister;
+
+using I2C2_ = NonexistantRegister;
+using I2C3_ = NonexistantRegister;
+
+using SAI1_ = NonexistantRegister;
+using SAI2_ = NonexistantRegister;
+using SAI3_ = NonexistantRegister;
+using SAI4_ = NonexistantRegister;
 } // namespace RCC_Reset
 
 namespace RCC_Clocks

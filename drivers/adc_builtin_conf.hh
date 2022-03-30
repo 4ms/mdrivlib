@@ -1,7 +1,6 @@
 #pragma once
 #include "dma_config_struct.hh"
 #include "pin.hh"
-#include "stm32mp1xx_hal_adc.h"
 #include "stm32xx.h"
 #include <concepts>
 
@@ -29,11 +28,15 @@ enum AdcChanNum : uint32_t {
 	_15 = ADC_CHANNEL_15,
 	_16 = ADC_CHANNEL_16,
 	_17 = ADC_CHANNEL_17,
+#if defined(ADC_CHANNEL_19)
 	_18 = ADC_CHANNEL_18,
 	_19 = ADC_CHANNEL_19,
+#endif
 };
+
 enum AdcSamplingTime : uint32_t {
 	_1Cycle = ADC_SAMPLETIME_1CYCLE_5,
+#if defined(STM32MP1)
 	_2Cycles = ADC_SAMPLETIME_2CYCLES_5,
 	_8Cycles = ADC_SAMPLETIME_8CYCLES_5,
 	_16Cycles = ADC_SAMPLETIME_16CYCLES_5,
@@ -41,15 +44,29 @@ enum AdcSamplingTime : uint32_t {
 	_64Cycles = ADC_SAMPLETIME_64CYCLES_5,
 	_387Cycles = ADC_SAMPLETIME_387CYCLES_5,
 	_810Cycles = ADC_SAMPLETIME_810CYCLES_5,
+#elif defined(STM32F030)
+	_7Cycles = ADC_SAMPLETIME_7CYCLES_5,
+	_13Cycles = ADC_SAMPLETIME_13CYCLES_5,
+	_28Cycles = ADC_SAMPLETIME_28CYCLES_5,
+	_41Cycles = ADC_SAMPLETIME_41CYCLES_5,
+	_55Cycles = ADC_SAMPLETIME_55CYCLES_5,
+	_71Cycles = ADC_SAMPLETIME_71CYCLES_5,
+	_239Cycles = ADC_SAMPLETIME_239CYCLES_5,
+#endif
 };
+
 enum AdcResolution : uint32_t {
 	Bits8 = ADC_RESOLUTION_8B,
 	Bits10 = ADC_RESOLUTION_10B,
 	Bits12 = ADC_RESOLUTION_12B,
+#if defined(ADC_RESOLUTION_16B)
 	Bits14 = ADC_RESOLUTION_14B,
 	Bits16 = ADC_RESOLUTION_16B
+#endif
 };
+
 enum AdcOversampleRightBitShift : uint32_t {
+#if defined(ADC_RIGHTBITSHIFT_NONE)
 	NoShift = ADC_RIGHTBITSHIFT_NONE,
 	Shift1Right = ADC_RIGHTBITSHIFT_1,
 	Shift2Right = ADC_RIGHTBITSHIFT_2,
@@ -62,9 +79,14 @@ enum AdcOversampleRightBitShift : uint32_t {
 	Shift9Right = ADC_RIGHTBITSHIFT_9,
 	Shift10Right = ADC_RIGHTBITSHIFT_10,
 	Shift11Right = ADC_RIGHTBITSHIFT_11,
+#else
+	NoShift = 0,
+#endif
 };
+
 enum AdcClockSourceDiv : uint32_t {
 	PLL_Div1 = ADC_CLOCK_ASYNC_DIV1,
+#if defined(ADC_CLOCK_ASYNC_DIV2)
 	PLL_Div2 = ADC_CLOCK_ASYNC_DIV2,
 	PLL_Div4 = ADC_CLOCK_ASYNC_DIV4,
 	PLL_Div6 = ADC_CLOCK_ASYNC_DIV6,
@@ -77,6 +99,7 @@ enum AdcClockSourceDiv : uint32_t {
 	PLL_Div128 = ADC_CLOCK_ASYNC_DIV128,
 	PLL_Div256 = ADC_CLOCK_ASYNC_DIV256,
 	APBClk_Div1 = ADC_CLOCK_SYNC_PCLK_DIV1,
+#endif
 	APBClk_Div2 = ADC_CLOCK_SYNC_PCLK_DIV2,
 	APBClk_Div4 = ADC_CLOCK_SYNC_PCLK_DIV4,
 };
@@ -89,7 +112,7 @@ struct DefaultAdcPeriphConf {
 	// enum DataSize { Byte, HalfWord, Word };
 	// static constexpr DataSize data_size = HalfWord;
 
-	static constexpr AdcResolution resolution = Bits16;
+	static constexpr AdcResolution resolution = Bits12;
 
 	// Ovesampling
 	static constexpr bool oversample = false;
@@ -98,7 +121,7 @@ struct DefaultAdcPeriphConf {
 	// TODO: other os config opts?
 
 	// Clock
-	static constexpr AdcClockSourceDiv clock_div = PLL_Div2;
+	static constexpr AdcClockSourceDiv clock_div = PLL_Div1;
 
 	// DMA Conf
 	static constexpr bool use_dma = true;
@@ -128,7 +151,7 @@ struct AdcChannelConf {
 	PinNoInit pin;
 	AdcChanNum adc_chan_num;
 	uint32_t rank;
-	AdcSamplingTime sampling_time = AdcSamplingTime::_32Cycles;
+	AdcSamplingTime sampling_time = AdcSamplingTime::_1Cycle;
 	// TODO: bool auto_set_rank = false;
 	// TODO: Single/diff
 	// TODO: offset

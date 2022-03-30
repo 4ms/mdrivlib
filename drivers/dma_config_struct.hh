@@ -41,7 +41,9 @@ struct DefaultDMAConf {
 
 struct DMA_Config {
 	DMA_TypeDef *DMAx;
+#if defined(DMA1_Stream1)
 	DMA_Stream_TypeDef *stream;
+#endif
 	uint32_t channel;
 	IRQn_Type IRQn;
 	uint32_t pri;
@@ -59,7 +61,8 @@ struct DMA_LL_Config {
 	// bool continuous;
 };
 
-// Todo: this should be in some dma manager class
+// Todo: rectify these util with dma_registers.hh
+// Move these to target-specific files
 
 #if defined(HAS_BDMA)
 
@@ -83,7 +86,7 @@ constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 									  : &(DMA1->LIFCR);
 }
 
-#else
+#elif defined(DMA1_Stream1)
 
 template<typename T>
 constexpr volatile uint32_t *dma_get_ISR_reg(T stream) {
@@ -103,7 +106,21 @@ constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 									  : &(DMA1->LIFCR);
 }
 
+#elif defined(STM32F030x6)
+
+template<typename T>
+constexpr volatile uint32_t *dma_get_ISR_reg(T) {
+	return &(DMA1->ISR);
+}
+
+template<typename T>
+constexpr volatile uint32_t *dma_get_IFCR_reg(T) {
+	return &(DMA1->IFCR);
+}
+
 #endif
+
+#if defined(DMA1_Stream1)
 
 template<typename T>
 constexpr uint32_t dma_get_TC_flag_index(T stream) {
@@ -244,4 +261,52 @@ constexpr uint32_t dma_get_DME_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_DMEIF3_7
 										 : 0x00000000;
 }
+
+#elif defined(STM32F030x6)
+
+template<typename T>
+constexpr uint32_t dma_get_TC_flag_index(T channel) {
+	auto s = (uint32_t)channel;
+	return s == ((uint32_t)DMA1_Channel1) ? DMA_FLAG_TC1
+		 : s == ((uint32_t)DMA1_Channel2) ? DMA_FLAG_TC2
+		 : s == ((uint32_t)DMA1_Channel3) ? DMA_FLAG_TC3
+		 : s == ((uint32_t)DMA1_Channel4) ? DMA_FLAG_TC4
+		 : s == ((uint32_t)DMA1_Channel5) ? DMA_FLAG_TC5
+										  : 0x00000000;
+}
+
+template<typename T>
+constexpr uint32_t dma_get_HT_flag_index(T channel) {
+	auto s = (uint32_t)channel;
+	return s == ((uint32_t)DMA1_Channel1) ? DMA_FLAG_HT1
+		 : s == ((uint32_t)DMA1_Channel2) ? DMA_FLAG_HT2
+		 : s == ((uint32_t)DMA1_Channel3) ? DMA_FLAG_HT3
+		 : s == ((uint32_t)DMA1_Channel4) ? DMA_FLAG_HT4
+		 : s == ((uint32_t)DMA1_Channel5) ? DMA_FLAG_HT5
+										  : 0x00000000;
+}
+
+template<typename T>
+constexpr uint32_t dma_get_TE_flag_index(T channel) {
+	auto s = (uint32_t)channel;
+	return s == ((uint32_t)DMA1_Channel1) ? DMA_FLAG_TE1
+		 : s == ((uint32_t)DMA1_Channel2) ? DMA_FLAG_TE2
+		 : s == ((uint32_t)DMA1_Channel3) ? DMA_FLAG_TE3
+		 : s == ((uint32_t)DMA1_Channel4) ? DMA_FLAG_TE4
+		 : s == ((uint32_t)DMA1_Channel5) ? DMA_FLAG_TE5
+										  : 0x00000000;
+}
+
+template<typename T>
+constexpr uint32_t dma_get_FE_flag_index(T) {
+	return 32; //shifting 32 bits ensures flag is always "read" as low
+}
+
+template<typename T>
+constexpr uint32_t dma_get_DME_flag_index(T) {
+	return 32; //shifting 32 bits ensures flag is always "read" as low
+}
+
+#endif
+
 } // namespace mdrivlib
