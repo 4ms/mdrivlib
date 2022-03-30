@@ -1,14 +1,14 @@
 #pragma once
+#include "drivers/arch.hh"
 #include "drivers/callable.hh"
 #include "stm32xx.h"
 #include <array>
-//#include <functional>
 
 // FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
-	#include "stubs/system.hh"
+#include "stubs/system.hh"
 #else
-	#include "interrupt_control.hh"
+#include "interrupt_control.hh"
 #endif
 
 // template<typename T, size_t N>
@@ -25,7 +25,7 @@ namespace mdrivlib
 // Interrupt Manager class
 class Interrupt {
 public:
-	static constexpr uint32_t NumISRs = 256;
+	static constexpr uint32_t NumISRs = TargetName == Targets::stm32f0 ? 32 : 256;
 	using ISRType = Callback;
 	// using ISRType = std::function<void()>;
 	using IRQType = IRQn_Type;
