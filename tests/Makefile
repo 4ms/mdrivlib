@@ -32,6 +32,7 @@ CXXFLAGS = 	-Wall \
 			-I../cmsis-device/stm32h7x5/include \
 			-I../stm32-hal/stm32h7x5/include \
 			-I../../../shared \
+			-I../../../shared/cpputil \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \
 
