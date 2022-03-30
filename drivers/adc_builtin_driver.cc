@@ -87,8 +87,11 @@ AdcPeriph<p>::AdcPeriph() {
 	num_channels_ = 0;
 	LL_ADC_Disable(get_ADC_base(p));
 
-	NVIC_DisableIRQ(ADC_IRQn);
+	//NVIC_DisableIRQ(ADC_IRQn);
 
+#if defined(STM32F030x6)
+	LL_ADC_SetClock(ADC1, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+#else
 #if defined(ADC123_COMMON)
 	LL_ADC_SetCommonClock(ADC123_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
 #elif defined(ADC12_COMMON)
@@ -107,6 +110,7 @@ AdcPeriph<p>::AdcPeriph() {
 #elif defined(ADC3_COMMON)
 	if constexpr (p == AdcPeriphNum::_3)
 		LL_ADC_SetCommonClock(ADC3_COMMON, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+#endif
 #endif
 
 	LL_ADC_SetResolution(get_ADC_base(p), LL_ADC_RESOLUTION_12B);

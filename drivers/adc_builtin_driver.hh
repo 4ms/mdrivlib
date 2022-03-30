@@ -42,10 +42,12 @@ enum class AdcPeriphNum { _1, _2, _3 };
 template<AdcPeriphNum ADCN>
 class AdcPeriph;
 
-#ifdef STM32F7
-const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_144CYCLES;
+#if defined(STM32F7)
+constexpr uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_144CYCLES;
+#elif defined(STM32F030x6)
+constexpr uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_239CYCLES_5;
 #elif defined(STM32H7) || defined(STM32MP1)
-const uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_387CYCLES_5;
+constexpr uint32_t ADC_DEFAULT_SAMPLINGTIME = LL_ADC_SAMPLINGTIME_387CYCLES_5;
 #endif
 
 template<AdcPeriphNum ADCN, AdcChanNum c, typename T = uint16_t>
