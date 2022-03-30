@@ -82,6 +82,10 @@
 #define I2C3 nullptr
 #endif
 
+#if !defined(SAI) && !defined(SAI1)
+using SAI_TypeDef = void;
+#endif
+
 #ifndef SAI1
 #define SAI1 nullptr
 #endif
