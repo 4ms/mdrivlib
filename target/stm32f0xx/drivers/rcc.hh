@@ -1,3 +1,4 @@
+#pragma once
 #include "drivers/register_access.hh"
 #include "drivers/stm32xx.h"
 
@@ -30,6 +31,47 @@ using WWDG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR),
 /*
 s/\v#define RCC_(.{-}ENR)_([^ ]{-})EN[^_] /using \2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, \1), RCC_\1_\2EN>;\r\0
 */
+struct GPIO {
+	static void enable(GPIO_TypeDef *periph) {
+		if (periph == GPIOA)
+			GPIOA_::set();
+		else if (periph == GPIOB)
+			GPIOB_::set();
+		else if (periph == GPIOC)
+			GPIOC_::set();
+		else if (periph == GPIOD)
+			GPIOD_::set();
+		else if (periph == GPIOF)
+			GPIOF_::set();
+		[[maybe_unused]] bool delay_after_enabling = is_enabled(periph);
+	}
+	static void disable(GPIO_TypeDef *periph) {
+		if (periph == GPIOA)
+			GPIOA_::clear();
+		else if (periph == GPIOB)
+			GPIOB_::clear();
+		else if (periph == GPIOC)
+			GPIOC_::clear();
+		else if (periph == GPIOD)
+			GPIOD_::clear();
+		else if (periph == GPIOF)
+			GPIOF_::clear();
+		[[maybe_unused]] bool delay_after_disabling = is_enabled(periph);
+	}
+	static bool is_enabled(GPIO_TypeDef *periph) {
+		if (periph == GPIOA)
+			return GPIOA_::read();
+		else if (periph == GPIOB)
+			return GPIOB_::read();
+		else if (periph == GPIOC)
+			return GPIOC_::read();
+		else if (periph == GPIOD)
+			return GPIOD_::read();
+		else if (periph == GPIOF)
+			return GPIOF_::read();
+		return false;
+	}
+};
 using ADC1_ = ADC_;
 using ADC2_ = NonexistantRegister;
 using ADC3_ = NonexistantRegister;

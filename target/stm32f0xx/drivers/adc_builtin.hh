@@ -23,6 +23,9 @@ public:
 		: _dma_buffer{dma_buffer.data()}
 		, num_channels{N} {
 
+		//On the F0 series, sampling time is common to all channels:
+		uint32_t common_sampling_time = ChanConfs[0].sampling_time;
+
 		Clocks::ADC::enable(get_ADC_base(ConfT::adc_periph_num));
 		hadc = {
 			.Instance = get_ADC_base(ConfT::adc_periph_num),
@@ -30,26 +33,18 @@ public:
 				{
 					.ClockPrescaler = ConfT::clock_div,
 					.Resolution = ConfT::resolution,
+					.DataAlign = ConfT::align,
 					.ScanConvMode = ADC_SCAN_ENABLE,
 					.EOCSelection = ADC_EOC_SEQ_CONV,
 					.LowPowerAutoWait = DISABLE,
+					.LowPowerAutoPowerOff = DISABLE,
 					.ContinuousConvMode = ENABLE,
-					.NbrOfConversion = num_channels,
 					.DiscontinuousConvMode = DISABLE,
-					.NbrOfDiscConversion = 0,
 					.ExternalTrigConv = ADC_SOFTWARE_START,
 					.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
-					.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR,
+					.DMAContinuousRequests = ENABLE,
 					.Overrun = ADC_OVR_DATA_OVERWRITTEN,
-					.LeftBitShift = ADC_LEFTBITSHIFT_NONE,
-					.OversamplingMode = ConfT::oversample ? ENABLE : DISABLE,
-					.Oversampling =
-						{
-							.Ratio = MathTools::constrain(ConfT::oversampling_ratio, 1, 1024),
-							.RightBitShift = ConfT::oversampling_right_bitshift,
-							.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
-							.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
-						},
+					.SamplingTimeCommon = common_sampling_time,
 				},
 		};
 		HAL_ADC_Init(&hadc);
@@ -58,23 +53,13 @@ public:
 
 		dma.link_periph_to_dma(hadc);
 
-		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
-		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
-
-		// Todo: allow auto rank.
-		// Todo: what if we manually set rank but skip some numbers?
 		for (auto chan : ChanConfs) {
 			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
 			ADC_ChannelConfTypeDef adc_chan_conf = {
 				.Channel = chan.adc_chan_num,
-				.Rank = adc_number_to_rank(chan.rank),
-				.SamplingTime = chan.sampling_time,
-				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
-				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
-				.Offset = 0,
-				.OffsetRightShift = DISABLE,
-				.OffsetSignedSaturation = DISABLE,
+				.Rank = chan.rank,
+				.SamplingTime = common_sampling_time,
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
 		}
@@ -103,26 +88,7 @@ public:
 	}
 
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
-		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
-	}
-	static constexpr uint32_t adc_number_to_rank(const uint32_t x) {
-		return x == 0  ? ADC_REGULAR_RANK_1
-			 : x == 1  ? ADC_REGULAR_RANK_2
-			 : x == 2  ? ADC_REGULAR_RANK_3
-			 : x == 3  ? ADC_REGULAR_RANK_4
-			 : x == 4  ? ADC_REGULAR_RANK_5
-			 : x == 5  ? ADC_REGULAR_RANK_6
-			 : x == 6  ? ADC_REGULAR_RANK_7
-			 : x == 7  ? ADC_REGULAR_RANK_8
-			 : x == 8  ? ADC_REGULAR_RANK_9
-			 : x == 9  ? ADC_REGULAR_RANK_10
-			 : x == 10 ? ADC_REGULAR_RANK_11
-			 : x == 11 ? ADC_REGULAR_RANK_12
-			 : x == 12 ? ADC_REGULAR_RANK_13
-			 : x == 13 ? ADC_REGULAR_RANK_14
-			 : x == 14 ? ADC_REGULAR_RANK_15
-			 : x == 15 ? ADC_REGULAR_RANK_16
-					   : 0;
+		return ADC1;
 	}
 
 	ADC_HandleTypeDef hadc;
