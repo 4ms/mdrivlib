@@ -1,3 +1,8 @@
+#define GPIOE_BASE static_cast<uint32_t>(FakeGPIO::E)
+#define GPIOF_BASE static_cast<uint32_t>(FakeGPIO::F)
+#define GPIOG_BASE static_cast<uint32_t>(FakeGPIO::G)
+#define GPIOH_BASE static_cast<uint32_t>(FakeGPIO::H)
+
 // clang-format off
 #include "tests/stubs/stm32/fake_gpio.h"
 #include "drivers/pin.hh"
