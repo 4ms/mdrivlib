@@ -11,13 +11,18 @@ class Uart {
 
 public:
 	Uart()
-		: uart{reinterpret_cast<USART_TypeDef *>(BASE_ADDR)} { // __HAL_RCC_USART6_CLK_ENABLE();
-		// Pin tx{GPIO::G, 14, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		// Pin rx{GPIO::G, 9, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		__HAL_RCC_UART4_CLK_ENABLE();
-		Pin tx{GPIO::G, 11, PinMode::Alt, LL_GPIO_AF_6, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		Pin rx{GPIO::B, 2, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		// Pin tx{GPIO::D, 1, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		: uart{reinterpret_cast<USART_TypeDef *>(BASE_ADDR)} {
+		//TODO: proper conf to setup any UART
+		if (BASE_ADDR == UART4_BASE) {
+			__HAL_RCC_UART4_CLK_ENABLE();
+			Pin tx{GPIO::G, 11, PinMode::Alt, LL_GPIO_AF_6, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+			Pin rx{GPIO::B, 2, PinMode::Alt, LL_GPIO_AF_8, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		} else if (BASE_ADDR == USART6_BASE) {
+			__HAL_RCC_USART6_CLK_ENABLE();
+			Pin tx{GPIO::C, 6, PinMode::Alt, LL_GPIO_AF_7, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+			Pin rx{GPIO::C, 7, PinMode::Alt, LL_GPIO_AF_7, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		} else
+			__BKPT(42);
 
 		UART_HandleTypeDef hal_h;
 		hal_h.Instance = uart;
