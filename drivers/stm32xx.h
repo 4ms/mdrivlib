@@ -81,9 +81,28 @@ enum { ADC_DATAALIGN_LEFT, ADC_DATAALIGN_RIGHT };
 #endif
 #ifndef I2C2
 #define I2C2 nullptr
+#define I2C2_EV_IRQn (IRQn_Type)0
+#define I2C2_ER_IRQn (IRQn_Type)0
 #endif
 #ifndef I2C3
 #define I2C3 nullptr
+#define I2C3_EV_IRQn (IRQn_Type)0
+#define I2C3_ER_IRQn (IRQn_Type)0
+#endif
+#ifndef I2C4
+#define I2C4 nullptr
+#define I2C4_EV_IRQn (IRQn_Type)0
+#define I2C4_ER_IRQn (IRQn_Type)0
+#endif
+#ifndef I2C5
+#define I2C5 nullptr
+#define I2C5_EV_IRQn (IRQn_Type)0
+#define I2C5_ER_IRQn (IRQn_Type)0
+#endif
+#ifndef I2C6
+#define I2C6 nullptr
+#define I2C6_EV_IRQn (IRQn_Type)0
+#define I2C6_ER_IRQn (IRQn_Type)0
 #endif
 
 #if !defined(SAI) && !defined(SAI1)

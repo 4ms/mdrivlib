@@ -76,6 +76,12 @@ struct I2C {
 			RCC_Enable::I2C2_::set();
 		else if (I2Cx == I2C3)
 			RCC_Enable::I2C3_::set();
+		else if (I2Cx == I2C4)
+			RCC_Enable::I2C4_::set();
+		else if (I2Cx == I2C5)
+			RCC_Enable::I2C5_::set();
+		else if (I2Cx == I2C6)
+			RCC_Enable::I2C6_::set();
 	}
 	static void disable(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr)
@@ -86,6 +92,12 @@ struct I2C {
 			RCC_Enable::I2C2_::clear();
 		else if (I2Cx == I2C3)
 			RCC_Enable::I2C3_::clear();
+		else if (I2Cx == I2C4)
+			RCC_Enable::I2C4_::clear();
+		else if (I2Cx == I2C5)
+			RCC_Enable::I2C5_::clear();
+		else if (I2Cx == I2C6)
+			RCC_Enable::I2C6_::clear();
 	}
 	static void force_reset(I2C_TypeDef *I2Cx) {
 		if (I2Cx == nullptr) {
@@ -99,6 +111,15 @@ struct I2C {
 		} else if (I2Cx == I2C3) {
 			RCC_Reset::I2C3_::set();
 			RCC_Reset::I2C3_::clear();
+		} else if (I2Cx == I2C4) {
+			RCC_Reset::I2C4_::set();
+			RCC_Reset::I2C4_::clear();
+		} else if (I2Cx == I2C5) {
+			RCC_Reset::I2C5_::set();
+			RCC_Reset::I2C5_::clear();
+		} else if (I2Cx == I2C6) {
+			RCC_Reset::I2C6_::set();
+			RCC_Reset::I2C6_::clear();
 		}
 	}
 };
