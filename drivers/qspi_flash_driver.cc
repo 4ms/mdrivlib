@@ -120,11 +120,17 @@ void QSpiFlash::GPIO_init_IO0_IO1() {
 	if (defs.io2.gpio != GPIO::Unused) {
 		Pin wp{defs.io2.gpio, defs.io2.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
 		wp.high();
+		wp.low();
+		wp.high();
+		wp.low();
 	}
 
 	if (defs.io3.gpio != GPIO::Unused) {
 		Pin hold{defs.io3.gpio, defs.io3.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
 		hold.high();
+		hold.low();
+		hold.high();
+		hold.low();
 	}
 }
 
