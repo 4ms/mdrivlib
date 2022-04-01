@@ -65,6 +65,10 @@
 #define ADC3_COMMON_BASE 0
 #endif
 
+#if !defined(ADC_DATAALIGN_LEFT)
+enum { ADC_DATAALIGN_LEFT, ADC_DATAALIGN_RIGHT };
+#endif
+
 #ifndef DMA1
 #define DMA1 nullptr
 #endif
