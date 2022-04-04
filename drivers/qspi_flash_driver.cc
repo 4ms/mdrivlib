@@ -89,13 +89,14 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 
 #ifdef QSPI_DO_TESTS
 	// Erase(ENTIRE_CHIP, 0, EXECUTE_FOREGROUND);
-	if (!Test()) {
-		asm("nop");
+	if (!test()) {
+		__BKPT();
 	}
 #endif
 }
 
 void QSpiFlash::GPIO_init_IO0_IO1() {
+#ifdef QSPI_DO_TESTS
 	{
 		Pin cs{defs.cs.gpio, defs.cs.pin, PinMode::Output, 0, PinPull::None};
 		Pin clk{defs.clk.gpio, defs.clk.pin, PinMode::Output, 0, PinPull::None};
@@ -110,6 +111,7 @@ void QSpiFlash::GPIO_init_IO0_IO1() {
 		io1.high();
 		io1.low();
 	}
+#endif
 
 	Pin cs{defs.cs.gpio, defs.cs.pin, PinMode::Alt, defs.cs.af, PinPull::Up};
 	Pin clk{defs.clk.gpio, defs.clk.pin, PinMode::Alt, defs.clk.af, PinPull::None};
@@ -120,17 +122,21 @@ void QSpiFlash::GPIO_init_IO0_IO1() {
 	if (defs.io2.gpio != GPIO::Unused) {
 		Pin wp{defs.io2.gpio, defs.io2.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
 		wp.high();
+#ifdef QSPI_DO_TESTS
 		wp.low();
 		wp.high();
 		wp.low();
+#endif
 	}
 
 	if (defs.io3.gpio != GPIO::Unused) {
 		Pin hold{defs.io3.gpio, defs.io3.pin, PinMode::Output, PinAF::AFNone, PinPull::None};
 		hold.high();
+#ifdef QSPI_DO_TESTS
 		hold.low();
 		hold.high();
 		hold.low();
+#endif
 	}
 }
 
@@ -185,13 +191,15 @@ bool QSpiFlash::test_sector(uint8_t sector_num) {
 	uint8_t test_buffer[QSPI_SECTOR_SIZE];
 	uint32_t test_addr = get_sector_addr(sector_num);
 
+	read(test_buffer, test_addr, QSPI_SECTOR_SIZE, EXECUTE_FOREGROUND);
+
 	for (i = 0; i < QSPI_SECTOR_SIZE; i++)
 		test_buffer[i] = (test_encode_num(i) + sector_num) & 0xFF;
 
 	while (!is_ready())
 		;
 
-	if (!erase(SECTOR, test_addr, EXECUTE_BACKGROUND))
+	if (!erase(SECTOR, test_addr, EXECUTE_FOREGROUND))
 		return false;
 
 	while (!is_ready())
@@ -200,7 +208,7 @@ bool QSpiFlash::test_sector(uint8_t sector_num) {
 	for (i = 0; i < (QSPI_SECTOR_SIZE / QSPI_PAGE_SIZE); i++) {
 		// Benchmark: ~380us/page
 		if (!write_page(
-				&(test_buffer[i * QSPI_PAGE_SIZE]), test_addr + i * QSPI_PAGE_SIZE, QSPI_PAGE_SIZE, EXECUTE_BACKGROUND))
+				&(test_buffer[i * QSPI_PAGE_SIZE]), test_addr + i * QSPI_PAGE_SIZE, QSPI_PAGE_SIZE, EXECUTE_FOREGROUND))
 			return false;
 		while (!is_ready())
 			;
@@ -209,7 +217,7 @@ bool QSpiFlash::test_sector(uint8_t sector_num) {
 	for (i = 0; i < QSPI_SECTOR_SIZE; i++)
 		test_buffer[i] = 0;
 
-	if (!read(test_buffer, test_addr, QSPI_SECTOR_SIZE, EXECUTE_BACKGROUND))
+	if (!read(test_buffer, test_addr, QSPI_SECTOR_SIZE, EXECUTE_FOREGROUND))
 		return false;
 
 	while (!is_ready())
