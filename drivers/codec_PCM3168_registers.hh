@@ -163,13 +163,13 @@ struct AdcControl2 {
 struct AdcInputType {
 	static constexpr uint8_t Address = 0x53;
 	enum : uint8_t {
-		AllAdcDifferential = 0,
-		Adc1Differential = 1 << 0,
-		Adc2Differential = 1 << 1,
-		Adc3Differential = 1 << 2,
-		Adc4Differential = 1 << 3,
-		Adc5Differential = 1 << 4,
-		Adc6Differential = 1 << 5,
+		AllAdcDifferential = 0b000000,
+		Adc1Differential = 0 << 0,
+		Adc2Differential = 0 << 1,
+		Adc3Differential = 0 << 2,
+		Adc4Differential = 0 << 3,
+		Adc5Differential = 0 << 4,
+		Adc6Differential = 0 << 5,
 		Adc1SingleEnded = 1 << 0,
 		Adc2SingleEnded = 1 << 1,
 		Adc3SingleEnded = 1 << 2,
