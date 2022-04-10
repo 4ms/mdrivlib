@@ -81,6 +81,9 @@ using BDMA_ = NonexistantRegister;
 using DMAMUX_ = NonexistantRegister;
 using I2C2_ = NonexistantRegister;
 using I2C3_ = NonexistantRegister;
+using I2C4_ = NonexistantRegister;
+using I2C5_ = NonexistantRegister;
+using I2C6_ = NonexistantRegister;
 using SAI1_ = NonexistantRegister;
 using SAI2_ = NonexistantRegister;
 using SAI3_ = NonexistantRegister;
@@ -129,6 +132,9 @@ using ADC3_ = NonexistantRegister;
 
 using I2C2_ = NonexistantRegister;
 using I2C3_ = NonexistantRegister;
+using I2C4_ = NonexistantRegister;
+using I2C5_ = NonexistantRegister;
+using I2C6_ = NonexistantRegister;
 
 using SAI1_ = NonexistantRegister;
 using SAI2_ = NonexistantRegister;
