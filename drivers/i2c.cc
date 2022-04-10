@@ -115,6 +115,17 @@ void I2CPeriph::deinit() {
 }
 
 I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
+	// Pin testsda{defs.SDA.gpio, defs.SDA.pin, PinMode::Output};
+	// testsda.high();
+	// testsda.low();
+	// testsda.high();
+	// testsda.low();
+	// Pin testscl{defs.SCL.gpio, defs.SCL.pin, PinMode::Output};
+	// testscl.high();
+	// testscl.low();
+	// testscl.high();
+	// testscl.low();
+
 	Pin sda{defs.SDA.gpio,
 			defs.SDA.pin,
 			PinMode::Alt,
@@ -161,6 +172,15 @@ I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingCon
 	} else if (hal_i2c_.Instance == I2C3) {
 		i2c_irq_num_ = I2C3_EV_IRQn;
 		i2c_err_irq_num_ = I2C3_ER_IRQn;
+	} else if (hal_i2c_.Instance == I2C4) {
+		i2c_irq_num_ = I2C4_EV_IRQn;
+		i2c_err_irq_num_ = I2C4_ER_IRQn;
+	} else if (hal_i2c_.Instance == I2C5) {
+		i2c_irq_num_ = I2C5_EV_IRQn;
+		i2c_err_irq_num_ = I2C5_ER_IRQn;
+	} else if (hal_i2c_.Instance == I2C6) {
+		i2c_irq_num_ = I2C6_EV_IRQn;
+		i2c_err_irq_num_ = I2C6_ER_IRQn;
 	}
 
 	Clocks::I2C::enable(periph);

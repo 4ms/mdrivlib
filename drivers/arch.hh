@@ -47,7 +47,7 @@ constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::stm32f0;
 
 // Simulator
-#elif defined(SIMULATOR)
+#elif defined(SIMULATOR) || defined(TESTPROJECT)
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::simulator;
 
