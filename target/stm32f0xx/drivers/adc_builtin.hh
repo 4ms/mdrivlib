@@ -53,7 +53,7 @@ public:
 
 		dma.link_periph_to_dma(hadc);
 
-		for (auto chan : ChanConfs) {
+		for (const auto &chan : ChanConfs) {
 			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
 			ADC_ChannelConfTypeDef adc_chan_conf = {
