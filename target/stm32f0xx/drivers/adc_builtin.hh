@@ -63,6 +63,13 @@ public:
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
 		}
+
+		static_assert(ConfT::DmaConf::DMAx == 1, "F030 only has one DMA");
+		hadc.DMA_Handle->DmaBaseAddress = DMA1;
+
+		hadc.DMA_Handle->Instance = DMA1_Channel1;
+		hadc.DMA_Handle->ChannelIndex = 1;
+		// hadc.DMA_Handle->Init.Direction...
 	}
 
 	void start() {
@@ -92,7 +99,7 @@ public:
 	}
 
 	ADC_HandleTypeDef hadc;
-	DMA_HandleTypeDef hdma_adc1;
+	// DMA_HandleTypeDef hdma_adc1;
 
 	ValueT *_dma_buffer;
 	const size_t num_channels;
