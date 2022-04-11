@@ -89,6 +89,21 @@ enum class GPIO : uint32_t {
 
 enum PinAF {
 	AFNone = 0,
+	AltFunc1,
+	AltFunc2,
+	AltFunc3,
+	AltFunc4,
+	AltFunc5,
+	AltFunc6,
+	AltFunc7,
+	AltFunc8,
+	AltFunc9,
+	AltFunc10,
+	AltFunc11,
+	AltFunc12,
+	AltFunc13,
+	AltFunc14,
+	AltFunc15,
 };
 
 // Convenient container for passing pin defintions to a peripheral which performs the initialization
