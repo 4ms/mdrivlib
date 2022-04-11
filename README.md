@@ -1,10 +1,13 @@
 # mdrivlib
 
-## C++17/20 Embedded driver library
+## C++20 Embedded driver library
 
 This is a work in progress, the API is in flux. Contributions, feedback, and issues are welcome.
 
 ### Devices supported:
+
+*Cortex M0*
+  * STM32F030: partial support
 
 *Cortex M7*
 
@@ -19,6 +22,7 @@ This is a work in progress, the API is in flux. Contributions, feedback, and iss
 
   * Easy to use, difficult to misuse.
   * Provide modern C++20 classes for setting up and accessing internal peripherals and common external chips.
+  * Leverage constexpr configurations for efficiency: suited for hard real-time systems.
   * Provide high-level functionality for common use cases in embedded projects (debouncing switches, wear-leveling, RGB color blending, filtering ADC readings).
   * Allow use of lambdas as callbacks (e.g. interrupt request handlers) with minimal overhead
   * Does not depend on dynamic memory (but provides some structures if you use it)
@@ -104,13 +108,14 @@ Add the following directories as INCLUDE directories for your build system:
 (e.g. add `-Ipath` to your compile commands for each of the following paths):
 
   * `mdrivlib/drivers` 
-  * `mdrivlib/util`
   * `mdrivlib/target/XXX/drivers/`, where XXX is the target architecture (look in the target dir to see what the options are)
   * CMSIS device header: if you've downloaded STM32Cube, then include the path something like this (for H7xx): `STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/` 
   * If you're using any drivers that require STM32-HAL or STM32-LL: STM32 HAL Include directory, e.g. `STM32Cube_FW_H7_V1/Drivers/STM32H7xx_HAL_Driver/Inc`
 
 Compile and link any `mdrivlib/drivers/*.cc` and `mdrivlib/target/XXX/drivers/*.cc` that you wish to use.
+Also compile and link any STM32-HAL or STM32-LL drivers used.
 
+Finally, add [https://github.com/4ms/cpputil](4ms/cpputil) to your project. You only need to include the cpputil/ directory (using `-Ipath/to/cpputil/cpputil`).
 
 
 Build with the proper symbols defined for your target: (TODO: specify these clearly in one place)
@@ -124,7 +129,7 @@ Use it:
 
 //Values for an STM32H745 Discovery board. Adjust these values to suit your chip/board:
 Pin userLED {GPIO::J, 2, PinMode::Output};
-Pin pwmPin {GPIO::A, 6, PinMode::Alt, LL_GPIO_AF2};
+Pin pwmPin {GPIO::A, 6, PinMode::Alt, PinAF::AltFunc2};
 TimPwmChannel myAnalogOut{{.TIMx = TIM3, .channel = 1, .period = 10000}};
 
 userLED.high();
@@ -137,6 +142,10 @@ Timekeeper lightFlasher({.TIMx=TIM2, .period=100000000/*ns*/}, [&ramp_up](){
 });
 lightFlasher.start();
 
+while (...) {
+	if (some_user_input())
+		ramp_up++;
+}
 
 ```
 
@@ -149,25 +158,53 @@ lightFlasher.start();
 
 mdrivlib contains a mix of three methods of hardware access:
 
-   - STM32-HAL (`stm32xxxxx_XXX_hal.c/.h` files): The STM32 HAL library is used only when the peripheral is complex enough that re-writing it would be non-trivial **and** would offer very little benefit in terms of efficiency, code space, or additional features.
+   - STM32-HAL (`stm32xxxxx_XXX_hal.c/.h` files): The STM32 HAL library is used only when the peripheral is complex enough that re-writing it would be non-trivial **and** would offer very little benefit in terms of efficiency, code space, or additional features. Often STM32-HAL is used for initialization only, since this library does not prioritize efficiency in initialization procedures.
  
    - STM32-LL (`stm32xxxxx_XXX_ll.c/.h` files): In some drivers, ST's LL drivers are used, which are thin wrappers over direct register control via CMSIS headers. I am mostly migrating the drivers that use LL to use CMSIS since the LL drivers aren't as portable as I originally believed.
  
-   - CMSIS (`stm32xxxxx.h` files): These are huge (2MB+) header files provided by the vendor (ST) that map all the registers to C-style structs and macros. The benefit of these is that the datasheet (Reference Manual) can be used along-side to setup and debug peripherals. Many drivers in mdrivlib use `RegisterBits` and `RegisterSection` which wrap the CMSIS macros. These can be specified as ReadWrite, ReadOnly, or WriteOnly, making this a bit safer to use than raw CMSIS register macros without sacrificing any efficiency.
+   - CMSIS (`stm32xxxxx.h` files): These are huge (2MB+) header files provided by the vendor (ST) that map all the registers to C-style structs and macros. The benefit of these is that the datasheet (Reference Manual) can be used along-side to setup and debug peripherals. Many drivers in mdrivlib use `RegisterBits` and `RegisterSection` which wrap the CMSIS macros. These can be specified as ReadWrite, ReadOnly, or WriteOnly, making this a bit safer to use than raw CMSIS register macros without sacrificing any efficiency. For instance, we can say `RCC_Enable::ADC_1::set()` instead of `RCC->APB2ENR = RCC->APB2ENR | RCC_APB2ENR_ADCEN` 
 
 
 
 ### Configuring a driver
 
-The tables above mentions different types of configuration:
 
-  * **Template params**: e.g. 
+The tables above mentions different types of configuration methods.
+
+Most drivers are being updated to use the constexpr template struct method, since it offers no drawbacks.
+
+  * **constexpr non-type template param**: C++20 allows constexpr objects of custom classes for template parameters. e.g:
+
+  ```
+  // mdrivlib configuration struct:
+  struct AdcConfig {
+  	uint32_t ADCx;
+	uint32_t BitDepth = 12;
+	bool oversample = false;
+  	...
+  };
+
+  // mdrivlib peripheral:
+  template<AdcConfig Conf> AdcPeriph {...};
+
+  // your application:
+  constexpr AdcConfig MyConfig {
+  	.ADCx = 1,
+		// BitDepth is not initialized here so it will use default value of 12
+	.oversample = true;
+  }
+
+  AdcPeriph<MyConfig> adc(...);
+  ```
+
+
+  * **Template params**: Each configuration value is passed as a separate parameter. e.g. 
   
   ```
   AdcChan<AdcPeriphNum::_1, AdcChanNum::_13, uint16_t> myADC;
   ```
   
-  * **Template struct**: wraps multiple params into a struct passed as a template argument:
+  * **Template struct**: wraps multiple params into a struct passed as a typename template argument:
   
   ```
   struct MySpiAdcConfig : DefaultSpiConfig { 

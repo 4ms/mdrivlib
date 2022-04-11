@@ -161,6 +161,7 @@ static constexpr AdcPeriphConfig MyDefaultAdcConfig_DefaultDMAFromDMAConfig{
 //override
 static constexpr AdcPeriphConfig MyDefaultAdcConfig_CustomDMA{
 	.adc_periph_num = AdcPeriphNum::_2,
+	//overrides from DMAConfig's defaults, not AdcConfig::default_dma_config
 	.dma_config{
 		.DMAx = 3,
 		.channel = 4,
