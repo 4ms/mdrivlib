@@ -86,7 +86,7 @@ enum AdcOversampleRightBitShift : uint32_t {
 
 enum AdcDataAlign : uint32_t {
 	AlignLeft = ADC_DATAALIGN_LEFT,
-	AlightRight = ADC_DATAALIGN_RIGHT,
+	AlignRight = ADC_DATAALIGN_RIGHT,
 };
 
 enum AdcClockSourceDiv : uint32_t {
@@ -119,7 +119,7 @@ struct DefaultAdcPeriphConf {
 
 	static constexpr AdcResolution resolution = Bits12;
 
-	static constexpr AdcDataAlign align = AlignLeft;
+	static constexpr AdcDataAlign align = AlignRight;
 
 	// Ovesampling
 	static constexpr bool oversample = false;
