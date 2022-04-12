@@ -7,6 +7,7 @@ namespace mdrivlib
 template<size_t PeriphNum, size_t ChannelNum>
 struct DMA_ {
 	static_assert(PeriphNum == 1, "STM32F030x6 only has DMA1");
+	static_assert(ChannelNum >= 1 && ChannelNum <= 5, "Invalid DMA channel number, F030x6 has only channels 1-5");
 
 	static constexpr uint32_t GetChannelBase() {
 		return ChannelNum == 1 ? DMA1_Channel1_BASE

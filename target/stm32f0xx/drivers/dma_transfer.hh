@@ -11,8 +11,7 @@ namespace mdrivlib
 template<typename ConfT>
 struct DMATransfer {
 	using DMAX = DMA_<ConfT::DMAx, ConfT::StreamNum>;
-	static_assert(ConfT::StreamNum >= 1 && ConfT::StreamNum <= 5,
-				  "Invalid DMA channel number, F030x6 has only channels 1-5");
+
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
@@ -62,9 +61,9 @@ struct DMATransfer {
 		hdma.Init.Direction = ConfT::dir == DefaultDMAConf::Mem2Periph ? DMA_MEMORY_TO_PERIPH
 							: ConfT::dir == DefaultDMAConf::Periph2Mem ? DMA_PERIPH_TO_MEMORY
 																	   : DMA_MEMORY_TO_MEMORY;
-		hdma.Init.PeriphInc = DMA_PINC_DISABLE;
+		hdma.Init.PeriphInc = ConfT::periph_inc ? DMA_PINC_ENABLE : DMA_PINC_DISABLE;
 
-		hdma.Init.MemInc = DMA_MINC_ENABLE;
+		hdma.Init.MemInc = ConfT::mem_inc ? DMA_MINC_ENABLE : DMA_MINC_DISABLE;
 
 		hdma.Init.PeriphDataAlignment = ConfT::transfer_size_periph == DefaultDMAConf::Byte ? DMA_PDATAALIGN_BYTE
 									  : ConfT::transfer_size_periph == DefaultDMAConf::HalfWord
@@ -101,7 +100,6 @@ struct DMATransfer {
 				}
 			}
 			if (*dma_isr_reg & dma_te_flag_index) {
-				__BKPT();
 				*dma_ifcr_reg = dma_te_flag_index;
 			}
 		});

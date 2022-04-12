@@ -49,8 +49,6 @@ public:
 		};
 		HAL_ADC_Init(&hadc);
 
-		DMATransfer<DmaConf> dma;
-
 		dma.link_periph_to_dma(hadc);
 
 		for (const auto &chan : ChanConfs) {
@@ -63,13 +61,6 @@ public:
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
 		}
-
-		static_assert(ConfT::DmaConf::DMAx == 1, "F030 only has one DMA");
-		hadc.DMA_Handle->DmaBaseAddress = DMA1;
-
-		hadc.DMA_Handle->Instance = DMA1_Channel1;
-		hadc.DMA_Handle->ChannelIndex = 1;
-		// hadc.DMA_Handle->Init.Direction...
 	}
 
 	void start() {
@@ -77,15 +68,15 @@ public:
 
 		uint32_t reg = hadc.Instance->IER;
 
-		if constexpr (ConfT::enable_end_of_sequence_isr)
-			reg |= ADC_IER_EOSIE;
-		else
-			reg &= ~ADC_IER_EOSIE;
+		// if constexpr (ConfT::enable_end_of_sequence_isr)
+		// 	reg |= ADC_IER_EOSIE;
+		// else
+		reg &= ~ADC_IER_EOSIE;
 
-		if constexpr (ConfT::enable_end_of_conversion_isr)
-			reg |= ADC_IER_EOCIE;
-		else
-			reg &= ~ADC_IER_EOCIE;
+		// if constexpr (ConfT::enable_end_of_conversion_isr)
+		// 	reg |= ADC_IER_EOCIE;
+		// else
+		reg &= ~ADC_IER_EOCIE;
 
 		reg &= ~ADC_IER_OVRIE;	 //overrun
 		reg &= ~ADC_IER_EOSMPIE; //end of sampling phase of any channel
@@ -99,7 +90,7 @@ public:
 	}
 
 	ADC_HandleTypeDef hadc;
-	// DMA_HandleTypeDef hdma_adc1;
+	DMATransfer<DmaConf> dma;
 
 	ValueT *_dma_buffer;
 	const size_t num_channels;
