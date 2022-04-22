@@ -80,7 +80,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 
 	Reset();
 
-	if (defs.io_mode == QSPIFlashConfig::IOMode::QuadSPI) {
+	if (defs.io_mode == QSPIFlashConfig::QuadSPI) {
 		// Now that chip is in QSPI mode, IO2 and IO3 can be initialized
 		if (defs.chip_id == QSPIFlashConfig::IS25L)
 			enter_memory_QPI(); //S25FL doesn't seem to need this?
