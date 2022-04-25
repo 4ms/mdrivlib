@@ -37,6 +37,7 @@ private:
 	unsigned offset_;
 	FILTER oversampler_;
 };
+
 // Usage
 // AnalogInPtr<AdcChan<AdcPeriphNum::_1, AdcChanNum::_0>, adc_buffer, Oversampler<16>> freq_cv1 = {GPIO::A, 0};
 } // namespace mdrivlib

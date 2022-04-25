@@ -6,7 +6,6 @@
 #include "interrupt_control.hh"
 #include "pin.hh"
 #include "stm32xx.h"
-#include "util/math.hh"
 #include <array>
 
 namespace mdrivlib
