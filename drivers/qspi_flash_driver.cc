@@ -9,21 +9,21 @@
 namespace mdrivlib
 {
 
-uint32_t QSpiFlash::get_64kblock_addr(int block64k_num) {
+uint32_t QSpiFlash::get_64kblock_addr(unsigned block64k_num) {
 	if (block64k_num >= defs.flash_size_bytes / QSPI_64KBLOCK_SIZE)
 		return 0;
 
 	return block64k_num * QSPI_64KBLOCK_SIZE;
 }
 
-uint32_t QSpiFlash::get_32kblock_addr(int block32k_num) {
+uint32_t QSpiFlash::get_32kblock_addr(unsigned block32k_num) {
 	if (block32k_num >= defs.flash_size_bytes / QSPI_32KBLOCK_SIZE)
 		return 0;
 
 	return block32k_num * QSPI_32KBLOCK_SIZE;
 }
 
-uint32_t QSpiFlash::get_sector_addr(int sector_num) {
+uint32_t QSpiFlash::get_sector_addr(unsigned sector_num) {
 	if (sector_num >= defs.flash_size_bytes / QSPI_SECTOR_SIZE)
 		return 0;
 
@@ -176,7 +176,7 @@ HAL_StatusTypeDef QSpiFlash::Reset() {
 // Tests entire chip sector-by-sector
 // Returns 1 if passed, 0 if failed
 bool QSpiFlash::test() {
-	int sector;
+	unsigned sector;
 	for (sector = 0; sector < defs.flash_size_bytes / QSPI_SECTOR_SIZE; sector++) {
 		if (!test_sector(sector))
 			return false; // fail
