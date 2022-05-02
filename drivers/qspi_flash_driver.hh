@@ -59,9 +59,9 @@ public:
 	bool test();
 	bool test_sector(uint8_t sector_num);
 
-	uint32_t get_64kblock_addr(int block64k_num);
-	uint32_t get_32kblock_addr(int block32k_num);
-	uint32_t get_sector_addr(int sector_num);
+	uint32_t get_64kblock_addr(unsigned block64k_num);
+	uint32_t get_32kblock_addr(unsigned block32k_num);
+	uint32_t get_sector_addr(unsigned sector_num);
 
 	HAL_StatusTypeDef Reset();
 
