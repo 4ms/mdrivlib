@@ -17,10 +17,21 @@ public:
 	PinChangeInt(std::function<void(void)> &&func)
 		: task_func{std::move(func)} {
 		_init();
+		_init_irq();
 	}
 
 	void init(std::function<void(void)> &&func) {
 		task_func = std::move(func);
+		_init();
+		_init_irq();
+	}
+
+	// Useful for using your own IRQ handler
+	// Must enable the IRQ with NVIC/GIC yourself, and call PinChangeInt::start()
+	// Also must read and set the PinChangePending flag in your IRQ handler
+	// Note: on an F030 with 48MHz SysClk, using lambdas and InterruptManager added
+	// ~100ns (5-6 instructions) to the response time.
+	void init_without_handler() {
 		_init();
 	}
 
@@ -81,7 +92,9 @@ private:
 			EXTI_::PinFallingTrig<ConfT::pin>::set();
 		else
 			EXTI_::PinFallingTrig<ConfT::pin>::clear();
+	}
 
+	void _init_irq() {
 		auto irqn = ConfT::pin >= 4 ? EXTI4_15_IRQn : ConfT::pin >= 2 ? EXTI2_3_IRQn : EXTI0_1_IRQn;
 
 		InterruptManager::register_and_start_isr(irqn, ConfT::priority1, ConfT::priority2, [&]() {

@@ -187,7 +187,7 @@ using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GP
 template<enum GPIO Gpio>
 using PortRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, IDR), 0xFFFF>;
 
-template<enum GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output>
+template<enum GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output, PinPolarity Polarity = PinPolarity::Normal>
 struct FPin {
 	static constexpr auto Gpio_v = Gpio;
 	static constexpr auto PinNum_v = PinNum;
@@ -203,15 +203,24 @@ struct FPin {
 
 	static void low() {
 		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set low");
-		_setlow.set();
+		if constexpr (Polarity == PinPolarity::Normal)
+			_setlow.set();
+		else
+			_sethigh.set();
 	}
 	static void high() {
 		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
-		_sethigh.set();
+		if constexpr (Polarity == PinPolarity::Normal)
+			_sethigh.set();
+		else
+			_setlow.set();
 	}
 	static bool read() {
 		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
-		return _read.read();
+		if constexpr (Polarity == PinPolarity::Normal)
+			return _read.read();
+		else
+			return !_read.read();
 	}
 
 private:

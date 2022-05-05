@@ -13,15 +13,12 @@ template<GPIO Gpio,
 		 unsigned StateMask = 0x00000FFF>
 struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> {
 	DebouncedPin() {
-		FPin<Gpio, PinNum, PinMode::Input> init_pin{Polarity == PinPolarity::Inverted ? PinPull::Up : PinPull::None};
+		FPin<Gpio, PinNum, PinMode::Input, Polarity> init_pin{Polarity == PinPolarity::Inverted ? PinPull::Up
+																								: PinPull::None};
 	}
 
 	void update() {
-		unsigned pin_state;
-		if constexpr (Polarity == PinPolarity::Normal)
-			pin_state = FPin<Gpio, PinNum, PinMode::Input>::read() ? 1 : 0;
-		if constexpr (Polarity == PinPolarity::Inverted)
-			pin_state = FPin<Gpio, PinNum, PinMode::Input>::read() ? 0 : 1;
+		unsigned pin_state = FPin<Gpio, PinNum, PinMode::Input, Polarity>::read() ? 1 : 0;
 		this->register_state(pin_state);
 	}
 };
