@@ -5,8 +5,13 @@
 
 namespace mdrivlib
 {
-template<GPIO Gpio, uint16_t PinNum, PinPolarity Polarity>
-struct DebouncedPin : public Debouncer<0x00000001, 0xFFFFFFFE, 0x00000FFF> {
+template<GPIO Gpio,
+		 uint16_t PinNum,
+		 PinPolarity Polarity,
+		 unsigned RisingEdgePattern = 0x00000001,
+		 unsigned FallingEdgePattern = 0xFFFFFFFE,
+		 unsigned StateMask = 0x00000FFF>
+struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> {
 	DebouncedPin() {
 		FPin<Gpio, PinNum, PinMode::Input> init_pin{Polarity == PinPolarity::Inverted ? PinPull::Up : PinPull::None};
 	}
@@ -17,7 +22,7 @@ struct DebouncedPin : public Debouncer<0x00000001, 0xFFFFFFFE, 0x00000FFF> {
 			pin_state = FPin<Gpio, PinNum, PinMode::Input>::read() ? 1 : 0;
 		if constexpr (Polarity == PinPolarity::Inverted)
 			pin_state = FPin<Gpio, PinNum, PinMode::Input>::read() ? 0 : 1;
-		register_state(pin_state);
+		this->register_state(pin_state);
 	}
 };
 

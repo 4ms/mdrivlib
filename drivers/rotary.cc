@@ -26,6 +26,56 @@ enum FullStepRotaryState : uint8_t {
 	FS_DIR_CCW = 0x20,
 };
 
+template<>
+const uint8_t RotaryFSM<RotaryHalfStep>::StateTable[7][4] = {
+	// HalfStep
+	// R_START (00)
+	{HS_R_START_M, HS_R_CW_BEGIN, HS_R_CCW_BEGIN, HS_R_START},
+
+	// R_CCW_BEGIN
+	{HS_R_START_M | HS_DIR_CCW, HS_R_START, HS_R_CCW_BEGIN, HS_R_START},
+
+	// HS_R_CW_BEGIN
+	{HS_R_START_M | HS_DIR_CW, HS_R_CW_BEGIN, HS_R_START, HS_R_START},
+
+	// HS_R_START_M (11)
+	{HS_R_START_M, HS_R_CCW_BEGIN_M, HS_R_CW_BEGIN_M, HS_R_START},
+
+	// R_CW_BEGIN_M
+	{HS_R_START_M, HS_R_START_M, HS_R_CW_BEGIN_M, HS_R_START | HS_DIR_CW},
+
+	// R_CCW_BEGIN_M
+	{HS_R_START_M, HS_R_CCW_BEGIN_M, HS_R_START_M, HS_R_START | HS_DIR_CCW},
+	{},
+
+};
+
+template<>
+const uint8_t RotaryFSM<RotaryFullStep>::StateTable[7][4] = {
+	// FullStep
+	// FS_R_START
+	{FS_R_START, FS_R_CW_BEGIN, FS_R_CCW_BEGIN, FS_R_START},
+
+	// R_CW_FINAL
+	{FS_R_CW_NEXT, FS_R_START, FS_R_CW_FINAL, FS_R_START | FS_DIR_CW},
+
+	// R_CW_BEGIN
+	{FS_R_CW_NEXT, FS_R_CW_BEGIN, FS_R_START, FS_R_START},
+
+	// R_CW_NEXT
+	{FS_R_CW_NEXT, FS_R_CW_BEGIN, FS_R_CW_FINAL, FS_R_START | FS_DIR_CW},
+
+	// R_CCW_BEGIN
+	{FS_R_CCW_NEXT, FS_R_START, FS_R_CCW_BEGIN, FS_R_START},
+
+	// R_CCW_FINAL
+	{FS_R_CCW_NEXT, FS_R_CCW_FINAL, FS_R_START, FS_R_START | FS_DIR_CCW},
+
+	// R_CCW_NEXT
+	{FS_R_CCW_NEXT, FS_R_CCW_FINAL, FS_R_CCW_BEGIN, FS_R_START | FS_DIR_CCW},
+};
+
+// TODO: remove this and change unit tests to above classes
 enum RotaryDir : uint8_t {
 	DIR_NONE = 0x00,
 	DIR_CW = 0x10,
@@ -100,4 +150,5 @@ const uint8_t RotaryBase::StateTable[13][4] = {
 	// R_CCW_NEXT
 	{FS_R_CCW_NEXT, FS_R_CCW_FINAL, FS_R_CCW_BEGIN, FS_R_START | FS_DIR_CCW},
 };
+
 } // namespace mdrivlib
