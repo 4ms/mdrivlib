@@ -12,6 +12,27 @@ namespace mdrivlib
 // - timeouts required for erasing
 // - Enter QPI mode method and commands
 // - preferred READ and WRITE commands for Single/Dual/Quad modes
+// - sector layout: [how??]
+// 	  - S25FL127S: [4k x 16 erased with 0x20 + 64k x 255 erased with 0xD8]
+//    - S25FL128L: [4k x 4096 erased with 0x20]
+// Maybe do something like this?
+struct FlashDefS24FL127L {
+	constexpr unsigned get_num_sectors() {
+		return 16 + 255;
+	}
+	constexpr unsigned get_sector_size(unsigned sector_num) {
+		return (sector_num < 16) ? 4096 : 64 * 1024;
+	}
+};
+struct FlashDefS24FL127S {
+	constexpr unsigned get_num_sectors() {
+		return 4096;
+	}
+	constexpr unsigned get_sector_size(unsigned sector_num) {
+		return 4096;
+	}
+};
+
 class QSpiFlash {
 
 public:
