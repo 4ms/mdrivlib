@@ -20,7 +20,7 @@ struct QSPIFlashConfig {
 	enum AddressBits { AddrBits24 = 24, AddrBits32 = 32 };
 	AddressBits flash_size_address_bits = AddrBits24;
 
-	enum ChipID { IS25L, S25FLxxxL };
+	enum ChipID { IS25L, S25FLxxxL, W25Q128JV };
 	ChipID chip_id = IS25L;
 
 	enum IOMode { SingleSPI, DualSPI, QuadSPI };
