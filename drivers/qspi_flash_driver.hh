@@ -47,7 +47,7 @@ private:
 		return QSPI_status == STATUS_TX_COMPLETE;
 	}
 
-	uint8_t test_encode_num(uint32_t num);
+	uint8_t test_encode_num(uint32_t num, uint32_t sector_num);
 
 public:
 	QSpiFlash(const QSPIFlashConfig &config_defs);

@@ -194,7 +194,7 @@ bool QSpiFlash::test_sector(uint8_t sector_num) {
 	read(test_buffer, test_addr, QSPI_SECTOR_SIZE, EXECUTE_FOREGROUND);
 
 	for (i = 0; i < QSPI_SECTOR_SIZE; i++)
-		test_buffer[i] = (test_encode_num(i) + sector_num) & 0xFF;
+		test_buffer[i] = test_encode_num(i, sector_num);
 
 	while (!is_ready())
 		;
@@ -224,15 +224,15 @@ bool QSpiFlash::test_sector(uint8_t sector_num) {
 		;
 
 	for (i = 0; i < (QSPI_SECTOR_SIZE - 1); i++) {
-		if (test_buffer[i] != ((test_encode_num(i) + sector_num) & 0xFF))
+		if (test_buffer[i] != test_encode_num(i, sector_num))
 			return false;
 	}
 
 	return true;
 }
 
-uint8_t QSpiFlash::test_encode_num(uint32_t num) {
-	return (num * 7) + (num >> 7);
+uint8_t QSpiFlash::test_encode_num(uint32_t num, uint32_t sector_num) {
+	return (((num * 9) + (num >> 7)) + sector_num) & 0xFF;
 }
 
 bool QSpiFlash::erase(uint32_t size, uint32_t base_addr, UseInterruptFlags use_interrupt) {
