@@ -90,6 +90,10 @@ struct GPIOExpander {
 		return last_reading;
 	}
 
+	uint16_t get_last_reading() {
+		return last_reading;
+	}
+
 	bool get_pin_state(unsigned pinnum) {
 		if (pinnum >= NumChans)
 			return false;
