@@ -127,5 +127,10 @@ struct GPIO {
 	}
 };
 
+using BDMA_ = NonexistantRegister;
+using DMAMUX_ = NonexistantRegister;
+using I2C5_ = NonexistantRegister;
+using I2C6_ = NonexistantRegister;
+
 } // namespace RCC_Enable
 } // namespace mdrivlib
