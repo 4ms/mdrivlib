@@ -2,6 +2,7 @@
 #include "register_access.hh"
 #include "stm32xx.h"
 
+// NOTE: This is for STM32F746IEKx
 namespace mdrivlib
 {
 namespace RCC_Enable
@@ -131,6 +132,11 @@ using BDMA_ = NonexistantRegister;
 using DMAMUX_ = NonexistantRegister;
 using I2C5_ = NonexistantRegister;
 using I2C6_ = NonexistantRegister;
+using SAI3_ = NonexistantRegister;
+using SAI4_ = NonexistantRegister;
+using TIM15_ = NonexistantRegister;
+using TIM16_ = NonexistantRegister;
+using TIM17_ = NonexistantRegister;
 
 } // namespace RCC_Enable
 
@@ -204,6 +210,13 @@ using USART2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RST
 using USART3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTR), RCC_APB1RSTR_USART3RST>;
 using USART6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_USART6RST>;
 using WWDG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTR), RCC_APB1RSTR_WWDGRST>;
+
+using BDMA_ = NonexistantRegister;
+using DMAMUX_ = NonexistantRegister;
+using I2C5_ = NonexistantRegister;
+using I2C6_ = NonexistantRegister;
+using SAI3_ = NonexistantRegister;
+using SAI4_ = NonexistantRegister;
 } // namespace RCC_Reset
 
 } // namespace mdrivlib
