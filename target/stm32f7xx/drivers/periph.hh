@@ -5,28 +5,41 @@
 namespace mdrivlib::PeriphUtil
 {
 struct TIM {
+	// NOTE: This is for STM32F746IEK
 	constexpr static unsigned NumPeriph = 14;
-	constexpr uint8_t to_num(TIM_TypeDef *TIMx) {
-		if (TIMx == nullptr)
-			return 0;
-		else if (TIMx == TIM1)
-			return 1;
-		else if (TIMx == TIM3)
-			return 3;
-		else if (TIMx == TIM14)
-			return 14;
-		else
-			return 0;
+	static uint8_t to_num(TIM_TypeDef *TIMx) {
+		return TIMx == TIM1	 ? 1
+			 : TIMx == TIM2	 ? 2
+			 : TIMx == TIM3	 ? 3
+			 : TIMx == TIM4	 ? 4
+			 : TIMx == TIM5	 ? 5
+			 : TIMx == TIM6	 ? 6
+			 : TIMx == TIM7	 ? 7
+			 : TIMx == TIM8	 ? 8
+			 : TIMx == TIM9	 ? 9
+			 : TIMx == TIM10 ? 10
+			 : TIMx == TIM11 ? 11
+			 : TIMx == TIM12 ? 12
+			 : TIMx == TIM13 ? 13
+			 : TIMx == TIM14 ? 14
+							 : 0;
 	}
-	static IRQn_Type IRQn(TIM_TypeDef *TIM) {
-		if (TIM == nullptr)
-			return (IRQn_Type)(0);
-		else if (TIM == TIM1)
-			return TIM1_CC_IRQn;
-		else if (TIM == TIM3)
-			return TIM3_IRQn;
-		else
-			return (IRQn_Type)(0);
+	static IRQn_Type IRQn(TIM_TypeDef *TIMx) {
+		return TIMx == TIM1	 ? TIM1_UP_TIM10_IRQn
+			 : TIMx == TIM2	 ? TIM2_IRQn
+			 : TIMx == TIM3	 ? TIM3_IRQn
+			 : TIMx == TIM4	 ? TIM4_IRQn
+			 : TIMx == TIM5	 ? TIM5_IRQn
+			 : TIMx == TIM6	 ? TIM6_DAC_IRQn
+			 : TIMx == TIM7	 ? TIM7_IRQn
+			 : TIMx == TIM8	 ? TIM8_UP_TIM13_IRQn
+			 : TIMx == TIM9	 ? TIM1_BRK_TIM9_IRQn
+			 : TIMx == TIM10 ? TIM1_UP_TIM10_IRQn
+			 : TIMx == TIM11 ? TIM1_TRG_COM_TIM11_IRQn
+			 : TIMx == TIM12 ? TIM8_BRK_TIM12_IRQn
+			 : TIMx == TIM13 ? TIM8_UP_TIM13_IRQn
+			 : TIMx == TIM14 ? TIM8_TRG_COM_TIM14_IRQn
+							 : (IRQn_Type)0;
 	}
 	static uint32_t max_freq(TIM_TypeDef *TIM) {
 		// APB2 --> divider = 1;

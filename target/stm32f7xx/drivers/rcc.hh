@@ -96,8 +96,18 @@ struct GPIO {
 			GPIOC_::set();
 		else if (periph == GPIOD)
 			GPIOD_::set();
+		else if (periph == GPIOE)
+			GPIOE_::set();
 		else if (periph == GPIOF)
 			GPIOF_::set();
+		else if (periph == GPIOG)
+			GPIOG_::set();
+		else if (periph == GPIOH)
+			GPIOH_::set();
+		else if (periph == GPIOI)
+			GPIOI_::set();
+		else if (periph == GPIOJ)
+			GPIOJ_::set();
 		[[maybe_unused]] bool delay_after_enabling = is_enabled(periph);
 	}
 	static void disable(GPIO_TypeDef *periph) {
@@ -109,8 +119,18 @@ struct GPIO {
 			GPIOC_::clear();
 		else if (periph == GPIOD)
 			GPIOD_::clear();
+		else if (periph == GPIOE)
+			GPIOE_::clear();
 		else if (periph == GPIOF)
 			GPIOF_::clear();
+		else if (periph == GPIOG)
+			GPIOG_::clear();
+		else if (periph == GPIOH)
+			GPIOH_::clear();
+		else if (periph == GPIOI)
+			GPIOI_::clear();
+		else if (periph == GPIOJ)
+			GPIOJ_::clear();
 		[[maybe_unused]] bool delay_after_disabling = is_enabled(periph);
 	}
 	static bool is_enabled(GPIO_TypeDef *periph) {
@@ -122,8 +142,18 @@ struct GPIO {
 			return GPIOC_::read();
 		else if (periph == GPIOD)
 			return GPIOD_::read();
+		else if (periph == GPIOE)
+			return GPIOE_::read();
 		else if (periph == GPIOF)
 			return GPIOF_::read();
+		else if (periph == GPIOG)
+			return GPIOG_::read();
+		else if (periph == GPIOH)
+			return GPIOH_::read();
+		else if (periph == GPIOI)
+			return GPIOI_::read();
+		else if (periph == GPIOJ)
+			return GPIOJ_::read();
 		return false;
 	}
 };

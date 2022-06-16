@@ -33,7 +33,7 @@ struct SystemClocks {
 		RCC_PeriphCLKInitTypeDef pclk_def_ = pclk_def;
 		HAL_RCCEx_PeriphCLKConfig(&pclk_def_);
 
-		HAL_RCC_EnableCSS();
+		//HAL_RCC_EnableCSS();
 
 		HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / systick_freq_hz);
 		HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
