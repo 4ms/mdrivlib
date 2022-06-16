@@ -12,6 +12,7 @@
 
 namespace mdrivlib::Clocks
 {
+#ifndef ADC
 struct ADC {
 	static void enable(const unsigned periph_num) {
 		if (periph_num == 1)
@@ -36,6 +37,7 @@ struct ADC {
 		disable(PeriphUtil::ADC::to_num(ADCx));
 	}
 };
+#endif
 
 struct DMA {
 	static void enable(const DMA_TypeDef *DMAx) {
