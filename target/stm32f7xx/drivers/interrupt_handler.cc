@@ -107,6 +107,11 @@ void IRQ_Trampoline_94() { ISRHandler(94); }
 void IRQ_Trampoline_95() { ISRHandler(95); }
 void IRQ_Trampoline_96() { ISRHandler(96); }
 void IRQ_Trampoline_97() { ISRHandler(97); }
+
+void IRQ_Trampoline_98() { ISRHandler(98); }
+void IRQ_Trampoline_99() { ISRHandler(99); }
+void IRQ_Trampoline_100() { ISRHandler(100); }
+void IRQ_Trampoline_101() { ISRHandler(101); }
 // clang-format on
 }
 
