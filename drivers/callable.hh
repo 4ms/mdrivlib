@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 #include <new>
 #include <type_traits>
@@ -63,6 +64,7 @@ private:
 	alignas(uint64_t) uint8_t m_data[BUFFER_SIZE];
 };
 
+// Function<T> is a callback that takes parameters and returns something
 template<typename Signature>
 struct Function {};
 
