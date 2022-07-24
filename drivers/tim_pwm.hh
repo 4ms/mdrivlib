@@ -14,8 +14,12 @@ enum class TimChannelNum {
 	_3 = LL_TIM_CHANNEL_CH3,
 	_3N = LL_TIM_CHANNEL_CH3N,
 	_4 = LL_TIM_CHANNEL_CH4,
+#ifdef LL_TIM_CHANNEL_CH5
 	_5 = LL_TIM_CHANNEL_CH5,
+#endif
+#ifdef LL_TIM_CHANNEL_CH6
 	_6 = LL_TIM_CHANNEL_CH6
+#endif
 };
 
 // TimPwmChannel: output PWM on a pin.
@@ -103,11 +107,18 @@ private:
 			case TimChannelNum::_4:
 				TIMx->CCR4 = val;
 				break;
+#ifdef LL_TIM_CHANNEL_CH5
 			case TimChannelNum::_5:
 				TIMx->CCR5 = val;
 				break;
+#endif
+#ifdef LL_TIM_CHANNEL_CH6
+			case TimChannelNum::_6:
+				TIMx->CCR1 = val;
+				break;
+#endif
 			default:
-				TIMx->CCR6 = val;
+				TIMx->CCR1 = val;
 				break;
 		}
 	}
