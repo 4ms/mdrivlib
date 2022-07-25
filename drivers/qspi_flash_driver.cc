@@ -285,7 +285,7 @@ bool QSpiFlash::erase(uint32_t size, uint32_t base_addr, UseInterruptFlags use_i
 	return true;
 }
 
-bool QSpiFlash::write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
+bool QSpiFlash::write(const uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
 	uint32_t end_addr, current_size, current_addr;
 
 	if (write_addr >= defs.flash_size_bytes)
@@ -330,7 +330,7 @@ bool QSpiFlash::write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
 		if (HAL_QSPI_Command(&handle, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 			return false;
 
-		if (HAL_QSPI_Transmit(&handle, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		if (HAL_QSPI_Transmit(&handle, const_cast<uint8_t *>(pData), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 			return false;
 
 		if (auto_polling_mem_ready(HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
@@ -349,7 +349,10 @@ bool QSpiFlash::write(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes) {
 // Setting use_interrupt to 1 means HAL_QSPI_TxCpltCallback() interrupt will be called when TX is
 // done, but you must still check the chip status before accessing it again.
 //
-bool QSpiFlash::write_page(uint8_t *pData, uint32_t write_addr, uint32_t num_bytes, UseInterruptFlags use_interrupt) {
+bool QSpiFlash::write_page(const uint8_t *pData,
+						   uint32_t write_addr,
+						   uint32_t num_bytes,
+						   UseInterruptFlags use_interrupt) {
 	// Cannot write more than a page
 	if (num_bytes > QSPI_PAGE_SIZE)
 		return false;
@@ -383,7 +386,7 @@ bool QSpiFlash::write_page(uint8_t *pData, uint32_t write_addr, uint32_t num_byt
 	if (use_interrupt == EXECUTE_BACKGROUND) {
 		QSPI_status = STATUS_TXING;
 
-		if (HAL_QSPI_Transmit_IT(&handle, pData) != HAL_OK)
+		if (HAL_QSPI_Transmit_IT(&handle, const_cast<uint8_t *>(pData)) != HAL_OK)
 			return false;
 
 		while (!done_TXing()) {
@@ -393,7 +396,7 @@ bool QSpiFlash::write_page(uint8_t *pData, uint32_t write_addr, uint32_t num_byt
 		// Set-up auto polling, which periodically queries the chip in the background
 		auto_polling_mem_ready_it();
 	} else {
-		if (HAL_QSPI_Transmit(&handle, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+		if (HAL_QSPI_Transmit(&handle, const_cast<uint8_t *>(pData), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 			return false;
 
 		if (auto_polling_mem_ready_it() != HAL_OK)
