@@ -108,10 +108,15 @@ public:
 
 	bool read_config(uint32_t *data);
 	bool read_chip_id(uint32_t *chip_id_ptr);
+
 	// Attempts a few times to read the ID, returns true if it matches the expected
 	bool check_chip_id(uint32_t expected_id, uint32_t mask);
 
-	// public for use in callbacks and IRQ
+	uint32_t get_chip_size_bytes() {
+		return defs.flash_size_bytes;
+	}
+
+	// for use in callbacks and IRQ:
 	volatile enum FlashStatus QSPI_status = STATUS_READY;
 	static QSpiFlash *instance_;
 };
