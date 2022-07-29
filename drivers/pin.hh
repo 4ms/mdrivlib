@@ -234,6 +234,13 @@ struct FPin {
 		else
 			_setlow.set();
 	}
+	static void set(bool state) {
+		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
+		if (state == (Polarity == PinPolarity::Normal))
+			_sethigh.set();
+		else
+			_setlow.set();
+	}
 	static bool read() {
 		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
 		if constexpr (Polarity == PinPolarity::Normal)
