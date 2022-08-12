@@ -54,7 +54,7 @@ public:
 			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
 			ADC_ChannelConfTypeDef adc_chan_conf = {
-				.Channel = chan.adc_chan_num,
+				.Channel = static_cast<uint32_t>(chan.adc_chan_num),
 				.Rank = chan.rank,
 				.SamplingTime = common_sampling_time,
 			};
