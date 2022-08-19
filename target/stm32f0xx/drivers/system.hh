@@ -18,13 +18,17 @@ struct System {
 
 		// Copy the vector table from the Flash (mapped at the base of the application
 		// load address) to the base address of the SRAM at 0x20000000.
-		// NOTE: You must setup linker script to reserve this space
+		// NOTE: You must setup linker script to reserve this space like this:
+		// MEMORY {
+		// 		VTRAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 0x70  /* First part of RAM is reserved to the vector table */
+		// 		RAM (xrw)       : ORIGIN = 0x20000070, LENGTH = 4K - 0x70
+		// 		...
+		// }
 		uint32_t SRAM_addr = 0x20000000;
 		auto *dst = reinterpret_cast<uint32_t *>(SRAM_addr);
 		auto *src = reinterpret_cast<uint32_t *>(reset_address);
 		for (int i = 0; i < F030_VTableSize; i++) {
 			*dst++ = *src++;
-			// *(volatile uint32_t *)(SRAM_addr + (i << 2)) = *(volatile uint32_t *)(reset_address + (i << 2));
 		}
 
 		// Remap SRAM 0x20000000 to 0x00000000
