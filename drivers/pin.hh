@@ -241,7 +241,7 @@ struct FPin {
 		else
 			_setlow.set();
 	}
-	static bool read() {
+	[[nodiscard]] static bool read() {
 		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
 		if constexpr (Polarity == PinPolarity::Normal)
 			return _read.read();
