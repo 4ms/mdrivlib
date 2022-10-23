@@ -206,7 +206,8 @@ void SaiTdmPeriph::_config_rx_dma() {
 	hdma_rx.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
 	hdma_rx.Init.Mode = DMA_CIRCULAR;
 	hdma_rx.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-	hdma_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_rx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+	hdma_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
 	hdma_rx.Init.MemBurst = DMA_MBURST_SINGLE;
 	hdma_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
@@ -225,7 +226,8 @@ void SaiTdmPeriph::_config_tx_dma() {
 	hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
 	hdma_tx.Init.Mode = DMA_CIRCULAR;
 	hdma_tx.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-	hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+	hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
 	hdma_tx.Init.MemBurst = DMA_MBURST_SINGLE;
 	hdma_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
