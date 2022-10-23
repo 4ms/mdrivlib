@@ -15,6 +15,7 @@ struct DefaultDMAConf {
 	static constexpr Direction dir = Mem2Periph;
 
 	static constexpr bool circular = false;
+	static constexpr bool periph_flow = false;
 
 	enum TransferSize { Byte, HalfWord, Word };
 	static constexpr TransferSize transfer_size_mem = Byte;	   // Dest, in M2M

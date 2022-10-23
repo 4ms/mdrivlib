@@ -137,7 +137,7 @@ struct DMATransfer {
 		hdma.Init.MemDataAlignment = ConfT::transfer_size_mem == DefaultDMAConf::Byte	  ? DMA_MDATAALIGN_BYTE
 								   : ConfT::transfer_size_mem == DefaultDMAConf::HalfWord ? DMA_MDATAALIGN_HALFWORD
 																						  : DMA_MDATAALIGN_WORD;
-		hdma.Init.Mode = ConfT::circular ? DMA_CIRCULAR : DMA_NORMAL;
+		hdma.Init.Mode = ConfT::circular ? DMA_CIRCULAR : ConfT::periph_flow ? DMA_PFCTRL : DMA_NORMAL;
 
 		hdma.Init.Priority = ConfT::dma_priority == DefaultDMAConf::Low	   ? DMA_PRIORITY_LOW
 						   : ConfT::dma_priority == DefaultDMAConf::Medium ? DMA_PRIORITY_MEDIUM
