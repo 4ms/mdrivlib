@@ -87,6 +87,25 @@ enum class GPIO : uint32_t {
 	Unused = 0,
 };
 
+enum PinNum : uint8_t {
+	_0 = 0,
+	_1 = 1,
+	_2 = 2,
+	_3 = 3,
+	_4 = 4,
+	_5 = 5,
+	_6 = 6,
+	_7 = 7,
+	_8 = 8,
+	_9 = 9,
+	_10 = 10,
+	_11 = 11,
+	_12 = 12,
+	_13 = 13,
+	_14 = 14,
+	_15 = 15,
+};
+
 enum PinAF {
 	AFNone = 0,
 	AltFunc1,
@@ -215,7 +234,14 @@ struct FPin {
 		else
 			_setlow.set();
 	}
-	static bool read() {
+	static void set(bool state) {
+		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
+		if (state == (Polarity == PinPolarity::Normal))
+			_sethigh.set();
+		else
+			_setlow.set();
+	}
+	[[nodiscard]] static bool read() {
 		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
 		if constexpr (Polarity == PinPolarity::Normal)
 			return _read.read();

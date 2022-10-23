@@ -172,6 +172,12 @@ using TIM17_ = NonexistantRegister;
 
 namespace RCC_Reset
 {
+using APB1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTR), 0xFFFFFFFF>;
+using APB2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), 0xFFFFFFFF>;
+using AHB1 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB1RSTR), 0xFFFFFFFF>;
+using AHB2 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB2RSTR), 0xFFFFFFFF>;
+using AHB3 = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, AHB3RSTR), 0xFFFFFFFF>;
+
 using ADC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2RSTR), RCC_APB2RSTR_ADCRST>;
 using CAN1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTR), RCC_APB1RSTR_CAN1RST>;
 using CAN2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1RSTR), RCC_APB1RSTR_CAN2RST>;
