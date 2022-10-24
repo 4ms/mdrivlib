@@ -35,6 +35,7 @@ struct SystemClocks {
 
 		//HAL_RCC_EnableCSS();
 
+		HAL_SetTickFreq(HAL_TICK_FREQ_DEFAULT);
 		HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / systick_freq_hz);
 		HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 	}
