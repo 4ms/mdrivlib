@@ -214,39 +214,50 @@ struct FPin {
 	// Todo: do our own init here using RegisterBits, don't rely on Pin class
 	// Will still need to depend on RCC_Enable class
 	FPin() {
-		Pin init{Gpio, PinNum, Mode};
+		if constexpr (Gpio != GPIO::Unused)
+			Pin init{Gpio, PinNum, Mode};
 	}
 	FPin(PinPull pull, PinSpeed speed = PinSpeed::Low, PinOType otype = PinOType::OpenDrain) {
-		Pin init{Gpio, PinNum, Mode, 0, pull, PinPolarity::Normal, speed, otype};
+		if constexpr (Gpio != GPIO::Unused)
+			Pin init{Gpio, PinNum, Mode, 0, pull, PinPolarity::Normal, speed, otype};
 	}
 
 	static void low() {
-		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set low");
-		if constexpr (Polarity == PinPolarity::Normal)
-			_setlow.set();
-		else
-			_sethigh.set();
+		if constexpr (Gpio != GPIO::Unused) {
+			static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set low");
+			if constexpr (Polarity == PinPolarity::Normal)
+				_setlow.set();
+			else
+				_sethigh.set();
+		}
 	}
 	static void high() {
-		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
-		if constexpr (Polarity == PinPolarity::Normal)
-			_sethigh.set();
-		else
-			_setlow.set();
+		if constexpr (Gpio != GPIO::Unused) {
+			static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
+			if constexpr (Polarity == PinPolarity::Normal)
+				_sethigh.set();
+			else
+				_setlow.set();
+		}
 	}
 	static void set(bool state) {
-		static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
-		if (state == (Polarity == PinPolarity::Normal))
-			_sethigh.set();
-		else
-			_setlow.set();
+		if constexpr (Gpio != GPIO::Unused) {
+			static_assert(Mode == PinMode::Output, "Pin is not an output, cannot set high");
+			if (state == (Polarity == PinPolarity::Normal))
+				_sethigh.set();
+			else
+				_setlow.set();
+		}
 	}
 	[[nodiscard]] static bool read() {
-		static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
-		if constexpr (Polarity == PinPolarity::Normal)
-			return _read.read();
-		else
-			return !_read.read();
+		if constexpr (Gpio != GPIO::Unused) {
+			static_assert(Mode == PinMode::Input, "Pin is not an input, cannot read");
+			if constexpr (Polarity == PinPolarity::Normal)
+				return _read.read();
+			else
+				return !_read.read();
+		} else
+			return false;
 	}
 
 private:
