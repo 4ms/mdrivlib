@@ -27,7 +27,6 @@ class Interrupt {
 public:
 	static constexpr uint32_t NumISRs = TargetName == Targets::stm32f0 ? 38 : 256;
 	using ISRType = Callback;
-	// using ISRType = std::function<void()>;
 	using IRQType = IRQn_Type;
 
 	Interrupt() = default;
