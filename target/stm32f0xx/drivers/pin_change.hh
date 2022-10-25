@@ -1,10 +1,10 @@
 #pragma once
+#include "drivers/callable.hh"
 #include "exti.hh"
 #include "interrupt.hh"
 #include "pin.hh"
 #include "pin_change_conf.hh"
 #include "rcc.hh"
-#include <functional>
 
 namespace mdrivlib
 {
@@ -14,13 +14,13 @@ class PinChangeInt {
 public:
 	PinChangeInt() = default;
 
-	PinChangeInt(std::function<void(void)> &&func)
+	PinChangeInt(Callback &&func)
 		: task_func{std::move(func)} {
 		_init();
 		_init_irq();
 	}
 
-	void init(std::function<void(void)> &&func) {
+	void init(Callback &&func) {
 		task_func = std::move(func);
 		_init();
 		_init_irq();
@@ -106,6 +106,6 @@ private:
 	}
 
 private:
-	std::function<void(void)> task_func;
+	Callback task_func;
 };
 } // namespace mdrivlib
