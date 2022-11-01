@@ -44,17 +44,17 @@ struct RegisterData {
 };
 
 static RegisterData default_codec_init[] = {
-	{ResetControl::Address, bitfield8(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
-	{DacControl1::Address, bitfield8(DacControl1::I2S_TDM_24bit, DacControl1::SlaveMode)},
-	{DacControl2::Address, bitfield8(DacControl2::DacAllEnable)},
-	{DacSoftMute::Address, bitfield8(DacSoftMute::NoDacMuted)},
-	{DacAllAtten::Address, bitfield8(DacAtten::ZeroDB)},
-	{AdcSamplingMode::Address, bitfield8(AdcSamplingMode::Single)},
-	{AdcControl1::Address, bitfield8(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
-	{AdcControl2::Address, bitfield8(AdcControl2::AdcAllHPFDisabled)},
-	{AdcSoftMute::Address, bitfield8(AdcSoftMute::NoAdcMuted)},
-	{AdcAllAtten::Address, bitfield8(AdcAtten::ZeroDB)},
-	{AdcInputType::Address, bitfield8(AdcInputType::AllAdcDifferential)},
+	{ResetControl::Address, bitfield(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
+	{DacControl1::Address, bitfield(DacControl1::I2S_TDM_24bit, DacControl1::SlaveMode)},
+	{DacControl2::Address, bitfield(DacControl2::DacAllEnable)},
+	{DacSoftMute::Address, bitfield(DacSoftMute::NoDacMuted)},
+	{DacAllAtten::Address, bitfield(DacAtten::ZeroDB)},
+	{AdcSamplingMode::Address, bitfield(AdcSamplingMode::Single)},
+	{AdcControl1::Address, bitfield(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
+	{AdcControl2::Address, bitfield(AdcControl2::AdcAllHPFDisabled)},
+	{AdcSoftMute::Address, bitfield(AdcSoftMute::NoAdcMuted)},
+	{AdcAllAtten::Address, bitfield(AdcAtten::ZeroDB)},
+	{AdcInputType::Address, bitfield(AdcInputType::AllAdcDifferential)},
 
 };
 
