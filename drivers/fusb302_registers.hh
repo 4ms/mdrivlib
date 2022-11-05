@@ -16,10 +16,12 @@ struct ID : ReadOnly {
 	uint8_t ProductID : 2;
 	uint8_t VersionID : 4;
 
-	constexpr ID(uint8_t raw)
-		: RevID(Bits<0, 2>(raw))
-		, ProductID(Bits<2, 2>(raw))
-		, VersionID(Bits<4, 4>(raw)) {
+	constexpr static ID make(uint8_t raw) {
+		return {
+			.RevID = Bits<0, 2>(raw),
+			.ProductID = Bits<2, 2>(raw),
+			.VersionID = Bits<4, 4>(raw),
+		};
 	}
 };
 
@@ -40,16 +42,16 @@ struct Switches0 : ReadWrite {
 			   (ConnectVConnCC1 << 4) | (ConnectVConnCC2 << 5) | (PullUpCC1 << 6) | (PullUpCC2 << 7);
 	}
 
-	// constexpr Switches0(uint8_t raw)
-	// 	: PullDownCC1(Bits<0>(raw))
-	// 	, PullDownCC2(Bits<1>(raw))
-	// 	, MeasureCC1(Bits<2>(raw))
-	// 	, MeasureCC2(Bits<3>(raw))
-	// 	, ConnectVConnCC1(Bits<4>(raw))
-	// 	, ConnectVConnCC2(Bits<5>(raw))
-	// 	, PullUpCC1(Bits<6>(raw))
-	// 	, PullUpCC2(Bits<7>(raw)) {
-	// }
+	constexpr static Switches0 make(uint8_t raw) {
+		return {.PullDownCC1 = Bits<0>(raw),
+				.PullDownCC2 = Bits<1>(raw),
+				.MeasureCC1 = Bits<2>(raw),
+				.MeasureCC2 = Bits<3>(raw),
+				.ConnectVConnCC1 = Bits<4>(raw),
+				.ConnectVConnCC2 = Bits<5>(raw),
+				.PullUpCC1 = Bits<6>(raw),
+				.PullUpCC2 = Bits<7>(raw)};
+	}
 };
 
 struct Switches1 : ReadWrite {
@@ -190,13 +192,12 @@ struct Control3 : ReadWrite, WriteClear {
 		return (AutoRetryCRC << 0) | (NumRetries << 1) | (AutoSoftReset << 3) | (AutoHardReset << 4) |
 			   (BISTTMode << 5) | (SendHardReset << 6);
 	}
-	// constexpr Control3() = default;
-	constexpr Control3(uint8_t raw)
-		: AutoRetryCRC(Bits<0>(raw))
-		, NumRetries(Bits<1, 2>(raw))
-		, AutoSoftReset(Bits<3>(raw))
-		, AutoHardReset(Bits<4>(raw))
-		, BISTTMode(Bits<5>(raw)) {
+	constexpr static Control3 make(uint8_t raw) {
+		return {.AutoRetryCRC = Bits<0>(raw),
+				.NumRetries = Bits<1, 2>(raw),
+				.AutoSoftReset = Bits<3>(raw),
+				.AutoHardReset = Bits<4>(raw),
+				.BISTTMode = Bits<5>(raw)};
 	}
 };
 
@@ -332,13 +333,14 @@ struct Status1A : ReadOnly {
 		return (RXSOP << 0) | (RXSOP1Dbg << 1) | (RXSOP2Dbg << 2) | (ToggleOutcomeIsCC1 << 3) |
 			   (ToggleOutcomeIsCC2 << 4) | (ToggleOutcomeIsSink << 5);
 	}
-	constexpr Status1A(uint8_t raw)
-		: RXSOP((raw & (1 << 0)) >> 0)
-		, RXSOP1Dbg((raw & (1 << 1)) >> 1)
-		, RXSOP2Dbg((raw & (1 << 2)) >> 2)
-		, ToggleOutcomeIsCC1((raw & (1 << 3)) >> 3)
-		, ToggleOutcomeIsCC2((raw & (1 << 4)) >> 4)
-		, ToggleOutcomeIsSink((raw & (1 << 5)) >> 5) {
+
+	constexpr static Status1A make(uint8_t raw) {
+		return {.RXSOP = Bits<0>(raw),
+				.RXSOP1Dbg = Bits<1>(raw),
+				.RXSOP2Dbg = Bits<2>(raw),
+				.ToggleOutcomeIsCC1 = Bits<3>(raw),
+				.ToggleOutcomeIsCC2 = Bits<4>(raw),
+				.ToggleOutcomeIsSink = Bits<5>(raw)};
 	}
 };
 
@@ -358,15 +360,15 @@ struct InterruptA : ReadClear {
 		return (HardResetRx << 0) | (SoftResetRx << 1) | (TxSent << 2) | (HardResetSent << 3) | (RetryFail << 4) |
 			   (SoftFail << 5) | (ToggleDone << 6) | (OCPTempEvent << 7);
 	}
-	constexpr InterruptA(uint8_t raw)
-		: HardResetRx(Bits<0>(raw))
-		, SoftResetRx(Bits<1>(raw))
-		, TxSent(Bits<2>(raw))
-		, HardResetSent(Bits<3>(raw))
-		, RetryFail(Bits<4>(raw))
-		, SoftFail(Bits<5>(raw))
-		, ToggleDone(Bits<6>(raw))
-		, OCPTempEvent(Bits<7>(raw)) {
+	constexpr static InterruptA make(uint8_t raw) {
+		return {.HardResetRx = Bits<0>(raw),
+				.SoftResetRx = Bits<1>(raw),
+				.TxSent = Bits<2>(raw),
+				.HardResetSent = Bits<3>(raw),
+				.RetryFail = Bits<4>(raw),
+				.SoftFail = Bits<5>(raw),
+				.ToggleDone = Bits<6>(raw),
+				.OCPTempEvent = Bits<7>(raw)};
 	}
 };
 
@@ -396,15 +398,14 @@ struct Status0 : ReadOnly {
 		return (BCLevel << 0) | (Wake << 2) | (Alert << 3) | (CRCCheck << 4) | (Comp << 5) | (Activity << 6) |
 			   (VBusOK << 7);
 	}
-	constexpr Status0() = default;
-	constexpr Status0(uint8_t raw)
-		: BCLevel(Bits<0, 2>(raw))
-		, Wake(Bits<2>(raw))
-		, Alert(Bits<3>(raw))
-		, CRCCheck(Bits<4>(raw))
-		, Comp(Bits<5>(raw))
-		, Activity(Bits<6>(raw))
-		, VBusOK(Bits<7>(raw)) {
+	constexpr static Status0 make(uint8_t raw) {
+		return {.BCLevel = Bits<0, 2>(raw),
+				.Wake = Bits<2>(raw),
+				.Alert = Bits<3>(raw),
+				.CRCCheck = Bits<4>(raw),
+				.Comp = Bits<5>(raw),
+				.Activity = Bits<6>(raw),
+				.VBusOK = Bits<7>(raw)};
 	}
 };
 
@@ -442,15 +443,15 @@ struct Interrupt : ReadClear {
 		return (BCLevel << 0) | (Collision << 1) | (Wake << 2) | (Alert << 3) | (CRCCheck << 4) | (CompChanged << 5) |
 			   (Activity << 6) | (VBusOK << 7);
 	}
-	constexpr Interrupt(uint8_t raw)
-		: BCLevel((raw & (1 << 0)) >> 0)
-		, Collision((raw & (1 << 1)) >> 1)
-		, Wake((raw & (1 << 2)) >> 2)
-		, Alert((raw & (1 << 3)) >> 3)
-		, CRCCheck((raw & (1 << 4)) >> 4)
-		, CompChanged((raw & (1 << 5)) >> 5)
-		, Activity((raw & (1 << 6)) >> 6)
-		, VBusOK((raw & (1 << 7)) >> 7) {
+	constexpr static Interrupt make(uint8_t raw) {
+		return {.BCLevel = Bits<0>(raw),
+				.Collision = Bits<1>(raw),
+				.Wake = Bits<2>(raw),
+				.Alert = Bits<3>(raw),
+				.CRCCheck = Bits<4>(raw),
+				.CompChanged = Bits<5>(raw),
+				.Activity = Bits<6>(raw),
+				.VBusOK = Bits<7>(raw)};
 	}
 };
 } // namespace FUSB302
