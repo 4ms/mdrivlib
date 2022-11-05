@@ -95,8 +95,8 @@ struct Device {
 	}
 
 	void handle_interrupt() {
-		auto intr = Interrupt{read<Interrupt>()};
-		auto intrA = InterruptA{read<InterruptA>()};
+		auto intr = read<Interrupt>();
+		auto intrA = read<InterruptA>();
 		auto intrB = read<InterruptB>();
 
 		pr_debug("Int = 0x%x VBusOK=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
@@ -156,15 +156,16 @@ struct Device {
 	//TODO: return std::expected<uint8_t> when compiler supports it
 	template<typename Reg>
 		requires std::derived_from<Reg, BusReg::ReadAccess>
-	uint8_t read() {
-		static bool got_error = false;
+	Reg read() {
+		static bool got_error_once = false;
 		uint8_t data = 0;
 		auto err = i2c.mem_read(dev_addr, Reg::Address, 1, &data, 1);
-		if (err != mdrivlib::I2CPeriph::I2C_NO_ERR && !got_error) {
+
+		if (err != mdrivlib::I2CPeriph::I2C_NO_ERR && !got_error_once) {
 			pr_debug("Error reading Reg 0x%x: %d\n", Reg::Address, err);
-			got_error = true;
+			got_error_once = true;
 		}
-		return data;
+		return Reg::make(data);
 	}
 
 	template<typename Reg>
@@ -172,7 +173,7 @@ struct Device {
 	void reg_check(std::string_view regname) {
 		static uint8_t last_val = 0xFF;
 		auto val = read<Reg>();
-		if (val != last_val)
+		if ((uint8_t)val != last_val)
 			pr_debug("Changed %s: 0x%x\n", regname.data(), val);
 		last_val = val;
 	}
@@ -183,7 +184,7 @@ struct Device {
 		auto val = read<Reg>();
 		pr_debug("%s: 0x%x\n", regname.data(), val);
 		if constexpr (static_cast<uint8_t>(Reg::Address) == FUSB302::Status0::Address) {
-			Status0 s{val};
+			auto s = Status0::make(val);
 			pr_debug("   BCLevel=%d Wake=%d Comp=%d VBusOK=%d\n", s.BCLevel, s.Wake, s.Comp, s.VBusOK);
 		}
 	}

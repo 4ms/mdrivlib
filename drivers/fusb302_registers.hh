@@ -16,6 +16,9 @@ struct ID : ReadOnly {
 	uint8_t ProductID : 2;
 	uint8_t VersionID : 4;
 
+	constexpr operator uint8_t() {
+		return (RevID << 0) | (ProductID << 2) | (VersionID << 4);
+	}
 	constexpr static ID make(uint8_t raw) {
 		return {
 			.RevID = Bits<0, 2>(raw),
@@ -69,6 +72,14 @@ struct Switches1 : ReadWrite {
 		return (EnableTXCC1 << 0) | (EnableTXCC2 << 1) | (AutoCRC << 2) | (DataRoleSrc << 4) | (SpecRev << 5) |
 			   (PowerRoleSrc << 7);
 	}
+	constexpr static Switches1 make(uint8_t raw) {
+		return {.EnableTXCC1 = Bits<0>(raw),
+				.EnableTXCC2 = Bits<1>(raw),
+				.AutoCRC = Bits<2>(raw),
+				.DataRoleSrc = Bits<4>(raw),
+				.SpecRev = Bits<5, 2>(raw),
+				.PowerRoleSrc = Bits<7>(raw)};
+	}
 };
 
 struct Measure : ReadWrite {
@@ -81,6 +92,12 @@ struct Measure : ReadWrite {
 	constexpr operator uint8_t() {
 		return (DAC << 0) | (MeasureVBUS << 6);
 	}
+	constexpr static Measure make(uint8_t raw) {
+		return {
+			.DAC = Bits<0, 6>(raw),
+			.MeasureVBUS = Bits<6>(raw),
+		};
+	}
 };
 
 struct Slice : ReadWrite {
@@ -91,6 +108,12 @@ struct Slice : ReadWrite {
 
 	constexpr operator uint8_t() {
 		return (BMCSlicerDAC << 0) | (SliderDACHys << 6);
+	}
+	constexpr static Slice make(uint8_t raw) {
+		return {
+			.BMCSlicerDAC = Bits<0, 6>(raw),
+			.SliderDACHys = Bits<6, 2>(raw),
+		};
 	}
 };
 
@@ -114,6 +137,13 @@ struct Control0 : ReadWrite {
 
 	constexpr operator uint8_t() {
 		return (AutoStartOnCRCRx << 1) | (HostCurrent << 2) | (MaskAllInt << 5);
+	}
+	constexpr static Control0 make(uint8_t raw) {
+		return {
+			.AutoStartOnCRCRx = Bits<1>(raw),
+			.HostCurrent = Bits<2, 2>(raw),
+			.MaskAllInt = Bits<5>(raw),
+		};
 	}
 };
 
@@ -140,7 +170,7 @@ struct Control1 : ReadWrite, WriteClear {
 
 	uint8_t EnableSOP1 : 1;
 	uint8_t EnableSOP2 : 1;
-	uint8_t RXFlush : 1; //W/C
+	uint8_t RXFlush : 1 = 0; //W/C
 	uint8_t : 1;
 	uint8_t BISTMode2 : 1;
 	uint8_t EnableSOP1Dbg : 1;
@@ -150,6 +180,13 @@ struct Control1 : ReadWrite, WriteClear {
 	constexpr operator uint8_t() {
 		return (EnableSOP1 << 0) | (EnableSOP2 << 1) | (RXFlush << 2) | (BISTMode2 << 4) | (EnableSOP1Dbg << 5) |
 			   (EnableSOP2Dbg << 6);
+	}
+	constexpr static Control1 make(uint8_t raw) {
+		return {.EnableSOP1 = Bits<0>(raw),
+				.EnableSOP2 = Bits<1>(raw),
+				.BISTMode2 = Bits<4>(raw),
+				.EnableSOP1Dbg = Bits<5>(raw),
+				.EnableSOP2Dbg = Bits<6>(raw)};
 	}
 };
 
@@ -166,7 +203,13 @@ struct Control2 : ReadWrite {
 	constexpr operator uint8_t() {
 		return (Toggle << 0) | (PollingMode << 1) | (WakeEnable << 3) | (ToggleIgnoreRa << 5) | (ToggleTime << 6);
 	}
-
+	constexpr static Control2 make(uint8_t raw) {
+		return {.Toggle = Bits<0>(raw),
+				.PollingMode = Bits<1, 2>(raw),
+				.WakeEnable = Bits<3>(raw),
+				.ToggleIgnoreRa = Bits<5>(raw),
+				.ToggleTime = Bits<6, 2>(raw)};
+	}
 	enum PollingModes {
 		PollDRP = 0b01,
 		PollSNK = 0b10,
@@ -217,6 +260,16 @@ struct Mask : ReadWrite {
 		return (HostCurrentReq << 0) | (Collision << 1) | (Wake << 2) | (Alert << 3) | (CRCCheck << 4) |
 			   (CompChange << 5) | (CCBusActivity << 6) | (VBusOK << 7);
 	}
+	constexpr static Mask make(uint8_t raw) {
+		return {.HostCurrentReq = Bits<0>(raw),
+				.Collision = Bits<1>(raw),
+				.Wake = Bits<2>(raw),
+				.Alert = Bits<3>(raw),
+				.CRCCheck = Bits<4>(raw),
+				.CompChange = Bits<5>(raw),
+				.CCBusActivity = Bits<6>(raw),
+				.VBusOK = Bits<7>(raw)};
+	}
 };
 
 struct Power : ReadWrite {
@@ -230,6 +283,14 @@ struct Power : ReadWrite {
 
 	constexpr operator uint8_t() {
 		return (BandGapAndWake << 0) | (MeasureBlock << 1) | (RXAndCurrentRefs << 2) | (IntOsc << 3);
+	}
+	constexpr static Power make(uint8_t raw) {
+		return {
+			.BandGapAndWake = Bits<0>(raw),
+			.MeasureBlock = Bits<1>(raw),
+			.RXAndCurrentRefs = Bits<2>(raw),
+			.IntOsc = Bits<3>(raw),
+		};
 	}
 };
 
@@ -255,6 +316,12 @@ struct OCP : ReadWrite {
 	constexpr operator uint8_t() {
 		return (OverCurrentDivEighths << 0) | (OverCurrentMax << 3);
 	}
+	constexpr static OCP make(uint8_t raw) {
+		return {
+			.OverCurrentDivEighths = Bits<0, 3>(raw),
+			.OverCurrentMax = Bits<3>(raw),
+		};
+	}
 
 	enum OverCurrentMax {
 		_80mA = 0,
@@ -278,6 +345,16 @@ struct MaskA : ReadWrite {
 		return (HardResetRx << 0) | (SoftResetRx << 1) | (TxSent << 2) | (HardResetSent << 3) | (RetryFail << 4) |
 			   (SoftFail << 5) | (ToggleDone << 6) | (OCPTempEvent << 7);
 	}
+	constexpr static MaskA make(uint8_t raw) {
+		return {.HardResetRx = Bits<0>(raw),
+				.SoftResetRx = Bits<1>(raw),
+				.TxSent = Bits<2>(raw),
+				.HardResetSent = Bits<3>(raw),
+				.RetryFail = Bits<4>(raw),
+				.SoftFail = Bits<5>(raw),
+				.ToggleDone = Bits<6>(raw),
+				.OCPTempEvent = Bits<7>(raw)};
+	}
 };
 
 struct MaskB : ReadWrite {
@@ -289,6 +366,9 @@ struct MaskB : ReadWrite {
 	constexpr operator uint8_t() {
 		return (GoodCRCSent << 0);
 	}
+	constexpr static MaskB make(uint8_t raw) {
+		return {.GoodCRCSent = Bits<0>(raw)};
+	}
 };
 
 struct Control4 : ReadWrite {
@@ -299,6 +379,9 @@ struct Control4 : ReadWrite {
 
 	constexpr operator uint8_t() {
 		return (ToggleExitAudio << 0);
+	}
+	constexpr static Control4 make(uint8_t raw) {
+		return {.ToggleExitAudio = Bits<0>(raw)};
 	}
 };
 
@@ -315,6 +398,16 @@ struct Status0A : ReadOnly {
 
 	constexpr operator uint8_t() {
 		return (HardReset << 0) | (SoftReset << 1) | (Power2 << 2) | (Power3 << 3) | (RetryFail << 4) | (SoftFail << 5);
+	}
+	constexpr static Status0A make(uint8_t raw) {
+		return {
+			.HardReset = Bits<0>(raw),
+			.SoftReset = Bits<1>(raw),
+			.Power2 = Bits<2>(raw),
+			.Power3 = Bits<3>(raw),
+			.RetryFail = Bits<4>(raw),
+			.SoftFail = Bits<5>(raw),
+		};
 	}
 };
 
@@ -381,6 +474,9 @@ struct InterruptB : ReadClear {
 	constexpr operator uint8_t() {
 		return (GCRSent << 0);
 	}
+	constexpr static InterruptB make(uint8_t raw) {
+		return {.GCRSent = Bits<0>(raw)};
+	}
 };
 
 struct Status0 : ReadOnly {
@@ -424,6 +520,16 @@ struct Status1 : ReadOnly {
 	constexpr operator uint8_t() {
 		return (OCP << 0) | (OverTemp << 1) | (TXFull << 2) | (TXEmpty << 3) | (RXFull << 4) | (RXEmpty << 5) |
 			   (RXSOP1 << 6) | (RXSOP2 << 7);
+	}
+	constexpr static Status1 make(uint8_t raw) {
+		return {.OCP = Bits<0>(raw),
+				.OverTemp = Bits<1>(raw),
+				.TXFull = Bits<2>(raw),
+				.TXEmpty = Bits<3>(raw),
+				.RXFull = Bits<4>(raw),
+				.RXEmpty = Bits<5>(raw),
+				.RXSOP1 = Bits<6>(raw),
+				.RXSOP2 = Bits<7>(raw)};
 	}
 };
 
