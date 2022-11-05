@@ -27,7 +27,7 @@ static_assert(Mask<uint8_t>(10) == 0xFF);
 
 template<unsigned FirstBitNum, unsigned BitWidth = 1, typename T>
 constexpr T Bits(T raw) {
-	return (raw & (Mask<T>(BitWidth) << FirstBitNum)) >> FirstBitNum;
+	return (raw >> FirstBitNum) & Mask<T>(BitWidth);
 }
 
 static_assert(Bits<0>(0b00011101) == 0b1);
