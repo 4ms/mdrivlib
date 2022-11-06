@@ -22,9 +22,9 @@ struct ID : ReadOnly {
 	}
 	constexpr static ID make(uint8_t raw) {
 		return {
-			.RevID = Bits<0, 2>(raw),
-			.ProductID = Bits<2, 2>(raw),
-			.VersionID = Bits<4, 4>(raw),
+			.RevID = Bits<0, 1>(raw),
+			.ProductID = Bits<2, 3>(raw),
+			.VersionID = Bits<4, 5, 6, 7>(raw),
 		};
 	}
 };
@@ -78,7 +78,7 @@ struct Switches1 : ReadWrite {
 				.EnableTXCC2 = Bits<1>(raw),
 				.AutoCRC = Bits<2>(raw),
 				.DataRoleSrc = Bits<4>(raw),
-				.SpecRev = Bits<5, 2>(raw),
+				.SpecRev = Bits<5, 6>(raw),
 				.PowerRoleSrc = Bits<7>(raw)};
 	}
 };
@@ -95,7 +95,7 @@ struct Measure : ReadWrite {
 	}
 	constexpr static Measure make(uint8_t raw) {
 		return {
-			.DAC = Bits<0, 6>(raw),
+			.DAC = Bits<0, 1, 2, 3, 4, 5>(raw),
 			.MeasureVBUS = Bits<6>(raw),
 		};
 	}
@@ -112,8 +112,8 @@ struct Slice : ReadWrite {
 	}
 	constexpr static Slice make(uint8_t raw) {
 		return {
-			.BMCSlicerDAC = Bits<0, 6>(raw),
-			.SliderDACHys = Bits<6, 2>(raw),
+			.BMCSlicerDAC = Bits<0, 1, 2, 3, 4, 5>(raw),
+			.SliderDACHys = Bits<6, 7>(raw),
 		};
 	}
 };
@@ -142,7 +142,7 @@ struct Control0 : ReadWrite {
 	constexpr static Control0 make(uint8_t raw) {
 		return {
 			.AutoStartOnCRCRx = Bits<1>(raw),
-			.HostCurrent = Bits<2, 2>(raw),
+			.HostCurrent = Bits<2, 3>(raw),
 			.MaskAllInt = Bits<5>(raw),
 		};
 	}
@@ -159,9 +159,11 @@ struct Control0WC : WriteClear {
 	uint8_t TXFlush : 1;
 	uint8_t : 1;
 
-	constexpr Control0WC(uint8_t raw)
-		: TXStart((raw & (1 << 0)) >> 0)
-		, TXFlush((raw & (1 << 6)) >> 6) {
+	constexpr static Control0WC make(uint8_t raw) {
+		return {
+			.TXStart = Bits<0>(raw),
+			.TXFlush = Bits<6>(raw),
+		};
 	}
 };
 
@@ -209,7 +211,7 @@ struct Control2 : ReadWrite {
 				.PollingMode = Bits<1, 2>(raw),
 				.WakeEnable = Bits<3>(raw),
 				.ToggleIgnoreRa = Bits<5>(raw),
-				.ToggleTime = Bits<6, 2>(raw)};
+				.ToggleTime = Bits<6, 7>(raw)};
 	}
 	enum PollingModes {
 		PollDRP = 0b01,
@@ -319,7 +321,7 @@ struct OCP : ReadWrite {
 	}
 	constexpr static OCP make(uint8_t raw) {
 		return {
-			.OverCurrentDivEighths = Bits<0, 3>(raw),
+			.OverCurrentDivEighths = Bits<0, 1, 2>(raw),
 			.OverCurrentMax = Bits<3>(raw),
 		};
 	}
@@ -496,7 +498,7 @@ struct Status0 : ReadOnly {
 			   (VBusOK << 7);
 	}
 	constexpr static Status0 make(uint8_t raw) {
-		return {.BCLevel = Bits<0, 2>(raw),
+		return {.BCLevel = Bits<0, 1>(raw),
 				.Wake = Bits<2>(raw),
 				.Alert = Bits<3>(raw),
 				.CRCCheck = Bits<4>(raw),

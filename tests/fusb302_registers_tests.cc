@@ -45,6 +45,7 @@ TEST_CASE("Syntax supports storing reg value in an array") {
 		{InterruptA::Address, InterruptA{.HardResetRx = 0}},
 		{InterruptB::Address, InterruptB{.GCRSent = 0}},
 	};
+	(void)r;
 }
 
 TEST_CASE("Can use write_reg<RegType>({.NamedDesignator1=1, .NamedDesignator2=1,...})") {
