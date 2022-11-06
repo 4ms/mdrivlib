@@ -5,21 +5,25 @@
 #include "pin.hh"
 #include "pin_change_conf.hh"
 #include <functional>
+// #include "drivers/callable.hh"
 
 namespace mdrivlib
 {
 
 template<PinChangeConf ConfT>
 class PinChangeInt {
+	using InterruptT = std::function<void()>;
+	// using InterruptT = Callback;
+
 public:
 	PinChangeInt() = default;
 
-	PinChangeInt(std::function<void(void)> &&func)
+	PinChangeInt(InterruptT &&func)
 		: task_func{std::move(func)} {
 		_init();
 	}
 
-	void init(std::function<void(void)> &&func) {
+	void init(InterruptT &&func) {
 		task_func = std::move(func);
 		_init();
 	}
@@ -120,6 +124,6 @@ private:
 	}
 
 private:
-	std::function<void(void)> task_func;
+	InterruptT task_func;
 };
 } // namespace mdrivlib
