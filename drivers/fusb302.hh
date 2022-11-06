@@ -4,8 +4,8 @@
 #include <cstdint>
 
 // Debugging:
-// #define DEBUG
-#ifdef DEBUG
+// #define FUSBDEBUG
+#ifdef FUSBDEBUG
 #include "printf.h"
 #define pr_debug printf_
 #include <optional>
@@ -167,7 +167,7 @@ struct Device {
 	}
 
 	//// Debugging stuff:
-#ifdef DEBUG
+#ifdef FUSBDEBUG
 	template<typename Reg>
 	requires std::derived_from<Reg, BusReg::ReadAccess>
 	void reg_check_changed(std::string_view regname) {
