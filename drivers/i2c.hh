@@ -1,8 +1,10 @@
 #pragma once
+#include "drivers/bus_register.hh"
 #include "i2c_config_struct.hh"
 #include "interrupt.hh"
 #include "pin.hh"
 #include <cstdint>
+#include <optional>
 
 namespace mdrivlib
 {
@@ -20,6 +22,24 @@ public:
 	void deinit();
 
 	bool is_ready();
+
+	template<typename Reg>
+	requires std::derived_from<Reg, BusReg::WriteAccess>
+	Error write_reg(uint16_t dev_address, Reg data) {
+		auto d = static_cast<uint8_t>(data);
+		return mem_write(dev_address, Reg::Address, 1, &d, 1);
+	}
+
+	template<typename Reg>
+	requires std::derived_from<Reg, BusReg::ReadAccess>
+	std::optional<Reg> read_reg(uint16_t dev_address) {
+		uint8_t data = 0;
+		auto err = mem_read(dev_address, Reg::Address, 1, &data, 1);
+		// TODO: return std::expected<Reg> when compilers support it
+		if (err == I2C_NO_ERR)
+			return Reg::make(data);
+		return std::nullopt;
+	}
 
 	Error mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
 	Error mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
