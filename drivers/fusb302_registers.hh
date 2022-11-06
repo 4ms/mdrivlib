@@ -1,3 +1,4 @@
+#pragma once
 #include "drivers/bus_register.hh"
 #include <cstdint>
 

@@ -35,6 +35,18 @@ TEST_CASE("Convert to uint8_t") {
 	CHECK((uint8_t)a == 0b10);
 }
 
+struct RegisterInit {
+	uint8_t reg_num;
+	uint8_t value;
+};
+TEST_CASE("Syntax supports storing reg value in an array") {
+	using namespace FUSB302;
+	RegisterInit r[] = {
+		{InterruptA::Address, InterruptA{.HardResetRx = 0}},
+		{InterruptB::Address, InterruptB{.GCRSent = 0}},
+	};
+}
+
 TEST_CASE("Can use write_reg<RegType>({.NamedDesignator1=1, .NamedDesignator2=1,...})") {
 	write_reg<FUSB302::InterruptA>({.HardResetRx = 1});
 	write_reg<FUSB302::InterruptA>({.HardResetRx = 1, .SoftResetRx = 1});
