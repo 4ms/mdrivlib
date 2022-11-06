@@ -143,18 +143,18 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 			PinSpeed::High,
 			PinOType::OpenDrain};
 
+	// Call target-specific init:
 	I2C::init(defs);
-	return _init_periph(defs.I2Cx, defs.timing);
-}
 
-I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingConfig &timing) {
+	// We let the pins be re-init because the app may have used them for some other purpose
+	// But we don't re-init the I2C peripheral with each device on the bus
 	if (already_init)
 		return I2C_ALREADY_INIT;
 
 	deinit();
 
-	hal_i2c_.Instance = periph;
-	hal_i2c_.Init.Timing = timing.calc();
+	hal_i2c_.Instance = defs.I2Cx;
+	hal_i2c_.Init.Timing = defs.timing.calc();
 	hal_i2c_.Init.OwnAddress1 = 0x33;
 	hal_i2c_.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	hal_i2c_.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -183,16 +183,17 @@ I2CPeriph::Error I2CPeriph::_init_periph(I2C_TypeDef *periph, const I2CTimingCon
 		i2c_err_irq_num_ = I2C6_ER_IRQn;
 	}
 
-	Clocks::I2C::enable(periph);
+	Clocks::I2C::enable(defs.I2Cx);
 
 	HAL_I2C_DeInit(&hal_i2c_);
 	if (HAL_I2C_Init(&hal_i2c_) != HAL_OK)
 		return I2C_INIT_ERR;
 
-	if (HAL_I2CEx_ConfigAnalogFilter(&hal_i2c_, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+	if (HAL_I2CEx_ConfigAnalogFilter(&hal_i2c_,
+									 defs.analog_filter ? I2C_ANALOGFILTER_ENABLE : I2C_ANALOGFILTER_DISABLE) != HAL_OK)
 		return I2C_INIT_ERR;
 
-	if (HAL_I2CEx_ConfigDigitalFilter(&hal_i2c_, 1) != HAL_OK)
+	if (HAL_I2CEx_ConfigDigitalFilter(&hal_i2c_, defs.digital_filter) != HAL_OK)
 		return I2C_INIT_ERR;
 
 	already_init = true;
