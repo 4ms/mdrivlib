@@ -19,7 +19,9 @@ struct InterruptControl {
 		NVIC_DisableIRQ(irqn);
 	}
 
-	static void enable_irq(IRQn_Type irqn) {
+	//TriggerType is here to enable CA7<=>CM4 compatibility
+	enum TriggerType { LevelTriggered = 0b01, EdgeTriggered = 0b10 };
+	static void enable_irq(IRQn_Type irqn, TriggerType _ignored = EdgeTriggered) {
 		NVIC_EnableIRQ(irqn);
 	}
 };
