@@ -1,5 +1,6 @@
 #include "doctest.h"
 #include "fusb302_registers.hh"
+#include <cstring>
 
 template<typename Reg>
 Reg read_reg(uint8_t fake_val) {
@@ -27,6 +28,7 @@ TEST_CASE("Simple API to read a reg and use field names on data that's read") {
 
 TEST_CASE("Convert to uint8_t") {
 	FUSB302::InterruptA a;
+	std::memset(&a, 0, sizeof(a));
 	a.HardResetRx = 1;
 	CHECK((uint8_t)a == 1);
 	a.SoftResetRx = 1;
