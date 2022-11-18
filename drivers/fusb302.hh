@@ -127,7 +127,7 @@ struct Device {
 				// Look for unplug event:
 				// VBusOK = 0 means no VBUS, BCLevel == 0 means CC detected as low (no
 				// host pull-up detected)
-				if (status0.VBusOK == 0 && status0.BCLevel == 0)
+				if (status0.VBusOK == 0 || status0.BCLevel == 0)
 					state = ConnectedState::None;
 			} break;
 
@@ -182,7 +182,7 @@ struct Device {
 	requires std::derived_from<Reg, BusReg::ReadAccess>
 	void reg_dump(std::string_view regname) {
 		auto val = read<Reg>();
-		pr_debug("%s: 0x%x\n", regname.data(), val);
+		pr_debug("%s: 0x%x\n", regname.data(), (uint8_t)val);
 
 		// Dump individual fields of interest:
 		if constexpr (static_cast<uint8_t>(Reg::Address) == FUSB302::Status0::Address) {
