@@ -50,6 +50,12 @@ struct HWSemaphore {
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT | processID;
 	}
 
+	static void unlock_nonrecursive(uint32_t processID) {
+		disable_channel_ISR();
+		unlock(processID);
+		enable_channel_ISR();
+	}
+
 	static bool is_locked() {
 		return HSEM->R[SemaphoreID] & HSEM_R_LOCK;
 	}
