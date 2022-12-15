@@ -17,7 +17,7 @@ void write_reg(Reg data) {
 
 TEST_CASE("Simple API to read a reg and use field names on data that's read") {
 	auto a = read_reg<FUSB302::InterruptA>(0x00);
-	CHECK(a.HardResetRx == 0);
+	CHECK((a.HardResetRx == 0));
 
 	FUSB302::InterruptA a2{read_reg<FUSB302::InterruptA>(0x01)};
 	if (a2.HardResetRx == 1)
