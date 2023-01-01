@@ -150,9 +150,9 @@ struct DefaultAdcPeriphConf {
 
 template<typename T>
 concept AdcPeriphConf = requires(T) {
-	std::derived_from<T, DefaultAdcPeriphConf>;
-	std::derived_from<DefaultDMAConf, typename T::DmaConf>;
-};
+							requires std::derived_from<T, DefaultAdcPeriphConf>;
+							requires std::derived_from<typename T::DmaConf, DefaultDMAConf>;
+						};
 
 struct AdcChannelConf {
 	PinNoInit pin;
