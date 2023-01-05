@@ -10,7 +10,7 @@
 namespace mdrivlib
 {
 
-enum class AdcPeriphNum { _1, _2 };
+enum class AdcPeriphNum { _1, _2, _3 };
 
 enum class AdcChanNum : uint32_t {
 	_0 = ADC_CHANNEL_0,
