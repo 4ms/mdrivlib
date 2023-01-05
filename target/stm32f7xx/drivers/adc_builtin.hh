@@ -24,7 +24,7 @@ public:
 
 		Clocks::ADCn<ConfT::adc_periph_num>::enable();
 		hadc = {
-			.Instance = get_ADC_base(ConfT::adc_periph_num),
+			.Instance = get_ADC_base<ConfT::adc_periph_num>(),
 			.Init =
 				{
 					.ClockPrescaler = ConfT::clock_div,
