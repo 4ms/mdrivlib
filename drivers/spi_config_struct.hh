@@ -4,6 +4,8 @@
 
 namespace mdrivlib
 {
+using mdrivlib::PinNum;
+using mdrivlib::PinAF;
 enum SpiDataDir { Duplex, TXOnly, RXOnly, HalfDuplex };
 
 struct DefaultSpiConf {
@@ -13,13 +15,13 @@ struct DefaultSpiConf {
 	static constexpr IRQn_Type IRQn = SPI1_IRQn;
 	static constexpr uint16_t priority1 = 3;
 	static constexpr uint16_t priority2 = 3;
-	static constexpr PinNoInit SCLK = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit COPI = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CIPO = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CS0 = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CS1 = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CS2 = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CS3 = {GPIO::A, 0, LL_GPIO_AF_0};
+	static constexpr PinDef SCLK = {GPIO::Unused, PinNum::_0};
+	static constexpr PinDef COPI = {GPIO::Unused, PinNum::_0};
+	static constexpr PinDef CIPO = {GPIO::Unused, PinNum::_0};
+	static constexpr PinDef CS0 = {GPIO::Unused, PinNum::_0};
+	static constexpr PinDef CS1 = {GPIO::Unused, PinNum::_0};
+	static constexpr PinDef CS2 = {GPIO::Unused, PinNum::_0};
+	static constexpr PinDef CS3 = {GPIO::Unused, PinNum::_0};
 	static constexpr bool use_hardware_ss = false;
 	static constexpr uint16_t clock_division = 64;
 	static constexpr uint16_t data_size = 16;
