@@ -17,7 +17,7 @@ struct DefaultPinChangeConf {
 
 template<typename T>
 concept PinChangeConf = requires(T) {
-	std::derived_from<T, DefaultPinChangeConf>;
+	requires std::derived_from<T, DefaultPinChangeConf>;
 };
 
 } // namespace mdrivlib
