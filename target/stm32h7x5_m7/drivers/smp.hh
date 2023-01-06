@@ -26,6 +26,9 @@ struct SMPThread {
 	template<uint32_t command_id, uint32_t data_reg = 0>
 	static void launch_command(uint32_t) {
 	}
+	template<uint32_t command_id>
+	static void split_with_command() {
+	}
 	static void join() {
 	}
 	static void execute() {

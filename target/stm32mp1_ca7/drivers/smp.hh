@@ -1,6 +1,7 @@
 #pragma once
 #include "drivers/secondary_core_control.hh"
 #include "stm32xx.h"
+#include <atomic>
 #include <cstdint>
 #include <functional>
 
@@ -9,7 +10,7 @@ namespace mdrivlib
 
 struct SMPControl {
 	static constexpr uint32_t NumRegs = 8;
-	static inline __attribute__((section(".noncachable"))) uint32_t regs[NumRegs] = {0, 0, 0, 0, 0, 0, 0, 0};
+	static inline __attribute__((section(".noncachable"))) std::atomic<uint32_t> regs[NumRegs] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 	template<uint32_t channel>
 	static void notify() {
@@ -30,30 +31,31 @@ struct SMPControl {
 	template<uint32_t reg_num = 0>
 	static void write(uint32_t value) {
 		if constexpr (reg_num < NumRegs)
-			regs[reg_num] = value;
+			regs[reg_num].store(value);
 	}
 
 	static void write(uint32_t reg_num, uint32_t value) {
 		if (reg_num >= NumRegs)
 			return;
-		regs[reg_num] = value;
+		regs[reg_num].store(value);
 	}
 
 	template<uint32_t reg_num = 0>
 	static uint32_t read() {
 		if constexpr (reg_num < NumRegs)
-			return regs[reg_num];
+			return regs[reg_num].load();
 		else
 			return 0;
 	}
 
 	static uint32_t read(uint32_t reg_num) {
-		return reg_num < NumRegs ? regs[reg_num] : 0;
+		return reg_num < NumRegs ? regs[reg_num].load() : 0;
 	}
 };
 
 struct SMPThread {
-	static constexpr uint32_t DataReg = 0;
+	static constexpr uint32_t StatusReg = 0;
+	enum Status {NotRunning = 0, Running = 1};
 
 	enum : uint32_t { CustomFunc0 = 0, CustomFunc1 = 0, CustomFunc2 = 2, CallFunction = 3 };
 
@@ -63,14 +65,8 @@ struct SMPThread {
 	// Aux Core must respond to the SGI#3 by calling SMPThread::execute();
 	static void launch(std::function<void()> &&entry) {
 		thread_func = std::move(entry);
-		SMPControl::write<DataReg>(1);
+		SMPControl::write<StatusReg>(Running);
 		SMPControl::notify<CallFunction>();
-	}
-
-	template<uint32_t command_id, uint32_t data_reg>
-	static void launch_command(uint32_t data) {
-		SMPControl::write<data_reg>(data);
-		SMPControl::notify<command_id>();
 	}
 
 	// Called by the aux core to respond to receiving an SGI3
@@ -79,24 +75,30 @@ struct SMPThread {
 		signal_done();
 	}
 
+	template<uint32_t command_id>
+	static void split_with_command() {
+		SMPControl::write<StatusReg>(Running);
+		SMPControl::notify<command_id>();
+	}
+
 	// Waits until thread completes
 	static void join() {
-		while (SMPControl::read<DataReg>() != 0)
+		while (SMPControl::read<StatusReg>() == Running)
 			;
 	}
 
-	// Aux Core must call this after processing a custom command (any command besides CallFunction)
+	// Aux Core must call this after processing a custom command
 	static void signal_done() {
-		SMPControl::write<DataReg>(0);
+		SMPControl::write<StatusReg>(NotRunning);
 	}
 
 	// Returns true if thread is completed
 	static bool is_running() {
-		return (SMPControl::read<DataReg>() != 0);
+		return (SMPControl::read<StatusReg>() == Running);
 	}
 
 	static void init() {
-		SMPControl::write<DataReg>(0);
+		SMPControl::write<StatusReg>(NotRunning);
 	}
 };
 } // namespace mdrivlib
