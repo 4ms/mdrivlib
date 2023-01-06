@@ -1,4 +1,13 @@
-/*
+/* 
+
+
+
+
+   DEPRECATED!!
+
+
+
+
  * adc_builtin_driver.h - adc driver for built-in adcs
  *
  * Author: Dan Green (danngreen1@gmail.com)
@@ -54,7 +63,8 @@ template<AdcPeriphNum ADCN, AdcChanNum c, typename T = uint16_t>
 class AdcChan {
 
 public:
-	AdcChan(const uint32_t sampletime = ADC_DEFAULT_SAMPLINGTIME) {
+	[[deprecated("AdcChan and AdcPeriph in adc_builtin_driver.hh are deprecated, use adc_builtin.hh")]] AdcChan(
+		const uint32_t sampletime = ADC_DEFAULT_SAMPLINGTIME) {
 		auto init_adc_once = AdcPeriph<ADCN>::AdcInstance();
 		AdcPeriph<ADCN>::add_channel(c, sampletime);
 	}

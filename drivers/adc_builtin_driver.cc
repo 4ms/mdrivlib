@@ -1,3 +1,7 @@
+
+
+// DEPRECATED!!
+
 /*
  * adc_builtin_driver.c - adc driver for built-in adcs
  * Uses DMA to dump ADC values into buffers

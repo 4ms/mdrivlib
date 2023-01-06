@@ -4,10 +4,13 @@
 #include "stm32xx.h"
 #include <concepts>
 
+//TODO: Less target-specific #defines by not setting the enum members equal to a target-specific value
+//In the target adc driver, interpret the enum as the target-specific value. Invalid values can raise a compile-time error
+//Not so easy to do with AdcClockSourceDiv
 namespace mdrivlib
 {
 
-enum class AdcPeriphNum { _1, _2 };
+enum class AdcPeriphNum { _1, _2, _3 };
 
 enum class AdcChanNum : uint32_t {
 	_0 = ADC_CHANNEL_0,
@@ -28,15 +31,17 @@ enum class AdcChanNum : uint32_t {
 	_15 = ADC_CHANNEL_15,
 	_16 = ADC_CHANNEL_16,
 	_17 = ADC_CHANNEL_17,
-#if defined(ADC_CHANNEL_19)
+#if defined(ADC_CHANNEL_18)
 	_18 = ADC_CHANNEL_18,
+#endif
+#if defined(ADC_CHANNEL_19)
 	_19 = ADC_CHANNEL_19,
 #endif
 };
 
 enum AdcSamplingTime : uint32_t {
-	_1Cycle = ADC_SAMPLETIME_1CYCLE_5,
 #if defined(STM32MP1)
+	_1Cycle = ADC_SAMPLETIME_1CYCLE_5,
 	_2Cycles = ADC_SAMPLETIME_2CYCLES_5,
 	_8Cycles = ADC_SAMPLETIME_8CYCLES_5,
 	_16Cycles = ADC_SAMPLETIME_16CYCLES_5,
@@ -45,6 +50,7 @@ enum AdcSamplingTime : uint32_t {
 	_387Cycles = ADC_SAMPLETIME_387CYCLES_5,
 	_810Cycles = ADC_SAMPLETIME_810CYCLES_5,
 #elif defined(STM32F030)
+	_1Cycle = ADC_SAMPLETIME_1CYCLE_5,
 	_7Cycles = ADC_SAMPLETIME_7CYCLES_5,
 	_13Cycles = ADC_SAMPLETIME_13CYCLES_5,
 	_28Cycles = ADC_SAMPLETIME_28CYCLES_5,
@@ -52,6 +58,15 @@ enum AdcSamplingTime : uint32_t {
 	_55Cycles = ADC_SAMPLETIME_55CYCLES_5,
 	_71Cycles = ADC_SAMPLETIME_71CYCLES_5,
 	_239Cycles = ADC_SAMPLETIME_239CYCLES_5,
+#elif defined(STM32F7)
+	_3Cycles = ADC_SAMPLETIME_3CYCLES,
+	_15Cycles = ADC_SAMPLETIME_15CYCLES,
+	_28Cycles = ADC_SAMPLETIME_28CYCLES,
+	_56Cycles = ADC_SAMPLETIME_56CYCLES,
+	_84Cycles = ADC_SAMPLETIME_84CYCLES,
+	_112Cycles = ADC_SAMPLETIME_112CYCLES,
+	_144Cycles = ADC_SAMPLETIME_144CYCLES,
+	_480Cycles = ADC_SAMPLETIME_480CYCLES,
 #endif
 };
 
@@ -90,8 +105,8 @@ enum AdcDataAlign : uint32_t {
 };
 
 enum AdcClockSourceDiv : uint32_t {
-	PLL_Div1 = ADC_CLOCK_ASYNC_DIV1,
 #if defined(ADC_CLOCK_ASYNC_DIV2)
+	PLL_Div1 = ADC_CLOCK_ASYNC_DIV1,
 	PLL_Div2 = ADC_CLOCK_ASYNC_DIV2,
 	PLL_Div4 = ADC_CLOCK_ASYNC_DIV4,
 	PLL_Div6 = ADC_CLOCK_ASYNC_DIV6,
@@ -107,6 +122,12 @@ enum AdcClockSourceDiv : uint32_t {
 #endif
 	APBClk_Div2 = ADC_CLOCK_SYNC_PCLK_DIV2,
 	APBClk_Div4 = ADC_CLOCK_SYNC_PCLK_DIV4,
+#if defined(ADC_CLOCK_SYNC_PCLK_DIV6)
+	APBClk_Div6 = ADC_CLOCK_SYNC_PCLK_DIV6,
+#endif
+#if defined(ADC_CLOCK_SYNC_PCLK_DIV8)
+	APBClk_Div8 = ADC_CLOCK_SYNC_PCLK_DIV8,
+#endif
 };
 
 struct DefaultAdcPeriphConf {
@@ -128,7 +149,7 @@ struct DefaultAdcPeriphConf {
 	// TODO: other os config opts?
 
 	// Clock
-	static constexpr AdcClockSourceDiv clock_div = PLL_Div1;
+	static constexpr AdcClockSourceDiv clock_div = APBClk_Div2;
 
 	// DMA Conf
 	static constexpr bool use_dma = true;
@@ -158,10 +179,10 @@ struct AdcChannelConf {
 	PinNoInit pin;
 	AdcChanNum adc_chan_num;
 	uint32_t rank;
-	AdcSamplingTime sampling_time = AdcSamplingTime::_1Cycle;
-	// TODO: bool auto_set_rank = false;
-	// TODO: Single/diff
-	// TODO: offset
+	AdcSamplingTime sampling_time; // = AdcSamplingTime::_1Cycle;
+								   // TODO: bool auto_set_rank = false;
+								   // TODO: Single/diff
+								   // TODO: offset
 };
 
 } // namespace mdrivlib

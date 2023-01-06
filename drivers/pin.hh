@@ -106,7 +106,7 @@ enum PinNum : uint8_t {
 	_15 = 15,
 };
 
-enum PinAF {
+enum PinAF : uint8_t {
 	AFNone = 0,
 	AltFunc1,
 	AltFunc2,
@@ -125,12 +125,15 @@ enum PinAF {
 	AltFunc15,
 };
 
-// Convenient container for passing pin defintions to a peripheral which performs the initialization
-struct PinNoInit {
+// Container for passing pin defintions to a peripheral which performs the initialization
+struct PinDef {
 	GPIO gpio;
-	uint8_t pin;
-	uint8_t af;
+	PinNum pin;
+	PinAF af;
 };
+
+// Legacy code support:
+using PinNoInit = PinDef;
 
 class Pin {
 public:
@@ -146,14 +149,14 @@ public:
 		PinSpeed speed = PinSpeed::High,
 		PinOType otype = PinOType::PushPull);
 
-	Pin(const PinNoInit &other,
+	Pin(const PinDef &other,
 		PinMode mode,
 		PinPull pull = PinPull::None,
 		PinPolarity polarity = PinPolarity::Normal,
 		PinSpeed speed = PinSpeed::High,
 		PinOType otype = PinOType::PushPull);
 
-	void init(const PinNoInit &other,
+	void init(const PinDef &other,
 			  PinMode mode,
 			  PinPull pull = PinPull::None,
 			  PinPolarity polarity = PinPolarity::Normal,
@@ -217,6 +220,7 @@ struct FPin {
 		if constexpr (Gpio != GPIO::Unused)
 			Pin init{Gpio, PinNum, Mode};
 	}
+
 	FPin(PinPull pull, PinSpeed speed = PinSpeed::Low, PinOType otype = PinOType::OpenDrain) {
 		if constexpr (Gpio != GPIO::Unused)
 			Pin init{Gpio, PinNum, Mode, 0, pull, PinPolarity::Normal, speed, otype};
