@@ -1,9 +1,11 @@
 #pragma once
-#include "adc_builtin_conf.hh"
 #include "arch.hh"
 #include "periph.hh"
 #include "rcc.hh"
 #include "stm32xx.h"
+
+//TODO: get rid of dependency on this:
+#include "adc_periph_nums.hh"
 
 // Todo: once all drivers are using constexpr init, much of these can go away,
 // and we'll use RCC_Enable::ADC<N>::set() instead

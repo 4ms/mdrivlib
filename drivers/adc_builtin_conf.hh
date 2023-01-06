@@ -1,6 +1,7 @@
 #pragma once
 #include "dma_config_struct.hh"
 #include "pin.hh"
+#include "adc_periph_nums.hh"
 #include "stm32xx.h"
 #include <concepts>
 
@@ -10,7 +11,6 @@
 namespace mdrivlib
 {
 
-enum class AdcPeriphNum { _1, _2, _3 };
 
 enum class AdcChanNum : uint32_t {
 	_0 = ADC_CHANNEL_0,
