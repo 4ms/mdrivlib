@@ -61,7 +61,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		hsai_rx.Init.AudioMode = SAI_MODEMASTER_RX;
 		hsai_rx.Init.Synchro = SAI_ASYNCHRONOUS;
-		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 		hsai_rx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
 								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
 																				  : SAI_SYNCEXT_DISABLE;
@@ -69,7 +68,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 	if (saidef_.mode == SaiConfig::TXMaster) {
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
-		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 		hsai_rx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
 								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
 																				  : SAI_SYNCEXT_DISABLE;
@@ -78,11 +76,8 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = saidef_.sync_receive_from == SaiConfig::SyncToSAI1 ? SAI_SYNCHRONOUS_EXT_SAI1
 							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI2 ? SAI_SYNCHRONOUS_EXT_SAI2
-							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI3 ? SAI_SYNCHRONOUS_EXT_SAI3
-							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI4 ? SAI_SYNCHRONOUS_EXT_SAI4
 																				  : SAI_SYNCHRONOUS;
 
-		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 		hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	}
 
@@ -90,11 +85,10 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
+	hsai_rx.Init.Mckdiv = 0; //not used
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_rx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_rx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
-	hsai_rx.Init.PdmInit.Activation = DISABLE;
 
 	if (saidef_.num_tdm_ins > 2) {
 		// Todo: use conf to set slot size
@@ -134,7 +128,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 	if (saidef_.mode == SaiConfig::RXMaster) {
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
 		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
-		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 		hsai_tx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
 								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
 																				  : SAI_SYNCEXT_DISABLE;
@@ -142,7 +135,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 	if (saidef_.mode == SaiConfig::TXMaster) {
 		hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
 		hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
-		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 		hsai_tx.Init.SynchroExt = saidef_.sync_send == SaiConfig::BlockASendsSync ? SAI_SYNCEXT_OUTBLOCKA_ENABLE
 								: saidef_.sync_send == SaiConfig::BlockBSendsSync ? SAI_SYNCEXT_OUTBLOCKB_ENABLE
 																				  : SAI_SYNCEXT_DISABLE;
@@ -151,11 +143,8 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
 		hsai_tx.Init.Synchro = saidef_.sync_receive_from == SaiConfig::SyncToSAI1 ? SAI_SYNCHRONOUS_EXT_SAI1
 							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI2 ? SAI_SYNCHRONOUS_EXT_SAI2
-							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI3 ? SAI_SYNCHRONOUS_EXT_SAI3
-							 : saidef_.sync_receive_from == SaiConfig::SyncToSAI4 ? SAI_SYNCHRONOUS_EXT_SAI4
 																				  : SAI_SYNCHRONOUS;
 
-		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 		hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
 	}
 
@@ -166,8 +155,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 	hsai_tx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_tx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_tx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
-	hsai_tx.Init.PdmInit.Activation = DISABLE;
 
 	if (saidef_.num_tdm_outs > 2) {
 		hsai_tx.Init.Protocol = SAI_FREE_PROTOCOL;
@@ -196,7 +183,7 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 }
 
 void SaiTdmPeriph::_config_rx_dma() {
-	hdma_rx.Init.Request = saidef_.dma_init_rx.channel;
+	hdma_rx.Init.Channel = saidef_.dma_init_rx.channel;
 
 	hdma_rx.Instance = saidef_.dma_init_rx.stream;
 	hdma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -216,7 +203,7 @@ void SaiTdmPeriph::_config_rx_dma() {
 }
 
 void SaiTdmPeriph::_config_tx_dma() {
-	hdma_tx.Init.Request = saidef_.dma_init_tx.channel;
+	hdma_tx.Init.Channel = saidef_.dma_init_tx.channel;
 
 	hdma_tx.Instance = saidef_.dma_init_tx.stream;
 	hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
