@@ -127,7 +127,7 @@ enum PinAF : uint8_t {
 
 // Container for passing pin defintions to a peripheral which performs the initialization
 struct PinDef {
-	GPIO gpio;
+	GPIO gpio{GPIO::Unused};
 	PinNum pin;
 	PinAF af;
 };
