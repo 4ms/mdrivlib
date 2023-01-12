@@ -143,6 +143,7 @@ g_pfnVectors:
   .word  PendSV_Handler
   .word  SysTick_Handler
 
+
   .word IRQ_Trampoline_0
   .word IRQ_Trampoline_1
   .word IRQ_Trampoline_2
@@ -241,6 +242,12 @@ g_pfnVectors:
   .word IRQ_Trampoline_95
   .word IRQ_Trampoline_96
   .word IRQ_Trampoline_97
+  .word IRQ_Trampoline_98
+  .word IRQ_Trampoline_99
+  .word IRQ_Trampoline_100
+  .word IRQ_Trampoline_101
+  .word IRQ_Trampoline_102
+  .word IRQ_Trampoline_103
   
   /* External Interrupts */
   ; .word     WWDG_IRQHandler                   /* Window WatchDog              */                                        
