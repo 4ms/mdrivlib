@@ -27,7 +27,7 @@ namespace mdrivlib
 
 class SDRAMPeriph {
 public:
-	SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept;
+	SDRAMPeriph(const SDRAMConfig &sdram_defs, SDRAMBank bank, uint32_t fmc_kernel_clock_MHz);
 	static uint32_t test(const uint32_t ram_start, const uint32_t ram_size);
 	static bool is_busy();
 	static void wait_until_ready();
@@ -36,9 +36,9 @@ public:
 
 private:
 	const SDRAMConfig &defs;
-	void config_timing();
-	void start_refresh();
-	void do_test();
+	void config_timing(SDRAMBank bank, uint32_t fmc_kernel_clock_MHz);
+	void start_refresh(SDRAMBank bank);
+	bool do_test(uint32_t start_addr, uint32_t size_bytes);
 	void init_gpio();
 	static uint32_t do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_t ram_start, const uint32_t ram_size);
 

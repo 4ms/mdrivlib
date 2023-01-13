@@ -1,5 +1,6 @@
 #include "sdram.hh"
 #include "arch.hh"
+#include "drivers/sdram_target.hh"
 #include "interrupt.hh"
 #include "pin.hh"
 #include "rcc.hh"
@@ -9,26 +10,32 @@
 
 namespace mdrivlib
 {
-SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs) noexcept
+SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs, SDRAMBank bank, uint32_t fmc_kernel_clock_MHz)
 	: status(HAL_ERROR)
 	, defs(sdram_defs) {
 
+	target_sdram_pre_init();
+
 	init_gpio();
 	__HAL_RCC_FMC_CLK_ENABLE();
-	config_timing();
-	start_refresh();
+	config_timing(bank, fmc_kernel_clock_MHz);
+
+	target_sdram_post_init();
+
+	start_refresh(bank);
 
 #ifdef SDRAM_DO_TEST
-	do_test();
+	uint32_t start_addr = bank == SDRAMBank::Bank1 ? 0xC0000000 : 0xD0000000;
+	do_test(start_addr, defs.size_bytes);
 #endif
 	status = HAL_OK;
 }
 
 static SDRAM_HandleTypeDef hsdram2;
-void SDRAMPeriph::config_timing() {
+void SDRAMPeriph::config_timing(SDRAMBank bank, uint32_t fmc_kernel_clock_MHz) {
 
 	// Todo: pass the FMC clock in the conf, or use System::FMC::get_clock_speed()
-	const uint32_t fmc_clock = defs.fmc_kernel_clock_MHz * 1000000UL;
+	const uint32_t fmc_clock = fmc_kernel_clock_MHz * 1000000UL;
 	const uint32_t clk_divider = SDRAMPeriphMath::freq_to_clockdiv(fmc_clock, defs.timing.max_freq_MHz);
 	sdram_clock_ = fmc_clock / clk_divider;
 
@@ -43,7 +50,7 @@ void SDRAMPeriph::config_timing() {
 	};
 
 	FMC_SDRAM_InitTypeDef init = {
-		.SDBank = defs.connected_bank == 1 ? FMC_SDRAM_BANK1 : FMC_SDRAM_BANK2,
+		.SDBank = bank == SDRAMBank::Bank1 ? FMC_SDRAM_BANK1 : FMC_SDRAM_BANK2,
 
 		.ColumnBitsNumber = defs.arch.column_bits == 11 ? FMC_SDRAM_COLUMN_BITS_NUM_11
 						  : defs.arch.column_bits == 10 ? FMC_SDRAM_COLUMN_BITS_NUM_10
@@ -78,20 +85,17 @@ void SDRAMPeriph::config_timing() {
 	FMC_SDRAM_Init(FMC_SDRAM_DEVICE, &init);
 	FMC_SDRAM_Timing_Init(FMC_SDRAM_DEVICE, &SdramTiming, init.SDBank);
 
-	__FMC_ENABLE();
-	// FMC_Bank1_R->BTCR[0] |= FMC_BCR1_FMCEN;
-
 	// Debugging:
-	InterruptManager::register_isr(FMC_IRQn, []() { __BKPT(); });
-	FMC_SDRAM_DEVICE->SDRTR |= FMC_SDRTR_REIE;
+	// InterruptManager::register_isr(FMC_IRQn, []() { __BKPT(); });
+	// FMC_SDRAM_DEVICE->SDRTR |= FMC_SDRTR_REIE;
 }
 
-void SDRAMPeriph::start_refresh() {
+void SDRAMPeriph::start_refresh(SDRAMBank sdrambank) {
 	FMC_SDRAM_CommandTypeDef cmd;
 
 	HAL_Delay(1);
 	wait_until_ready();
-	auto bank = defs.connected_bank == 1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
+	auto bank = sdrambank == SDRAMBank::Bank1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
 
 	// CLK ENABLE command
 	cmd = {.CommandMode = FMC_SDRAM_CMD_CLK_ENABLE,
@@ -150,10 +154,6 @@ void SDRAMPeriph::start_refresh() {
 }
 
 void SDRAMPeriph::init_gpio() {
-	// Hack for H7x5: pins PC_2C and PC_3C must be configured. See RM0399 Rev 3, page 588
-	RCC_Enable::SYSCFG_::set();
-	SYSCFG->PMCR = SYSCFG->PMCR & ~(SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk);
-
 	for (auto &pind : defs.pin_list.pin_array) {
 		Pin{pind.gpio,
 			pind.pin,
@@ -217,19 +217,12 @@ uint32_t SDRAMPeriph::do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_
 	return num_fails;
 }
 
-void SDRAMPeriph::do_test() {
-	// 434ms
-	// vs SRAM1/2: 128ms
-	// vs DTCM: 111ms
+bool SDRAMPeriph::do_test(uint32_t start_addr, uint32_t size_bytes) {
 	uint32_t start = HAL_GetTick();
-	volatile uint32_t sdram_fails = SDRAMPeriph::test(0xC0000000, 0x00800000);
+	volatile uint32_t sdram_fails = SDRAMPeriph::test(start_addr, size_bytes);
 	volatile uint32_t elapsed = HAL_GetTick() - start;
 	if (sdram_fails)
-		__BKPT();
-	if (elapsed > 540) {
-		__BKPT();
-	}
-	// else
-	// 	__BKPT();
+		return false;
+	return true;
 }
 } // namespace mdrivlib
