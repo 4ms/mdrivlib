@@ -1,6 +1,7 @@
 #pragma once
 #include "drivers/sdcard_conf.hh"
 #include "stm32xx.h"
+#include <span>
 
 namespace mdrivlib
 {
@@ -8,6 +9,7 @@ namespace mdrivlib
 template<SDCardConfC ConfT>
 struct SDCard {
 	SD_HandleTypeDef hsd;
+	bool is_init = false;
 
 	SDCard() = default;
 
@@ -28,6 +30,85 @@ struct SDCard {
 		Pin{ConfT::D3, PinMode::Alt};
 		Pin{ConfT::CMD, PinMode::Alt};
 		Pin{ConfT::SCLK, PinMode::Alt};
+
+		is_init = HAL_SD_Init(&hsd) == HAL_OK;
+	}
+
+	// Read from SD card into a generic data structure. Max one block (512B)
+	bool read(std::span<uint8_t> buf, uint32_t block_num) {
+		constexpr uint32_t timeout = 0xFFFFFF;
+		uint32_t bytes_to_read = buf.size_bytes();
+		auto read_ptr = buf.data();
+
+		if (bytes_to_read >= 512) {
+			uint32_t numblocks = bytes_to_read / 512;
+			auto err = HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout);
+			if (err != HAL_OK)
+				return false;
+
+			uint32_t bytes_read = numblocks * 512;
+			if (bytes_to_read == bytes_read)
+				return true;
+
+			//setup for reading the remainder
+			bytes_to_read -= bytes_read;
+			block_num += numblocks;
+			read_ptr += bytes_read;
+		}
+
+		if (bytes_to_read > 0) {
+			uint8_t _data[512];
+			constexpr uint32_t numblocks = 1;
+			auto err = HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout);
+			if (err != HAL_OK)
+				return false;
+
+			uint8_t *src = _data;
+			while (bytes_to_read--)
+				*read_ptr++ = *src++;
+		}
+		return true;
+	}
+
+	bool write(const std::span<const uint8_t> buf, uint32_t block_num) {
+		constexpr uint32_t timeout = 0xFFFFFF;
+		uint32_t bytes_to_write = buf.size_bytes();
+
+		// STM32 HAL is not const-correct, so we must perform a const cast
+		auto buf_ptr = const_cast<uint8_t *>(buf.data());
+
+		if (bytes_to_write >= 512) {
+			uint32_t numblocks = bytes_to_write / 512;
+			auto err = HAL_SD_WriteBlocks(&hsd, buf_ptr, block_num, numblocks, timeout);
+			if (err != HAL_OK)
+				return false;
+
+			uint32_t bytes_written = numblocks * 512;
+			if (bytes_to_write == bytes_written)
+				return true;
+
+			//setup for reading the remainder
+			bytes_to_write -= bytes_written;
+			block_num += numblocks;
+			buf_ptr += bytes_written;
+		}
+
+		if (bytes_to_write > 0 && bytes_to_write < 512) {
+			uint8_t _data[512];
+			uint8_t *dst = _data;
+			for (unsigned i = 0; i < 512; i++) {
+				if (i < bytes_to_write)
+					*dst++ = *buf_ptr++;
+				else
+					*dst++ = 0;
+			}
+
+			constexpr uint32_t numblocks = 1;
+			auto err = HAL_SD_WriteBlocks(&hsd, _data, block_num, numblocks, timeout);
+			if (err != HAL_OK)
+				return false;
+		}
+		return true;
 	}
 };
 
