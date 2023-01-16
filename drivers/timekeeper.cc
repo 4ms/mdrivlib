@@ -52,7 +52,7 @@ void Timekeeper::_set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pr
 	const uint32_t max_prescaler = PeriphUtil::TIM::max_prescaler(periph_num);
 	const uint32_t max_clockdivider = PeriphUtil::TIM::max_clockdivider(periph_num);
 	const uint32_t sysfreq_Hz = PeriphUtil::TIM::max_freq(timx);
-	const float sysfreq_ns = 1000000000.f / sysfreq_Hz;
+	const float sysfreq_ns = 1'000'000'000.f / sysfreq_Hz;
 
 	uint32_t period_clocks = period_ns / sysfreq_ns;
 
