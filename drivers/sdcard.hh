@@ -75,6 +75,8 @@ struct SDCard {
 
 	void set_status_nocard() {
 		status = Status::NoCard;
+		//TODO: Check if we need to toggle pin state, we might be able to read the pin
+		// even when its in AF mode
 		card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
 		HAL_Delay(1);
 	}
