@@ -196,20 +196,20 @@ private:
 /////////////////////
 // FPin: Fast Pin
 
-template<GPIO Gpio, uint16_t PinNum>
+template<GPIO Gpio, uint8_t PinNum>
 using PinSetHigh = RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << PinNum)>;
 
-template<GPIO Gpio, uint16_t PinNum>
+template<GPIO Gpio, uint8_t PinNum>
 using PinSetLow =
 	RegisterBits<WriteOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, BSRR), (1UL << (16 + PinNum))>;
 
-template<GPIO Gpio, uint16_t PinNum>
+template<GPIO Gpio, uint8_t PinNum>
 using PinRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, IDR), (1UL << PinNum)>;
 
 template<GPIO Gpio>
 using PortRead = RegisterBits<ReadOnly, static_cast<uint32_t>(Gpio) + offsetof(GPIO_TypeDef, IDR), 0xFFFF>;
 
-template<GPIO Gpio, uint16_t PinNum, PinMode Mode = PinMode::Output, PinPolarity Polarity = PinPolarity::Normal>
+template<GPIO Gpio, uint8_t PinNum, PinMode Mode = PinMode::Output, PinPolarity Polarity = PinPolarity::Normal>
 struct FPin {
 	static constexpr auto Gpio_v = Gpio;
 	static constexpr auto PinNum_v = PinNum;
