@@ -1,4 +1,5 @@
 #pragma once
+#include "drivers/rcc.hh"
 #include "drivers/sdcard_conf.hh"
 #include "stm32xx.h"
 #include <span>
@@ -9,12 +10,12 @@ namespace mdrivlib
 template<SDCardConfC ConfT>
 struct SDCard {
 	SD_HandleTypeDef hsd;
-	bool is_init = false;
+	enum class Status { NotInit, NoCard, Mounted } status = Status::NotInit;
+	Pin card_det_pin;
 
-	SDCard() = default;
-
-	void init() {
-		RCC->SDMMC12CKSELR = 3; // HSI = 64MHz. Default value (just showing it here for educational purposes)
+	SDCard() {
+		RCC->SDMMC12CKSELR = 3; // HSI = 64MHz
+		RCC_Enable::SDMMC1_::set();
 
 		HAL_SD_DeInit(&hsd);
 		hsd.Instance = SDMMC1;
@@ -27,11 +28,55 @@ struct SDCard {
 		Pin{ConfT::D0, PinMode::Alt};
 		Pin{ConfT::D1, PinMode::Alt};
 		Pin{ConfT::D2, PinMode::Alt};
-		Pin{ConfT::D3, PinMode::Alt};
+		// Pin{ConfT::D3, PinMode::Alt};
 		Pin{ConfT::CMD, PinMode::Alt};
 		Pin{ConfT::SCLK, PinMode::Alt};
 
-		is_init = HAL_SD_Init(&hsd) == HAL_OK;
+		init();
+	}
+
+	void init() {
+		if (status == Status::NotInit) {
+			set_status_nocard();
+			if (card_det_pin.is_on()) {
+				set_status_mounted();
+				if (HAL_SD_Init(&hsd) != HAL_OK)
+					set_status_nocard();
+			}
+		}
+	}
+
+	bool detect_card() {
+		switch (status) {
+			case Status::NoCard:
+				if (card_det_pin.is_on())
+					set_status_mounted();
+				break;
+
+			case Status::Mounted: {
+				hsd.ErrorCode = HAL_SD_ERROR_NONE;
+				auto cardstate = HAL_SD_GetCardState(&hsd);
+				if (HAL_SD_GetError(&hsd) != HAL_SD_ERROR_NONE || cardstate == HAL_SD_CARD_DISCONNECTED ||
+					cardstate == HAL_SD_CARD_ERROR)
+					set_status_nocard();
+			} break;
+
+			case Status::NotInit:
+				init();
+				break;
+		}
+		return (status == Status::Mounted);
+	}
+
+	void set_status_mounted() {
+		status = Status::Mounted;
+		card_det_pin.init(ConfT::D3, PinMode::Alt);
+	}
+
+	void set_status_nocard() {
+		status = Status::NoCard;
+		card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
+		HAL_Delay(1);
 	}
 
 	// Read from SD card into a generic data structure. Max one block (512B)
