@@ -20,7 +20,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 
 	Error err = SAI_NO_ERR;
 
-	// Todo: swap order: always init slave first
 	err = _config_rx_sai();
 	if (err != SAI_NO_ERR)
 		return err;
@@ -29,7 +28,6 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	if (err != SAI_NO_ERR)
 		return err;
 
-	// Todo: swap order: always init slave first
 	_config_rx_dma();
 	_config_tx_dma();
 	err = _init_sai_dma();
@@ -83,7 +81,7 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
+	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
 	hsai_rx.Init.Mckdiv = 0; //not used
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
@@ -150,7 +148,7 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 
 	hsai_tx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_tx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-	hsai_tx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
+	hsai_tx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;
 	hsai_tx.Init.AudioFrequency = saidef_.samplerate;
 	hsai_tx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_tx.Init.CompandingMode = SAI_NOCOMPANDING;
@@ -303,9 +301,6 @@ void SaiTdmPeriph::start() {
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_rx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_rx.stream);
 		_start_irq(rx_irqn);
-		// slave first:
-		HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
-		HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
 	}
 	if (saidef_.mode == SaiConfig::TXMaster) {
 		dma_tc_flag_index = dma_get_TC_flag_index(hdma_tx.Instance);
@@ -316,15 +311,14 @@ void SaiTdmPeriph::start() {
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_tx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
 		_start_irq(tx_irqn);
-		// slave first:
-		HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
-		HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	}
 	if (saidef_.mode == SaiConfig::ExtSynced) {
 		stop(); //disable interrupts for synced SAI
-		HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
-		HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	}
+
+	// TODO: does order matter? Doesn't seem to with TX_Master
+	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
+	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 }
 
 void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
