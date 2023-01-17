@@ -1,27 +1,33 @@
 #pragma once
-#include <algorithm>
+#include <utility>
 
-// Todo: is this necessary?
+// template<typename AdcSourceT, typename FilterT, typename RawValT, typename FilteredValT>
+// concept AdcSourceC = requires(AdcSourceT adc, FilterT filt, RawValT raw, unsigned u) {
+// 						 // clang-format off
+// 	{ adc.get_val(u) } -> std::convertible_to<RawValT>;
+// 	filt.add_val(raw);
+// 	{ filt.val() } -> std::convertible_to<FilteredValT>;
+// 						 // clang-format on
+// 					 };
+// requires SOURCE::get_val(unsigned chan)-->UnfiltT, POSTFILTER::add_val(UnfiltT val), POSTFILTER::val()-->FilteredT
 
-// requires SOURCE::get_val(int chan)-->int, POSTFILTER::add_val(int val), POSTFILTER::val()-->FilteredT
-template<typename AdcSource, int NumChans, typename PostFilter>
+template<typename AdcSource, unsigned NumChans, typename PostFilter>
 struct AnalogIn : AdcSource {
-	AnalogIn() {
+	AnalogIn() = default;
+
+	template<typename... Ts>
+	AnalogIn(Ts &&...init)
+		: AdcSource{std::forward<Ts>(init)...} {
 	}
 
-	template<typename T>
-	AnalogIn(T &&init)
-		: AdcSource{std::move(init)} {
-	}
-
-	void read(int chan) {
+	void read(unsigned chan) {
 		_postfilter[chan].add_val(this->get_val(chan));
 	}
 	void read() {
-		for (int chan = 0; chan < NumChans; chan++)
+		for (unsigned chan = 0; chan < NumChans; chan++)
 			read(chan);
 	}
-	auto get(int chan) {
+	auto get(unsigned chan) {
 		return _postfilter[chan].val();
 	}
 
