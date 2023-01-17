@@ -1,6 +1,7 @@
 #pragma once
 #include "adc_builtin_conf.hh"
 #include "clocks.hh"
+#include "debug.hh"
 #include "dma_transfer.hh"
 #include "interrupt.hh"
 #include "interrupt_control.hh"
@@ -59,14 +60,23 @@ public:
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
-
-		uint32_t reg = hadc.Instance->CR1;
-		reg &= ~ADC_CR1_EOCIE;
-		hadc.Instance->CR1 = reg;
 	}
 
 	ValueT get_val(unsigned chan) {
 		return _dma_buffer[chan];
+	}
+
+	void register_callback(auto callback, uint32_t pri, uint32_t subpri) {
+		__HAL_ADC_DISABLE(&hadc);
+		__HAL_ADC_ENABLE_IT(&hadc, ADC_IT_EOC);
+		__HAL_ADC_ENABLE(&hadc);
+
+		//TODO: seems to work without clearing the EOC flag, but why?
+		// Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, [callback = std::move(callback), this] {
+		// 	__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
+		// 	callback();
+		// });
+		Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, callback);
 	}
 
 	template<AdcPeriphNum p>
