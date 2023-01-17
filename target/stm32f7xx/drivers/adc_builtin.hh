@@ -65,6 +65,10 @@ public:
 		hadc.Instance->CR1 = reg;
 	}
 
+	ValueT get_val(unsigned chan) {
+		return _dma_buffer[chan];
+	}
+
 	template<AdcPeriphNum p>
 	static constexpr ADC_TypeDef *get_ADC_base() {
 		if constexpr (p == AdcPeriphNum::_1)
