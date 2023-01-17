@@ -71,20 +71,21 @@ public:
 		__HAL_ADC_ENABLE_IT(&hadc, ADC_IT_EOC);
 		__HAL_ADC_ENABLE(&hadc);
 
-		//TODO: seems to work without clearing the EOC flag, but why?
-		// Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, [callback = std::move(callback), this] {
-		// 	__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
-		// 	callback();
-		// });
-		Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, callback);
+		//FIXME: does not work with multiple ADCs
+		Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, [callback = std::move(callback), this] {
+			__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
+			callback();
+		});
 	}
 
 	template<AdcPeriphNum p>
 	static constexpr ADC_TypeDef *get_ADC_base() {
 		if constexpr (p == AdcPeriphNum::_1)
 			return ADC1;
-		else
+		else if (p == AdcPeriphNum::_2)
 			return ADC2;
+		else
+			return ADC3;
 	}
 
 	ADC_HandleTypeDef hadc;
