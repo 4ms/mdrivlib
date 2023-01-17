@@ -50,7 +50,7 @@ public:
 
 			ADC_ChannelConfTypeDef adc_chan_conf = {
 				.Channel = static_cast<uint32_t>(chan.adc_chan_num),
-				.Rank = chan.rank,
+				.Rank = chan.rank + 1,
 				.SamplingTime = chan.sampling_time,
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
