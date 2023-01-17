@@ -303,6 +303,9 @@ void SaiTdmPeriph::start() {
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_rx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_rx.stream);
 		_start_irq(rx_irqn);
+		// slave first:
+		HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
+		HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
 	}
 	if (saidef_.mode == SaiConfig::TXMaster) {
 		dma_tc_flag_index = dma_get_TC_flag_index(hdma_tx.Instance);
@@ -313,13 +316,15 @@ void SaiTdmPeriph::start() {
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_tx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
 		_start_irq(tx_irqn);
+		// slave first:
+		HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
+		HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	}
 	if (saidef_.mode == SaiConfig::ExtSynced) {
 		stop(); //disable interrupts for synced SAI
+		HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
+		HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	}
-
-	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
-	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
 }
 
 void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
