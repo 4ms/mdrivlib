@@ -21,17 +21,17 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	Error err = SAI_NO_ERR;
 
 	// Todo: swap order: always init slave first
-	err = _config_tx_sai();
-	if (err != SAI_NO_ERR)
-		return err;
-
 	err = _config_rx_sai();
 	if (err != SAI_NO_ERR)
 		return err;
 
+	err = _config_tx_sai();
+	if (err != SAI_NO_ERR)
+		return err;
+
 	// Todo: swap order: always init slave first
-	_config_tx_dma();
 	_config_rx_dma();
+	_config_tx_dma();
 	err = _init_sai_dma();
 	if (err != SAI_NO_ERR)
 		return err;
@@ -39,13 +39,13 @@ SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	_sai_enable(&hsai_rx);
 	_sai_enable(&hsai_tx);
 
-	tx_irqn = saidef_.dma_init_tx.IRQn;
-	InterruptControl::set_irq_priority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
-	InterruptControl::disable_irq(tx_irqn);
-
 	rx_irqn = saidef_.dma_init_rx.IRQn;
 	InterruptControl::set_irq_priority(rx_irqn, saidef_.dma_init_rx.pri, saidef_.dma_init_rx.subpri);
 	InterruptControl::disable_irq(rx_irqn);
+
+	tx_irqn = saidef_.dma_init_tx.IRQn;
+	InterruptControl::set_irq_priority(tx_irqn, saidef_.dma_init_tx.pri, saidef_.dma_init_tx.subpri);
+	InterruptControl::disable_irq(tx_irqn);
 
 	return SAI_NO_ERR;
 }
