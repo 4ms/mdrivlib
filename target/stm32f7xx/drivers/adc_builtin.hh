@@ -73,6 +73,7 @@ public:
 
 		//FIXME: does not work with multiple ADCs
 		Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, [callback = std::move(callback), this] {
+			__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_OVR);
 			__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
 			callback();
 		});
