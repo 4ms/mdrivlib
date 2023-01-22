@@ -1,17 +1,13 @@
 #pragma once
 #include "dma_config_struct.hh"
-// #include "dma_registers.hh"
 #include "interrupt.hh"
 #include "rcc.hh"
 #include "stm32xx.h"
 
-// Todo: Finish converting to using CMSIS instead of STM32-HAL
 namespace mdrivlib
 {
-template<typename ConfT>
+template<DMAPeriphConfC ConfT>
 struct DMATransfer {
-	// using DMAX = DMA_<ConfT::DMAx, ConfT::StreamNum>;
-
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
@@ -94,7 +90,7 @@ struct DMATransfer {
 
 	void init() {
 		hdma.Instance = stream;
-
+		hdma.Init.Channel = ConfT::RequestNum;
 		hdma.Init.Direction = ConfT::dir == DefaultDMAConf::Mem2Periph ? DMA_MEMORY_TO_PERIPH
 							: ConfT::dir == DefaultDMAConf::Periph2Mem ? DMA_PERIPH_TO_MEMORY
 																	   : DMA_MEMORY_TO_MEMORY;

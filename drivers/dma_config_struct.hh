@@ -1,5 +1,6 @@
 #pragma once
 #include "stm32xx.h"
+#include <concepts>
 
 namespace mdrivlib
 {
@@ -39,6 +40,9 @@ struct DefaultDMAConf {
 
 	// Todo: Double-buffer mode
 };
+
+template<typename T>
+concept DMAPeriphConfC = requires(T) { requires std::derived_from<T, DefaultDMAConf>; };
 
 struct DMA_Config {
 	DMA_TypeDef *DMAx;
