@@ -1,7 +1,7 @@
 #pragma once
+#include "adc_periph_nums.hh"
 #include "dma_config_struct.hh"
 #include "pin.hh"
-#include "adc_periph_nums.hh"
 #include "stm32xx.h"
 #include <concepts>
 
@@ -10,7 +10,6 @@
 //Not so easy to do with AdcClockSourceDiv
 namespace mdrivlib
 {
-
 
 enum class AdcChanNum : uint32_t {
 	_0 = ADC_CHANNEL_0,
@@ -171,9 +170,9 @@ struct DefaultAdcPeriphConf {
 
 template<typename T>
 concept AdcPeriphConf = requires(T) {
-	requires std::derived_from<T, DefaultAdcPeriphConf>;
-	requires std::derived_from<typename T::DmaConf, DefaultDMAConf>;
-};
+							requires std::derived_from<T, DefaultAdcPeriphConf>;
+							requires std::derived_from<typename T::DmaConf, DefaultDMAConf>;
+						};
 
 struct AdcChannelConf {
 	PinNoInit pin;
@@ -184,5 +183,20 @@ struct AdcChannelConf {
 								   // TODO: Single/diff
 								   // TODO: offset
 };
+
+//
+// ADC Common ISR Conf
+//
+
+struct DefaultAdcCommonIsrConf {
+	static constexpr bool adc1_enabled = false;
+	static constexpr bool adc2_enabled = false;
+	static constexpr bool adc3_enabled = false;
+	static constexpr uint32_t pri = 0;
+	static constexpr uint32_t subpri = 0;
+};
+
+template<typename T>
+concept AdcCommonIsrConfC = requires(T) { requires std::derived_from<T, DefaultAdcCommonIsrConf>; };
 
 } // namespace mdrivlib

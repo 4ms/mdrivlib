@@ -1,5 +1,6 @@
 #pragma once
 #include "adc_builtin_conf.hh"
+#include "adc_common_builtin.hh"
 #include "clocks.hh"
 #include "debug.hh"
 #include "dma_transfer.hh"
@@ -66,17 +67,11 @@ public:
 		return _dma_buffer[chan];
 	}
 
-	void register_callback(auto callback, uint32_t pri, uint32_t subpri) {
+	void register_callback(auto &adc_common, Callback &&callback) {
+		adc_common.register_callback(ConfT::adc_periph_num, std::move(callback));
 		__HAL_ADC_DISABLE(&hadc);
 		__HAL_ADC_ENABLE_IT(&hadc, ADC_IT_EOC);
 		__HAL_ADC_ENABLE(&hadc);
-
-		//FIXME: does not work with multiple ADCs
-		Interrupt::register_and_start_isr(ADC_IRQn, pri, subpri, [callback = std::move(callback), this] {
-			__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_OVR);
-			__HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
-			callback();
-		});
 	}
 
 	template<AdcPeriphNum p>
