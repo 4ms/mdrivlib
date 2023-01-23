@@ -74,6 +74,10 @@ public:
 		__HAL_ADC_ENABLE(&hadc);
 	}
 
+	void register_callback(Callback &&callback) {
+		dma.register_callback(std::forward<Callback &&>(callback));
+	}
+
 	template<AdcPeriphNum p>
 	static constexpr ADC_TypeDef *get_ADC_base() {
 		if constexpr (p == AdcPeriphNum::_1)
