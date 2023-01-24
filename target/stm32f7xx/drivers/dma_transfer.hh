@@ -1,8 +1,8 @@
 #pragma once
-#include "dma_config_struct.hh"
-#include "interrupt.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/dma_config_struct.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/rcc.hh"
+#include "drivers/stm32xx.h"
 
 namespace mdrivlib
 {

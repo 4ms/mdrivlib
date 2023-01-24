@@ -1,13 +1,12 @@
 #pragma once
-#include "adc_builtin_conf.hh"
-#include "adc_common_builtin.hh"
-#include "clocks.hh"
-#include "debug.hh"
-#include "dma_transfer.hh"
-#include "interrupt.hh"
-#include "interrupt_control.hh"
-#include "pin.hh"
-#include "stm32xx.h"
+#include "drivers/adc_builtin_conf.hh"
+#include "drivers/adc_common_builtin.hh"
+#include "drivers/clocks.hh"
+#include "drivers/dma_transfer.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/interrupt_control.hh"
+#include "drivers/pin.hh"
+#include "drivers/stm32xx.h"
 #include <array>
 
 namespace mdrivlib
@@ -67,6 +66,7 @@ public:
 		return _dma_buffer[chan];
 	}
 
+	// FIXME: Common ADC IRQ gets called constantly
 	void register_callback(auto &adc_common, Callback &&callback) {
 		adc_common.register_callback(ConfT::adc_periph_num, std::move(callback));
 		__HAL_ADC_DISABLE(&hadc);
