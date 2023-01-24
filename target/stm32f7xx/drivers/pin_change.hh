@@ -60,8 +60,8 @@ private:
 				  : ConfT::port == GPIO::F ? EXTI_::PortF
 				  : ConfT::port == GPIO::G ? EXTI_::PortG
 				  : ConfT::port == GPIO::H ? EXTI_::PortH
-				  : ConfT::port == GPIO::J ? EXTI_::PortJ
-				  : ConfT::port == GPIO::K ? EXTI_::PortK
+										   // : ConfT::port == GPIO::J ? EXTI_::PortJ
+										   // : ConfT::port == GPIO::K ? EXTI_::PortK
 										   : EXTI_::PortA;
 		if constexpr (ConfT::pin == 1)
 			EXTI_::Pin1::write(port);
