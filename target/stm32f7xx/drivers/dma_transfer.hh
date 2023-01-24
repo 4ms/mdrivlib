@@ -117,6 +117,16 @@ struct DMATransfer {
 	}
 
 	void register_callback(auto cb) {
+		if constexpr (ConfT::half_transfer_interrupt_enable)
+			__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_HT);
+		else
+			__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_HT);
+
+		__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TC);
+		__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TE);
+
+		__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_FE);
+		__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_DME);
 		InterruptControl::disable_irq(ConfT::IRQn);
 		InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = cb, this]() {
 			if (*dma_isr_reg & dma_tc_flag_index) {
@@ -126,12 +136,16 @@ struct DMATransfer {
 				else
 					callback();
 			}
+
 			if constexpr (ConfT::half_transfer_interrupt_enable) {
 				if (*dma_isr_reg & dma_ht_flag_index) {
 					*dma_ifcr_reg = dma_ht_flag_index;
 					callback(0);
 				}
+			} else {
+				*dma_ifcr_reg = dma_ht_flag_index;
 			}
+
 			if (*dma_isr_reg & dma_te_flag_index) {
 				*dma_ifcr_reg = dma_te_flag_index;
 				//TODO: handle Transfer Error here
