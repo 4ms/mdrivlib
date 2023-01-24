@@ -74,8 +74,8 @@ public:
 		__HAL_ADC_ENABLE(&hadc);
 	}
 
-	void register_callback(Callback &&callback) {
-		dma.register_callback(std::forward<Callback &&>(callback));
+	void register_callback(auto callback) {
+		dma.register_callback(std::move(callback));
 	}
 
 	template<AdcPeriphNum p>
