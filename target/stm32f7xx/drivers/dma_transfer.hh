@@ -12,7 +12,6 @@ struct DMATransfer {
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
 
-	DMA_TypeDef *dmax;
 	DMA_Stream_TypeDef *stream;
 	volatile uint32_t *dma_ifcr_reg;
 	volatile uint32_t *dma_isr_reg;
@@ -26,57 +25,11 @@ struct DMATransfer {
 	DMATransfer() {
 		if constexpr (ConfT::DMAx == 1) {
 			RCC_Enable::DMA1_::set();
-			if constexpr (ConfT::StreamNum == 0) {
-				stream = DMA1_Stream0;
-			}
-			if constexpr (ConfT::StreamNum == 1) {
-				stream = DMA1_Stream1;
-			}
-			if constexpr (ConfT::StreamNum == 2) {
-				stream = DMA1_Stream2;
-			}
-			if constexpr (ConfT::StreamNum == 3) {
-				stream = DMA1_Stream3;
-			}
-			if constexpr (ConfT::StreamNum == 4) {
-				stream = DMA1_Stream4;
-			}
-			if constexpr (ConfT::StreamNum == 5) {
-				stream = DMA1_Stream5;
-			}
-			if constexpr (ConfT::StreamNum == 6) {
-				stream = DMA1_Stream6;
-			}
-			if constexpr (ConfT::StreamNum == 7) {
-				stream = DMA1_Stream7;
-			}
+			stream = reinterpret_cast<DMA_Stream_TypeDef *>(DMA1StreamBase[ConfT::StreamNum]);
 		}
 		if constexpr (ConfT::DMAx == 2) {
 			RCC_Enable::DMA2_::set();
-			if constexpr (ConfT::StreamNum == 0) {
-				stream = DMA2_Stream0;
-			}
-			if constexpr (ConfT::StreamNum == 1) {
-				stream = DMA2_Stream1;
-			}
-			if constexpr (ConfT::StreamNum == 2) {
-				stream = DMA2_Stream2;
-			}
-			if constexpr (ConfT::StreamNum == 3) {
-				stream = DMA2_Stream3;
-			}
-			if constexpr (ConfT::StreamNum == 4) {
-				stream = DMA2_Stream4;
-			}
-			if constexpr (ConfT::StreamNum == 5) {
-				stream = DMA2_Stream5;
-			}
-			if constexpr (ConfT::StreamNum == 6) {
-				stream = DMA2_Stream6;
-			}
-			if constexpr (ConfT::StreamNum == 7) {
-				stream = DMA2_Stream7;
-			}
+			stream = reinterpret_cast<DMA_Stream_TypeDef *>(DMA2StreamBase[ConfT::StreamNum]);
 		}
 
 		dma_tc_flag_index = dma_get_TC_flag_index(stream);
