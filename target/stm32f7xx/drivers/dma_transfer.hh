@@ -131,7 +131,10 @@ struct DMATransfer {
 					*dma_ifcr_reg = dma_ht_flag_index;
 					callback(0);
 				}
+			} else {
+				*dma_ifcr_reg = dma_ht_flag_index;
 			}
+
 			if (*dma_isr_reg & dma_te_flag_index) {
 				*dma_ifcr_reg = dma_te_flag_index;
 				//TODO: handle Transfer Error here
