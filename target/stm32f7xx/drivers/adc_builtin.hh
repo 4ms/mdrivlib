@@ -60,6 +60,9 @@ public:
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+		// Must do this as fix for HAL, which unconditionally enables HT interrupt
+		if constexpr (!DmaConf::half_transfer_interrupt_enable)
+			dma.disable_ht();
 	}
 
 	ValueT get_val(unsigned chan) {
@@ -67,12 +70,12 @@ public:
 	}
 
 	// FIXME: Common ADC IRQ gets called constantly
-	void register_callback(auto &adc_common, Callback &&callback) {
-		adc_common.register_callback(ConfT::adc_periph_num, std::move(callback));
-		__HAL_ADC_DISABLE(&hadc);
-		__HAL_ADC_ENABLE_IT(&hadc, ADC_IT_EOC);
-		__HAL_ADC_ENABLE(&hadc);
-	}
+	// void register_callback(auto &adc_common, Callback &&callback) {
+	// 	adc_common.register_callback(ConfT::adc_periph_num, std::move(callback));
+	// 	__HAL_ADC_DISABLE(&hadc);
+	// 	__HAL_ADC_ENABLE_IT(&hadc, ADC_IT_EOC);
+	// 	__HAL_ADC_ENABLE(&hadc);
+	// }
 
 	void register_callback(auto callback) {
 		dma.register_callback(std::move(callback));

@@ -69,12 +69,16 @@ struct DMATransfer {
 		HAL_DMA_Init(&hdma);
 	}
 
+	void disable_ht() {
+		__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_HT);
+	}
+
 	void register_callback(auto cb) {
 		if constexpr (ConfT::half_transfer_interrupt_enable)
 			__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_HT);
 		else
 			__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_HT);
-
+		*dma_ifcr_reg = dma_ht_flag_index;
 		__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TC);
 		__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TE);
 
