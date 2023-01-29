@@ -13,17 +13,19 @@ struct SDCard {
 	enum class Status { NotInit, NoCard, Mounted } status = Status::NotInit;
 	Pin card_det_pin;
 
+	static constexpr uint32_t BlockSize = 512;
+
 	SDCard() {
 		RCC->SDMMC12CKSELR = 3; // HSI = 64MHz
 		RCC_Enable::SDMMC1_::set();
 
-		HAL_SD_DeInit(&hsd);
 		hsd.Instance = SDMMC1;
 		hsd.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
 		hsd.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
 		hsd.Init.BusWide = SDMMC_BUS_WIDE_4B;
 		hsd.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
 		hsd.Init.ClockDiv = 2; // 64MHz/2 / 2 = 16MHz, seems to be the max OSD32-BRK can handle reliably
+		HAL_SD_DeInit(&hsd);
 
 		Pin{ConfT::D0, PinMode::Alt};
 		Pin{ConfT::D1, PinMode::Alt};
@@ -67,33 +69,19 @@ struct SDCard {
 		}
 		return (status == Status::Mounted);
 	}
-
-	void set_status_mounted() {
-		status = Status::Mounted;
-		card_det_pin.init(ConfT::D3, PinMode::Alt);
-	}
-
-	void set_status_nocard() {
-		status = Status::NoCard;
-		//TODO: Check if we need to toggle pin state, we might be able to read the pin
-		// even when its in AF mode
-		card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
-		HAL_Delay(1);
-	}
-
-	// Read from SD card into a generic data structure. Max one block (512B)
+	// Read from SD card into a generic data structure
 	bool read(std::span<uint8_t> buf, uint32_t block_num) {
 		constexpr uint32_t timeout = 0xFFFFFF;
 		uint32_t bytes_to_read = buf.size_bytes();
 		auto read_ptr = buf.data();
 
-		if (bytes_to_read >= 512) {
-			uint32_t numblocks = bytes_to_read / 512;
+		if (bytes_to_read >= BlockSize) {
+			uint32_t numblocks = bytes_to_read / BlockSize;
 			auto err = HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout);
 			if (err != HAL_OK)
 				return false;
 
-			uint32_t bytes_read = numblocks * 512;
+			uint32_t bytes_read = numblocks * BlockSize;
 			if (bytes_to_read == bytes_read)
 				return true;
 
@@ -104,7 +92,7 @@ struct SDCard {
 		}
 
 		if (bytes_to_read > 0) {
-			uint8_t _data[512];
+			uint8_t _data[BlockSize];
 			constexpr uint32_t numblocks = 1;
 			auto err = HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout);
 			if (err != HAL_OK)
@@ -124,8 +112,8 @@ struct SDCard {
 		// STM32 HAL is not const-correct, so we must perform a const cast
 		auto buf_ptr = const_cast<uint8_t *>(buf.data());
 
-		if (bytes_to_write >= 512) {
-			uint32_t numblocks = bytes_to_write / 512;
+		if (bytes_to_write >= BlockSize) {
+			uint32_t numblocks = bytes_to_write / BlockSize;
 			auto err = HAL_SD_WriteBlocks(&hsd, buf_ptr, block_num, numblocks, timeout);
 			if (err != HAL_OK)
 				return false;
@@ -134,12 +122,14 @@ struct SDCard {
 			if (bytes_to_write == bytes_written)
 				return true;
 
-			//setup for reading the remainder
+			//setup for writing the remainder (less than a whole block)
 			bytes_to_write -= bytes_written;
 			block_num += numblocks;
 			buf_ptr += bytes_written;
 		}
 
+
+		// Handle writing less than a whole block, by copying and padding
 		if (bytes_to_write > 0 && bytes_to_write < 512) {
 			uint8_t _data[512];
 			uint8_t *dst = _data;
@@ -157,6 +147,21 @@ struct SDCard {
 		}
 		return true;
 	}
+
+	private:
+	void set_status_mounted() {
+		status = Status::Mounted;
+		card_det_pin.init(ConfT::D3, PinMode::Alt);
+	}
+
+	void set_status_nocard() {
+		status = Status::NoCard;
+		//TODO: Check if we need to toggle pin state, we might be able to read the pin
+		// even when its in AF mode
+		card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
+		HAL_Delay(1);
+	}
+
 };
 
 } // namespace mdrivlib
