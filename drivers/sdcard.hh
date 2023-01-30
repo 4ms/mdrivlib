@@ -48,6 +48,18 @@ struct SDCard {
 		}
 	}
 
+	uint32_t get_card_num_blocks() {
+		if (!detect_card())
+			return 0;
+
+		HAL_SD_CardInfoTypeDef info;
+		auto err = HAL_SD_GetCardInfo(&hsd, &info);
+		if (err != HAL_OK)
+			return 0;
+
+		return info.BlockNbr;
+	}
+
 	bool detect_card() {
 		switch (status) {
 			case Status::NoCard:
@@ -128,7 +140,6 @@ struct SDCard {
 			buf_ptr += bytes_written;
 		}
 
-
 		// Handle writing less than a whole block, by copying and padding
 		if (bytes_to_write > 0 && bytes_to_write < 512) {
 			uint8_t _data[512];
@@ -148,7 +159,7 @@ struct SDCard {
 		return true;
 	}
 
-	private:
+private:
 	void set_status_mounted() {
 		status = Status::Mounted;
 		card_det_pin.init(ConfT::D3, PinMode::Alt);
@@ -161,7 +172,6 @@ struct SDCard {
 		card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
 		HAL_Delay(1);
 	}
-
 };
 
 } // namespace mdrivlib
