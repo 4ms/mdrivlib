@@ -7,7 +7,7 @@ namespace mdrivlib::CodecPCM3060Register
 using BusReg::Bits;
 using BusReg::ReadWrite;
 
-constexpr uint8_t I2C_BASE_ADDR = 0b10001100; // Shifted address (0x8C for write, 0x8D for read)
+constexpr inline uint8_t I2C_BASE_ADDR = 0b10001100; // Shifted address (0x8C for write, 0x8D for read)
 
 struct SystemControl : ReadWrite {
 	enum : uint8_t { Address = 64 };
