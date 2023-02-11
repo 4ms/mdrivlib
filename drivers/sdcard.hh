@@ -83,7 +83,7 @@ struct SDCard {
 	}
 	// Read from SD card into a generic data structure
 	bool read(std::span<uint8_t> buf, uint32_t block_num) {
-		constexpr uint32_t timeout = 0xFFFFFF;
+		constexpr uint32_t timeout = 2000; //2 seconds
 		uint32_t bytes_to_read = buf.size_bytes();
 		auto read_ptr = buf.data();
 
