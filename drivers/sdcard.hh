@@ -1,8 +1,14 @@
 #pragma once
+#include "drivers//interrupt.hh"
 #include "drivers/rcc.hh"
 #include "drivers/sdcard_conf.hh"
 #include "stm32xx.h"
 #include <span>
+
+extern volatile bool sd_rx;
+// extern "C" void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd) {
+// 	sd_rx = true;
+// }
 
 namespace mdrivlib
 {
@@ -35,6 +41,8 @@ struct SDCard {
 		Pin{ConfT::SCLK, PinMode::Alt};
 
 		init();
+
+		Interrupt::register_and_start_isr(SDMMC1_IRQn, 0, 0, [&] { HAL_SD_IRQHandler(&hsd); });
 	}
 
 	void init() {
@@ -81,6 +89,30 @@ struct SDCard {
 		}
 		return (status == Status::Mounted);
 	}
+
+	bool try_mount() {
+		if (status == Status::Mounted)
+			return true;
+		if (status == Status::NoCard) {
+			if (card_det_pin.is_on()) {
+				set_status_mounted();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void check_status() {
+		if (status != Status::Mounted)
+			return;
+
+		hsd.ErrorCode = HAL_SD_ERROR_NONE;
+		auto cardstate = HAL_SD_GetCardState(&hsd);
+		if (HAL_SD_GetError(&hsd) != HAL_SD_ERROR_NONE || cardstate == HAL_SD_CARD_DISCONNECTED ||
+			cardstate == HAL_SD_CARD_ERROR)
+			set_status_nocard();
+	}
+
 	// Read from SD card into a generic data structure
 	bool read(std::span<uint8_t> buf, uint32_t block_num) {
 		constexpr uint32_t timeout = 2000; //2 seconds
@@ -89,9 +121,13 @@ struct SDCard {
 
 		if (bytes_to_read >= BlockSize) {
 			uint32_t numblocks = bytes_to_read / BlockSize;
-			auto err = HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout);
-			if (err != HAL_OK)
+
+			sd_rx = false;
+			if (HAL_SD_ReadBlocks_DMA(&hsd, read_ptr, block_num, numblocks) != HAL_OK)
 				return false;
+			//wait until rx interrupt
+			while (sd_rx == false)
+				;
 
 			uint32_t bytes_read = numblocks * BlockSize;
 			if (bytes_to_read == bytes_read)
@@ -106,9 +142,13 @@ struct SDCard {
 		if (bytes_to_read > 0) {
 			uint8_t _data[BlockSize];
 			constexpr uint32_t numblocks = 1;
-			auto err = HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout);
-			if (err != HAL_OK)
+
+			sd_rx = false;
+			if (HAL_SD_ReadBlocks_DMA(&hsd, _data, block_num, numblocks) != HAL_OK)
 				return false;
+			//wait until rx interrupt
+			while (sd_rx == false)
+				;
 
 			uint8_t *src = _data;
 			while (bytes_to_read--)
