@@ -6,7 +6,7 @@
 #include "stm32xx.h"
 #include <span>
 
-extern volatile bool sd_rx;
+// extern volatile bool sd_rx;
 // extern "C" void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd) {
 // 	sd_rx = true;
 // }
@@ -43,7 +43,7 @@ struct SDCard {
 
 		init();
 
-		Interrupt::register_and_start_isr(SDMMC1_IRQn, 0, 0, [&] { HAL_SD_IRQHandler(&hsd); });
+		// Interrupt::register_and_start_isr(SDMMC1_IRQn, 0, 0, [&] { HAL_SD_IRQHandler(&hsd); });
 	}
 
 	void init() {
@@ -145,12 +145,12 @@ struct SDCard {
 			uint8_t _data[BlockSize];
 			constexpr uint32_t numblocks = 1;
 
-			sd_rx = false;
-			if (HAL_SD_ReadBlocks_DMA(&hsd, _data, block_num, numblocks) != HAL_OK)
+			// sd_rx = false;
+			if (HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout) != HAL_OK)
 				return false;
 			//wait until rx interrupt
-			while (sd_rx == false)
-				;
+			// while (sd_rx == false)
+			// 	;
 
 			uint8_t *src = _data;
 			while (bytes_to_read--)
