@@ -1,5 +1,6 @@
 #pragma once
 #include "drivers//interrupt.hh"
+#include "drivers/cache.hh"
 #include "drivers/rcc.hh"
 #include "drivers/sdcard_conf.hh"
 #include "stm32xx.h"
@@ -22,14 +23,14 @@ struct SDCard {
 	static constexpr uint32_t BlockSize = 512;
 
 	SDCard() {
-		RCC->SDMMC12CKSELR = 3; // HSI = 64MHz
+		RCC->SDMMC12CKSELR = RCC_SDMMC12CLKSOURCE_HSI; //3 = HSI = 64MHz
 		RCC_Enable::SDMMC1_::set();
 
 		hsd.Instance = SDMMC1;
 		hsd.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
 		hsd.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
 		hsd.Init.BusWide = SDMMC_BUS_WIDE_4B;
-		hsd.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+		hsd.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
 		hsd.Init.ClockDiv = 2; // 64MHz/2 / 2 = 16MHz, seems to be the max OSD32-BRK can handle reliably
 		HAL_SD_DeInit(&hsd);
 
@@ -122,14 +123,15 @@ struct SDCard {
 		if (bytes_to_read >= BlockSize) {
 			uint32_t numblocks = bytes_to_read / BlockSize;
 
-			sd_rx = false;
-			if (HAL_SD_ReadBlocks_DMA(&hsd, read_ptr, block_num, numblocks) != HAL_OK)
+			// sd_rx = false;
+			if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
 				return false;
 			//wait until rx interrupt
-			while (sd_rx == false)
-				;
+			// while (sd_rx == false)
+			// 	;
 
 			uint32_t bytes_read = numblocks * BlockSize;
+			// SystemCache::invalidate_dcache_by_range(read_ptr, bytes_read);
 			if (bytes_to_read == bytes_read)
 				return true;
 
