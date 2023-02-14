@@ -63,5 +63,17 @@ private:
 	bool write(Reg data) {
 		return i2c_.write_reg(I2C_address, data) == mdrivlib::I2CPeriph::I2C_NO_ERR;
 	}
+
+	// Returns 0 if failed
+	template<typename Reg>
+	Reg read() {
+		auto reg = i2c_.read_reg<Reg>(I2C_address);
+		return reg.value_or(Reg::make(0));
+	}
+
+	template<typename Reg>
+	std::optional<Reg> try_read() {
+		return i2c_.read_reg<Reg>(I2C_address);
+	}
 };
 } // namespace mdrivlib

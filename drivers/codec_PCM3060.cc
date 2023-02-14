@@ -48,7 +48,7 @@ CodecPCM3060::CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef)
 	, i2c_(i2c)
 	, samplerate_{saidef.samplerate}
 	, reset_pin_{saidef.reset_pin, PinMode::Output}
-	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b11) << 1)))} {
+	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b1) << 1)))} {
 	reset_pin_.low();
 }
 
@@ -72,21 +72,47 @@ void CodecPCM3060::start() {
 }
 
 CodecPCM3060::Error CodecPCM3060::_write_all_registers(uint32_t sample_rate) {
-	CodecPCM3060::Error err;
 
-	write<SystemControl>({.ModeRegisterReset = 0});
+	auto sysreg_read = try_read<SystemControl>();
+	if (!sysreg_read.has_value())
+		return Error::I2C_INIT_ERR;
 
-	return err;
-}
+	// Reset registers
+	SystemControl sysreg{
+		.DACSingleEnded = 1, .DACPowerSave = 1, .ADCPowerSave = 1, .SystemReset = 1, .ModeRegisterReset = 0};
+	if (write(sysreg))
+		return Error::I2C_INIT_ERR;
 
-CodecPCM3060::Error CodecPCM3060::_write_register(uint8_t reg_address, uint8_t reg_value) {
-	uint8_t data[2] = {reg_address, reg_value};
+	HAL_Delay(10);
 
-	if constexpr (DISABLE_I2C)
-		return CODEC_NO_ERR;
+	//System Reset
+	sysreg.ModeRegisterReset = 1;
+	sysreg.SystemReset = 0;
+	if (write(sysreg))
+		return Error::I2C_INIT_ERR;
 
-	auto err = i2c_.mem_write(I2C_address, reg_address, REGISTER_ADDR_SIZE, &data[1], 1);
-	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
+	HAL_Delay(10);
+
+	// I2S Format
+	DacControl1 dacreg{.Format = DacControl1::Formats::I2S_24bit,
+					   .MSInterface = DacControl1::Interfaces::Slave,
+					   .ClockSel = DacControl1::ClockSels::SelectPinGroups2};
+	if (write(dacreg))
+		return Error::I2C_INIT_ERR;
+
+	AdcControl1 adcreg{.Format = AdcControl1::Formats::I2S_24bit,
+					   .MSInterface = AdcControl1::Interfaces::Slave,
+					   .ClockSel = AdcControl1::ClockSels::SelectPinGroups1};
+	if (write(adcreg))
+		return Error::I2C_INIT_ERR;
+
+	// Turn on ADC and DAC (disable power-save)
+	sysreg.ADCPowerSave = 0;
+	sysreg.DACPowerSave = 0;
+	if (write(sysreg))
+		return Error::I2C_INIT_ERR;
+
+	return CODEC_NO_ERR;
 }
 
 } // namespace mdrivlib

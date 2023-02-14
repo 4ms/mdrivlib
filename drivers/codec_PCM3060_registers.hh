@@ -7,26 +7,27 @@ namespace mdrivlib::CodecPCM3060Register
 using BusReg::Bits;
 using BusReg::ReadWrite;
 
-constexpr inline uint8_t I2C_BASE_ADDR = 0b10001100; // Shifted address (0x8C for write, 0x8D for read)
+// Un-shifted address: 0x46 (will send 0x8C for write, 0x8D for read)
+constexpr inline uint8_t I2C_BASE_ADDR = 0b1000110;
 
 struct SystemControl : ReadWrite {
 	enum : uint8_t { Address = 64 };
 
 	uint8_t DACSingleEnded : 1;
 	uint8_t : 3;
-	uint8_t DACPOwerSave : 1;
+	uint8_t DACPowerSave : 1;
 	uint8_t ADCPowerSave : 1;
 	uint8_t SystemReset : 1;
 	uint8_t ModeRegisterReset : 1;
 
 	constexpr operator uint8_t() {
-		return (DACSingleEnded << 0) | (DACPOwerSave << 4) | (ADCPowerSave << 5) | (SystemReset << 6) |
+		return (DACSingleEnded << 0) | (DACPowerSave << 4) | (ADCPowerSave << 5) | (SystemReset << 6) |
 			   (ModeRegisterReset << 7);
 	}
 	constexpr static SystemControl make(uint8_t raw) {
 		return {
 			.DACSingleEnded = Bits<0>(raw),
-			.DACPOwerSave = Bits<4>(raw),
+			.DACPowerSave = Bits<4>(raw),
 			.ADCPowerSave = Bits<5>(raw),
 			.SystemReset = Bits<6>(raw),
 			.ModeRegisterReset = Bits<7>(raw),
