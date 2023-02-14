@@ -24,14 +24,18 @@ struct SDCard {
 
 	SDCard() {
 		RCC->SDMMC12CKSELR = RCC_SDMMC12CLKSOURCE_HSI; //3 = HSI = 64MHz
+		constexpr uint32_t base_clock = 64'000'000;
+		constexpr uint32_t clock_div = (base_clock / 2) / ConfT::speed_hz;
+		//clock_div: 16MHz => 2, 32MHz => 1
+
 		RCC_Enable::SDMMC1_::set();
 
 		hsd.Instance = SDMMC1;
 		hsd.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
 		hsd.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-		hsd.Init.BusWide = SDMMC_BUS_WIDE_4B;
+		hsd.Init.BusWide = ConfT::width ? SDMMC_BUS_WIDE_4B : SDMMC_BUS_WIDE_1B;
 		hsd.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
-		hsd.Init.ClockDiv = 2; // 64MHz/2 / 2 = 16MHz, seems to be the max OSD32-BRK can handle reliably
+		hsd.Init.ClockDiv = clock_div;
 		HAL_SD_DeInit(&hsd);
 
 		Pin{ConfT::D0, PinMode::Alt};
