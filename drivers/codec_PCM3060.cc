@@ -48,8 +48,8 @@ CodecPCM3060::CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef)
 	, i2c_(i2c)
 	, samplerate_{saidef.samplerate}
 	, reset_pin_{saidef.reset_pin, PinMode::Output}
-	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b1) << 1)))} {
-	reset_pin_.low();
+	, I2C_address{static_cast<uint8_t>((CodecPCM3060Register::I2C_BASE_ADDR + (saidef.bus_address & 0b1)) << 1)} {
+	reset_pin_.high();
 }
 
 CodecPCM3060::Error CodecPCM3060::init() {
@@ -57,7 +57,7 @@ CodecPCM3060::Error CodecPCM3060::init() {
 	if (err != SaiTdmPeriph::SAI_NO_ERR)
 		return CodecPCM3060::I2S_INIT_ERR;
 
-	reset_pin_.high();
+	// reset_pin_.high();
 
 	HAL_Delay(1); // 3846 SYSCLKI cycles = 0.313ms
 	return _write_all_registers(samplerate_);
@@ -80,7 +80,7 @@ CodecPCM3060::Error CodecPCM3060::_write_all_registers(uint32_t sample_rate) {
 	// Reset registers
 	SystemControl sysreg{
 		.DACSingleEnded = 1, .DACPowerSave = 1, .ADCPowerSave = 1, .SystemReset = 1, .ModeRegisterReset = 0};
-	if (write(sysreg))
+	if (!write(sysreg))
 		return Error::I2C_INIT_ERR;
 
 	HAL_Delay(10);
@@ -88,7 +88,7 @@ CodecPCM3060::Error CodecPCM3060::_write_all_registers(uint32_t sample_rate) {
 	//System Reset
 	sysreg.ModeRegisterReset = 1;
 	sysreg.SystemReset = 0;
-	if (write(sysreg))
+	if (!write(sysreg))
 		return Error::I2C_INIT_ERR;
 
 	HAL_Delay(10);
@@ -97,19 +97,19 @@ CodecPCM3060::Error CodecPCM3060::_write_all_registers(uint32_t sample_rate) {
 	DacControl1 dacreg{.Format = DacControl1::Formats::I2S_24bit,
 					   .MSInterface = DacControl1::Interfaces::Slave,
 					   .ClockSel = DacControl1::ClockSels::SelectPinGroups2};
-	if (write(dacreg))
+	if (!write(dacreg))
 		return Error::I2C_INIT_ERR;
 
 	AdcControl1 adcreg{.Format = AdcControl1::Formats::I2S_24bit,
 					   .MSInterface = AdcControl1::Interfaces::Slave,
 					   .ClockSel = AdcControl1::ClockSels::SelectPinGroups1};
-	if (write(adcreg))
+	if (!write(adcreg))
 		return Error::I2C_INIT_ERR;
 
 	// Turn on ADC and DAC (disable power-save)
 	sysreg.ADCPowerSave = 0;
 	sysreg.DACPowerSave = 0;
-	if (write(sysreg))
+	if (!write(sysreg))
 		return Error::I2C_INIT_ERR;
 
 	return CODEC_NO_ERR;
