@@ -181,11 +181,11 @@ struct DMATransfer {
 				}
 			}
 			if (*dma_isr_reg & dma_te_flag_index) {
-				__BKPT(32);
+				// __BKPT(32);
 				*dma_ifcr_reg = dma_te_flag_index;
 			}
 			if (*dma_isr_reg & dma_fe_flag_index) {
-				__BKPT(33);
+				// __BKPT(33);
 				*dma_ifcr_reg = dma_fe_flag_index;
 			}
 		});
