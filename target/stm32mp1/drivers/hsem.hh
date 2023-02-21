@@ -6,19 +6,19 @@
 
 namespace mdrivlib
 {
-struct HSEM_ {
-	template<uint32_t Mask>
-	using IER = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, IER), Mask>;
+// struct HSEM_ {
+// 	template<uint32_t Mask>
+// 	using IER = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, IER), Mask>;
 
-	template<uint32_t Mask>
-	using ICR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, ICR), Mask>;
+// 	template<uint32_t Mask>
+// 	using ICR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, ICR), Mask>;
 
-	template<uint32_t Mask>
-	using ISR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, ISR), Mask>;
+// 	template<uint32_t Mask>
+// 	using ISR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, ISR), Mask>;
 
-	template<uint32_t Mask>
-	using MISR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, MISR), Mask>;
-};
+// 	template<uint32_t Mask>
+// 	using MISR = RegisterBits<ReadWrite, HSEM_BASE + offsetof(HSEM_Common_TypeDef, MISR), Mask>;
+// };
 
 enum class HWSemaphoreFlag {
 	LockFailed = 0,
