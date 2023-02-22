@@ -37,6 +37,10 @@ struct IPCC_ {
 		IPCCRegs::Core<N>::TXFreeISREnable::clear();
 	}
 	template<uint32_t C>
+	static bool is_chan_txfree_isr_enabled() {
+		return IPCCRegs::Core<N>::template Chan<C>::FreeISRMasked::read();
+	}
+	template<uint32_t C>
 	static bool is_tx_free() {
 		return IPCCRegs::Core<N>::template Chan<C>::FlagStatus::read() == 0;
 	}
@@ -58,6 +62,10 @@ struct IPCC_ {
 	}
 	static void disble_all_rxocc_isr() {
 		IPCCRegs::Core<N>::RXOccISREnable::clear(); //disable = clear an enable bit
+	}
+	template<uint32_t C>
+	static bool is_chan_rxocc_isr_enabled() {
+		return IPCCRegs::Core<N>::template Chan<C>::OccISRMasked::read();
 	}
 	template<uint32_t C>
 	static bool is_rx_occupied() {
@@ -105,6 +113,13 @@ struct IPCC_ {
 				disable_chan_txfree_isr<C>();
 			else
 				disable_chan_rxocc_isr<C>();
+		}
+
+		static bool is_chan_isr_enabled() {
+			if constexpr (N == 1)
+				return is_chan_txfree_isr_enabled<C>();
+			else
+				return is_chan_rxocc_isr_enabled<C>();
 		}
 	};
 };
