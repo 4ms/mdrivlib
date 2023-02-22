@@ -63,6 +63,10 @@ struct IPCC_ {
 	static bool is_rx_occupied() {
 		return IPCCRegs::Core<N>::template Chan<C>::FlagStatus::read() != 0;
 	}
+	template<uint32_t C>
+	static bool is_other_rx_occupied() {
+		return IPCCRegs::Core<3 - N>::template Chan<C>::FlagStatus::read() != 0;
+	}
 
 	//Half Duplex mode:
 	template<uint32_t C>
@@ -71,7 +75,8 @@ struct IPCC_ {
 			if constexpr (N == 1)
 				return is_tx_free<C>();
 			else
-				return is_rx_occupied<C>();
+				// Core<1>'s flag holds the state of the halfduplex communication
+				return is_other_rx_occupied<C>();
 		}
 
 		static void enable_chan_isr(uint32_t pri, uint32_t subpri, auto &&callback) {
@@ -86,6 +91,7 @@ struct IPCC_ {
 				set_flag<C>();
 			else
 				clear_flag<C>();
+
 			enable_chan_isr();
 		}
 
