@@ -91,8 +91,6 @@ struct IPCC_ {
 				set_flag<C>();
 			else
 				clear_flag<C>();
-
-			enable_chan_isr();
 		}
 
 		static auto enable_chan_isr() {
