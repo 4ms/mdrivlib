@@ -9,16 +9,30 @@ struct IPCC_ {
 	static_assert(N == 1 || N == 2, "IPCC has Core = 1 and Core = 2 only");
 
 	// Set/Clear the IPCC Flag:
+	// Note: Clearing acts upon the other core's flag
+	// and reading the rx occupied flag requires reading the other Core's flags
+	template<uint32_t C>
+	static void set_flag() {
+		IPCCRegs::Core<N>::template Chan<C>::ChangeFlag::set();
+	}
 	template<uint32_t C>
 	static void clear_flag() {
 		IPCCRegs::Core<N>::template Chan<C>::ChangeFlag::clear();
 	}
 	template<uint32_t C>
-	static void set_flag() {
-		IPCCRegs::Core<N>::template Chan<C>::ChangeFlag::set();
+	static bool is_tx_free() {
+		return IPCCRegs::Core<N>::template Chan<C>::FlagStatus::read() == 0;
+	}
+	template<uint32_t C>
+	static bool is_rx_occupied() {
+		return IPCCRegs::Core<3 - N>::template Chan<C>::FlagStatus::read() != 0;
+	}
+	template<uint32_t C>
+	static bool is_other_rx_occupied() {
+		return IPCCRegs::Core<N>::template Chan<C>::FlagStatus::read() != 0;
 	}
 
-	// TXFree:
+	// TXFree ISR:
 	template<uint32_t C>
 	static void enable_chan_txfree_isr() {
 		IPCCRegs::Core<N>::template Chan<C>::FreeISRMasked::clear(); //enable = clear a mask bit (unmask)
@@ -40,12 +54,9 @@ struct IPCC_ {
 	static bool is_chan_txfree_isr_enabled() {
 		return IPCCRegs::Core<N>::template Chan<C>::FreeISRMasked::read();
 	}
-	template<uint32_t C>
-	static bool is_tx_free() {
-		return IPCCRegs::Core<N>::template Chan<C>::FlagStatus::read() == 0;
-	}
 
 	// RXOccupied:
+	// Note: RXOcc ISR triggers on the other core's flag going high
 	template<uint32_t C>
 	static void enable_chan_rxocc_isr() {
 		IPCCRegs::Core<N>::template Chan<C>::OccISRMasked::clear(); //enable = clear a mask bit (unmask)
@@ -67,14 +78,6 @@ struct IPCC_ {
 	static bool is_chan_rxocc_isr_enabled() {
 		return IPCCRegs::Core<N>::template Chan<C>::OccISRMasked::read();
 	}
-	template<uint32_t C>
-	static bool is_rx_occupied() {
-		return IPCCRegs::Core<N>::template Chan<C>::FlagStatus::read() != 0;
-	}
-	template<uint32_t C>
-	static bool is_other_rx_occupied() {
-		return IPCCRegs::Core<3 - N>::template Chan<C>::FlagStatus::read() != 0;
-	}
 
 	//Half Duplex mode:
 	template<uint32_t C>
@@ -83,8 +86,7 @@ struct IPCC_ {
 			if constexpr (N == 1)
 				return is_tx_free<C>();
 			else
-				// Core<1>'s flag holds the state of the halfduplex communication
-				return is_other_rx_occupied<C>();
+				return is_rx_occupied<C>();
 		}
 
 		static void enable_chan_isr(uint32_t pri, uint32_t subpri, auto &&callback) {
