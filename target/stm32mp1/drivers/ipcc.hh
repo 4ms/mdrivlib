@@ -1,6 +1,6 @@
 #pragma once
 #include "drivers/interrupt.hh"
-#include "ipcc_regs.hh"
+#include "drivers/ipcc_regs.hh"
 
 namespace mdrivlib
 {

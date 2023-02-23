@@ -64,8 +64,6 @@ struct Core<2> {
 	};
 };
 
-//Usage: IPCC_::Core<N>::TXFreeISREnable::set();
-//Usage: IPCC_::Core<N>::Chan<C>::ChangeFlag::clear();
 }; // namespace IPCCRegs
 
 } // namespace mdrivlib
