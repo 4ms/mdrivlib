@@ -5,9 +5,7 @@
 #include "stm32xx.h"
 #include <span>
 
-#define pr_dbg printf_
-#include "printf.h"
-// #define pr_dbg(...)
+// #include "printf.h"
 
 // extern volatile bool sd_rx;
 // extern "C" void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd) {
@@ -44,7 +42,7 @@ struct SDCard {
 		Pin{ConfT::D0, PinMode::Alt};
 		Pin{ConfT::D1, PinMode::Alt};
 		Pin{ConfT::D2, PinMode::Alt};
-		// Pin{ConfT::D3, PinMode::Alt};
+		// Pin{ConfT::D3, PinMode::Alt}; //Do not init this as AltFunc; it's used as card detect
 		Pin{ConfT::CMD, PinMode::Alt};
 		Pin{ConfT::SCLK, PinMode::Alt};
 
@@ -83,7 +81,7 @@ struct SDCard {
 					set_status_mounted();
 					HAL_SD_DeInit(&hsd);
 					if (HAL_SD_Init(&hsd) != HAL_OK) {
-						pr_dbg("Cannot re-mount, err %d\n", HAL_SD_GetError(&hsd));
+						// printf_("Cannot re-mount, err %d\n", HAL_SD_GetError(&hsd));
 						set_status_nocard();
 					}
 				}
