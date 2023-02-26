@@ -1,10 +1,13 @@
 #pragma once
-#include "drivers//interrupt.hh"
 #include "drivers/cache.hh"
 #include "drivers/rcc.hh"
 #include "drivers/sdcard_conf.hh"
 #include "stm32xx.h"
 #include <span>
+
+#define pr_dbg printf_
+#include "printf.h"
+// #define pr_dbg(...)
 
 // extern volatile bool sd_rx;
 // extern "C" void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd) {
@@ -76,8 +79,14 @@ struct SDCard {
 	bool detect_card() {
 		switch (status) {
 			case Status::NoCard:
-				if (card_det_pin.is_on())
+				if (card_det_pin.is_on()) {
 					set_status_mounted();
+					HAL_SD_DeInit(&hsd);
+					if (HAL_SD_Init(&hsd) != HAL_OK) {
+						pr_dbg("Cannot re-mount, err %d\n", HAL_SD_GetError(&hsd));
+						set_status_nocard();
+					}
+				}
 				break;
 
 			case Status::Mounted: {
