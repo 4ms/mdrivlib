@@ -19,13 +19,13 @@ public:
 	template<typename T>
 	void set_tx_buffer_start(std::span<T> tx_buf) {
 		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
-		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), tx_buf.size_bytes() / BytesPerDMAXfer);
+		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), tx_buf.size() / BytesPerDMAXfer);
 	}
 
 	template<typename T>
 	void set_rx_buffer_start(std::span<T> buf) {
 		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
-		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(buf.data()), buf.size_bytes() / BytesPerDMAXfer);
+		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(buf.data()), buf.size() / BytesPerDMAXfer);
 	}
 
 	void set_tx_buffer_start(auto &buf) {
@@ -37,14 +37,14 @@ public:
 	}
 
 	template<typename T, size_t NumFramesInBuffer>
-	void set_tx_buffer_start(std::array<T, NumFramesInBuffer> &tx_buf) {
+	[[deprecated]] void set_tx_buffer_start(std::array<T, NumFramesInBuffer> &tx_buf) {
 		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
 		constexpr uint32_t block_size = sizeof(tx_buf) / BytesPerDMAXfer;
 		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), block_size);
 	}
 
 	template<typename T, size_t BUFSIZE>
-	void set_rx_buffer_start(std::array<T, BUFSIZE> &rx_buf) {
+	[[deprecated]] void set_rx_buffer_start(std::array<T, BUFSIZE> &rx_buf) {
 		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
 		constexpr uint32_t block_size = sizeof(rx_buf) / BytesPerDMAXfer;
 		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(rx_buf.data()), block_size);
