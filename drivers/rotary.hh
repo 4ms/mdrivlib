@@ -41,7 +41,7 @@ private:
 	};
 };
 
-template<RotaryStepSize StepSize, PinNoInit PinA, PinNoInit PinB>
+template<RotaryStepSize StepSize, PinDef PinA, PinDef PinB>
 class RotaryEnc {
 public:
 	RotaryEnc() = default;
@@ -57,8 +57,8 @@ public:
 
 private:
 	RotaryFSM<StepSize> rotary;
-	DebouncedPin<PinA.gpio, PinA.pin, PinPolarity::Inverted, 0x0000FFFF, 0xFFFF0000, 0xFFFFFFFF> pin_a;
-	DebouncedPin<PinB.gpio, PinB.pin, PinPolarity::Inverted, 0x0000FFFF, 0xFFFF0000, 0xFFFFFFFF> pin_b;
+	DebouncedPin<PinA, PinPolarity::Inverted, 0x0000FFFF, 0xFFFF0000, 0xFFFFFFFF> pin_a;
+	DebouncedPin<PinB, PinPolarity::Inverted, 0x0000FFFF, 0xFFFF0000, 0xFFFFFFFF> pin_b;
 };
 
 // TODO: remove this and change unit tests to above classes

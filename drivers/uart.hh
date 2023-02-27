@@ -2,7 +2,7 @@
 #include "drivers/pin.hh"
 #include "drivers/stm32xx.h"
 #include "drivers/uart_target.hh"
-#include "stm32f723xx.h"
+#include "stm32xx.h"
 
 namespace mdrivlib
 {

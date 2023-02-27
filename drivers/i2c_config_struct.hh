@@ -33,8 +33,8 @@ struct I2CTimingConfigBitfld {
 
 struct I2CConfig {
 	I2C_TypeDef *I2Cx;
-	PinNoInit SCL;
-	PinNoInit SDA;
+	PinDef SCL;
+	PinDef SDA;
 	I2CTimingConfig timing;
 	//TODO:
 	//I2CTimingConfigBitfld timing;

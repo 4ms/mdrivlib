@@ -2,9 +2,9 @@
 #include "drivers/sdram.hh"
 
 using namespace mdrivlib;
-SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &defs) noexcept
-	: defs{defs} {
-}
+// SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &defs) noexcept
+// 	: defs{defs} {
+// }
 
 TEST_CASE("SDRAM math tests") {
 

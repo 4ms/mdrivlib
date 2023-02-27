@@ -26,11 +26,11 @@ struct SaiConf {
 	uint32_t framesize;
 	uint32_t samplerate;
 
-	PinNoInit MCLK;
-	PinNoInit SCLK;
-	PinNoInit LRCLK;
-	PinNoInit SD_DAC;
-	PinNoInit SD_ADC;
+	PinDef MCLK;
+	PinDef SCLK;
+	PinDef LRCLK;
+	PinDef SD_DAC;
+	PinDef SD_ADC;
 };
 
 // In project conf file:

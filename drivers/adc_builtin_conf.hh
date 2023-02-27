@@ -175,7 +175,7 @@ concept AdcPeriphConf = requires(T) {
 						};
 
 struct AdcChannelConf {
-	PinNoInit pin;
+	PinDef pin;
 	AdcChanNum adc_chan_num;
 	uint32_t rank;
 	AdcSamplingTime sampling_time; // = AdcSamplingTime::_1Cycle;

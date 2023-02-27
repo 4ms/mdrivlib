@@ -19,12 +19,12 @@ struct SaiConfig {
 	uint32_t framesize;
 	uint32_t samplerate;
 
-	PinNoInit MCLK;
-	PinNoInit SCLK;
-	PinNoInit LRCLK;
-	PinNoInit SD_DAC;
-	PinNoInit SD_ADC;
-	PinNoInit reset_pin;
+	PinDef MCLK;
+	PinDef SCLK;
+	PinDef LRCLK;
+	PinDef SD_DAC;
+	PinDef SD_ADC;
+	PinDef reset_pin;
 
 	uint32_t bus_address;
 

@@ -17,15 +17,14 @@ Pin::Pin(GPIO port,
 	, polarity_(polarity) {
 	_init(mode, af, pull, speed, otype);
 }
-Pin::Pin(const PinNoInit &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype)
+Pin::Pin(const PinDef &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype)
 	: port_(other.gpio)
 	, pin_(static_cast<uint16_t>(1 << (other.pin & 0x0F)))
 	, polarity_(polarity) {
 	_init(mode, other.af, pull, speed, otype);
 }
 
-void Pin::init(
-	const PinNoInit &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype) {
+void Pin::init(const PinDef &other, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype) {
 	port_ = other.gpio;
 	pin_ = static_cast<uint16_t>(1 << (other.pin & 0x0F));
 	polarity_ = polarity;

@@ -4,12 +4,12 @@
 namespace mdrivlib
 {
 struct QSPIFlashConfig {
-	PinNoInit io0{};
-	PinNoInit io1{};
-	PinNoInit io2{};
-	PinNoInit io3{};
-	PinNoInit clk{};
-	PinNoInit cs{};
+	PinDef io0{};
+	PinDef io1{};
+	PinDef io2{};
+	PinDef io3{};
+	PinDef clk{};
+	PinDef cs{};
 
 	uint32_t clock_division = 4;
 	uint32_t IRQ_pri = 2;
@@ -31,12 +31,12 @@ struct QSPIFlashConfig {
 };
 
 struct QSPIFlashConf {
-	static constexpr PinNoInit io0{};
-	static constexpr PinNoInit io1{};
-	static constexpr PinNoInit io2{};
-	static constexpr PinNoInit io3{};
-	static constexpr PinNoInit clk{};
-	static constexpr PinNoInit cs{};
+	static constexpr PinDef io0{};
+	static constexpr PinDef io1{};
+	static constexpr PinDef io2{};
+	static constexpr PinDef io3{};
+	static constexpr PinDef clk{};
+	static constexpr PinDef cs{};
 
 	static constexpr uint32_t clock_division = 4;
 	static constexpr uint32_t IRQ_pri = 2;

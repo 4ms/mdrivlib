@@ -11,8 +11,8 @@ For an example, see the I2C config struct in `drivers/i2c_config_struct.hh`:
 ```
 struct I2CConfig {
 	I2C_TypeDef *I2Cx;
-	PinNoInit SCL;
-	PinNoInit SDA;
+	PinDef SCL;
+	PinDef SDA;
 	// etc..
 };
 ```
@@ -61,10 +61,10 @@ struct DefaultSpiConf {
 	static constexpr IRQType IRQn = SPI1_IRQn;
 	static constexpr uint16_t priority1 = 3;
 	static constexpr uint16_t priority2 = 3;
-	static constexpr PinNoInit SCLK = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit COPI = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CIPO = {GPIO::A, 0, LL_GPIO_AF_0};
-	static constexpr PinNoInit CS0 = {GPIO::A, 0, LL_GPIO_AF_0};
+	static constexpr PinDef SCLK = {GPIO::A, 0, LL_GPIO_AF_0};
+	static constexpr PinDef COPI = {GPIO::A, 0, LL_GPIO_AF_0};
+	static constexpr PinDef CIPO = {GPIO::A, 0, LL_GPIO_AF_0};
+	static constexpr PinDef CS0 = {GPIO::A, 0, LL_GPIO_AF_0};
 	//...
 };
 ```

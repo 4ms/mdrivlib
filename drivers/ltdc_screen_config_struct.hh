@@ -5,13 +5,13 @@ namespace mdrivlib
 {
 
 struct LTDCScreenConf {
-	static constexpr PinNoInit r[8]{};
-	static constexpr PinNoInit g[8]{};
-	static constexpr PinNoInit b[8]{};
-	static constexpr PinNoInit de{};
-	static constexpr PinNoInit clk{};
-	static constexpr PinNoInit vsync{};
-	static constexpr PinNoInit hsync{};
+	static constexpr PinDef r[8]{};
+	static constexpr PinDef g[8]{};
+	static constexpr PinDef b[8]{};
+	static constexpr PinDef de{};
+	static constexpr PinDef clk{};
+	static constexpr PinDef vsync{};
+	static constexpr PinDef hsync{};
 
 	static constexpr uint32_t width = 240;
 	static constexpr uint32_t height = 240;
