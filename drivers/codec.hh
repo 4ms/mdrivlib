@@ -1,8 +1,8 @@
 #pragma once
-#include "sai_config_struct.hh"
-#include "sai_tdm.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/sai_config_struct.hh"
+#include "drivers/sai_tdm.hh"
 #include <array>
-#include <cstdint>
 
 namespace mdrivlib
 {
@@ -15,19 +15,17 @@ public:
 		: sai_{sai_def} {
 	}
 
-	template<typename FrameT, size_t BUFSIZE>
-	void set_tx_buffer_start(std::array<FrameT, BUFSIZE> &tx_buf) {
-		constexpr uint32_t NumHalfTransfers = 2;
-		constexpr uint32_t BytesPerSample = 4;
-		constexpr uint32_t block_size = sizeof(tx_buf) * NumHalfTransfers / BytesPerSample;
+	template<typename T, size_t NumFramesInBuffer>
+	void set_tx_buffer_start(std::array<T, NumFramesInBuffer> &tx_buf) {
+		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
+		constexpr uint32_t block_size = sizeof(tx_buf) / BytesPerDMAXfer;
 		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), block_size);
 	}
 
-	template<typename FrameT, size_t BUFSIZE>
-	void set_rx_buffer_start(std::array<FrameT, BUFSIZE> &rx_buf) {
-		constexpr uint32_t NumHalfTransfers = 2;
-		constexpr uint32_t BytesPerSample = 4;
-		constexpr uint32_t block_size = sizeof(rx_buf) * NumHalfTransfers / BytesPerSample;
+	template<typename T, size_t BUFSIZE>
+	void set_rx_buffer_start(std::array<T, BUFSIZE> &rx_buf) {
+		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
+		constexpr uint32_t block_size = sizeof(rx_buf) / BytesPerDMAXfer;
 		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(rx_buf.data()), block_size);
 	}
 

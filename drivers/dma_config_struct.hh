@@ -1,5 +1,6 @@
 #pragma once
 #include "stm32xx.h"
+#include <concepts>
 
 namespace mdrivlib
 {
@@ -39,6 +40,9 @@ struct DefaultDMAConf {
 
 	// Todo: Double-buffer mode
 };
+
+template<typename T>
+concept DMAPeriphConfC = requires(T) { requires std::derived_from<T, DefaultDMAConf>; };
 
 struct DMA_Config {
 	DMA_TypeDef *DMAx;
@@ -262,6 +266,23 @@ constexpr uint32_t dma_get_DME_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_DMEIF3_7
 										 : 0x00000000;
 }
+
+inline constexpr uint32_t DMA1StreamBase[8] = {DMA1_Stream0_BASE,
+											   DMA1_Stream1_BASE,
+											   DMA1_Stream2_BASE,
+											   DMA1_Stream3_BASE,
+											   DMA1_Stream4_BASE,
+											   DMA1_Stream5_BASE,
+											   DMA1_Stream6_BASE,
+											   DMA1_Stream7_BASE};
+inline constexpr uint32_t DMA2StreamBase[8] = {DMA2_Stream0_BASE,
+											   DMA2_Stream1_BASE,
+											   DMA2_Stream2_BASE,
+											   DMA2_Stream3_BASE,
+											   DMA2_Stream4_BASE,
+											   DMA2_Stream5_BASE,
+											   DMA2_Stream6_BASE,
+											   DMA2_Stream7_BASE};
 
 #elif defined(STM32F030x6)
 

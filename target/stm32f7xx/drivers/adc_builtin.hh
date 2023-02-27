@@ -1,11 +1,12 @@
 #pragma once
-#include "adc_builtin_conf.hh"
-#include "clocks.hh"
-#include "dma_transfer.hh"
-#include "interrupt.hh"
-#include "interrupt_control.hh"
-#include "pin.hh"
-#include "stm32xx.h"
+#include "drivers/adc_builtin_conf.hh"
+#include "drivers/adc_common_builtin.hh"
+#include "drivers/clocks.hh"
+#include "drivers/dma_transfer.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/interrupt_control.hh"
+#include "drivers/pin.hh"
+#include "drivers/stm32xx.h"
 #include <array>
 
 namespace mdrivlib
@@ -50,7 +51,7 @@ public:
 
 			ADC_ChannelConfTypeDef adc_chan_conf = {
 				.Channel = static_cast<uint32_t>(chan.adc_chan_num),
-				.Rank = chan.rank,
+				.Rank = chan.rank + 1,
 				.SamplingTime = chan.sampling_time,
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
@@ -59,18 +60,35 @@ public:
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+		// Must do this as fix for HAL, which unconditionally enables HT interrupt
+		if constexpr (!DmaConf::half_transfer_interrupt_enable)
+			dma.disable_ht();
+	}
 
-		uint32_t reg = hadc.Instance->CR1;
-		reg &= ~ADC_CR1_EOCIE;
-		hadc.Instance->CR1 = reg;
+	ValueT get_val(unsigned chan) {
+		return _dma_buffer[chan];
+	}
+
+	// FIXME: Common ADC IRQ gets called constantly
+	// void register_callback(auto &adc_common, Callback &&callback) {
+	// 	adc_common.register_callback(ConfT::adc_periph_num, std::move(callback));
+	// 	__HAL_ADC_DISABLE(&hadc);
+	// 	__HAL_ADC_ENABLE_IT(&hadc, ADC_IT_EOC);
+	// 	__HAL_ADC_ENABLE(&hadc);
+	// }
+
+	void register_callback(auto callback) {
+		dma.register_callback(std::move(callback));
 	}
 
 	template<AdcPeriphNum p>
 	static constexpr ADC_TypeDef *get_ADC_base() {
 		if constexpr (p == AdcPeriphNum::_1)
 			return ADC1;
-		else
+		else if (p == AdcPeriphNum::_2)
 			return ADC2;
+		else
+			return ADC3;
 	}
 
 	ADC_HandleTypeDef hadc;

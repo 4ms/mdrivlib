@@ -1,22 +1,17 @@
 #pragma once
-#include "dma_config_struct.hh"
-// #include "dma_registers.hh"
-#include "interrupt.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/dma_config_struct.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/rcc.hh"
+#include "drivers/stm32xx.h"
 
-// Todo: Finish converting to using CMSIS instead of STM32-HAL
 namespace mdrivlib
 {
-template<typename ConfT>
+template<DMAPeriphConfC ConfT>
 struct DMATransfer {
-	// using DMAX = DMA_<ConfT::DMAx, ConfT::StreamNum>;
-
 	uint32_t _src_addr;
 	uint32_t _dst_addr;
 	uint32_t _transfer_size;
 
-	DMA_TypeDef *dmax;
 	DMA_Stream_TypeDef *stream;
 	volatile uint32_t *dma_ifcr_reg;
 	volatile uint32_t *dma_isr_reg;
@@ -30,57 +25,11 @@ struct DMATransfer {
 	DMATransfer() {
 		if constexpr (ConfT::DMAx == 1) {
 			RCC_Enable::DMA1_::set();
-			if constexpr (ConfT::StreamNum == 0) {
-				stream = DMA1_Stream0;
-			}
-			if constexpr (ConfT::StreamNum == 1) {
-				stream = DMA1_Stream1;
-			}
-			if constexpr (ConfT::StreamNum == 2) {
-				stream = DMA1_Stream2;
-			}
-			if constexpr (ConfT::StreamNum == 3) {
-				stream = DMA1_Stream3;
-			}
-			if constexpr (ConfT::StreamNum == 4) {
-				stream = DMA1_Stream4;
-			}
-			if constexpr (ConfT::StreamNum == 5) {
-				stream = DMA1_Stream5;
-			}
-			if constexpr (ConfT::StreamNum == 6) {
-				stream = DMA1_Stream6;
-			}
-			if constexpr (ConfT::StreamNum == 7) {
-				stream = DMA1_Stream7;
-			}
+			stream = reinterpret_cast<DMA_Stream_TypeDef *>(DMA1StreamBase[ConfT::StreamNum]);
 		}
 		if constexpr (ConfT::DMAx == 2) {
 			RCC_Enable::DMA2_::set();
-			if constexpr (ConfT::StreamNum == 0) {
-				stream = DMA2_Stream0;
-			}
-			if constexpr (ConfT::StreamNum == 1) {
-				stream = DMA2_Stream1;
-			}
-			if constexpr (ConfT::StreamNum == 2) {
-				stream = DMA2_Stream2;
-			}
-			if constexpr (ConfT::StreamNum == 3) {
-				stream = DMA2_Stream3;
-			}
-			if constexpr (ConfT::StreamNum == 4) {
-				stream = DMA2_Stream4;
-			}
-			if constexpr (ConfT::StreamNum == 5) {
-				stream = DMA2_Stream5;
-			}
-			if constexpr (ConfT::StreamNum == 6) {
-				stream = DMA2_Stream6;
-			}
-			if constexpr (ConfT::StreamNum == 7) {
-				stream = DMA2_Stream7;
-			}
+			stream = reinterpret_cast<DMA_Stream_TypeDef *>(DMA2StreamBase[ConfT::StreamNum]);
 		}
 
 		dma_tc_flag_index = dma_get_TC_flag_index(stream);
@@ -94,7 +43,7 @@ struct DMATransfer {
 
 	void init() {
 		hdma.Instance = stream;
-
+		hdma.Init.Channel = ConfT::RequestNum;
 		hdma.Init.Direction = ConfT::dir == DefaultDMAConf::Mem2Periph ? DMA_MEMORY_TO_PERIPH
 							: ConfT::dir == DefaultDMAConf::Periph2Mem ? DMA_PERIPH_TO_MEMORY
 																	   : DMA_MEMORY_TO_MEMORY;
@@ -120,7 +69,21 @@ struct DMATransfer {
 		HAL_DMA_Init(&hdma);
 	}
 
+	void disable_ht() {
+		__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_HT);
+	}
+
 	void register_callback(auto cb) {
+		if constexpr (ConfT::half_transfer_interrupt_enable)
+			__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_HT);
+		else
+			__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_HT);
+		*dma_ifcr_reg = dma_ht_flag_index;
+		__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TC);
+		__HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TE);
+
+		__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_FE);
+		__HAL_DMA_DISABLE_IT(&hdma, DMA_IT_DME);
 		InterruptControl::disable_irq(ConfT::IRQn);
 		InterruptManager::register_and_start_isr(ConfT::IRQn, ConfT::pri, ConfT::subpri, [callback = cb, this]() {
 			if (*dma_isr_reg & dma_tc_flag_index) {
@@ -130,12 +93,14 @@ struct DMATransfer {
 				else
 					callback();
 			}
+
 			if constexpr (ConfT::half_transfer_interrupt_enable) {
 				if (*dma_isr_reg & dma_ht_flag_index) {
 					*dma_ifcr_reg = dma_ht_flag_index;
 					callback(0);
 				}
 			}
+
 			if (*dma_isr_reg & dma_te_flag_index) {
 				*dma_ifcr_reg = dma_te_flag_index;
 				//TODO: handle Transfer Error here

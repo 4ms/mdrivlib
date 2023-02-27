@@ -1,5 +1,5 @@
 /*
- * CodecWM8731.c
+ * CodecPCM3168.cc
  *
  * Author: Dan Green (danngreen1@gmail.com)
  *
@@ -27,53 +27,53 @@
  */
 
 #pragma once
-
-#include "drivers/codec.hh"
-#include "drivers/i2c.hh"
-#include <cstdint>
+#include "codec.hh"
+#include "i2c.hh"
 
 namespace mdrivlib
 {
 
-class CodecWM8731 : public CodecBase {
+class CodecPCM3060 : public CodecBase {
 public:
 	enum Error {
 		CODEC_NO_ERR = 0,
 		CODEC_I2C_ERR,
 		I2C_INIT_ERR,
-		I2S_CLK_INIT_ERR,
-		I2STX_INIT_ERR,
-		I2SRX_INIT_ERR,
-		I2STX_DMA_INIT_ERR,
-		I2SRX_DMA_INIT_ERR,
-		I2STX_XMIT_DMA_ERR,
-		I2SRX_XMIT_DMA_ERR,
-		SAI_DMA_IT_FE,
-		SAI_DMA_IT_TE,
-		SAI_DMA_IT_DME,
-		INVALID_PARAM
+		I2S_INIT_ERR,
 	};
 
-	CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef);
+	CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef);
 
 	Error init();
-	void start();
 	uint32_t get_samplerate();
-
-	Error init_at_samplerate(uint32_t sample_rate);
-	Error power_down();
+	void start();
 
 private:
 	I2CPeriph &i2c_;
 	uint32_t samplerate_;
+	Pin reset_pin_;
 
-	Error _write_register(uint8_t RegisterAddr, uint16_t RegisterValue);
+	Error _write_register(uint8_t RegisterAddr, uint8_t RegisterValue);
 	Error _write_all_registers(uint32_t sample_rate);
-	Error _reset();
-	uint16_t _calc_samplerate(uint32_t sample_rate);
 
-	const uint8_t I2C_address; // I2C_BASE_ADDRESS = 0b10000000;
-	const static inline auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
+	const uint8_t I2C_address;
+
+	// Returns true on success
+	template<typename Reg>
+	bool write(Reg data) {
+		return i2c_.write_reg(I2C_address, data) == mdrivlib::I2CPeriph::I2C_NO_ERR;
+	}
+
+	// Returns 0 if failed
+	template<typename Reg>
+	Reg read() {
+		auto reg = i2c_.read_reg<Reg>(I2C_address);
+		return reg.value_or(Reg::make(0));
+	}
+
+	template<typename Reg>
+	std::optional<Reg> try_read() {
+		return i2c_.read_reg<Reg>(I2C_address);
+	}
 };
-
 } // namespace mdrivlib

@@ -1,5 +1,6 @@
 #pragma once
 #include "adc_builtin_driver.hh"
+
 namespace mdrivlib
 {
 template<AdcPeriphNum p, AdcChanNum c, typename FILTER>
