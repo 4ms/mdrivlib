@@ -3,6 +3,7 @@
 #include "drivers/sai_config_struct.hh"
 #include "drivers/sai_tdm.hh"
 #include <array>
+#include <span>
 
 namespace mdrivlib
 {
@@ -13,6 +14,26 @@ class CodecBase {
 public:
 	CodecBase(const SaiConfig &sai_def)
 		: sai_{sai_def} {
+	}
+
+	template<typename T>
+	void set_tx_buffer_start(std::span<T> tx_buf) {
+		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
+		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), tx_buf.size_bytes() / BytesPerDMAXfer);
+	}
+
+	template<typename T>
+	void set_rx_buffer_start(std::span<T> buf) {
+		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
+		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(buf.data()), buf.size_bytes() / BytesPerDMAXfer);
+	}
+
+	void set_tx_buffer_start(auto &buf) {
+		set_tx_buffer_start(std::span{buf, sizeof(buf)});
+	}
+
+	void set_rx_buffer_start(auto &buf) {
+		set_rx_buffer_start(std::span{buf, sizeof(buf)});
 	}
 
 	template<typename T, size_t NumFramesInBuffer>
