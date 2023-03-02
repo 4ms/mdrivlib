@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <variant>
 
 #include "drivers/bus_register.hh"
@@ -286,5 +287,55 @@ using AnyRegister = std::variant<SystemControl,
 								 AdcRightLevel,
 								 AdcControl1,
 								 AdcControl2>;
+
+// Example register configurations:
+
+// I2S slave, 24bit, HPF enabled (AC)
+constexpr inline std::array<AnyRegister, 8> default_setup_i2s_24bit_hpf = {
+	DacControl1{.Format = DacControl1::Formats::I2S_24bit,
+				.MSInterface = DacControl1::Interfaces::Slave,
+				.ClockSel = DacControl1::ClockSels::SelectPinGroups2},
+
+	AdcControl1{.Format = AdcControl1::Formats::I2S_24bit,
+				.MSInterface = AdcControl1::Interfaces::Slave,
+				.ClockSel = AdcControl1::ClockSels::SelectPinGroups1},
+
+	SystemControl{.DACSingleEnded = 0, .DACPowerSave = 0, .ADCPowerSave = 0, .SystemReset = 1, .ModeRegisterReset = 1},
+
+	DacLeftLevel{.atten = DacLeftLevel::AttenAmt::_0dB},
+	DacRightLevel{.atten = DacRightLevel::AttenAmt::_0dB},
+	AdcLeftLevel{.atten = AdcLeftLevel::AttenAmt::_0dB},
+	AdcRightLevel{.atten = AdcRightLevel::AttenAmt::_0dB},
+
+	AdcControl2{.SoftMuteEnableLeft = 0,
+				.SoftMuteEnableRight = 0,
+				.InvertPhase = 0,
+				.HPFBypass = 0,
+				.ZeroCrossDetectDisable = 0},
+};
+
+// I2S slave, 24bit, HPF disabled (DC)
+constexpr inline std::array<AnyRegister, 8> default_setup_i2s_24bit_dc = {
+	DacControl1{.Format = DacControl1::Formats::I2S_24bit,
+				.MSInterface = DacControl1::Interfaces::Slave,
+				.ClockSel = DacControl1::ClockSels::SelectPinGroups2},
+
+	AdcControl1{.Format = AdcControl1::Formats::I2S_24bit,
+				.MSInterface = AdcControl1::Interfaces::Slave,
+				.ClockSel = AdcControl1::ClockSels::SelectPinGroups1},
+
+	SystemControl{.DACSingleEnded = 0, .DACPowerSave = 0, .ADCPowerSave = 0, .SystemReset = 1, .ModeRegisterReset = 1},
+
+	DacLeftLevel{.atten = DacLeftLevel::AttenAmt::_0dB},
+	DacRightLevel{.atten = DacRightLevel::AttenAmt::_0dB},
+	AdcLeftLevel{.atten = AdcLeftLevel::AttenAmt::_0dB},
+	AdcRightLevel{.atten = AdcRightLevel::AttenAmt::_0dB},
+
+	AdcControl2{.SoftMuteEnableLeft = 0,
+				.SoftMuteEnableRight = 0,
+				.InvertPhase = 0,
+				.HPFBypass = 1,
+				.ZeroCrossDetectDisable = 0},
+};
 
 } // namespace mdrivlib::CodecPCM3060Register
