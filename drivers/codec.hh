@@ -28,26 +28,22 @@ public:
 		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(buf.data()), buf.size() / BytesPerDMAXfer);
 	}
 
+	// Take any type which decays to an address (C-style array)
 	void set_tx_buffer_start(auto &buf) {
 		set_tx_buffer_start(std::span{buf, sizeof(buf)});
 	}
-
 	void set_rx_buffer_start(auto &buf) {
 		set_rx_buffer_start(std::span{buf, sizeof(buf)});
 	}
 
+	// Take a std::array
 	template<typename T, size_t NumFramesInBuffer>
-	[[deprecated]] void set_tx_buffer_start(std::array<T, NumFramesInBuffer> &tx_buf) {
-		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
-		constexpr uint32_t block_size = sizeof(tx_buf) / BytesPerDMAXfer;
-		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), block_size);
+	void set_tx_buffer_start(std::array<T, NumFramesInBuffer> &buf) {
+		set_tx_buffer_start(std::span{buf.data(), sizeof(buf)});
 	}
-
-	template<typename T, size_t BUFSIZE>
-	[[deprecated]] void set_rx_buffer_start(std::array<T, BUFSIZE> &rx_buf) {
-		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
-		constexpr uint32_t block_size = sizeof(rx_buf) / BytesPerDMAXfer;
-		sai_.set_rx_buffer_start(reinterpret_cast<uint8_t *>(rx_buf.data()), block_size);
+	template<typename T, size_t NumFramesInBuffer>
+	void set_rx_buffer_start(std::array<T, NumFramesInBuffer> &buf) {
+		set_rx_buffer_start(std::span{buf.data(), sizeof(buf)});
 	}
 
 	void set_callbacks(CallbackT &&tx_complete_cb, CallbackT &&tx_half_complete_cb) {
