@@ -52,7 +52,7 @@ CodecPCM3060::CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef)
 	reset_pin_.high();
 }
 
-CodecPCM3060::Error CodecPCM3060::init() {
+CodecPCM3060::Error CodecPCM3060::init(const std::span<const AnyRegister> init_regs) {
 	auto err = sai_.init();
 	if (err != SaiTdmPeriph::SAI_NO_ERR)
 		return CodecPCM3060::I2S_INIT_ERR;
@@ -60,7 +60,7 @@ CodecPCM3060::Error CodecPCM3060::init() {
 	// reset_pin_.high();
 
 	HAL_Delay(1); // 3846 SYSCLKI cycles = 0.313ms
-	return _write_all_registers(samplerate_);
+	return _write_all_registers(init_regs, samplerate_);
 }
 
 uint32_t CodecPCM3060::get_samplerate() {
@@ -71,7 +71,8 @@ void CodecPCM3060::start() {
 	sai_.start();
 }
 
-CodecPCM3060::Error CodecPCM3060::_write_all_registers(uint32_t sample_rate) {
+CodecPCM3060::Error CodecPCM3060::_write_all_registers(const std::span<const AnyRegister> init_regs,
+													   uint32_t sample_rate) {
 
 	auto sysreg_read = try_read<SystemControl>();
 	if (!sysreg_read.has_value())
@@ -93,24 +94,10 @@ CodecPCM3060::Error CodecPCM3060::_write_all_registers(uint32_t sample_rate) {
 
 	HAL_Delay(10);
 
-	// I2S Format
-	DacControl1 dacreg{.Format = DacControl1::Formats::I2S_24bit,
-					   .MSInterface = DacControl1::Interfaces::Slave,
-					   .ClockSel = DacControl1::ClockSels::SelectPinGroups2};
-	if (!write(dacreg))
-		return Error::I2C_INIT_ERR;
-
-	AdcControl1 adcreg{.Format = AdcControl1::Formats::I2S_24bit,
-					   .MSInterface = AdcControl1::Interfaces::Slave,
-					   .ClockSel = AdcControl1::ClockSels::SelectPinGroups1};
-	if (!write(adcreg))
-		return Error::I2C_INIT_ERR;
-
-	// Turn on ADC and DAC (disable power-save)
-	sysreg.ADCPowerSave = 0;
-	sysreg.DACPowerSave = 0;
-	if (!write(sysreg))
-		return Error::I2C_INIT_ERR;
+	for (auto &reg : init_regs) {
+		if (!std::visit([this](auto &&arg) { return write(arg); }, reg))
+			return Error::I2C_INIT_ERR;
+	}
 
 	return CODEC_NO_ERR;
 }

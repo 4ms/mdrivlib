@@ -28,7 +28,9 @@
 
 #pragma once
 #include "codec.hh"
+#include "codec_PCM3060_registers.hh"
 #include "i2c.hh"
+#include <span>
 
 namespace mdrivlib
 {
@@ -44,7 +46,7 @@ public:
 
 	CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef);
 
-	Error init();
+	Error init(const std::span<const CodecPCM3060Register::AnyRegister> init_regs);
 	uint32_t get_samplerate();
 	void start();
 
@@ -53,8 +55,8 @@ private:
 	uint32_t samplerate_;
 	Pin reset_pin_;
 
-	Error _write_register(uint8_t RegisterAddr, uint8_t RegisterValue);
-	Error _write_all_registers(uint32_t sample_rate);
+	Error _write_all_registers(const std::span<const CodecPCM3060Register::AnyRegister> init_regs,
+							   uint32_t sample_rate);
 
 	const uint8_t I2C_address;
 

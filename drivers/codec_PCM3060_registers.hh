@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <variant>
 
 #include "drivers/bus_register.hh"
 
@@ -33,6 +35,48 @@ struct SystemControl : ReadWrite {
 			.SystemReset = Bits<6>(raw),
 			.ModeRegisterReset = Bits<7>(raw),
 		};
+	}
+};
+
+struct DacLeftLevel : ReadWrite {
+	enum : uint8_t { Address = 65 };
+
+	uint8_t atten;
+	enum AttenAmt {
+		_0dB = 255,
+		_minus1dB = 253,
+		_minus2dB = 251,
+		//... etc
+		_minus100dB = 55,
+		_Mute = 54,
+	};
+
+	constexpr operator uint8_t() {
+		return atten;
+	}
+	constexpr static DacLeftLevel make(uint8_t raw) {
+		return {.atten = raw};
+	}
+};
+
+struct DacRightLevel : ReadWrite {
+	enum : uint8_t { Address = 66 };
+
+	uint8_t atten;
+	enum AttenAmt {
+		_0dB = 255,
+		_minus1dB = 253,
+		_minus2dB = 251,
+		//... etc
+		_minus100dB = 55,
+		_Mute = 54,
+	};
+
+	constexpr operator uint8_t() {
+		return atten;
+	}
+	constexpr static DacRightLevel make(uint8_t raw) {
+		return {.atten = raw};
 	}
 };
 
@@ -78,6 +122,76 @@ struct DacControl1 : ReadWrite {
 	}
 };
 
+struct DacControl2 : ReadWrite {
+	enum : uint8_t { Address = 68 };
+	//TODO
+	uint8_t raw;
+
+	constexpr operator uint8_t() {
+		return raw;
+	}
+	constexpr static DacControl2 make(uint8_t raw) {
+		return {.raw = raw};
+	}
+};
+
+struct DacControl3 : ReadWrite {
+	enum : uint8_t { Address = 69 };
+	//TODO
+	uint8_t raw;
+
+	constexpr operator uint8_t() {
+		return raw;
+	}
+	constexpr static DacControl3 make(uint8_t raw) {
+		return {.raw = raw};
+	}
+};
+
+struct AdcLeftLevel : ReadWrite {
+	enum : uint8_t { Address = 70 };
+
+	uint8_t atten;
+	enum AttenAmt {
+		_plus20dB = 255,
+		_plus19dB = 253,
+
+		_0dB = 215,
+
+		_minus100dB = 15,
+		_Mute = 14,
+	};
+
+	constexpr operator uint8_t() {
+		return atten;
+	}
+	constexpr static AdcLeftLevel make(uint8_t raw) {
+		return {.atten = raw};
+	}
+};
+
+struct AdcRightLevel : ReadWrite {
+	enum : uint8_t { Address = 71 };
+
+	uint8_t atten;
+	enum AttenAmt {
+		_plus20dB = 255,
+		_plus19dB = 253,
+
+		_0dB = 215,
+
+		_minus100dB = 15,
+		_Mute = 14,
+	};
+
+	constexpr operator uint8_t() {
+		return atten;
+	}
+	constexpr static AdcRightLevel make(uint8_t raw) {
+		return {.atten = raw};
+	}
+};
+
 struct AdcControl1 : ReadWrite {
 	enum : uint8_t { Address = 72 };
 
@@ -116,6 +230,112 @@ struct AdcControl1 : ReadWrite {
 			.ClockSel = Bits<7>(raw),
 		};
 	}
+};
+
+struct AdcControl2 : ReadWrite {
+	enum : uint8_t { Address = 73 };
+
+	uint8_t SoftMuteEnableLeft : 1;
+	uint8_t SoftMuteEnableRight : 1;
+	uint8_t InvertPhase : 1;
+	uint8_t HPFBypass : 1;
+	uint8_t ZeroCrossDetectDisable : 1;
+	uint8_t : 3;
+
+	enum Formats {
+		I2S_24bit = 0b00,
+		LeftJust_24bit = 0b01,
+		RightJust_24bit = 0b10,
+		RightJust_16bit = 0b11,
+	};
+
+	enum Interfaces {
+		Slave = 0b000,
+		Master768fs = 0b001,
+		Master512fs = 0b010,
+		Master384fs = 0b011,
+		Master256fs = 0b100,
+	};
+
+	enum ClockSels {
+		SelectPinGroups1 = 0,
+		SelectPinGroups2 = 1,
+	};
+
+	constexpr operator uint8_t() {
+		return (SoftMuteEnableLeft << 0) | (SoftMuteEnableLeft << 1) | (InvertPhase << 2) | (HPFBypass << 3) |
+			   (ZeroCrossDetectDisable << 4);
+	}
+	constexpr static AdcControl2 make(uint8_t raw) {
+		return {
+			.SoftMuteEnableLeft = Bits<0>(raw),
+			.SoftMuteEnableRight = Bits<1>(raw),
+			.InvertPhase = Bits<2>(raw),
+			.HPFBypass = Bits<3>(raw),
+			.ZeroCrossDetectDisable = Bits<4>(raw),
+		};
+	}
+};
+
+using AnyRegister = std::variant<SystemControl,
+								 DacLeftLevel,
+								 DacRightLevel,
+								 DacControl1,
+								 DacControl2,
+								 DacControl3,
+								 AdcLeftLevel,
+								 AdcRightLevel,
+								 AdcControl1,
+								 AdcControl2>;
+
+// Example register configurations:
+
+// I2S slave, 24bit, HPF enabled (AC)
+constexpr inline std::array<AnyRegister, 8> default_setup_i2s_24bit_hpf = {
+	DacControl1{.Format = DacControl1::Formats::I2S_24bit,
+				.MSInterface = DacControl1::Interfaces::Slave,
+				.ClockSel = DacControl1::ClockSels::SelectPinGroups2},
+
+	AdcControl1{.Format = AdcControl1::Formats::I2S_24bit,
+				.MSInterface = AdcControl1::Interfaces::Slave,
+				.ClockSel = AdcControl1::ClockSels::SelectPinGroups1},
+
+	SystemControl{.DACSingleEnded = 0, .DACPowerSave = 0, .ADCPowerSave = 0, .SystemReset = 1, .ModeRegisterReset = 1},
+
+	DacLeftLevel{.atten = DacLeftLevel::AttenAmt::_0dB},
+	DacRightLevel{.atten = DacRightLevel::AttenAmt::_0dB},
+	AdcLeftLevel{.atten = AdcLeftLevel::AttenAmt::_0dB},
+	AdcRightLevel{.atten = AdcRightLevel::AttenAmt::_0dB},
+
+	AdcControl2{.SoftMuteEnableLeft = 0,
+				.SoftMuteEnableRight = 0,
+				.InvertPhase = 0,
+				.HPFBypass = 0,
+				.ZeroCrossDetectDisable = 0},
+};
+
+// I2S slave, 24bit, HPF disabled (DC)
+constexpr inline std::array<AnyRegister, 8> default_setup_i2s_24bit_dc = {
+	DacControl1{.Format = DacControl1::Formats::I2S_24bit,
+				.MSInterface = DacControl1::Interfaces::Slave,
+				.ClockSel = DacControl1::ClockSels::SelectPinGroups2},
+
+	AdcControl1{.Format = AdcControl1::Formats::I2S_24bit,
+				.MSInterface = AdcControl1::Interfaces::Slave,
+				.ClockSel = AdcControl1::ClockSels::SelectPinGroups1},
+
+	SystemControl{.DACSingleEnded = 0, .DACPowerSave = 0, .ADCPowerSave = 0, .SystemReset = 1, .ModeRegisterReset = 1},
+
+	DacLeftLevel{.atten = DacLeftLevel::AttenAmt::_0dB},
+	DacRightLevel{.atten = DacRightLevel::AttenAmt::_0dB},
+	AdcLeftLevel{.atten = AdcLeftLevel::AttenAmt::_0dB},
+	AdcRightLevel{.atten = AdcRightLevel::AttenAmt::_0dB},
+
+	AdcControl2{.SoftMuteEnableLeft = 0,
+				.SoftMuteEnableRight = 0,
+				.InvertPhase = 0,
+				.HPFBypass = 1,
+				.ZeroCrossDetectDisable = 0},
 };
 
 } // namespace mdrivlib::CodecPCM3060Register
