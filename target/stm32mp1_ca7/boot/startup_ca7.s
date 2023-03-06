@@ -58,21 +58,21 @@ Reset_Handler:
 	orr r0, r0, #(1 << 18)
 	str r0, [r4]
 
-	ldr r4, =GPIOG_BSRR								// Output two pulses on pin PG9, then hold high during stack init
-	mov r0, #(1 << 9)
-	str r0, [r4] 									// Pin high
-	mov r0, #(1 << 25)
-	str r0, [r4] 									// Pin low
-	mov r0, #(1 << 9)
-	str r0, [r4] 									// Pin high
-	mov r0, #(1 << 25)
-	str r0, [r4] 									// Pin low
-	mov r0, #(1 << 9)
-	str r0, [r4] 									// Pin high
+	; ldr r4, =GPIOG_BSRR								// Output two pulses on pin PG9, then hold high during stack init
+	; mov r0, #(1 << 9)
+	; str r0, [r4] 									// Pin high
+	; mov r0, #(1 << 25)
+	; str r0, [r4] 									// Pin low
+	; mov r0, #(1 << 9)
+	; str r0, [r4] 									// Pin high
+	; mov r0, #(1 << 25)
+	; str r0, [r4] 									// Pin low
+	; mov r0, #(1 << 9)
+	; str r0, [r4] 									// Pin high
 
-	ldr r4, =UART4_TDR 								// UART: print 'A'
-	mov r0, #65
-	str r0, [r4]
+	; ldr r4, =UART4_TDR 								// UART: print 'A'
+	; mov r0, #65
+	; str r0, [r4]
     												// FIQ stack
     msr cpsr_c, MODE_FIQ
     ldr r1, =_fiq_stack_start
@@ -140,28 +140,28 @@ bss_loop:
     strlt r0, [r1], #4
     blt bss_loop
 
-	ldr r4, =UART4_TDR 								// UART: print 'B'
-	mov r5, #66
-	str r5, [r4]
+	; ldr r4, =UART4_TDR 								// UART: print 'B'
+	; mov r5, #66
+	; str r5, [r4]
 
-	ldr r4, =GPIOG_BSRR								// Send PG9 low for system init
-	mov r0, #(1 << 25)
-	str r0, [r4]
+	; ldr r4, =GPIOG_BSRR								// Send PG9 low for system init
+	; mov r0, #(1 << 25)
+	; str r0, [r4]
 
 	bl SystemInit 									// System and libc/cpp init
     bl __libc_init_array
 
-	ldr r4, =UART4_TDR 								// UART: print 'C'
-	mov r5, #67
-	str r5, [r4]
+	; ldr r4, =UART4_TDR 								// UART: print 'C'
+	; mov r5, #67
+	; str r5, [r4]
 
 	CPSIE  i 										// enable irq interrupts
 
-	ldr r4, =GPIOG_BSRR								// Pulse PG9 pin before main
-	mov r0, #(1 << 9)
-	str r0, [r4]
-	mov r0, #(1 << 25)
-	str r0, [r4]
+	; ldr r4, =GPIOG_BSRR								// Pulse PG9 pin before main
+	; mov r0, #(1 << 9)
+	; str r0, [r4]
+	; mov r0, #(1 << 25)
+	; str r0, [r4]
 
     bl main
     b Abort_Exception
