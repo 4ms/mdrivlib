@@ -37,6 +37,8 @@ struct SecondaryCoreController {
 	static void reset() {
 		// Reset MPU1
 		RCC->MP_GRSTCSETR = RCC_MP_GRSTCSETR_MPUP1RST;
+		while (RCC->MP_GRSTCSETR & RCC_MP_GRSTCSETR_MPUP1RST)
+			;
 		__DSB();
 		__ISB();
 	}
