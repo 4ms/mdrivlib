@@ -11,6 +11,12 @@ namespace mdrivlib
 template<typename RLedT, typename GLedT, typename BLedT, unsigned UpdateRateHz = 1000>
 struct MixedRgbLed {
 
+	MixedRgbLed()
+		: r_{}
+		, g_{}
+		, b_{} {
+	}
+
 	MixedRgbLed(RLedT r_LED, GLedT g_LED, BLedT b_LED)
 		: r_(r_LED)
 		, g_(g_LED)
@@ -52,7 +58,7 @@ struct MixedRgbLed {
 		fader_.set_phase(0);
 	}
 
-	constexpr void set_color(Color const &col) const {
+	void set_color(Color const &col) const {
 		r_.set(col.red());
 		g_.set(col.green());
 		b_.set(col.blue());
