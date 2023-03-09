@@ -15,6 +15,7 @@ public:
 	Uart()
 		: uart{reinterpret_cast<USART_TypeDef *>(BASE_ADDR)} {
 	}
+
 	void init() {
 		UartTarget::uart_init(BASE_ADDR);
 	}
