@@ -49,6 +49,7 @@ public:
 	Error init(const std::span<const CodecPCM3060Register::AnyRegister> init_regs);
 	uint32_t get_samplerate();
 	void start();
+	void stop();
 
 private:
 	I2CPeriph &i2c_;
