@@ -71,6 +71,10 @@ void CodecPCM3060::start() {
 	sai_.start();
 }
 
+void CodecPCM3060::stop() {
+	sai_.stop();
+}
+
 CodecPCM3060::Error CodecPCM3060::_write_all_registers(const std::span<const AnyRegister> init_regs,
 													   uint32_t sample_rate) {
 
