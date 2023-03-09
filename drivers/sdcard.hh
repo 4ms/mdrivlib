@@ -1,7 +1,8 @@
 #pragma once
-#include "drivers/cache.hh"
+// #include "drivers/cache.hh"
 #include "drivers/rcc.hh"
 #include "drivers/sdcard_conf.hh"
+#include "drivers/sdcard_target.hh"
 #include "stm32xx.h"
 #include <span>
 
@@ -24,11 +25,12 @@ struct SDCard {
 	static constexpr uint32_t BlockSize = 512;
 
 	SDCard() {
-		RCC->SDMMC12CKSELR = RCC_SDMMC12CLKSOURCE_HSI; //3 = HSI = 64MHz
-		constexpr uint32_t base_clock = 64'000'000;
-		constexpr uint32_t clock_div = (base_clock / 2) / ConfT::speed_hz;
-		//clock_div: 16MHz => 2, 32MHz => 1
+		constexpr uint32_t base_clock = target::setup_sdmmc_base_clk<ConfT>();
+		constexpr uint32_t clock_div = base_clock / ConfT::speed_hz;
+		//MP1: source clk = 64M, base_clock = 32M, clock_div=2 => 16MHz, clock_div=1 => 32MHz
+		//F7: source_clk = 48M, base_clock = 24M: clock_div=2 => 12MHz, clock_div=1 => 24MHz
 
+		//FIXME: handle other SDMMC#
 		RCC_Enable::SDMMC1_::set();
 
 		hsd.Instance = SDMMC1;
