@@ -1,3 +1,4 @@
+#pragma once
 #include "drivers/pin.hh"
 #include "drivers/rcc.hh"
 #include "drivers/stm32xx.h"
