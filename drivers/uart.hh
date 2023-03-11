@@ -7,28 +7,28 @@
 namespace mdrivlib
 {
 
-template<uint32_t BASE_ADDR>
+template<UartConf Conf>
 class Uart {
 	USART_TypeDef *const uart;
 
 public:
 	Uart()
-		: uart{reinterpret_cast<USART_TypeDef *>(BASE_ADDR)} {
+		: uart{reinterpret_cast<USART_TypeDef *>(Conf.base_addr)} {
 	}
 
 	void init() {
-		UartTarget::uart_init(BASE_ADDR);
+		UartTarget<Conf>::uart_init();
 	}
 
 	void putchar(char c) {
 		uart->TDR = c;
-		UartTarget::delay_for_write(uart);
+		UartTarget<Conf>::delay_for_write(uart);
 	}
 
 	void write(const char *str) {
 		while (*str) {
 			uart->TDR = *str++;
-			UartTarget::delay_for_write(uart);
+			UartTarget<Conf>::delay_for_write(uart);
 		}
 	}
 
