@@ -1,10 +1,10 @@
-#include "i2c.hh"
-#include "clocks.hh"
-#include "i2c_target.hh"
-#include "interrupt.hh"
-#include "rcc.hh"
-#include "register_access.hh"
-#include "stm32xx.h"
+#include "drivers/i2c.hh"
+#include "drivers/clocks.hh"
+#include "drivers/i2c_target.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/rcc.hh"
+#include "drivers/register_access.hh"
+#include "drivers/stm32xx.h"
 
 namespace mdrivlib
 {

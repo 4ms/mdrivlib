@@ -1,8 +1,8 @@
 #pragma once
-#include "arch.hh"
-#include "periph.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/arch.hh"
+#include "drivers/periph.hh"
+#include "drivers/rcc.hh"
+#include "drivers/stm32xx.h"
 
 //TODO: get rid of dependency on this:
 #include "adc_periph_nums.hh"
