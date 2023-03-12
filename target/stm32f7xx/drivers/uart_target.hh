@@ -74,6 +74,7 @@ struct UartTarget {
 			hal_h.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 			hal_h.Init.OverSampling = UART_OVERSAMPLING_16;
 			hal_h.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+			hal_h.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 			auto err = HAL_UART_Init(&hal_h);
 			if (err != HAL_OK) {
 				// __BKPT(43);
