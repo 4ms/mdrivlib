@@ -1,6 +1,6 @@
-#include "tim.hh"
-#include "clocks.hh"
-#include "periph.hh"
+#include "drivers/tim.hh"
+#include "drivers/clocks.hh"
+#include "drivers/periph.hh"
 
 namespace mdrivlib
 {

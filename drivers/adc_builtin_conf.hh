@@ -1,8 +1,8 @@
 #pragma once
-#include "adc_periph_nums.hh"
-#include "dma_config_struct.hh"
-#include "pin.hh"
-#include "stm32xx.h"
+#include "drivers/adc_periph_nums.hh"
+#include "drivers/dma_config_struct.hh"
+#include "drivers/pin.hh"
+#include "drivers/stm32xx.h"
 #include <concepts>
 
 //TODO: Less target-specific #defines by not setting the enum members equal to a target-specific value
@@ -170,9 +170,9 @@ struct DefaultAdcPeriphConf {
 
 template<typename T>
 concept AdcPeriphConf = requires(T) {
-							requires std::derived_from<T, DefaultAdcPeriphConf>;
-							requires std::derived_from<typename T::DmaConf, DefaultDMAConf>;
-						};
+	requires std::derived_from<T, DefaultAdcPeriphConf>;
+	requires std::derived_from<typename T::DmaConf, DefaultDMAConf>;
+};
 
 struct AdcChannelConf {
 	PinDef pin;
