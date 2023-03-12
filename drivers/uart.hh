@@ -17,6 +17,10 @@ public:
 	}
 
 	void init() {
+		if constexpr (Conf.mode != UartConf::Mode::RXonly)
+			Pin tx{Conf.TXPin, mdrivlib::PinMode::Alt};
+		if constexpr (Conf.mode != UartConf::Mode::TXonly)
+			Pin rx{Conf.RXPin, mdrivlib::PinMode::Alt};
 		UartTarget<Conf>::uart_init();
 	}
 

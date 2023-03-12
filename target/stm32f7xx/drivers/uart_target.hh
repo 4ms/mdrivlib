@@ -53,7 +53,7 @@ struct UartTarget {
 			hal_h.Init.Parity = Conf.parity == None ? UART_PARITY_NONE
 							  : Conf.parity == Odd	? UART_PARITY_ODD
 													: UART_PARITY_EVEN;
-			hal_h.Init.Mode = Conf.mode == TXRX ? UART_MODE_TX_RX : Conf.mode == TX ? UART_MODE_TX : UART_MODE_RX;
+			hal_h.Init.Mode = Conf.mode == TXRX ? UART_MODE_TX_RX : Conf.mode == TXonly ? UART_MODE_TX : UART_MODE_RX;
 			hal_h.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 			hal_h.Init.OverSampling = UART_OVERSAMPLING_16;
 			hal_h.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
@@ -75,7 +75,9 @@ struct UartTarget {
 			hal_h.Init.Parity = Conf.parity == None ? USART_PARITY_NONE
 							  : Conf.parity == Odd	? USART_PARITY_ODD
 													: USART_PARITY_EVEN;
-			hal_h.Init.Mode = Conf.mode == TXRX ? USART_MODE_TX_RX : Conf.mode == TX ? USART_MODE_TX : USART_MODE_RX;
+			hal_h.Init.Mode = Conf.mode == TXRX	  ? USART_MODE_TX_RX
+							: Conf.mode == TXonly ? USART_MODE_TX
+												  : USART_MODE_RX;
 			hal_h.Init.CLKPolarity = USART_POLARITY_LOW;
 			hal_h.Init.CLKPhase = USART_PHASE_1EDGE;
 			hal_h.Init.CLKLastBit = USART_LASTBIT_DISABLE;

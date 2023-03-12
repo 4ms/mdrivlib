@@ -6,7 +6,7 @@ struct UartConf {
 	uint32_t base_addr;
 	mdrivlib::PinDef TXPin;
 	mdrivlib::PinDef RXPin;
-	enum class Mode { TX, RX, TXRX } mode = Mode::TXRX;
+	enum class Mode { TXonly, RXonly, TXRX } mode = Mode::TXRX;
 	uint32_t baud = 115200;
 	uint32_t wordlen = 8;
 	enum class Parity { None, Odd, Even } parity = Parity::None;
