@@ -24,8 +24,9 @@ struct SDCard {
 	static constexpr uint32_t BlockSize = 512;
 
 	SDCard() {
-		constexpr uint32_t base_clock = target::setup_sdmmc_base_clk<ConfT>();
-		constexpr uint32_t clock_div = base_clock / ConfT::speed_hz;
+		SDMMCTarget<ConfT>::setup_base_clk();
+		uint32_t base_clock = SDMMCTarget<ConfT>::get_base_clk();
+		uint32_t clock_div = base_clock / ConfT::speed_hz;
 		//MP1: source clk = 64M, base_clock = 32M, clock_div=2 => 16MHz, clock_div=1 => 32MHz
 		//F7: source_clk = 48M, base_clock = 24M: clock_div=2 => 12MHz, clock_div=1 => 24MHz
 
