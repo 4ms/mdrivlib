@@ -33,28 +33,6 @@ struct UartTarget {
 		using enum UartConf::Mode;
 
 		if constexpr (is_usart) {
-			UART_HandleTypeDef hal_h;
-			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
-			hal_h.Init.BaudRate = Conf.baud;
-			hal_h.Init.WordLength = Conf.wordlen == 8 ? UART_WORDLENGTH_8B
-								  : Conf.wordlen == 7 ? UART_WORDLENGTH_7B
-													  : UART_WORDLENGTH_9B;
-			hal_h.Init.StopBits = Conf.stopbits == _1	? UART_STOPBITS_1
-								: Conf.stopbits == _0_5 ? UART_STOPBITS_0_5
-								: Conf.stopbits == _1_5 ? UART_STOPBITS_1_5
-														: UART_STOPBITS_2;
-			hal_h.Init.Parity = Conf.parity == None ? UART_PARITY_NONE
-							  : Conf.parity == Odd	? UART_PARITY_ODD
-													: UART_PARITY_EVEN;
-			hal_h.Init.Mode = Conf.mode == TXRX ? UART_MODE_TX_RX : Conf.mode == TXonly ? UART_MODE_TX : UART_MODE_RX;
-			hal_h.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-			hal_h.Init.OverSampling = UART_OVERSAMPLING_16;
-			hal_h.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-			auto err = HAL_UART_Init(&hal_h);
-			if (err != HAL_OK) {
-				// __BKPT(43);
-			}
-		} else {
 			USART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
 			hal_h.Init.BaudRate = Conf.baud;
@@ -75,6 +53,28 @@ struct UartTarget {
 			hal_h.Init.CLKPhase = USART_PHASE_1EDGE;
 			hal_h.Init.CLKLastBit = USART_LASTBIT_DISABLE;
 			auto err = HAL_USART_Init(&hal_h);
+			if (err != HAL_OK) {
+				// __BKPT(43);
+			}
+		} else {
+			UART_HandleTypeDef hal_h;
+			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
+			hal_h.Init.BaudRate = Conf.baud;
+			hal_h.Init.WordLength = Conf.wordlen == 8 ? UART_WORDLENGTH_8B
+								  : Conf.wordlen == 7 ? UART_WORDLENGTH_7B
+													  : UART_WORDLENGTH_9B;
+			hal_h.Init.StopBits = Conf.stopbits == _1	? UART_STOPBITS_1
+								: Conf.stopbits == _0_5 ? UART_STOPBITS_0_5
+								: Conf.stopbits == _1_5 ? UART_STOPBITS_1_5
+														: UART_STOPBITS_2;
+			hal_h.Init.Parity = Conf.parity == None ? UART_PARITY_NONE
+							  : Conf.parity == Odd	? UART_PARITY_ODD
+													: UART_PARITY_EVEN;
+			hal_h.Init.Mode = Conf.mode == TXRX ? UART_MODE_TX_RX : Conf.mode == TXonly ? UART_MODE_TX : UART_MODE_RX;
+			hal_h.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+			hal_h.Init.OverSampling = UART_OVERSAMPLING_16;
+			hal_h.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+			auto err = HAL_UART_Init(&hal_h);
 			if (err != HAL_OK) {
 				// __BKPT(43);
 			}

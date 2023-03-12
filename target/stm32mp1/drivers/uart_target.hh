@@ -33,6 +33,31 @@ struct UartTarget {
 		using enum UartConf::Mode;
 
 		if constexpr (is_usart) {
+			// USART_HandleTypeDef hal_h;
+			// hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
+			// hal_h.Init.BaudRate = Conf.baud;
+			// hal_h.Init.WordLength = Conf.wordlen == 8 ? USART_WORDLENGTH_8B
+			// 					  : Conf.wordlen == 7 ? USART_WORDLENGTH_7B
+			// 										  : USART_WORDLENGTH_9B;
+			// hal_h.Init.StopBits = Conf.stopbits == _1	? USART_STOPBITS_1
+			// 					: Conf.stopbits == _0_5 ? USART_STOPBITS_0_5
+			// 					: Conf.stopbits == _1_5 ? USART_STOPBITS_1_5
+			// 											: USART_STOPBITS_2;
+			// hal_h.Init.Parity = Conf.parity == None ? USART_PARITY_NONE
+			// 				  : Conf.parity == Odd	? USART_PARITY_ODD
+			// 										: USART_PARITY_EVEN;
+			// hal_h.Init.Mode = Conf.mode == TXRX	  ? USART_MODE_TX_RX
+			// 				: Conf.mode == TXonly ? USART_MODE_TX
+			// 									  : USART_MODE_RX;
+			// hal_h.Init.CLKPolarity = USART_POLARITY_LOW;
+			// hal_h.Init.CLKPhase = USART_PHASE_1EDGE;
+			// hal_h.Init.CLKLastBit = USART_LASTBIT_DISABLE;
+			// hal_h.Init.ClockPrescaler = USART_PRESCALER_DIV1;
+			// auto err = HAL_USART_Init(&hal_h);
+			// if (err != HAL_OK) {
+			// 	// __BKPT(43);
+			// }
+		} else {
 			UART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
 			hal_h.Init.BaudRate = Conf.baud;
@@ -58,31 +83,6 @@ struct UartTarget {
 			if (err != HAL_OK) {
 				// __BKPT(43);
 			}
-		} else {
-			// USART_HandleTypeDef hal_h;
-			// hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
-			// hal_h.Init.BaudRate = Conf.baud;
-			// hal_h.Init.WordLength = Conf.wordlen == 8 ? USART_WORDLENGTH_8B
-			// 					  : Conf.wordlen == 7 ? USART_WORDLENGTH_7B
-			// 										  : USART_WORDLENGTH_9B;
-			// hal_h.Init.StopBits = Conf.stopbits == _1	? USART_STOPBITS_1
-			// 					: Conf.stopbits == _0_5 ? USART_STOPBITS_0_5
-			// 					: Conf.stopbits == _1_5 ? USART_STOPBITS_1_5
-			// 											: USART_STOPBITS_2;
-			// hal_h.Init.Parity = Conf.parity == None ? USART_PARITY_NONE
-			// 				  : Conf.parity == Odd	? USART_PARITY_ODD
-			// 										: USART_PARITY_EVEN;
-			// hal_h.Init.Mode = Conf.mode == TXRX	  ? USART_MODE_TX_RX
-			// 				: Conf.mode == TXonly ? USART_MODE_TX
-			// 									  : USART_MODE_RX;
-			// hal_h.Init.CLKPolarity = USART_POLARITY_LOW;
-			// hal_h.Init.CLKPhase = USART_PHASE_1EDGE;
-			// hal_h.Init.CLKLastBit = USART_LASTBIT_DISABLE;
-			// hal_h.Init.ClockPrescaler = USART_PRESCALER_DIV1;
-			// auto err = HAL_USART_Init(&hal_h);
-			// if (err != HAL_OK) {
-			// 	// __BKPT(43);
-			// }
 		}
 	}
 
