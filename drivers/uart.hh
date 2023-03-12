@@ -1,6 +1,7 @@
 #pragma once
 #include "drivers/pin.hh"
 #include "drivers/stm32xx.h"
+#include "drivers/uart_conf.hh"
 #include "drivers/uart_target.hh"
 #include "stm32xx.h"
 

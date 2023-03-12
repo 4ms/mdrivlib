@@ -9,27 +9,20 @@ template<UartConf Conf>
 struct UartTarget {
 
 	static void uart_init() {
-		bool is_usart = false;
-		if constexpr (Conf.base_addr == USART1_BASE) {
+		constexpr bool is_usart = (Conf.base_addr == USART1_BASE || Conf.base_addr == USART2_BASE ||
+								   Conf.base_addr == USART3_BASE || Conf.base_addr == USART6_BASE);
+		if constexpr (Conf.base_addr == USART1_BASE)
 			RCC_Enable::USART1_::set();
-			is_usart = true;
-		}
-		if constexpr (Conf.base_addr == USART2_BASE) {
+		if constexpr (Conf.base_addr == USART2_BASE)
 			RCC_Enable::USART2_::set();
-			is_usart = true;
-		}
-		if constexpr (Conf.base_addr == USART3_BASE) {
+		if constexpr (Conf.base_addr == USART3_BASE)
 			RCC_Enable::USART3_::set();
-			is_usart = true;
-		}
 		if constexpr (Conf.base_addr == UART4_BASE)
 			RCC_Enable::UART4_::set();
 		if constexpr (Conf.base_addr == UART5_BASE)
 			RCC_Enable::UART5_::set();
-		if constexpr (Conf.base_addr == USART6_BASE) {
+		if constexpr (Conf.base_addr == USART6_BASE)
 			RCC_Enable::USART6_::set();
-			is_usart = true;
-		}
 		if constexpr (Conf.base_addr == UART7_BASE)
 			RCC_Enable::UART7_::set();
 		if constexpr (Conf.base_addr == UART8_BASE)
@@ -38,8 +31,8 @@ struct UartTarget {
 		using enum UartConf::StopBits;
 		using enum UartConf::Parity;
 		using enum UartConf::Mode;
-		if (is_usart) {
 
+		if constexpr (is_usart) {
 			UART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
 			hal_h.Init.BaudRate = Conf.baud;
