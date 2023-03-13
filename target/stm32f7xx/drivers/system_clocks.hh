@@ -1,6 +1,9 @@
 #pragma once
 #include "drivers/stm32xx.h"
 
+namespace mdrivlib
+{
+
 struct SystemClocks {
 	SystemClocks() = delete;
 
@@ -35,4 +38,4 @@ struct SystemClocks {
 		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 	}
 };
-}
+} // namespace mdrivlib
