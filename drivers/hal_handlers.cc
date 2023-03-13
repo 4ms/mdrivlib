@@ -1,4 +1,4 @@
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 
 extern void recover_from_task_fault(void);
 
@@ -7,14 +7,12 @@ void SysTick_Handler(void) {
 	HAL_IncTick();
 }
 
-#ifndef CORE_CA7
 #define HARDFAULT_HANDLING_ASM(_x)                                                                                     \
 	__asm volatile("tst lr, #4 \n"                                                                                     \
 				   "ite eq \n"                                                                                         \
 				   "mrseq r0, msp \n"                                                                                  \
 				   "mrsne r0, psp \n"                                                                                  \
 				   "b my_fault_handler_c \n")
-#endif
 
 #define HALT_IF_DEBUGGING()                                                                                            \
 	do {                                                                                                               \
@@ -24,11 +22,7 @@ void SysTick_Handler(void) {
 	} while (0)
 
 void HardFault_Handler() {
-#ifndef CORE_CA7
 	HARDFAULT_HANDLING_ASM();
-#else
-	while(1);
-#endif
 }
 
 typedef struct __attribute__((packed)) ContextStateFrame {
@@ -45,7 +39,6 @@ typedef struct __attribute__((packed)) ContextStateFrame {
 __attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *frame) {
 	// https://interrupt.memfault.com/blog/cortex-m-fault-debug
 	// HALT_IF_DEBUGGING();
-#ifdef CORE_M7
 	volatile uint32_t mmfar = SCB->MMFAR;
 	volatile uint32_t bfar = SCB->BFAR;
 	volatile uint32_t hfsr = SCB->HFSR;
@@ -134,7 +127,6 @@ __attribute__((optimize("O0"))) void my_fault_handler_c(sContextStateFrame *fram
 
 	while (1)
 		;
-#endif
 }
 //
 // void assert_failed(const char* file, uint32_t line) { while (1); }
