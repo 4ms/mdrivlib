@@ -4,7 +4,7 @@
 namespace mdrivlib
 {
 
-struct SystemStartup {
+struct SystemClocks {
 	//FIXME: systick_freq_hz is not used
 	static void init_clocks(const RCC_OscInitTypeDef &osc_def,
 							const RCC_ClkInitTypeDef &clk_def,
@@ -38,5 +38,4 @@ struct SystemStartup {
 	}
 };
 
-using SystemClocks = SystemStartup;
 } // namespace mdrivlib
