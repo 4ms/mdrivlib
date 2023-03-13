@@ -2,7 +2,7 @@
 #include "drivers/pin.hh"
 #include "drivers/rcc.hh"
 #include "drivers/stm32xx.h"
-#include "uart_conf.hh"
+#include "drivers/uart_conf.hh"
 
 namespace mdrivlib
 {
@@ -33,30 +33,37 @@ struct UartTarget {
 		using enum UartConf::Mode;
 
 		if constexpr (is_usart) {
-			// USART_HandleTypeDef hal_h;
-			// hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
-			// hal_h.Init.BaudRate = Conf.baud;
-			// hal_h.Init.WordLength = Conf.wordlen == 8 ? USART_WORDLENGTH_8B
-			// 					  : Conf.wordlen == 7 ? USART_WORDLENGTH_7B
-			// 										  : USART_WORDLENGTH_9B;
-			// hal_h.Init.StopBits = Conf.stopbits == _1	? USART_STOPBITS_1
-			// 					: Conf.stopbits == _0_5 ? USART_STOPBITS_0_5
-			// 					: Conf.stopbits == _1_5 ? USART_STOPBITS_1_5
-			// 											: USART_STOPBITS_2;
-			// hal_h.Init.Parity = Conf.parity == None ? USART_PARITY_NONE
-			// 				  : Conf.parity == Odd	? USART_PARITY_ODD
-			// 										: USART_PARITY_EVEN;
-			// hal_h.Init.Mode = Conf.mode == TXRX	  ? USART_MODE_TX_RX
-			// 				: Conf.mode == TXonly ? USART_MODE_TX
-			// 									  : USART_MODE_RX;
-			// hal_h.Init.CLKPolarity = USART_POLARITY_LOW;
-			// hal_h.Init.CLKPhase = USART_PHASE_1EDGE;
-			// hal_h.Init.CLKLastBit = USART_LASTBIT_DISABLE;
-			// hal_h.Init.ClockPrescaler = USART_PRESCALER_DIV1;
-			// auto err = HAL_USART_Init(&hal_h);
-			// if (err != HAL_OK) {
-			// 	// __BKPT(43);
-			// }
+			USART_HandleTypeDef hal_h;
+			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
+			hal_h.Init.BaudRate = Conf.baud;
+			hal_h.Init.WordLength = Conf.wordlen == 8 ? USART_WORDLENGTH_8B
+								  : Conf.wordlen == 7 ? USART_WORDLENGTH_7B
+													  : USART_WORDLENGTH_9B;
+			hal_h.Init.StopBits = Conf.stopbits == _1	? USART_STOPBITS_1
+								: Conf.stopbits == _0_5 ? USART_STOPBITS_0_5
+								: Conf.stopbits == _1_5 ? USART_STOPBITS_1_5
+														: USART_STOPBITS_2;
+			hal_h.Init.Parity = Conf.parity == None ? USART_PARITY_NONE
+							  : Conf.parity == Odd	? USART_PARITY_ODD
+													: USART_PARITY_EVEN;
+			hal_h.Init.Mode = Conf.mode == TXRX	  ? USART_MODE_TX_RX
+							: Conf.mode == TXonly ? USART_MODE_TX
+												  : USART_MODE_RX;
+			hal_h.Init.CLKPolarity = USART_POLARITY_LOW;
+			hal_h.Init.CLKPhase = USART_PHASE_1EDGE;
+			hal_h.Init.CLKLastBit = USART_LASTBIT_DISABLE;
+			hal_h.Init.ClockPrescaler = USART_PRESCALER_DIV1;
+
+			hal_h.FifoMode = UART_FIFOMODE_ENABLE;
+
+			auto err = HAL_USART_Init(&hal_h);
+			if (err != HAL_OK) {
+				// __BKPT(43);
+			}
+			//HAL_USART_Init() does not enable Fifo Mode, so we must do it manually
+			hal_h.Instance->CR1 &= ~USART_CR1_UE;
+			hal_h.Instance->CR1 |= USART_CR1_FIFOEN;
+			hal_h.Instance->CR1 |= USART_CR1_UE;
 		} else {
 			UART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
@@ -87,7 +94,7 @@ struct UartTarget {
 	}
 
 	static void delay_for_write(auto uart) {
-		while ((uart->ISR & USART_ISR_TXFT) == 0)
+		while ((uart->ISR & USART_ISR_TXFE) == 0) //requires FIFO mode
 			;
 	}
 };
