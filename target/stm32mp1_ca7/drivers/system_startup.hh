@@ -37,4 +37,6 @@ struct SystemStartup {
 			__BKPT();
 	}
 };
+
+using SystemClocks = SystemStartup;
 } // namespace mdrivlib
