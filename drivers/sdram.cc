@@ -1,5 +1,6 @@
 #include "sdram.hh"
 #include "arch.hh"
+#include "drivers/ram_test.hh"
 #include "drivers/sdram_target.hh"
 #include "interrupt.hh"
 #include "pin.hh"
@@ -26,7 +27,7 @@ SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs, SDRAMBank bank, uint32_t
 
 #ifdef SDRAM_DO_TEST
 	uint32_t start_addr = bank == SDRAMBank::Bank1 ? 0xC0000000 : 0xD0000000;
-	do_test(start_addr, defs.size_bytes);
+	time_test(start_addr, defs.size_bytes);
 #endif
 	status = HAL_OK;
 }
@@ -179,47 +180,9 @@ void SDRAMPeriph::wait_until_ready() {
 		;
 }
 
-uint32_t SDRAMPeriph::test(const uint32_t ram_start, const uint32_t ram_size) {
-	uint32_t num_fails = 0;
-
-	auto countup_func = [](uint32_t x) { return x; };
-	num_fails += do_sdram_test(countup_func, ram_start, ram_size);
-
-	auto bitinvert_countdown_func = [](uint32_t x) { return 0xFFFFFFFFU - x; };
-	num_fails += do_sdram_test(bitinvert_countdown_func, ram_start, ram_size);
-
-	return num_fails;
-}
-
-uint32_t SDRAMPeriph::do_sdram_test(uint32_t (*mapfunc)(uint32_t), const uint32_t ram_start, const uint32_t ram_size) {
-	uint32_t num_fails = 0;
-	const size_t test_val_size = sizeof(uint32_t);
-
-	uint32_t addr = ram_start;
-	for (uint32_t i = 0; i < (ram_size / test_val_size); i++) {
-		// wait_until_ready();
-		uint32_t testval = mapfunc(i);
-		*((uint32_t *)addr) = testval;
-
-		addr += test_val_size;
-	}
-
-	addr = ram_start;
-	for (uint32_t i = 0; i < (ram_size / test_val_size); i++) {
-		uint32_t readval = *((uint32_t *)addr);
-
-		uint32_t expectedval = mapfunc(i);
-		if (readval != expectedval)
-			num_fails++;
-
-		addr += test_val_size;
-	}
-	return num_fails;
-}
-
-bool SDRAMPeriph::do_test(uint32_t start_addr, uint32_t size_bytes) {
+bool SDRAMPeriph::time_test(uint32_t start_addr, uint32_t size_bytes) {
 	uint32_t start = HAL_GetTick();
-	volatile uint32_t sdram_fails = SDRAMPeriph::test(start_addr, size_bytes);
+	volatile uint32_t sdram_fails = RamTest::test(start_addr, size_bytes);
 	volatile uint32_t elapsed = HAL_GetTick() - start;
 	if (sdram_fails)
 		return false;
