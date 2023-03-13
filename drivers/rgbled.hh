@@ -11,11 +11,11 @@ namespace mdrivlib
 template<typename RLedT, typename GLedT, typename BLedT, unsigned UpdateRateHz = 1000>
 struct MixedRgbLed {
 
-	MixedRgbLed()
-		: r_{}
-		, g_{}
-		, b_{} {
-	}
+	MixedRgbLed() = default;
+	// : r_{}
+	// , g_{}
+	// , b_{} {
+	// }
 
 	MixedRgbLed(RLedT r_LED, GLedT g_LED, BLedT b_LED)
 		: r_(r_LED)
