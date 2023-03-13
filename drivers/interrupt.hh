@@ -1,14 +1,14 @@
 #pragma once
 #include "drivers/arch.hh"
 #include "drivers/callable.hh"
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 #include <array>
 
 // FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
 #include "stubs/system.hh"
 #else
-#include "interrupt_control.hh"
+#include "drivers/interrupt_control.hh"
 #endif
 
 // template<typename T, size_t N>

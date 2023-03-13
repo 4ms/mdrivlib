@@ -1,11 +1,11 @@
 #pragma once
-#include "adc_builtin_conf.hh"
-#include "clocks.hh"
-#include "dma_transfer.hh"
-#include "interrupt.hh"
-#include "interrupt_control.hh"
-#include "pin.hh"
-#include "stm32xx.h"
+#include "drivers/adc_builtin_conf.hh"
+#include "drivers/clocks.hh"
+#include "drivers/dma_transfer.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/interrupt_control.hh"
+#include "drivers/pin.hh"
+#include "drivers/stm32xx.h"
 #include "util/math.hh"
 #include <array>
 

@@ -1,11 +1,11 @@
-#include "sdram.hh"
-#include "arch.hh"
+#include "drivers/sdram.hh"
+#include "drivers/arch.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/pin.hh"
 #include "drivers/ram_test.hh"
+#include "drivers/rcc.hh"
 #include "drivers/sdram_target.hh"
-#include "interrupt.hh"
-#include "pin.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 
 // #define SDRAM_DO_TEST
 

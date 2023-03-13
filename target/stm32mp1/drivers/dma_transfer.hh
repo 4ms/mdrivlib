@@ -1,10 +1,9 @@
 #pragma once
-#include "debug.hh" //REMOVE ME
-#include "dma_config_struct.hh"
-#include "dma_registers.hh"
-#include "interrupt.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/dma_config_struct.hh"
+#include "drivers/dma_registers.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/rcc.hh"
+#include "drivers/stm32xx.h"
 
 // Todo: Finish converting to using CMSIS instead of STM32-HAL
 namespace mdrivlib
