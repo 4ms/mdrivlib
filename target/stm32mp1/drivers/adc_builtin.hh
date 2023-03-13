@@ -54,8 +54,6 @@ public:
 		};
 		HAL_ADC_Init(&hadc);
 
-		DMATransfer<DmaConf> dma;
-
 		dma.link_periph_to_dma(hadc);
 
 		ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
@@ -102,6 +100,10 @@ public:
 		hadc.Instance->IER = reg;
 	}
 
+	void register_callback(auto callback) {
+		// dma.register_callback(std::move(callback));
+	}
+
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
 		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
 	}
@@ -126,7 +128,8 @@ public:
 	}
 
 	ADC_HandleTypeDef hadc;
-	DMA_HandleTypeDef hdma_adc1;
+	DMATransfer<DmaConf> dma;
+	// DMA_HandleTypeDef hdma_adc1;
 
 	ValueT *_dma_buffer;
 	const size_t num_channels;
