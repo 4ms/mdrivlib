@@ -24,21 +24,12 @@ struct SDCard {
 	static constexpr uint32_t BlockSize = 512;
 
 	SDCard() {
-		SDMMCTarget<ConfT>::setup_base_clk();
-		uint32_t base_clock = SDMMCTarget<ConfT>::get_base_clk();
-		uint32_t clock_div = base_clock / ConfT::speed_hz;
-		//MP1: source clk = 64M, base_clock = 32M, clock_div=2 => 16MHz, clock_div=1 => 32MHz
-		//F7: source_clk = 48M, base_clock = 24M: clock_div=2 => 12MHz, clock_div=1 => 24MHz
+		SDMMCTarget<ConfT>::setup_hal_handle(hsd);
 
 		//FIXME: handle other SDMMC#
 		RCC_Enable::SDMMC1_::set();
 
 		hsd.Instance = SDMMC1;
-		hsd.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
-		hsd.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-		hsd.Init.BusWide = ConfT::width ? SDMMC_BUS_WIDE_4B : SDMMC_BUS_WIDE_1B;
-		hsd.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
-		hsd.Init.ClockDiv = clock_div;
 		HAL_SD_DeInit(&hsd);
 
 		Pin{ConfT::D0, PinMode::Alt};
