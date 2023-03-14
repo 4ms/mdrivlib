@@ -7,6 +7,7 @@
 
 #include "printf.h"
 extern volatile bool sd_rx;
+extern volatile bool sd_tx;
 
 namespace mdrivlib
 {
@@ -31,21 +32,27 @@ struct SDCard {
 		Pin{ConfT::D0, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 		Pin{ConfT::D1, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 		Pin{ConfT::D2, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		// Pin{ConfT::D3, PinMode::Alt}; //Do not init this as AltFunc; it's used as card detect
 		Pin{ConfT::CMD, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 		Pin{ConfT::SCLK, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+
+		//Note: We do not init D3 as AltFunc; it's used as card detect
 
 		init();
 	}
 
 	void init() {
-		if (status == Status::NotInit) {
-			set_status_nocard();
-			if (card_det_pin.is_on()) {
-				set_status_mounted();
-				if (HAL_SD_Init(&hsd) != HAL_OK)
-					set_status_nocard();
+		if (status != Status::NotInit)
+			return;
+
+		set_status_nocard();
+		if (card_det_pin.is_on()) {
+			set_status_mounted();
+			if (HAL_SD_Init(&hsd) != HAL_OK) {
+				set_status_nocard();
+				return;
 			}
+			if constexpr (ConfT::width == DefaultSDCardConf::Wide4)
+				HAL_SD_ConfigWideBusOperation(&hsd, SDMMC_BUS_WIDE_4B);
 		}
 	}
 
@@ -68,7 +75,7 @@ struct SDCard {
 					set_status_mounted();
 					HAL_SD_DeInit(&hsd);
 					if (HAL_SD_Init(&hsd) != HAL_OK) {
-						// printf_("Cannot re-mount, err %d\n", HAL_SD_GetError(&hsd));
+						printf_("Cannot re-mount, err %d\n", HAL_SD_GetError(&hsd));
 						set_status_nocard();
 					}
 				}
@@ -112,27 +119,44 @@ struct SDCard {
 			set_status_nocard();
 	}
 
+	bool wait_until_ready() {
+		if (status != Status::Mounted)
+			return false;
+
+		constexpr uint32_t timeout = 1000;
+		uint32_t tm = HAL_GetTick();
+		while ((HAL_GetTick() - tm) < timeout) {
+			if (HAL_SD_GetCardState(&hsd) == HAL_SD_CARD_TRANSFER)
+				return true; //Transfer OK
+			if (HAL_SD_GetCardState(&hsd) == HAL_SD_CARD_READY)
+				return true; //Card is ready<<<Check this, it's not in ST BSP
+		}
+
+		return false;
+	}
+
 	// Read from SD card into a generic data structure
 	bool read(std::span<uint8_t> buf, uint32_t block_num) {
 		constexpr uint32_t timeout = 2000; //2 seconds
 		uint32_t bytes_to_read = buf.size_bytes();
 		auto read_ptr = buf.data();
 
-		if (bytes_to_read >= BlockSize) {
+		bool buf_is_aligned = !((uint32_t)buf.data() & 0b11);
+
+		if (buf_is_aligned && (bytes_to_read >= BlockSize)) {
 			uint32_t numblocks = bytes_to_read / BlockSize;
 
+			// if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
+			//	return false;
 			sd_rx = false;
-			if (HAL_SD_ReadBlocks_DMA(&hsd, read_ptr, block_num, numblocks) != HAL_OK)
-				// if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
+			if (!wait_until_ready())
 				return false;
-			do {
-				auto state = HAL_SD_GetCardState(&hsd);
-				if (state == HAL_SD_CARD_READY || state == HAL_SD_CARD_STANDBY)
-					break;
-			} while (true);
-			// ;
-			// while (sd_rx == false)
-			// ;
+			if (HAL_SD_ReadBlocks_DMA(&hsd, read_ptr, block_num, numblocks) != HAL_OK)
+				return false;
+			while (sd_rx == false)
+				;
+			if (!wait_until_ready())
+				return false;
 
 			uint32_t bytes_read = numblocks * BlockSize;
 			// SystemCache::invalidate_dcache_by_range(read_ptr, bytes_read);
@@ -146,15 +170,21 @@ struct SDCard {
 		}
 
 		if (bytes_to_read > 0) {
-			uint8_t _data[BlockSize];
+			printf_("Unaligned read\n");
+			alignas(4) uint8_t _data[BlockSize];
 			constexpr uint32_t numblocks = 1;
 
-			// sd_rx = false;
-			if (HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout) != HAL_OK)
+			// if (HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout) != HAL_OK)
+			// 	return false;
+			if (!wait_until_ready())
 				return false;
-			//wait until rx interrupt
-			// while (sd_rx == false)
-			// 	;
+			sd_rx = false;
+			if (HAL_SD_ReadBlocks_DMA(&hsd, _data, block_num, numblocks) != HAL_OK)
+				return false;
+			while (sd_rx == false)
+				;
+			if (!wait_until_ready())
+				return false;
 
 			uint8_t *src = _data;
 			while (bytes_to_read--)
@@ -172,8 +202,16 @@ struct SDCard {
 
 		if (bytes_to_write >= BlockSize) {
 			uint32_t numblocks = bytes_to_write / BlockSize;
-			auto err = HAL_SD_WriteBlocks(&hsd, buf_ptr, block_num, numblocks, timeout);
-			if (err != HAL_OK)
+			// if (HAL_SD_WriteBlocks(&hsd, buf_ptr, block_num, numblocks, timeout) != HAL_OK)
+			// 	return false;
+			if (!wait_until_ready())
+				return false;
+			sd_tx = false;
+			if (HAL_SD_WriteBlocks_DMA(&hsd, buf_ptr, block_num, numblocks) != HAL_OK)
+				return false;
+			while (sd_tx == false)
+				;
+			if (!wait_until_ready())
 				return false;
 
 			uint32_t bytes_written = numblocks * 512;

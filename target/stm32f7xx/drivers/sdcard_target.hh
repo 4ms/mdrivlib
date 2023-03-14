@@ -34,27 +34,47 @@ struct SDMMCTarget {
 
 		// static DMATransfer<DmaConf> dma_;
 
-		static DMA_HandleTypeDef dma;
-		dma.Instance = DMA2_Stream3;
-		dma.Init.Channel = DMA_CHANNEL_4;
-		dma.Init.Direction = DMA_PERIPH_TO_MEMORY;
-		dma.Init.PeriphInc = DMA_PINC_DISABLE;
-		dma.Init.MemInc = DMA_MINC_ENABLE;
-		dma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-		dma.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-		dma.Init.Mode = DMA_PFCTRL;
-		dma.Init.Priority = DMA_PRIORITY_LOW;
-		dma.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
-		dma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
-		dma.Init.MemBurst = DMA_MBURST_INC4;
-		dma.Init.PeriphBurst = DMA_PBURST_INC4;
-		if (HAL_DMA_Init(&dma) != HAL_OK)
-			__BKPT();
+		static DMA_HandleTypeDef dma_rx_handle;
+		dma_rx_handle.Instance = DMA2_Stream3;
+		dma_rx_handle.Init.Channel = DMA_CHANNEL_4;
+		dma_rx_handle.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		dma_rx_handle.Init.PeriphInc = DMA_PINC_DISABLE;
+		dma_rx_handle.Init.MemInc = DMA_MINC_ENABLE;
+		dma_rx_handle.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+		dma_rx_handle.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+		dma_rx_handle.Init.Mode = DMA_PFCTRL;
+		dma_rx_handle.Init.Priority = DMA_PRIORITY_VERY_HIGH;
+		dma_rx_handle.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+		dma_rx_handle.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+		dma_rx_handle.Init.MemBurst = DMA_MBURST_INC4;
+		dma_rx_handle.Init.PeriphBurst = DMA_PBURST_INC4;
 
-		__HAL_LINKDMA(&hsd, hdmarx, dma);
-		__HAL_LINKDMA(&hsd, hdmatx, dma);
+		__HAL_LINKDMA(&hsd, hdmarx, dma_rx_handle);
+		HAL_DMA_DeInit(&dma_rx_handle);
+		HAL_DMA_Init(&dma_rx_handle);
+
+		static DMA_HandleTypeDef dma_tx_handle;
+		dma_tx_handle.Instance = DMA2_Stream6;
+		dma_tx_handle.Init.Channel = DMA_CHANNEL_4;
+		dma_tx_handle.Init.Direction = DMA_MEMORY_TO_PERIPH;
+		dma_tx_handle.Init.PeriphInc = DMA_PINC_DISABLE;
+		dma_tx_handle.Init.MemInc = DMA_MINC_ENABLE;
+		dma_tx_handle.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+		dma_tx_handle.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+		dma_tx_handle.Init.Mode = DMA_PFCTRL;
+		dma_tx_handle.Init.Priority = DMA_PRIORITY_VERY_HIGH;
+		dma_tx_handle.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+		dma_tx_handle.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+		dma_tx_handle.Init.MemBurst = DMA_MBURST_INC4;
+		dma_tx_handle.Init.PeriphBurst = DMA_PBURST_INC4;
+
+		__HAL_LINKDMA(&hsd, hdmatx, dma_tx_handle);
+		HAL_DMA_DeInit(&dma_tx_handle);
+		HAL_DMA_Init(&dma_tx_handle);
 
 		Interrupt::register_and_start_isr(SDMMC1_IRQn, 0, 0, [&] { HAL_SD_IRQHandler(&hsd); });
+		Interrupt::register_and_start_isr(DMA2_Stream3_IRQn, 0, 0, [&] { HAL_DMA_IRQHandler(&dma_rx_handle); });
+		Interrupt::register_and_start_isr(DMA2_Stream6_IRQn, 0, 0, [&] { HAL_DMA_IRQHandler(&dma_tx_handle); });
 	}
 
 private:
