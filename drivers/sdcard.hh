@@ -216,7 +216,7 @@ struct SDCard {
 
 		// Handle writing less than a whole block, by copying and padding
 		if (bytes_to_write > 0 && bytes_to_write < 512) {
-			uint8_t _data[512];
+			alignas(4) uint8_t _data[512];
 			uint8_t *dst = _data;
 			for (unsigned i = 0; i < 512; i++) {
 				if (i < bytes_to_write)
@@ -236,6 +236,18 @@ struct SDCard {
 				return false;
 		}
 		return true;
+	}
+
+	uint32_t test_rx_speed(uint32_t block_num = 0, uint32_t end_block = 10 * 2048) {
+		alignas(4) uint8_t _data[512];
+
+		uint32_t start_tm = HAL_GetTick();
+		while (block_num < end_block) {
+			if (!Target::read(&hsd, _data, block_num++, 1))
+				return 0;
+		}
+		uint32_t stop_tm = HAL_GetTick();
+		return stop_tm - start_tm;
 	}
 
 private:
