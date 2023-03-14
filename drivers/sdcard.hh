@@ -52,7 +52,7 @@ struct SDCard {
 				return;
 			}
 			if constexpr (ConfT::width == DefaultSDCardConf::Wide4)
-				HAL_SD_ConfigWideBusOperation(&hsd, SDMMC_BUS_WIDE_4B);
+				Target::config_widebus(&hsd);
 		}
 	}
 

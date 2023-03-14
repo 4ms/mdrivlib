@@ -106,6 +106,11 @@ struct SDMMCTarget {
 		return false;
 	}
 
+	static void config_widebus(SD_HandleTypeDef *hsd) {
+		//FIXME: Why does this fail?
+		HAL_SD_ConfigWideBusOperation(hsd, SDMMC_BUS_WIDE_4B);
+	}
+
 private:
 	static std::optional<uint32_t> calc_clock_div() {
 		uint32_t source_clock;
