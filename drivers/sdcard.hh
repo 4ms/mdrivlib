@@ -32,16 +32,14 @@ struct SDCard {
 		hsd.Instance = SDMMC1;
 		HAL_SD_DeInit(&hsd);
 
-		Pin{ConfT::D0, PinMode::Alt};
-		Pin{ConfT::D1, PinMode::Alt};
-		Pin{ConfT::D2, PinMode::Alt};
+		Pin{ConfT::D0, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::D1, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::D2, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 		// Pin{ConfT::D3, PinMode::Alt}; //Do not init this as AltFunc; it's used as card detect
-		Pin{ConfT::CMD, PinMode::Alt};
-		Pin{ConfT::SCLK, PinMode::Alt};
+		Pin{ConfT::CMD, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::SCLK, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
 
 		init();
-
-		// Interrupt::register_and_start_isr(SDMMC1_IRQn, 0, 0, [&] { HAL_SD_IRQHandler(&hsd); });
 	}
 
 	void init() {
@@ -208,7 +206,7 @@ struct SDCard {
 private:
 	void set_status_mounted() {
 		status = Status::Mounted;
-		card_det_pin.init(ConfT::D3, PinMode::Alt);
+		card_det_pin.init(ConfT::D3, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh);
 	}
 
 	void set_status_nocard() {
