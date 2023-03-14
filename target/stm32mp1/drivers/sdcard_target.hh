@@ -1,6 +1,6 @@
 #pragma once
 #include "drivers/rcc.hh"
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 
 namespace mdrivlib
 {

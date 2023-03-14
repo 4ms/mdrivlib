@@ -1,5 +1,5 @@
 #pragma once
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 #include <cstdint>
 
 namespace mdrivlib::PeriphUtil
