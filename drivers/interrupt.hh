@@ -7,6 +7,7 @@
 // FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
 #include "stubs/system.hh"
+#define __BKPT()
 #else
 #include "drivers/interrupt_control.hh"
 #endif
@@ -21,6 +22,14 @@
 
 namespace mdrivlib
 {
+
+template<typename T, size_t N>
+auto fill_arr(auto &&f) {
+	std::array<T, N> x;
+	for (size_t i = 0l; i < N; i++)
+		x[i] = f;
+	return x;
+}
 
 // Interrupt Manager class
 class Interrupt {
@@ -54,7 +63,7 @@ public:
 
 private:
 	// static void null_func() {
-	// 	return;
+	// 	__BKPT();
 	// }
 
 	// static inline std::array<ISRType, NumISRs> ISRs{fill_arr<ISRType, NumISRs>(null_func)};

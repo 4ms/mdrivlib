@@ -2,15 +2,11 @@
 #include "drivers/rcc.hh"
 #include "drivers/sdcard_conf.hh"
 #include "drivers/sdcard_target.hh"
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 #include <span>
 
-// #include "printf.h"
-
-// extern volatile bool sd_rx;
-// extern "C" void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd) {
-// 	sd_rx = true;
-// }
+#include "printf.h"
+extern volatile bool sd_rx;
 
 namespace mdrivlib
 {
@@ -125,12 +121,18 @@ struct SDCard {
 		if (bytes_to_read >= BlockSize) {
 			uint32_t numblocks = bytes_to_read / BlockSize;
 
-			// sd_rx = false;
-			if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
+			sd_rx = false;
+			if (HAL_SD_ReadBlocks_DMA(&hsd, read_ptr, block_num, numblocks) != HAL_OK)
+				// if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
 				return false;
-			//wait until rx interrupt
+			do {
+				auto state = HAL_SD_GetCardState(&hsd);
+				if (state == HAL_SD_CARD_READY || state == HAL_SD_CARD_STANDBY)
+					break;
+			} while (true);
+			// ;
 			// while (sd_rx == false)
-			// 	;
+			// ;
 
 			uint32_t bytes_read = numblocks * BlockSize;
 			// SystemCache::invalidate_dcache_by_range(read_ptr, bytes_read);
