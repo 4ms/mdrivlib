@@ -1,7 +1,6 @@
 #pragma once
 #include "drivers/rcc.hh"
 #include "stm32xx.h"
-#include <optional>
 
 namespace mdrivlib
 {
@@ -24,6 +23,22 @@ struct SDMMCTarget {
 		hsd.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
 		hsd.Init.ClockDiv = clock_div;
 		//MP1: source clk = 64M, base_clock = 32M, clock_div=2 => 16MHz, clock_div=1 => 32MHz
+	}
+
+	static bool read(SD_HandleTypeDef *hsd, uint8_t *data, uint32_t block_num, uint32_t numblocks) {
+		if (HAL_SD_ReadBlocks(hsd, data, block_num, numblocks, 1000) != HAL_OK)
+			return false;
+		return true;
+	}
+
+	static bool write(SD_HandleTypeDef *hsd, uint8_t *data, uint32_t block_num, uint32_t numblocks) {
+		if (HAL_SD_WriteBlocks(hsd, data, block_num, numblocks, 1000) != HAL_OK)
+			return false;
+		return true;
+	}
+
+	static void config_widebus(SD_HandleTypeDef *) {
+		//Do nothing, HAL_SD_Init() calls HAL_SD_ConfigWideBusOperation
 	}
 };
 
