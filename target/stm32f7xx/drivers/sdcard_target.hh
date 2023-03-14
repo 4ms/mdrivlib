@@ -5,6 +5,9 @@
 #include "drivers/stm32xx.h"
 #include <optional>
 
+extern volatile bool sd_rx;
+extern volatile bool sd_tx;
+
 namespace mdrivlib
 {
 
@@ -75,6 +78,32 @@ struct SDMMCTarget {
 		Interrupt::register_and_start_isr(SDMMC1_IRQn, 0, 0, [&] { HAL_SD_IRQHandler(&hsd); });
 		Interrupt::register_and_start_isr(DMA2_Stream3_IRQn, 0, 0, [&] { HAL_DMA_IRQHandler(&dma_rx_handle); });
 		Interrupt::register_and_start_isr(DMA2_Stream6_IRQn, 0, 0, [&] { HAL_DMA_IRQHandler(&dma_tx_handle); });
+	}
+
+	static bool read(SD_HandleTypeDef *hsd, uint8_t *data, uint32_t block_num, uint32_t numblocks) {
+		sd_rx = false;
+		if (HAL_SD_ReadBlocks_DMA(hsd, data, block_num, numblocks) != HAL_OK)
+			return false;
+
+		uint32_t timeout = HAL_GetTick();
+		while (HAL_GetTick() - timeout < 1000) {
+			if (sd_rx)
+				return true;
+		}
+		return false;
+	}
+
+	static bool write(SD_HandleTypeDef *hsd, uint8_t *data, uint32_t block_num, uint32_t numblocks) {
+		sd_tx = false;
+		if (HAL_SD_WriteBlocks_DMA(hsd, data, block_num, numblocks) != HAL_OK)
+			return false;
+
+		uint32_t timeout = HAL_GetTick();
+		while (HAL_GetTick() - timeout < 1000) {
+			if (sd_tx)
+				return true;
+		}
+		return false;
 	}
 
 private:

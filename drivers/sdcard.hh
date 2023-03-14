@@ -6,8 +6,6 @@
 #include <span>
 
 #include "printf.h"
-extern volatile bool sd_rx;
-extern volatile bool sd_tx;
 
 namespace mdrivlib
 {
@@ -18,10 +16,12 @@ struct SDCard {
 	enum class Status { NotInit, NoCard, Mounted } status = Status::NotInit;
 	Pin card_det_pin;
 
+	using Target = SDMMCTarget<ConfT>;
+
 	static constexpr uint32_t BlockSize = 512;
 
 	SDCard() {
-		SDMMCTarget<ConfT>::setup_hal_handle(hsd);
+		Target::setup_hal_handle(hsd);
 
 		//FIXME: handle other SDMMC#
 		RCC_Enable::SDMMC1_::set();
@@ -148,13 +148,10 @@ struct SDCard {
 
 			// if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
 			//	return false;
-			sd_rx = false;
 			if (!wait_until_ready())
 				return false;
-			if (HAL_SD_ReadBlocks_DMA(&hsd, read_ptr, block_num, numblocks) != HAL_OK)
+			if (!Target::read(&hsd, read_ptr, block_num, numblocks))
 				return false;
-			while (sd_rx == false)
-				;
 			if (!wait_until_ready())
 				return false;
 
@@ -170,7 +167,6 @@ struct SDCard {
 		}
 
 		if (bytes_to_read > 0) {
-			printf_("Unaligned read\n");
 			alignas(4) uint8_t _data[BlockSize];
 			constexpr uint32_t numblocks = 1;
 
@@ -178,11 +174,8 @@ struct SDCard {
 			// 	return false;
 			if (!wait_until_ready())
 				return false;
-			sd_rx = false;
-			if (HAL_SD_ReadBlocks_DMA(&hsd, _data, block_num, numblocks) != HAL_OK)
+			if (!Target::read(&hsd, read_ptr, block_num, numblocks))
 				return false;
-			while (sd_rx == false)
-				;
 			if (!wait_until_ready())
 				return false;
 
@@ -206,11 +199,8 @@ struct SDCard {
 			// 	return false;
 			if (!wait_until_ready())
 				return false;
-			sd_tx = false;
-			if (HAL_SD_WriteBlocks_DMA(&hsd, buf_ptr, block_num, numblocks) != HAL_OK)
+			if (!Target::write(&hsd, buf_ptr, block_num, numblocks))
 				return false;
-			while (sd_tx == false)
-				;
 			if (!wait_until_ready())
 				return false;
 
@@ -236,8 +226,13 @@ struct SDCard {
 			}
 
 			constexpr uint32_t numblocks = 1;
-			auto err = HAL_SD_WriteBlocks(&hsd, _data, block_num, numblocks, timeout);
-			if (err != HAL_OK)
+			// if (HAL_SD_WriteBlocks(&hsd, _data, block_num, numblocks, timeout) != HAL_OK)
+			// 	return false;
+			if (!wait_until_ready())
+				return false;
+			if (!Target::write(&hsd, buf_ptr, block_num, numblocks))
+				return false;
+			if (!wait_until_ready())
 				return false;
 		}
 		return true;
