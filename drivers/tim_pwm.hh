@@ -32,6 +32,87 @@ enum class TimChannelNum {
 //
 // Todo: add separate methods for setting pin, TIM, channel, period, prescaler, clock_div
 
+struct TimChanConf {
+	PinDef pin;
+	TIM_TypeDef *const TIM;
+	TimChannelNum channum;
+	uint32_t period = 256;
+	uint32_t prescaler = 1;
+	uint32_t clock_div = 0;
+};
+
+template<TimChanConf Conf>
+class TimPwmChan {
+
+	TimPwmChan() {
+		TIMPeriph::init_periph(get_TIM(), Conf.period, Conf.prescaler, Conf.clock_div);
+
+		if (IS_TIM_BREAK_INSTANCE(get_TIM()))
+			LL_TIM_EnableAllOutputs(get_TIM());
+
+		LL_TIM_OC_InitTypeDef tim_oc = {
+			.OCMode = LL_TIM_OCMODE_PWM1,
+			.OCState = is_inverted() ? LL_TIM_OCSTATE_DISABLE : LL_TIM_OCSTATE_ENABLE,
+			.OCNState = is_inverted() ? LL_TIM_OCSTATE_ENABLE : LL_TIM_OCSTATE_DISABLE,
+			.CompareValue = 0,
+			.OCPolarity = LL_TIM_OCPOLARITY_LOW,
+			.OCNPolarity = LL_TIM_OCPOLARITY_LOW,
+			.OCIdleState = LL_TIM_OCIDLESTATE_LOW,
+			.OCNIdleState = LL_TIM_OCIDLESTATE_LOW,
+		};
+
+		LL_TIM_OC_Init(get_TIM(), static_cast<uint32_t>(get_base_channel()), &tim_oc);
+		LL_TIM_CC_EnableChannel(get_TIM(), static_cast<uint32_t>(Conf.channum));
+		LL_TIM_EnableCounter(get_TIM());
+	}
+
+	void set(uint32_t val) const {
+		if constexpr (Conf.channum == TimChannelNum::_1)
+			get_TIM()->CCR1 = val;
+		if constexpr (Conf.channum == TimChannelNum::_2)
+			get_TIM()->CCR2 = val;
+		if constexpr (Conf.channum == TimChannelNum::_3)
+			get_TIM()->CCR3 = val;
+		if constexpr (Conf.channum == TimChannelNum::_4)
+			get_TIM()->CCR4 = val;
+#ifdef LL_TIM_CHANNEL_CH5
+		if constexpr (Conf.channum == TimChannelNum::_5)
+			get_TIM()->CCR5 = val;
+#endif
+#ifdef LL_TIM_CHANNEL_CH6
+		if constexpr (Conf.channum == TimChannelNum::_6)
+			get_TIM()->CCR1 = val;
+#endif
+	}
+
+	void start_output() const {
+		LL_TIM_CC_EnableChannel(get_TIM(), static_cast<uint32_t>(Conf.channum));
+	}
+	void stop_output() const {
+		LL_TIM_CC_DisableChannel(get_TIM(), static_cast<uint32_t>(Conf.channum));
+	}
+
+private:
+	constexpr TimChannelNum get_base_channel() {
+		if constexpr (Conf.channum == TimChannelNum::_1N)
+			return TimChannelNum::_1;
+		if constexpr (Conf.channum == TimChannelNum::_2N)
+			return TimChannelNum::_2;
+		if constexpr (Conf.channum == TimChannelNum::_3N)
+			return TimChannelNum::_3;
+		return Conf.channum;
+	}
+
+	constexpr bool is_inverted() {
+		return get_base_channel() == Conf.channum;
+	}
+
+	constexpr TIM_TypeDef *get_TIM() {
+		return Conf.TIM;
+		//return reinterpret_cast<TIM_TypeDef*>(Conf.TIM);
+	}
+};
+
 class TimPwmChannel {
 public:
 	TimPwmChannel(TIM_TypeDef *const TIM,
