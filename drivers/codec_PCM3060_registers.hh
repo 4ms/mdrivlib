@@ -124,27 +124,52 @@ struct DacControl1 : ReadWrite {
 
 struct DacControl2 : ReadWrite {
 	enum : uint8_t { Address = 68 };
-	//TODO
-	uint8_t raw;
+	uint8_t MuteLeft : 1;
+	uint8_t MuteRight : 1;
+	uint8_t Invert : 1;
+	uint8_t : 3;
+	uint8_t Oversample : 1;
+	uint8_t : 1;
 
 	constexpr operator uint8_t() {
-		return raw;
+		return (MuteLeft << 0) | (MuteRight << 1) | (Invert << 2) | (Oversample << 6);
 	}
 	constexpr static DacControl2 make(uint8_t raw) {
-		return {.raw = raw};
+		return {
+			.MuteLeft = Bits<0>(raw),
+			.MuteRight = Bits<1>(raw),
+			.Invert = Bits<2>(raw),
+			.Oversample = Bits<6>(raw),
+		};
 	}
 };
 
 struct DacControl3 : ReadWrite {
 	enum : uint8_t { Address = 69 };
-	//TODO
-	uint8_t raw;
+	uint8_t ZeroFlagLR : 1;
+	uint8_t ZeroFlagLowOnDetect : 1;
+	uint8_t : 2;
+	uint8_t DeEmph : 1;
+	uint8_t DeEmphFreq : 2;
+	uint8_t SlowRolloff : 1;
+
+	enum DeEmphFreqs {
+		DeEmph44k = 0b00,
+		DeEmph49k = 0b01,
+		DeEmph32k = 0b10,
+	};
 
 	constexpr operator uint8_t() {
-		return raw;
+		return (ZeroFlagLR << 0) | (ZeroFlagLowOnDetect << 1) | (DeEmph << 4) | (DeEmphFreq << 5) | (SlowRolloff << 7);
 	}
 	constexpr static DacControl3 make(uint8_t raw) {
-		return {.raw = raw};
+		return {
+			.ZeroFlagLR = Bits<0>(raw),
+			.ZeroFlagLowOnDetect = Bits<1>(raw),
+			.DeEmph = Bits<4>(raw),
+			.DeEmphFreq = Bits<5>(raw),
+			.SlowRolloff = Bits<7>(raw),
+		};
 	}
 };
 
