@@ -35,8 +35,13 @@ template<PinDef Pindef,
 		 unsigned RisingEdgePattern = 0x00000001,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
 		 unsigned StateMask = 0x00000FFF>
-struct DebouncedButton : DebouncerCounter<RisingEdgePattern, FallingEdgePattern, StateMask> {
+struct DebouncedButton : public DebouncerCounter<RisingEdgePattern, FallingEdgePattern, StateMask> {
+
 	using PinT = FPin<Pindef.gpio, Pindef.pin, PinMode::Input, Polarity>;
+
+	DebouncedButton() {
+		PinT init_pin{Polarity == PinPolarity::Inverted ? PinPull::Up : PinPull::None};
+	}
 
 	void update() {
 		unsigned pin_state = PinT::read() ? 1 : 0;
