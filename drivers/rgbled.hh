@@ -23,13 +23,13 @@ struct MixedRgbLed {
 		, b_(b_LED) {
 	}
 
-	void set_background(Color const &col) {
+	void set_base_color(Color const &col) {
 		background_color_ = col;
 	}
-	void blend_background(Color const col) {
+	void blend_base_color(Color col) {
 		background_color_ = background_color_.blend(col);
 	}
-	void add_background(Color const col) {
+	void add_base_color(Color col) {
 		background_color_ = background_color_ + col;
 	}
 	// void set_solid(Color const &col) { solid_color_ = col; }
