@@ -35,7 +35,7 @@ struct MixedRgbLed {
 	// void set_solid(Color const &col) { solid_color_ = col; }
 
 	// actual frequency in secs: freq / update_rate_Hz
-	void flash_once(Color const &c, uint32_t const flash_freq) {
+	void flash_once(Color const &c, uint32_t flash_freq) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
 		flash_rate_ = flash_freq;
@@ -48,7 +48,7 @@ struct MixedRgbLed {
 
 	// If update_animation() is called at the same rate as UpdateRateHz, then freq will be in Hz.
 	// Otherwise, actual freq will be freq * UpdateRateHz / Rate[update_animation() is called]
-	void breathe(Color const &c, const float freq) {
+	void breathe(Color const &c, float freq) {
 		breathe_color_ = c;
 		fader_.set_frequency(freq);
 	}
@@ -63,12 +63,12 @@ struct MixedRgbLed {
 		g_.set(col.green());
 		b_.set(col.blue());
 	}
-	void set_color(Color const &col, uint8_t const brightness) const {
+	void set_color(Color const &col, uint8_t brightness) const {
 		r_.set((col.red() * brightness) >> 8);
 		g_.set((col.green() * brightness) >> 8);
 		b_.set((col.blue() * brightness) >> 8);
 	}
-	void set_color(Color const &col, float const brightness) const {
+	void set_color(Color const &col, float brightness) const {
 		r_.set(col.red() * brightness);
 		g_.set(col.green() * brightness);
 		b_.set(col.blue() * brightness);
