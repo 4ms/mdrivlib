@@ -34,7 +34,7 @@ struct MixedRgbLed {
 	}
 	// void set_solid(Color const &col) { solid_color_ = col; }
 
-	// actual frequency in secs: freq / update_rate_Hz
+	// actual period in secs: flash_freq / update_rate_Hz
 	void flash_once(Color const &c, uint32_t flash_freq) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
