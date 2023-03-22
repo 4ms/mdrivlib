@@ -34,11 +34,10 @@ struct MixedRgbLed {
 	}
 	// void set_solid(Color const &col) { solid_color_ = col; }
 
-	// actual period in secs: flash_freq / update_rate_Hz
-	void flash_once(Color const &c, uint32_t flash_freq) {
+	void flash_once_ms(Color const &c, float ms) {
 		flash_color_ = c;
 		flash_phase_ = 0xFFFFFFFF;
-		flash_rate_ = flash_freq;
+		flash_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
 	}
 
 	// void breathe(Color const &c, const uint32_t freq) {
@@ -76,19 +75,22 @@ struct MixedRgbLed {
 
 	void update_oscillators() {
 		fader_.update();
-		if (flash_phase_ > flash_rate_)
+		if (flash_phase_ > flash_rate_) {
 			flash_phase_ -= flash_rate_;
-		else
+		} else {
 			flash_phase_ = 0;
+		}
 	}
 
 	// Todo: don't waste cycles updating if nothing's changed
 	void update_animation() {
 		update_oscillators();
 		Color c = background_color_;
-		// if (solid_color_ != Colors::off) c = solid_color_;
-		c = c.blend(breathe_color_, fader_.val());
-		c = c.blend(flash_color_, flash_phase_);
+		if (flash_phase_)
+			c = flash_color_;
+		else
+			c = c.blend(breathe_color_, fader_.val());
+		// c = c.blend(flash_color_, flash_phase_);
 		// c = c.adjust(color_cal_);
 		set_color(c);
 	}
