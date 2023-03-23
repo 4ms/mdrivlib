@@ -13,7 +13,7 @@ struct TimekeeperConfig {
 
 class Timekeeper {
 public:
-	Timekeeper();
+	Timekeeper() = default;
 	Timekeeper(const TimekeeperConfig &config, std::function<void(void)> &&func);
 	void init(const TimekeeperConfig &config, std::function<void(void)> &&func);
 
@@ -24,8 +24,6 @@ private:
 	TIM_TypeDef *timx;
 	IRQn_Type irqn;
 
-	// Note: is_running must be volatile so compiler doesn't optimize out calls to start();
-	volatile bool is_running;
 	std::function<void(void)> task_func;
 
 	void _set_periph(TIM_TypeDef *timx);

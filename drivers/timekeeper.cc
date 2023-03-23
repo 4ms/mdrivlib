@@ -8,10 +8,6 @@
 namespace mdrivlib
 {
 
-Timekeeper::Timekeeper()
-	: is_running(false) {
-}
-
 void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> &&func) {
 	_set_periph(config.TIMx);
 	task_func = std::move(func);
@@ -21,8 +17,7 @@ void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> 
 Timekeeper::Timekeeper(const TimekeeperConfig &config, std::function<void(void)> &&func)
 	: timx(config.TIMx)
 	, irqn(PeriphUtil::TIM::IRQn(timx))
-	, task_func(std::move(func))
-	, is_running(false) {
+	, task_func(std::move(func)) {
 	_init(config);
 }
 
@@ -33,11 +28,11 @@ void Timekeeper::_init(const TimekeeperConfig &config) {
 }
 
 void Timekeeper::start() {
-	is_running = true;
+	InterruptControl::enable_irq(irqn);
 }
 
 void Timekeeper::stop() {
-	is_running = false;
+	InterruptControl::disable_irq(irqn);
 }
 
 void Timekeeper::_set_periph(TIM_TypeDef *TIMx) {
@@ -81,7 +76,6 @@ void Timekeeper::_set_timing(uint32_t period_ns, uint32_t priority1, uint32_t pr
 	}
 
 	InterruptControl::set_irq_priority(irqn, priority1, priority2);
-	InterruptControl::enable_irq(irqn);
 
 	TIMPeriph::init_periph(timx, period_clocks, prescaler, clock_division);
 
@@ -93,7 +87,7 @@ void Timekeeper::_register_task() {
 	InterruptManager::register_isr(irqn, [this]() {
 		if (tim_update_IT_is_set()) {
 			if (tim_update_IT_is_source()) {
-				if (is_running && task_func)
+				if (task_func)
 					task_func();
 			}
 			tim_update_IT_clear();
