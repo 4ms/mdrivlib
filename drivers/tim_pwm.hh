@@ -107,8 +107,9 @@ private:
 };
 
 // Dummy class for use when an LED element of an RGB LED is not connected
-class NoPwmChannel {
-public:
+struct NoPwmChannel {
+	NoPwmChannel() {
+	}
 	static void set(uint32_t val) {
 	}
 };
