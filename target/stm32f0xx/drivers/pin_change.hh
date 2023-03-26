@@ -1,10 +1,10 @@
 #pragma once
 #include "drivers/callable.hh"
-#include "exti.hh"
-#include "interrupt.hh"
-#include "pin.hh"
-#include "pin_change_conf.hh"
-#include "rcc.hh"
+#include "drivers/exti.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/pin.hh"
+#include "drivers/pin_change_conf.hh"
+#include "drivers/rcc.hh"
 
 namespace mdrivlib
 {
