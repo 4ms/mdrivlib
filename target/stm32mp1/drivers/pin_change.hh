@@ -1,9 +1,9 @@
 #pragma once
-#include "arch.hh"
+#include "drivers/arch.hh"
 #include "drivers/exti.hh"
-#include "interrupt.hh"
-#include "pin.hh"
-#include "pin_change_conf.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/pin.hh"
+#include "drivers/pin_change_conf.hh"
 #include <functional>
 // #include "drivers/callable.hh"
 
