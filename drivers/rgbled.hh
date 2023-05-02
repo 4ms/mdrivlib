@@ -41,6 +41,12 @@ struct MixedRgbLed {
 		flash_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
 	}
 
+	void fade_once_ms(Color const &c, float ms) {
+		fade_color_ = c;
+		fade_phase_ = 0xFFFFFFFF;
+		fade_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
+	}
+
 	// void breathe(Color const &c, const uint32_t freq) {
 	// 	breathe_color_ = c;
 	// 	fader_.set_frequency(freq);
@@ -81,6 +87,11 @@ struct MixedRgbLed {
 		} else {
 			flash_phase_ = 0;
 		}
+		if (fade_phase_ > fade_rate_) {
+			fade_phase_ -= fade_rate_;
+		} else {
+			fade_phase_ = 0;
+		}
 	}
 
 	// Todo: don't waste cycles updating if nothing's changed
@@ -89,9 +100,10 @@ struct MixedRgbLed {
 		Color c = background_color_;
 		if (flash_phase_)
 			c = flash_color_;
+		else if (fade_phase_)
+			c = c.blend(fade_color_, fade_phase_);
 		else
 			c = c.blend(breathe_color_, fader_.val());
-		// c = c.blend(flash_color_, flash_phase_);
 		// c = c.adjust(color_cal_);
 		set_color(c);
 	}
@@ -102,11 +114,13 @@ private:
 	const BLedT b_;
 	TriangleOscillator<UpdateRateHz> fader_;
 	Color background_color_ = Colors::off;
-	Color solid_color_ = Colors::off;
 	Color flash_color_ = Colors::white;
+	Color fade_color_ = Colors::red;
 	Color breathe_color_ = Colors::red;
 	uint32_t flash_rate_ = 100;
 	uint32_t flash_phase_ = 0;
+	uint32_t fade_rate_ = 100;
+	uint32_t fade_phase_ = 0;
 	//    Color::Adjustment& color_cal_;
 };
 
