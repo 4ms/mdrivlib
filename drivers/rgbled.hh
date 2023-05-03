@@ -33,7 +33,6 @@ struct MixedRgbLed {
 	void add_base_color(Color col) {
 		background_color_ = background_color_ + col;
 	}
-	// void set_solid(Color const &col) { solid_color_ = col; }
 
 	void flash_once_ms(Color const &c, float ms) {
 		flash_color_ = c;
@@ -46,11 +45,6 @@ struct MixedRgbLed {
 		fade_phase_ = 0xFFFFFFFF;
 		fade_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
 	}
-
-	// void breathe(Color const &c, const uint32_t freq) {
-	// 	breathe_color_ = c;
-	// 	fader_.set_frequency(freq);
-	// }
 
 	// If update_animation() is called at the same rate as UpdateRateHz, then freq will be in Hz.
 	// Otherwise, actual freq will be freq * UpdateRateHz / Rate[update_animation() is called]
@@ -104,7 +98,7 @@ struct MixedRgbLed {
 			c = c.blend(fade_color_, fade_phase_);
 		else
 			c = c.blend(breathe_color_, fader_.val());
-		// c = c.adjust(color_cal_);
+		c = c.adjust(color_cal_);
 		set_color(c);
 	}
 
@@ -121,7 +115,7 @@ private:
 	uint32_t flash_phase_ = 0;
 	uint32_t fade_rate_ = 100;
 	uint32_t fade_phase_ = 0;
-	//    Color::Adjustment& color_cal_;
+	Color::Adjustment color_cal_{128, 128, 128};
 };
 
 //"Normal" RGB LED where each element has the same type of LED driver
