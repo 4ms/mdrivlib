@@ -36,14 +36,14 @@ struct MixedRgbLed {
 
 	void flash_once_ms(Color const &c, float ms) {
 		flash_color_ = c;
-		flash_phase_ = 0xFFFFFFFF;
-		flash_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
+		flasher_.reset();
+		flasher_.set_period_ms(ms);
+		do_smooth_fade_ = false;
 	}
 
 	void fade_once_ms(Color const &c, float ms) {
-		fade_color_ = c;
-		fade_phase_ = 0xFFFFFFFF;
-		fade_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
+		flash_once_ms(c, ms);
+		do_smooth_fade_ = true;
 	}
 
 	// If update_animation() is called at the same rate as UpdateRateHz, then freq will be in Hz.
@@ -80,27 +80,15 @@ struct MixedRgbLed {
 
 	void update_oscillators() {
 		fader_.update();
-		if (flash_phase_ > flash_rate_) {
-			flash_phase_ -= flash_rate_;
-		} else {
-			flash_phase_ = 0;
-		}
-		if (fade_phase_ > fade_rate_) {
-			fade_phase_ -= fade_rate_;
-		} else {
-			fade_phase_ = 0;
-		}
+		flasher_.update();
 	}
 
 	// Todo: don't waste cycles updating if nothing's changed
-	// Todo: Combine flash and fade, use a bool to distinguish behavior
 	void update_animation() {
 		update_oscillators();
 		Color c = background_color_;
-		if (flash_phase_)
-			c = flash_color_;
-		else if (fade_phase_)
-			c = c.blend(fade_color_, fade_phase_);
+		if (flasher_.val())
+			c = do_smooth_fade_ ? c.blend(flash_color_, flasher_.val()) : flash_color_;
 		else
 			c = c.blend(breathe_color_, fader_.val());
 		c = c.adjust(color_cal_);
@@ -112,14 +100,13 @@ private:
 	const GLedT g_;
 	const BLedT b_;
 	TriangleOscillator<UpdateRateHz> fader_;
+	DownCounter<UpdateRateHz> flasher_;
 	Color background_color_ = Colors::off;
-	Color flash_color_ = Colors::white;
-	Color fade_color_ = Colors::red;
 	Color breathe_color_ = Colors::red;
-	uint32_t flash_rate_ = 100;
-	uint32_t flash_phase_ = 0;
-	uint32_t fade_rate_ = 100;
-	uint32_t fade_phase_ = 0;
+	Color flash_color_ = Colors::white;
+	// uint32_t flash_rate_ = 100;
+	// uint32_t flash_phase_ = 0;
+	bool do_smooth_fade_ = false;
 	Color::Adjustment color_cal_{128, 128, 128};
 };
 
