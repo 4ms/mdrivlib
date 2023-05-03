@@ -107,8 +107,9 @@ This is a work in progress, the API is in flux. Contributions, feedback, and iss
 Add the following directories as INCLUDE directories for your build system:
 (e.g. add `-Ipath` to your compile commands for each of the following paths):
 
-  * `mdrivlib/drivers` 
-  * `mdrivlib/target/XXX/drivers/`, where XXX is the target architecture (look in the target dir to see what the options are)
+  * `mdrivlib` 
+  * `mdrivlib/target/stm32XXxx`, where XX is the target architecture, e.g. `stm32f7xx` (look in the target dir to see what the options are)
+  * `mdrivlib/target/stm32XXyy_zz`, (if present): chip or core-specific architecture. e.g. `stm32f723` or `stm32mp1_ca7` (look in the target dir to see what the options are)
   * CMSIS device header: if you've downloaded STM32Cube, then include the path something like this (for H7xx): `STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/` 
   * If you're using any drivers that require STM32-HAL or STM32-LL: STM32 HAL Include directory, e.g. `STM32Cube_FW_H7_V1/Drivers/STM32H7xx_HAL_Driver/Inc`
 
