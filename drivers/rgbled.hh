@@ -74,6 +74,10 @@ struct MixedRgbLed {
 		b_.set(col.blue() * brightness);
 	}
 
+	void set_color_calibration(Color::Adjustment adj) {
+		color_cal_ = adj;
+	}
+
 	void update_oscillators() {
 		fader_.update();
 		if (flash_phase_ > flash_rate_) {
@@ -89,6 +93,7 @@ struct MixedRgbLed {
 	}
 
 	// Todo: don't waste cycles updating if nothing's changed
+	// Todo: Combine flash and fade, use a bool to distinguish behavior
 	void update_animation() {
 		update_oscillators();
 		Color c = background_color_;
