@@ -37,7 +37,8 @@ struct MixedRgbLed {
 	void flash_once_ms(Color const &c, float ms) {
 		flash_color_ = c;
 		flasher_.reset();
-		flasher_.set_period_ms(ms);
+		flasher_.set_frequency(1000.f / ms);
+		// flasher_.set_period_ms(ms);
 		do_smooth_fade_ = false;
 	}
 
@@ -89,7 +90,7 @@ struct MixedRgbLed {
 		Color c = background_color_;
 		if (flasher_.val())
 			c = do_smooth_fade_ ? c.blend(flash_color_, flasher_.val()) : flash_color_;
-		else
+		else if (fader_.val())
 			c = c.blend(breathe_color_, fader_.val());
 		c = c.adjust(color_cal_);
 		set_color(c);
@@ -104,8 +105,6 @@ private:
 	Color background_color_ = Colors::off;
 	Color breathe_color_ = Colors::red;
 	Color flash_color_ = Colors::white;
-	// uint32_t flash_rate_ = 100;
-	// uint32_t flash_phase_ = 0;
 	bool do_smooth_fade_ = false;
 	Color::Adjustment color_cal_{128, 128, 128};
 };
