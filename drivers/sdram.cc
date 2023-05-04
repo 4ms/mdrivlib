@@ -32,7 +32,6 @@ SDRAMPeriph::SDRAMPeriph(const SDRAMConfig &sdram_defs, SDRAMBank bank, uint32_t
 	status = HAL_OK;
 }
 
-static SDRAM_HandleTypeDef hsdram2;
 void SDRAMPeriph::config_timing(SDRAMBank bank, uint32_t fmc_kernel_clock_MHz) {
 
 	// Todo: pass the FMC clock in the conf, or use System::FMC::get_clock_speed()
@@ -144,10 +143,10 @@ void SDRAMPeriph::start_refresh(SDRAMBank sdrambank) {
 
 	// Refresh rate in number of SDCLK clock cycles between the refresh cycles
 	auto refresh_ms_to_refcount = [sdram_clock = sdram_clock_](uint32_t refresh_ms, uint32_t num_rows) -> uint32_t {
-		return 800;
-		// uint32_t rate_us = (refresh_ms * 10000) / num_rows;
-		// uint32_t count = (sdram_clock / 1000000U) * rate_us;
-		// return (count / 10) - 20; // Safe margin, as per STM32F74x datasheet
+		// return 800;
+		uint32_t rate_us = (refresh_ms * 10000) / num_rows;
+		uint32_t count = (sdram_clock / 1000000U) * rate_us;
+		return (count / 10) - 20; // Safe margin, as per STM32F74x datasheet
 	};
 	FMC_SDRAM_ProgramRefreshRate(FMC_SDRAM_DEVICE, refresh_ms_to_refcount(defs.timing.refresh_ms, defs.arch.num_rows));
 	HAL_Delay(1);
@@ -184,6 +183,7 @@ bool SDRAMPeriph::time_test(uint32_t start_addr, uint32_t size_bytes) {
 	uint32_t start = HAL_GetTick();
 	volatile uint32_t sdram_fails = RamTest::test(start_addr, size_bytes);
 	volatile uint32_t elapsed = HAL_GetTick() - start;
+	(void)elapsed;
 	if (sdram_fails)
 		return false;
 	return true;
