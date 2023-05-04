@@ -52,6 +52,10 @@ struct DebouncedButton : public DebouncerCounter<RisingEdgePattern, FallingEdgeP
 		return this->steady_state_ctr;
 	}
 
+	unsigned how_long_held_pressed() {
+		return this->is_pressed() ? this->steady_state_ctr : 0;
+	}
+
 	void reset_hold_ctr() {
 		this->steady_state_ctr = 0;
 	}

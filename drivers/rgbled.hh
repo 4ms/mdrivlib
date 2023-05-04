@@ -1,4 +1,5 @@
 #pragma once
+#include "drivers/pin.hh"
 #include "util/colors.hh"
 #include "util/oscs.hh"
 
@@ -32,18 +33,18 @@ struct MixedRgbLed {
 	void add_base_color(Color col) {
 		background_color_ = background_color_ + col;
 	}
-	// void set_solid(Color const &col) { solid_color_ = col; }
 
 	void flash_once_ms(Color const &c, float ms) {
 		flash_color_ = c;
-		flash_phase_ = 0xFFFFFFFF;
-		flash_rate_ = (float)(0xFFFFFFFFU / UpdateRateHz) / (ms / 1000.f);
+		flasher_.reset();
+		flasher_.set_period_ms(ms);
+		do_smooth_fade_ = false;
 	}
 
-	// void breathe(Color const &c, const uint32_t freq) {
-	// 	breathe_color_ = c;
-	// 	fader_.set_frequency(freq);
-	// }
+	void fade_once_ms(Color const &c, float ms) {
+		flash_once_ms(c, ms);
+		do_smooth_fade_ = true;
+	}
 
 	// If update_animation() is called at the same rate as UpdateRateHz, then freq will be in Hz.
 	// Otherwise, actual freq will be freq * UpdateRateHz / Rate[update_animation() is called]
@@ -73,25 +74,24 @@ struct MixedRgbLed {
 		b_.set(col.blue() * brightness);
 	}
 
+	void set_color_calibration(Color::Adjustment adj) {
+		color_cal_ = adj;
+	}
+
 	void update_oscillators() {
 		fader_.update();
-		if (flash_phase_ > flash_rate_) {
-			flash_phase_ -= flash_rate_;
-		} else {
-			flash_phase_ = 0;
-		}
+		flasher_.update();
 	}
 
 	// Todo: don't waste cycles updating if nothing's changed
 	void update_animation() {
 		update_oscillators();
 		Color c = background_color_;
-		if (flash_phase_)
-			c = flash_color_;
+		if (flasher_.val())
+			c = do_smooth_fade_ ? c.blend(flash_color_, flasher_.val()) : flash_color_;
 		else
 			c = c.blend(breathe_color_, fader_.val());
-		// c = c.blend(flash_color_, flash_phase_);
-		// c = c.adjust(color_cal_);
+		c = c.adjust(color_cal_);
 		set_color(c);
 	}
 
@@ -100,16 +100,27 @@ private:
 	const GLedT g_;
 	const BLedT b_;
 	TriangleOscillator<UpdateRateHz> fader_;
+	DownCounter<UpdateRateHz> flasher_;
 	Color background_color_ = Colors::off;
-	Color solid_color_ = Colors::off;
-	Color flash_color_ = Colors::white;
 	Color breathe_color_ = Colors::red;
-	uint32_t flash_rate_ = 100;
-	uint32_t flash_phase_ = 0;
-	//    Color::Adjustment& color_cal_;
+	Color flash_color_ = Colors::white;
+	// uint32_t flash_rate_ = 100;
+	// uint32_t flash_phase_ = 0;
+	bool do_smooth_fade_ = false;
+	Color::Adjustment color_cal_{128, 128, 128};
 };
 
 //"Normal" RGB LED where each element has the same type of LED driver
 template<typename LedType, unsigned UpdateRateHz = 1000>
 using RgbLed = MixedRgbLed<LedType, LedType, LedType, UpdateRateHz>;
+
+//LED where value > 50% turns it on, otherwise off
+
+template<mdrivlib::GPIO Gpio, uint8_t PinNum, PinPolarity Polarity = PinPolarity::Normal>
+struct Led50 : FPin<Gpio, PinNum, PinMode::Output, Polarity> {
+	static void set(uint8_t val) {
+		FPin<Gpio, PinNum, PinMode::Output, Polarity>::set(val > 0x7F);
+	}
+};
+
 } // namespace mdrivlib

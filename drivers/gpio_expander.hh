@@ -104,7 +104,7 @@ private:
 	const GPIO_expander_conf &_conf;
 	const uint8_t _device_addr;
 	I2CPeriph &_i2c;
-	uint16_t last_reading;
+	uint16_t last_reading{0};
 	uint8_t _data[3];
 	uint16_t _data16;
 	unsigned _cur_port = 0;

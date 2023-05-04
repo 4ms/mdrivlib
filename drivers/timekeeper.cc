@@ -29,6 +29,7 @@ void Timekeeper::_init(const TimekeeperConfig &config) {
 
 void Timekeeper::start() {
 	InterruptControl::enable_irq(irqn);
+	tim_update_IT_clear();
 }
 
 void Timekeeper::stop() {
