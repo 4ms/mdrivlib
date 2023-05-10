@@ -5,13 +5,13 @@
 namespace SDRAMPeriphMath
 {
 
-static uint32_t freq_to_clockdiv(uint32_t FMC_clock, uint32_t freq) {
+inline uint32_t freq_to_clockdiv(uint32_t FMC_clock, uint32_t freq) {
 	// Requirement: FMC_clock / clockdiv >= freq
 	// STM32H7 SDRAM controller: Only values of 2 and 3 are valid for clockdiv
 	return ((freq * 2 * 1000000) >= FMC_clock) ? 2 : 3;
 };
 
-static constexpr uint32_t ns_to_hclks(const uint32_t sdram_clock, const uint32_t ns) {
+constexpr uint32_t ns_to_hclks(const uint32_t sdram_clock, const uint32_t ns) {
 	// return 16;
 	uint32_t sdram_mhz = sdram_clock / 1000000U;
 	uint32_t clks_x1000 = ns * sdram_mhz;
