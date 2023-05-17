@@ -5,7 +5,7 @@
 namespace SDRAMPeriphMath
 {
 
-static uint32_t freq_to_clockdiv(uint32_t FMC_clock, uint32_t freq) {
+inline uint32_t freq_to_clockdiv(uint32_t FMC_clock, uint32_t freq) {
 	// Requirement: FMC_clock / clockdiv >= freq
 	// STM32H7 SDRAM controller: Only values of 2 and 3 are valid for clockdiv
 	return ((freq * 2 * 1000000) >= FMC_clock) ? 2 : 3;
