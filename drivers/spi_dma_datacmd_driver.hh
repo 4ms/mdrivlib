@@ -12,6 +12,8 @@ namespace mdrivlib
 // Todo: pass dma as reference in ctor, rather than passing its type in the template params?
 template<typename ConfT, typename DmaTransferT>
 struct SpiDmaDataCmdDriver {
+	using ScreenConfT = ConfT::ScreenSpiConf;
+
 	enum PacketType { Cmd, Data };
 
 	SpiDmaDataCmdDriver() = default;
@@ -23,6 +25,17 @@ struct SpiDmaDataCmdDriver {
 		spi.enable();
 
 		spi_dr = spi.get_tx_datareg_addr();
+	}
+
+	// Clears the OVR flag whenever its set, by enabling the IRQ
+	void clear_overrun_on_interrupt() {
+		InterruptControl::disable_irq(ScreenConfT::IRQn);
+		spi.clear_overrun_flag();
+		InterruptManager::register_and_start_isr(
+			ScreenConfT::IRQn, ScreenConfT::priority1, ScreenConfT::priority2, [this]() {
+				if (spi.is_overrun())
+					spi.clear_overrun_flag();
+			});
 	}
 
 	template<PacketType MessageType>
@@ -114,7 +127,7 @@ struct SpiDmaDataCmdDriver {
 	}
 
 private:
-	SpiPeriph<typename ConfT::ScreenSpiConf> spi;
+	SpiPeriph<ScreenConfT> spi;
 	typename ConfT::DCPin dcpin;
 
 	DmaTransferT dma;
