@@ -146,8 +146,6 @@ struct SDCard {
 		if (buf_is_aligned && (bytes_to_read >= BlockSize)) {
 			uint32_t numblocks = bytes_to_read / BlockSize;
 
-			// if (HAL_SD_ReadBlocks(&hsd, read_ptr, block_num, numblocks, timeout) != HAL_OK)
-			//	return false;
 			if (!wait_until_ready())
 				return false;
 			if (!Target::read(&hsd, read_ptr, block_num, numblocks))
@@ -156,7 +154,6 @@ struct SDCard {
 				return false;
 
 			uint32_t bytes_read = numblocks * BlockSize;
-			// SystemCache::invalidate_dcache_by_range(read_ptr, bytes_read);
 			if (bytes_to_read == bytes_read)
 				return true;
 
@@ -166,22 +163,23 @@ struct SDCard {
 			read_ptr += bytes_read;
 		}
 
-		if (bytes_to_read > 0) {
-			alignas(4) uint8_t _data[BlockSize];
+		while (bytes_to_read > 0) {
+			alignas(4) uint8_t aligned_data[BlockSize];
 			constexpr uint32_t numblocks = 1;
 
-			// if (HAL_SD_ReadBlocks(&hsd, _data, block_num, numblocks, timeout) != HAL_OK)
-			// 	return false;
 			if (!wait_until_ready())
 				return false;
-			if (!Target::read(&hsd, read_ptr, block_num, numblocks))
+			if (!Target::read(&hsd, aligned_data, block_num, numblocks))
 				return false;
 			if (!wait_until_ready())
 				return false;
 
-			uint8_t *src = _data;
-			while (bytes_to_read--)
-				*read_ptr++ = *src++;
+			uint32_t bytes_to_copy = std::min(bytes_to_read, BlockSize);
+			for (unsigned i = 0; i < bytes_to_copy; i++) {
+				*read_ptr++ = aligned_data[i];
+			}
+			bytes_to_read -= bytes_to_copy;
+			block_num++;
 		}
 		return true;
 	}

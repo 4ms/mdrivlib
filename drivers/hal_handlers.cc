@@ -1,6 +1,8 @@
 #include "drivers/stm32xx.h"
 
-extern void recover_from_task_fault(void);
+void recover_from_task_fault() {
+	NVIC_SystemReset();
+}
 
 extern "C" {
 void SysTick_Handler(void) {
