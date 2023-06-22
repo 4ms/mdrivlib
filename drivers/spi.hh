@@ -72,11 +72,11 @@ public:
 		if constexpr (ConfT::data_dir == SpiDataDir::Duplex)
 			CFG2<SPI_CFG2_COMM>::write(0);
 		if constexpr (ConfT::data_dir == SpiDataDir::TXOnly)
-			CFG2<SPI_CFG2_COMM>::write(0b01 << SPI_CFG2_COMM_Pos);
+			CFG2<SPI_CFG2_COMM>::write(0b01);
 		if constexpr (ConfT::data_dir == SpiDataDir::RXOnly)
-			CFG2<SPI_CFG2_COMM>::write(0b10 << SPI_CFG2_COMM_Pos);
+			CFG2<SPI_CFG2_COMM>::write(0b10);
 		if constexpr (ConfT::data_dir == SpiDataDir::HalfDuplex)
-			CFG2<SPI_CFG2_COMM>::write(0b11 << SPI_CFG2_COMM_Pos);
+			CFG2<SPI_CFG2_COMM>::write(0b11);
 
 		set_data_size(ConfT::data_size);
 		// or: CFG1<SPI_CFG1_DSIZE>::write((ConfT::data_size - 1) << SPI_CFG1_DSIZE_Pos);
@@ -121,11 +121,11 @@ public:
 			CFG2<SPI_CFG2_MASTER>::clear();
 
 		if constexpr (ConfT::clock_division < 2)
-			CFG1<SPI_CFG1_MBR>::write(0b000 << SPI_CFG1_MBR_Pos);
+			CFG1<SPI_CFG1_MBR>::write(0b000);
 		else if constexpr (ConfT::clock_division > 256)
-			CFG1<SPI_CFG1_MBR>::write(0b111 << SPI_CFG1_MBR_Pos);
+			CFG1<SPI_CFG1_MBR>::write(0b111);
 		else
-			CFG1<SPI_CFG1_MBR>::write((MathTools::log2_floor(ConfT::clock_division) - 1) << SPI_CFG1_MBR_Pos);
+			CFG1<SPI_CFG1_MBR>::write((MathTools::log2_floor(ConfT::clock_division) - 1));
 
 		if constexpr (ConfT::LSBfirst)
 			CFG2<SPI_CFG2_LSBFRST>::set();
@@ -147,11 +147,11 @@ public:
 		} else
 			CFG1<SPI_CFG1_CRCEN>::clear();
 
-		CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold - 1) << SPI_CFG1_FTHLV_Pos);
+		CFG1<SPI_CFG1_FTHLV>::write((ConfT::FifoThreshold - 1));
 
-		CFG2<SPI_CFG2_MSSI>::write((ConfT::NumClocksDelayBeforeData & SPI_CFG2_MSSI_Msk) << SPI_CFG2_MSSI_Pos);
+		CFG2<SPI_CFG2_MSSI>::write((ConfT::NumClocksDelayBeforeData & SPI_CFG2_MSSI_Msk));
 
-		CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111) << SPI_CFG2_MIDI_Pos);
+		CFG2<SPI_CFG2_MIDI>::write((ConfT::NumClocksToggleSSInterData & 0b1111));
 
 		// Todo: make configurable
 		CR1<SPI_CR1_MASRX>::clear();
@@ -231,10 +231,10 @@ public:
 		CR2<SPI_CR2_TSER>::write(num_packets);
 	}
 	void set_data_size(uint8_t data_size) {
-		CFG1<SPI_CFG1_DSIZE>::write((data_size - 1) << SPI_CFG1_DSIZE_Pos);
+		CFG1<SPI_CFG1_DSIZE>::write((data_size - 1));
 	}
 	void set_fifo_threshold(uint8_t num_bytes) {
-		CFG1<SPI_CFG1_FTHLV>::write((num_bytes - 1) << SPI_CFG1_FTHLV_Pos);
+		CFG1<SPI_CFG1_FTHLV>::write((num_bytes - 1));
 	}
 	void load_tx_data(uint16_t data0, uint16_t data1) {
 		SPI_<N>::TXDR::write(data0 << 16 | data1);
