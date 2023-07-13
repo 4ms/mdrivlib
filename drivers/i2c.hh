@@ -42,15 +42,21 @@ public:
 	}
 
 	Error mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
+	Error mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
+
 	Error mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
 	Error mem_write_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
 	Error mem_write_dma(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size);
+
 	Error read(uint16_t dev_address, uint8_t *data, uint16_t size);
 	Error read_IT(uint16_t dev_address, uint8_t *data, uint16_t size);
+
 	Error write(uint16_t address, uint8_t *data, uint16_t size);
 	Error write_IT(uint16_t address, uint8_t *data, uint16_t size);
+
 	void enable_IT(uint8_t pri1 = 2, uint8_t pri2 = 2);
 	void disable_IT();
+
 	void link_DMA_TX(DMA_HandleTypeDef *dmatx);
 	void link_DMA_RX(DMA_HandleTypeDef *dmarx);
 

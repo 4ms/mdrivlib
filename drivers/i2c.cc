@@ -73,6 +73,17 @@ I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_
 }
 
 I2CPeriph::Error
+I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	uint32_t retries = 16;
+	while (retries) {
+		if (HAL_I2C_Mem_Read_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
+			return I2C_NO_ERR;
+		retries = _check_errors(retries);
+	}
+	return I2C_XMIT_ERR;
+}
+
+I2CPeriph::Error
 I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
 	uint32_t retries = 16;
 	while (retries) {
