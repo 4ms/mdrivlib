@@ -1,9 +1,10 @@
 #pragma once
+#include "drivers/callable.hh"
 #include "stm32xx.h"
-#include <functional>
 
 namespace mdrivlib
 {
+
 struct TimekeeperConfig {
 	TIM_TypeDef *TIMx;
 	uint32_t period_ns;
@@ -12,10 +13,12 @@ struct TimekeeperConfig {
 };
 
 class Timekeeper {
+	using CallbackT = CallbackSized<32>;
+
 public:
 	Timekeeper() = default;
-	Timekeeper(const TimekeeperConfig &config, std::function<void(void)> &&func);
-	void init(const TimekeeperConfig &config, std::function<void(void)> &&func);
+	Timekeeper(const TimekeeperConfig &config, CallbackT &&func);
+	void init(const TimekeeperConfig &config, CallbackT &&func);
 
 	void start();
 	void stop();
@@ -24,7 +27,7 @@ private:
 	TIM_TypeDef *timx;
 	IRQn_Type irqn;
 
-	std::function<void(void)> task_func;
+	CallbackT task_func;
 
 	void _set_periph(TIM_TypeDef *timx);
 	void _set_timing(uint32_t period_ns, uint32_t priority1 = 3, uint32_t priority2 = 3);
