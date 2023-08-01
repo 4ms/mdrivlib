@@ -35,14 +35,13 @@ public:
 					.DataAlign = ConfT::align,
 					.ScanConvMode = ENABLE,
 					.EOCSelection = ADC_EOC_SEQ_CONV,
-					.LowPowerAutoWait = DISABLE,
-					.LowPowerAutoPowerOff = DISABLE,
 					.ContinuousConvMode = ENABLE,
+					.NbrOfConversion = ChanConfs.size(),
 					.DiscontinuousConvMode = DISABLE,
+					.NbrOfDiscConversion = 0,
 					.ExternalTrigConv = ADC_SOFTWARE_START,
 					.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
 					.DMAContinuousRequests = ENABLE,
-					.SamplingTimeCommon = common_sampling_time,
 				},
 		};
 		HAL_ADC_Init(&hadc);
