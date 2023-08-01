@@ -94,7 +94,7 @@ LoopFillZerobss:
 /* Call the clock system initialization function.*/
   bl  SystemInit   
 /* Call static constructors */
-    bl __libc_init_array
+  bl __libc_init_array
 /* Call the application's entry point.*/
   bl  main
   bx  lr    
@@ -112,14 +112,8 @@ Default_Handler:
 Infinite_Loop:
   b  Infinite_Loop
   .size  Default_Handler, .-Default_Handler
-/******************************************************************************
-*
-* The minimal vector table for a Cortex M3. Note that the proper constructs
-* must be placed on this to ensure that it ends up at physical address
-* 0x0000.0000.
-* 
-*******************************************************************************/
-   .section  .isr_vector,"a",%progbits
+
+  .section  .isr_vector,"a",%progbits
   .type  g_pfnVectors, %object
   .size  g_pfnVectors, .-g_pfnVectors
     
@@ -161,10 +155,10 @@ g_pfnVectors:
   .word IRQ_Trampoline_16
   .word IRQ_Trampoline_17
   .word IRQ_Trampoline_18
-  .word IRQ_Trampoline_19
-  .word IRQ_Trampoline_20
-  .word IRQ_Trampoline_21
-  .word IRQ_Trampoline_22
+  .word 0
+  .word 0
+  .word 0
+  .word 0
   .word IRQ_Trampoline_23
   .word IRQ_Trampoline_24
   .word IRQ_Trampoline_25
@@ -181,34 +175,34 @@ g_pfnVectors:
   .word IRQ_Trampoline_36
   .word IRQ_Trampoline_37
   .word IRQ_Trampoline_38
-  .word IRQ_Trampoline_39
+  .word 0
   .word IRQ_Trampoline_40
   .word IRQ_Trampoline_41
   .word IRQ_Trampoline_42
-  .word IRQ_Trampoline_43
-  .word IRQ_Trampoline_44
-  .word IRQ_Trampoline_45
-  .word IRQ_Trampoline_46
+  .word 0
+  .word 0
+  .word 0
+  .word 0
   .word IRQ_Trampoline_47
-  .word IRQ_Trampoline_48
+  .word 0
   .word IRQ_Trampoline_49
   .word IRQ_Trampoline_50
   .word IRQ_Trampoline_51
-  .word IRQ_Trampoline_52
-  .word IRQ_Trampoline_53
-  .word IRQ_Trampoline_54
-  .word IRQ_Trampoline_55
+  .word 0
+  .word 0
+  .word 0
+  .word 0
   .word IRQ_Trampoline_56
   .word IRQ_Trampoline_57
   .word IRQ_Trampoline_58
   .word IRQ_Trampoline_59
   .word IRQ_Trampoline_60
-  .word IRQ_Trampoline_61
-  .word IRQ_Trampoline_62
-  .word IRQ_Trampoline_63
-  .word IRQ_Trampoline_64
-  .word IRQ_Trampoline_65
-  .word IRQ_Trampoline_66
+  .word 0
+  .word 0
+  .word 0
+  .word 0
+  .word 0
+  .word 0
   .word IRQ_Trampoline_67
   .word IRQ_Trampoline_68
   .word IRQ_Trampoline_69
@@ -216,16 +210,16 @@ g_pfnVectors:
   .word IRQ_Trampoline_71
   .word IRQ_Trampoline_72
   .word IRQ_Trampoline_73
-  .word IRQ_Trampoline_74
-  .word IRQ_Trampoline_75
-  .word IRQ_Trampoline_76
-  .word IRQ_Trampoline_77
-  .word IRQ_Trampoline_78
-  .word IRQ_Trampoline_79
-  .word IRQ_Trampoline_80
+  .word 0
+  .word 0
+  .word 0
+  .word 0
+  .word 0
+  .word 0
+  .word 0
   .word IRQ_Trampoline_81
-  .word IRQ_Trampoline_82
-  .word IRQ_Trampoline_83
+  .word 0
+  .word 0
   .word IRQ_Trampoline_84
   
   ; .word     WWDG_IRQHandler                   /* Window WatchDog              */                                        

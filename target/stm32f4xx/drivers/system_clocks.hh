@@ -18,6 +18,7 @@ struct SystemClocks {
 		HAL_RCC_OscConfig(&osc_def_);
 
 		RCC_ClkInitTypeDef clk_def_ = clk_def;
+		//TODO: configure the flash latency:
 		HAL_RCC_ClockConfig(&clk_def_, FLASH_LATENCY_3); //3WS for 75<HCLK<100, 2.7V<Vdd<3.6V
 
 		RCC_PeriphCLKInitTypeDef pclk_def_ = pclk_def;
