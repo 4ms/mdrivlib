@@ -4,6 +4,7 @@
 
 namespace mdrivlib
 {
+
 Pin::Pin(GPIO port,
 		 uint8_t pin,
 		 PinMode mode,

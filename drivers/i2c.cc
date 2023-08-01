@@ -126,17 +126,6 @@ void I2CPeriph::deinit() {
 }
 
 I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
-	// Pin testsda{defs.SDA.gpio, defs.SDA.pin, PinMode::Output};
-	// testsda.high();
-	// testsda.low();
-	// testsda.high();
-	// testsda.low();
-	// Pin testscl{defs.SCL.gpio, defs.SCL.pin, PinMode::Output};
-	// testscl.high();
-	// testscl.low();
-	// testscl.high();
-	// testscl.low();
-
 	Pin sda{defs.SDA.gpio,
 			defs.SDA.pin,
 			PinMode::Alt,
@@ -165,14 +154,19 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 	deinit();
 
 	hal_i2c_.Instance = defs.I2Cx;
-	hal_i2c_.Init.Timing = defs.timing.calc();
 	hal_i2c_.Init.OwnAddress1 = 0x33;
 	hal_i2c_.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	hal_i2c_.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
 	hal_i2c_.Init.OwnAddress2 = 0;
-	hal_i2c_.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
 	hal_i2c_.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
 	hal_i2c_.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+#ifdef STM32F4
+	hal_i2c_.Init.ClockSpeed = 100000;
+	hal_i2c_.Init.DutyCycle = I2C_DUTYCYCLE_2;
+#else
+	hal_i2c_.Init.Timing = defs.timing.calc();
+	hal_i2c_.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+#endif
 
 	if (hal_i2c_.Instance == I2C1) {
 		i2c_irq_num_ = I2C1_EV_IRQn;
