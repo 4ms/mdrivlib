@@ -10,6 +10,10 @@ struct TimekeeperConfig {
 	uint32_t period_ns;
 	uint32_t priority1;
 	uint32_t priority2;
+
+	static constexpr uint32_t Hz(uint32_t freq_hz) {
+		return 1'000'000'000UL / freq_hz;
+	}
 };
 
 class Timekeeper {
