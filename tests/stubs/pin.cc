@@ -1,3 +1,4 @@
+#include <cstdio>
 #define GPIOE_BASE static_cast<uint32_t>(FakeGPIO::E)
 #define GPIOF_BASE static_cast<uint32_t>(FakeGPIO::F)
 #define GPIOG_BASE static_cast<uint32_t>(FakeGPIO::G)
@@ -47,6 +48,12 @@ Pin::Pin(GPIO port,
 	, polarity_(polarity) {
 }
 
+Pin::Pin(const PinDef &pindef, PinMode mode, PinPull pull, PinPolarity polarity, PinSpeed speed, PinOType otype)
+	: port_(pindef.gpio)
+	, pin_(pindef.pin)
+	, polarity_(polarity) {
+}
+
 void Pin::high() const {
 }
 void Pin::low() const {
@@ -66,11 +73,9 @@ bool Pin::read_raw() {
 uint8_t Pin::is_on() {
 	if (polarity_ == PinPolarity::Normal) {
 		bool state = read_fake_pin(fake_port(port_), pin_);
-		// printf("Reading pin %d = %d\n", pin_, state);
 		return state;
 	} else {
 		bool state = !read_fake_pin(fake_port(port_), pin_);
-		// printf("Reading inverted pin %d = %d\n", pin_, state);
 		return state;
 	}
 }

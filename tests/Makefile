@@ -13,12 +13,11 @@ TEST_SOURCES += $(wildcard $(TEST_DIR)/test_*.cc)
 TEST_SOURCES += $(wildcard $(TEST_DIR)/test_*.cpp)
 TEST_SOURCES += $(TEST_DIR)/stubs/pin.cc
 TEST_SOURCES += $(TEST_DIR)/stubs/stm32/fake_gpio.cpp
-TEST_SOURCES += drivers/rotary.cc
 
 BUILDDIR = $(TEST_DIR)/build
 
 CXXFLAGS = 	-Wall \
-		 	-std=gnu++2a \
+		 	-std=gnu++2b \
 			-include $(TEST_DIR)/stubs/stm32/fake_gpio.h \
 			-include $(TEST_DIR)/stubs/system.hh \
 			-I$(TEST_DIR)/stubs \
