@@ -161,7 +161,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 	hal_i2c_.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
 	hal_i2c_.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 #ifdef STM32F4
-	hal_i2c_.Init.ClockSpeed = 100000;
+	hal_i2c_.Init.ClockSpeed = defs.timing.speed_hz;
 	hal_i2c_.Init.DutyCycle = I2C_DUTYCYCLE_2;
 #else
 	hal_i2c_.Init.Timing = defs.timing.calc();
