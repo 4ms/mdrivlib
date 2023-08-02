@@ -62,6 +62,9 @@ public:
 
 	void start() {
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+		// Must do this as fix for HAL, which unconditionally enables HT interrupt
+		if constexpr (!DmaConf::half_transfer_interrupt_enable)
+			dma.disable_ht();
 
 		uint32_t reg = hadc.Instance->CR1;
 		// Disable End of Conversion ISR

@@ -122,6 +122,8 @@ struct DMATransfer {
 		hdma.Lock = HAL_UNLOCKED;
 		hdma.State = HAL_DMA_STATE_READY;
 		HAL_DMA_Start_IT(&hdma, _src_addr, _dst_addr, _transfer_size / 2);
+		if constexpr (!ConfT::half_transfer_interrupt_enable)
+			disable_ht();
 	}
 
 	uint32_t get_transfer_size() {
