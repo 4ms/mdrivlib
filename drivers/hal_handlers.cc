@@ -1,3 +1,4 @@
+#include "debug.hh"
 #include "drivers/stm32xx.h"
 
 void recover_from_task_fault() {
@@ -5,8 +6,10 @@ void recover_from_task_fault() {
 }
 
 extern "C" {
-void SysTick_Handler(void) {
-	HAL_IncTick();
+
+void SysTick_Handler() {
+	extern volatile uint32_t uwTick;
+	uwTick = uwTick + 1;
 }
 
 #define HARDFAULT_HANDLING_ASM(_x)                                                                                     \
