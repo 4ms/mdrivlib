@@ -2,6 +2,7 @@
 #include "drivers/i2c.hh"
 #include "lp5024_registers.hh"
 #include <cstdint>
+#include <span>
 
 namespace mdrivlib::LP5024
 {
