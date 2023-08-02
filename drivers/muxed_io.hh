@@ -3,6 +3,7 @@
 #include "util/math.hh"
 #include "util/zip.hh"
 #include <array>
+#include <optional>
 
 template<unsigned NumInputChips = 0, unsigned NumOutputChips = 0, unsigned ChannelsPerChip = 8>
 struct MuxedIOConfig {
@@ -30,35 +31,42 @@ struct MuxedIO {
 			pin.init(pin_def, mdrivlib::PinMode::Output);
 	}
 
-	// data is packed with LSByte being chip 0
-	// TODO: wrap data into a structure so that we can access by chip, or by bit?
-	uint32_t readwrite(uint32_t data) {
-		uint32_t read = 0;
+	// Steps to the next mux channel, reading and writing as needed.
+	// Call this at a fixed frequency
+	// Returns the read value only after all channels have been read.
+	// Otherwise returns nullopt.
+	// TODO: wrap `data` into a structure so that we can access by chip, or by bit?
+	// ... right now data is packed with LSByte being chip 0, which is not obvious
+	std::optional<uint32_t> step(uint32_t data) {
 
-		for (unsigned chan = 0; chan < Conf.ChanPerChip; chan++) {
-			// Turn all write pins off so we don't accidentally write a 1 to the previous mux channel
-			// Or to a channel that gets selected while select() is changing select pins
-			for (auto &pin : write_pins) {
-				pin.off();
+		// Turn all write pins off so we don't accidentally write a 1 to the previous mux channel
+		// Or to a channel that gets selected while select() is changing select pins
+		for (auto &pin : write_pins)
+			pin.off();
+
+		// Select the next channel
+		select(cur_chan);
+
+		// Write a 1 or 0 to the MUXed outputs
+		for (auto &pin : write_pins)
+			pin.set_to(data & (1 << cur_chan));
+
+		// Read each input chip, putting the result into the right bit
+		for (unsigned chipnum = 0; auto &pin : read_pins) {
+			if (pin.read_raw()) {
+				running_read |= (1 << cur_chan) << (8U * chipnum);
 			}
-
-			// Select the next channel
-			select(chan);
-
-			// Write a 1 or 0 to the MUXed output
-			for (auto &pin : write_pins) {
-				pin.set_to(data & (1 << chan));
-			}
-
-			// Read each input chip, putting the result into the right bit
-			for (unsigned chipnum = 0; auto &pin : read_pins) {
-				if (pin.read_raw()) {
-					read |= (1 << chan) << (8U * chipnum);
-				}
-				chipnum++;
-			}
+			chipnum++;
 		}
-		return read;
+
+		cur_chan++;
+		if (cur_chan >= Conf.ChanPerChip) {
+			cur_chan = 0;
+			auto read = running_read;
+			running_read = 0;
+			return read;
+		} else
+			return std::nullopt;
 	}
 
 private:
@@ -72,4 +80,7 @@ private:
 	std::array<mdrivlib::Pin, Conf.InputChipPins.size()> read_pins;
 	std::array<mdrivlib::Pin, Conf.OutputChipPins.size()> write_pins;
 	std::array<mdrivlib::Pin, Conf.SelectPins.size()> sel_pins;
+
+	uint32_t cur_chan = 0;
+	uint32_t running_read = 0;
 };
