@@ -4,8 +4,8 @@
 
 namespace mdrivlib
 {
-using mdrivlib::PinNum;
 using mdrivlib::PinAF;
+using mdrivlib::PinNum;
 enum SpiDataDir { Duplex, TXOnly, RXOnly, HalfDuplex };
 
 struct DefaultSpiConf {
@@ -42,5 +42,7 @@ struct DefaultSpiConf {
 	static constexpr uint32_t NumClocksDelayBeforeData = 0;
 
 	static constexpr uint8_t FifoThreshold = 1;
+
+	static constexpr bool LSBFirst = false;
 };
 } // namespace mdrivlib
