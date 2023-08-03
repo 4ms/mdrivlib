@@ -43,6 +43,6 @@ struct DefaultSpiConf {
 
 	static constexpr uint8_t FifoThreshold = 1;
 
-	static constexpr bool LSBFirst = false;
+	static constexpr bool LSBfirst = false;
 };
 } // namespace mdrivlib
