@@ -183,15 +183,15 @@ public:
 	void clear_tx_reload_flag() { }
 
 	// Status flags
-	bool rx_packet_available() { return false; }
-	bool tx_space_available() { return false; }
-	bool duplex_space_available() { return false; }
+	// bool rx_packet_available() { return false; }
+	bool tx_space_available() { return SR<SPI_SR_TXE>::read() ? true : false; }
+	// bool duplex_space_available() { return false; }
 	bool is_end_of_transfer() { return SR<SPI_SR_BSY>::read() ? false : true; }
 	bool is_tx_complete() { return SR<SPI_SR_BSY>::read() ? false : true; }
 	bool is_overrun() { return SR<SPI_SR_OVR>::read() ? true : false; }
 	bool is_underrun() { return SR<SPI_SR_UDR>::read() ? true : false; }
-	bool rx_fifo_not_empty() { return false; }
-	int rx_fifo_frames_left() { return false; }
+	// bool rx_fifo_not_empty() { return false; }
+	// int rx_fifo_frames_left() { return false; }
 
 	// clang-format off
 
@@ -199,10 +199,10 @@ public:
 	uint32_t get_tx_datareg_addr() { return reinterpret_cast<uint32_t>(SPI_<N>::TXDR::BaseAddress); }
 
 	// TX conditions
-	void set_tx_message_size(uint16_t num_packets) {
-	}
-	void set_tx_message_reload_size(uint16_t num_packets) {
-	}
+	// void set_tx_message_size(uint16_t num_packets) {
+	// }
+	// void set_tx_message_reload_size(uint16_t num_packets) {
+	// }
 	void set_data_size() {
 		CR1<SPI_CR1_DFF>::write(ConfT::data_size == 16 ? 1 : 0);
 	}
@@ -214,9 +214,9 @@ public:
 	void load_tx_data(uint32_t data) {
 		SPI_<N>::DR::write(data);
 	}
-	void start_transfer() {
+	// void start_transfer() {
 		//starts on load_tx_data()
-	}
+	// }
 	uint16_t received_data() {
 		return SPI_<N>::DR::read();
 	}
@@ -233,8 +233,8 @@ public:
 		}
 	}
 
-	void enable_auto_suspend() {
-	}
+	// void enable_auto_suspend() {
+	// }
 
 	template<int chip_num>
 	void select() {
