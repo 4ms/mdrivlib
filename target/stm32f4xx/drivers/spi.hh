@@ -148,7 +148,7 @@ public:
 	void disable_RX_interrupt() { CR2<SPI_CR2_RXNEIE>::clear(); }
 	void enable_TX_interrupt() { CR2<SPI_CR2_TXEIE>::set(); }
 	void disable_TX_interrupt() { CR2<SPI_CR2_TXEIE>::clear(); }
-	void enable_duplex_interrupt() { ; }
+	// void enable_duplex_interrupt() { ; }
 	void disable_duplex_interrupt() { ; }
 	void enable_end_of_xfer_interrupt() { enable_TX_interrupt(); }
 	void disable_end_of_xfer_interrupt() { disable_TX_interrupt(); }
@@ -168,7 +168,7 @@ public:
 
 	void enable_tx_filled_interrupt() { enable_TX_interrupt(); }
 	void disable_tx_filled_interrupt() { disable_TX_interrupt(); }
-	void enable_tx_reload_interrupt() { }
+	// void enable_tx_reload_interrupt() { }
 	void disable_tx_reload_interrupt() { }
 
 	void clear_EOT_flag() { }
@@ -187,7 +187,7 @@ public:
 	bool tx_space_available() { return SR<SPI_SR_TXE>::read() ? true : false; }
 	// bool duplex_space_available() { return false; }
 	bool is_end_of_transfer() { return SR<SPI_SR_BSY>::read() ? false : true; }
-	bool is_tx_complete() { return SR<SPI_SR_BSY>::read() ? false : true; }
+	bool is_tx_complete() { return tx_space_available();}
 	bool is_overrun() { return SR<SPI_SR_OVR>::read() ? true : false; }
 	bool is_underrun() { return SR<SPI_SR_UDR>::read() ? true : false; }
 	// bool rx_fifo_not_empty() { return false; }
@@ -208,10 +208,10 @@ public:
 	}
 	void set_fifo_threshold(uint8_t num_bytes) {
 	}
-	void load_tx_data(uint16_t data0, uint16_t data1) {
-		SPI_<N>::TXDR::write(data0 << 16 | data1);
-	}
-	void load_tx_data(uint32_t data) {
+	// void load_tx_data(uint16_t data0, uint16_t data1) {
+	// 	SPI_<N>::TXDR::write(data0 << 16 | data1);
+	// }
+	void load_tx_data(uint16_t data) {
 		SPI_<N>::DR::write(data);
 	}
 	// void start_transfer() {
