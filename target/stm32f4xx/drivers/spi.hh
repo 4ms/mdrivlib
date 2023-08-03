@@ -80,7 +80,7 @@ public:
 			//RXONLY?
 		}
 
-		set_data_size<ConfT::data_size>();
+		set_data_size();
 
 		if constexpr (ConfT::clock_high_when_idle)
 			CR1<SPI_CR1_CPOL>::set();
