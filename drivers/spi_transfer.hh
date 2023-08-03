@@ -1,6 +1,6 @@
 #pragma once
-#include "spi.hh"
-#include "spi_transfer_config_struct.hh"
+#include "drivers/spi.hh"
+#include "drivers/spi_transfer_config_struct.hh"
 #include "util/math.hh"
 
 // Wrapper around a chip's SPI peripheral, handling multi-chip buses.

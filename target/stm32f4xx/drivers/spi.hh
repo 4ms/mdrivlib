@@ -187,7 +187,7 @@ public:
 	bool tx_space_available() { return SR<SPI_SR_TXE>::read() ? true : false; }
 	// bool duplex_space_available() { return false; }
 	bool is_end_of_transfer() { return SR<SPI_SR_BSY>::read() ? false : true; }
-	bool is_tx_complete() { return tx_space_available();}
+	bool is_tx_complete() { return is_end_of_transfer();}
 	bool is_overrun() { return SR<SPI_SR_OVR>::read() ? true : false; }
 	bool is_underrun() { return SR<SPI_SR_UDR>::read() ? true : false; }
 	// bool rx_fifo_not_empty() { return false; }
@@ -211,7 +211,7 @@ public:
 	// void load_tx_data(uint16_t data0, uint16_t data1) {
 	// 	SPI_<N>::TXDR::write(data0 << 16 | data1);
 	// }
-	void load_tx_data(uint16_t data) {
+	void load_tx_data(uint8_t data) {
 		SPI_<N>::DR::write(data);
 	}
 	// void start_transfer() {
