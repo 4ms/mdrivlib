@@ -9,8 +9,10 @@ namespace mdrivlib
 {
 
 struct SMPControl {
+	static constexpr uint32_t NumCores = 2;
 	static constexpr uint32_t NumRegs = 8;
-	static inline __attribute__((section(".noncachable"))) std::atomic<uint32_t> regs[NumRegs] = {0, 0, 0, 0, 0, 0, 0, 0};
+	static inline __attribute__((section(".noncachable"))) std::atomic<uint32_t> regs[NumRegs] = {
+		0, 0, 0, 0, 0, 0, 0, 0};
 
 	template<uint32_t channel>
 	static void notify() {
@@ -55,7 +57,7 @@ struct SMPControl {
 
 struct SMPThread {
 	static constexpr uint32_t StatusReg = 0;
-	enum Status {NotRunning = 0, Running = 1};
+	enum Status { NotRunning = 0, Running = 1 };
 
 	enum : uint32_t { CustomFunc0 = 0, CustomFunc1 = 0, CustomFunc2 = 2, CallFunction = 3 };
 
