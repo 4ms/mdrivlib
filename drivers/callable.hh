@@ -9,15 +9,20 @@
 // Note: [this] takes 4 Bytes (on ARM 32-bit system), so it's quite useful
 // Improvements, possibly: remove m_destroy and make m_data sizeof(void*)
 // this would reduce the size (on ARM 32-bit) from 16 Bytes to 8 Bytes
-class Callback {
+// But it would leak memory if Callable was on the heap
+// (which shouldn't happen, since the point of this is to avoid the heap,
+// but it could...)
+
+template<unsigned BUFFER_SIZE = 2 * sizeof(void *)>
+class CallbackSized {
 private:
-	static constexpr uint8_t BUFFER_SIZE = 2 * sizeof(void *);
+	// static constexpr unsigned BUFFER_SIZE = 2 * sizeof(void *);
 
 public:
-	Callback() = default;
+	CallbackSized() = default;
 
 	template<typename Callable>
-	Callback(Callable callable) {
+	CallbackSized(Callable callable) {
 		static_assert(sizeof(Callable) <= BUFFER_SIZE);
 		static_assert(std::is_invocable_v<Callable>);
 
@@ -26,7 +31,7 @@ public:
 		m_destroy = destroy<Callable>;
 	}
 
-	~Callback() {
+	~CallbackSized() {
 		if (m_destroy)
 			m_destroy(&m_data[0]);
 	}
@@ -39,6 +44,10 @@ public:
 
 	void operator()() {
 		call();
+	}
+
+	operator bool() {
+		return m_callback;
 	}
 
 private:
@@ -63,6 +72,8 @@ private:
 
 	alignas(uint64_t) uint8_t m_data[BUFFER_SIZE];
 };
+
+using Callback = CallbackSized<2 * sizeof(void *)>;
 
 // Function<T> is a callback that takes parameters and returns something
 template<typename Signature>

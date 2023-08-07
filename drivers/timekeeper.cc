@@ -8,13 +8,13 @@
 namespace mdrivlib
 {
 
-void Timekeeper::init(const TimekeeperConfig &config, std::function<void(void)> &&func) {
+void Timekeeper::init(const TimekeeperConfig &config, CallbackT &&func) {
 	_set_periph(config.TIMx);
 	task_func = std::move(func);
 	_init(config);
 }
 
-Timekeeper::Timekeeper(const TimekeeperConfig &config, std::function<void(void)> &&func)
+Timekeeper::Timekeeper(const TimekeeperConfig &config, CallbackT &&func)
 	: timx(config.TIMx)
 	, irqn(PeriphUtil::TIM::IRQn(timx))
 	, task_func(std::move(func)) {

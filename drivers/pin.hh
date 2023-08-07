@@ -19,7 +19,7 @@
 #pragma once
 
 #include "drivers/register_access.hh"
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 #include <cstddef>
 
 namespace mdrivlib

@@ -34,7 +34,10 @@ auto fill_arr(auto &&f) {
 // Interrupt Manager class
 class Interrupt {
 public:
-	static constexpr uint32_t NumISRs = TargetName == Targets::stm32f0 ? 38 : 256;
+	static constexpr uint32_t NumISRs = TargetName == Targets::stm32f0 ? 38
+									  : TargetName == Targets::stm32f4 ? 85
+									  : TargetName == Targets::stm32f7 ? 128
+																	   : 256;
 	using ISRType = Callback;
 	using IRQType = IRQn_Type;
 

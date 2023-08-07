@@ -79,7 +79,7 @@ private:
 
 	Error _init_periph(I2C_TypeDef *periph, const I2CTimingConfig &timing);
 	Error _init_periph(I2C_TypeDef *periph) {
-		return _init_periph(periph, I2CTimingConfig{.PRESC = 0x50, .SCLDEL_SDADEL = 0x70, .SCLH = 0x75, .SCLL = 0xB1});
+		return _init_periph(periph, I2CTimingConfig{});
 	}
 };
 } // namespace mdrivlib
