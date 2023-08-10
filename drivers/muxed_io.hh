@@ -48,8 +48,18 @@ struct MuxedIO {
 		select(cur_chan);
 
 		// Write a 1 or 0 to the MUXed outputs
-		for (auto &pin : write_pins)
-			pin.set_to(data & (1 << cur_chan));
+		for (auto &pin : write_pins) {
+			bool is_set = data & (1 << cur_chan);
+			if (data & (1 << (cur_chan + flash_offset))) {
+				if (flash_timer & 0b1000)
+					is_set = false;
+			}
+			if (data & (1 << (cur_chan + dim_offset))) {
+				if ((flash_timer & 0b11) != 0b00)
+					is_set = false;
+			}
+			pin.set_to(is_set);
+		}
 
 		// Read each input chip, putting the result into the right bit
 		for (unsigned chipnum = 0; auto &pin : read_pins) {
@@ -62,6 +72,7 @@ struct MuxedIO {
 		cur_chan++;
 		if (cur_chan >= Conf.ChanPerChip) {
 			cur_chan = 0;
+			flash_timer++;
 			auto read = running_read;
 			running_read = 0;
 			return read;
@@ -83,4 +94,9 @@ private:
 
 	uint32_t cur_chan = 0;
 	uint32_t running_read = 0;
+	uint32_t flash_timer = 0;
+
+	//FIXME!!
+	static constexpr uint32_t flash_offset = 16;
+	static constexpr uint32_t dim_offset = 8;
 };
