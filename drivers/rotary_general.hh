@@ -14,8 +14,6 @@ public:
 	RotaryEncoder(const PinDef &pinA, const PinDef &pinB, RotaryStepSize step_size)
 		: pinA{pinA, PinMode::Input, PinPull::Up, PinPolarity::Inverted}
 		, pinB{pinB, PinMode::Input, PinPull::Up, PinPolarity::Inverted}
-		, state_{0x00}
-		, position_{0}
 		, StateTable(step_size == RotaryStepSize::RotaryHalfStep ? RotaryEncDetails::RotaryStateTable<RotaryHalfStep>
 																 : RotaryEncDetails::RotaryStateTable<RotaryFullStep>) {
 	}
@@ -42,8 +40,8 @@ public:
 private:
 	Pin pinA;
 	Pin pinB;
-	uint8_t state_;
-	int32_t position_;
+	uint8_t state_{};
+	int32_t position_{};
 	const RotaryEncDetails::StateTableType &StateTable;
 
 	enum RotaryDir : uint8_t {

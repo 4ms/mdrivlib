@@ -1,5 +1,5 @@
 #include "doctest.h"
-#include "fusb302_registers.hh"
+#include "drivers/fusb302_registers.hh"
 #include <cstring>
 
 template<typename Reg>

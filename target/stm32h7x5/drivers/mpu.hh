@@ -1,5 +1,5 @@
 #pragma once
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 #include "util/math.hh"
 
 namespace mdrivlib

@@ -1,9 +1,9 @@
 #include "doctest.h"
-#include "drivers/rotary_general.hh"
 #include "stubs/stm32/fake_gpio.h"
 //
-#include "drivers/pin.hh"
+// #include "drivers/pin.hh"
 #include "drivers/rotary.hh"
+#include "drivers/rotary_general.hh"
 
 using namespace mdrivlib;
 

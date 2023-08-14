@@ -1,5 +1,5 @@
 #include "doctest.h"
-#include "register_access.hh"
+#include "drivers/register_access.hh"
 #include <memory>
 
 TEST_CASE("register accesss") {

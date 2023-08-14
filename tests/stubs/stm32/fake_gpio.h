@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum LL_GPIO_STUB_VALS {
 	LL_GPIO_MODE_INPUT,

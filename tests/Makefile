@@ -25,9 +25,7 @@ CXXFLAGS = 	-Wall \
 			-I$(DOCTESTHEADER_DIR) \
 			-I$(TEST_DIR) \
 			-I. \
-			-Idrivers \
-			-I/target/stm32h7x5 \
-			-I/target/stm32h7x5/drivers \
+			-Itarget/stm32h7x5 \
 			-I../cmsis-device/stm32h7x5/include \
 			-I../stm32-hal/stm32h7x5/include \
 			-I../../../shared \
