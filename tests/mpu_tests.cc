@@ -38,7 +38,7 @@ TEST_CASE("Disable cache in a region and check MPU registers are correct") {
 	uint32_t fake_region_base_addr = 0x1234C7A5;
 	uint32_t fake_region_size = 5178;
 	uint32_t smallest_base2_region_that_fits_over_fake = 8192;
-	uint32_t base2_size = log2(smallest_base2_region_that_fits_over_fake);
+	uint32_t base2_size = MathTools::log2_floor(smallest_base2_region_that_fits_over_fake);
 	uint32_t expected_SIZE_val = base2_size - 1;
 
 	auto region_id = mdrivlib::MPU_::disable_cache_for_dma_buffer(fake_region_base_addr, fake_region_size);
