@@ -3,6 +3,7 @@
 #include "drivers/callable.hh"
 #include "drivers/stm32xx.h"
 #include <array>
+#include <cstddef>
 
 // FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
