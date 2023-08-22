@@ -1,4 +1,4 @@
-#include "interrupt.hh"
+#include "drivers/interrupt.hh"
 
 namespace mdrivlib
 {

@@ -1,8 +1,8 @@
 #pragma once
-#include "dma_config_struct.hh"
+#include "drivers/dma_config_struct.hh"
+#include "drivers/interrupt.hh"
 #include "drivers/memory_transfer.hh"
-#include "interrupt.hh"
-#include "spi.hh"
+#include "drivers/spi.hh"
 #include "util/math.hh"
 #include <functional>
 

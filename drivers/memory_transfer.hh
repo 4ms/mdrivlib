@@ -1,10 +1,9 @@
 #pragma once
-#include "debug.hh" //FIXME
 #include "drivers/cache.hh"
-#include "interrupt.hh"
-#include "mdma_registers.hh"
-#include "rcc.hh"
-#include "stm32xx.h"
+#include "drivers/interrupt.hh"
+#include "drivers/mdma_registers.hh"
+#include "drivers/rcc.hh"
+#include "drivers/stm32xx.h"
 #include <cstddef>
 
 namespace mdrivlib

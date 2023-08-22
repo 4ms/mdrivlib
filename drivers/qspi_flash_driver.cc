@@ -1,8 +1,8 @@
-#include "qspi_flash_driver.hh"
-#include "interrupt.hh"
-#include "interrupt_control.hh"
-#include "qspi_flash_registers.h"
-#include "stm32xx.h"
+#include "drivers/qspi_flash_driver.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/interrupt_control.hh"
+#include "drivers/qspi_flash_registers.h"
+#include "drivers/stm32xx.h"
 
 //#define QSPI_DO_TESTS
 
