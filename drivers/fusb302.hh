@@ -101,7 +101,7 @@ struct Device {
 		auto intrB = read<InterruptB>();
 
 		pr_debug("Int = 0x%x VBusOK=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
-		pr_debug("IntA = 0x%x TogDone=%d\n", intrA, intrA.ToggleDone);
+		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", intrA, intrB, intrA.ToggleDone);
 
 		switch (state) {
 			case ConnectedState::TogglePolling: {

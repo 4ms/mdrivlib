@@ -48,7 +48,7 @@ int32_t IRQ_Initialize(void) {
 	GIC_Enable();
 
 	unsigned num_irq = 32U * ((GIC_DistributorInfo() & 0x1FU) + 1U);
-	int x;
+	unsigned x;
 	do {
 		x = GIC_AcknowledgePending();
 		__DSB();
