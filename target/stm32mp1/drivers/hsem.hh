@@ -1,7 +1,7 @@
 #pragma once
-#include "interrupt.hh"
-#include "register_access.hh"
-#include "stm32xx.h"
+#include "drivers/interrupt.hh"
+#include "drivers/register_access.hh"
+#include "drivers/stm32xx.h"
 #include <functional>
 
 namespace mdrivlib

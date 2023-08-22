@@ -1,6 +1,6 @@
 #pragma once
 #include "drivers/secondary_core_control.hh"
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 #include <atomic>
 #include <cstdint>
 #include <functional>

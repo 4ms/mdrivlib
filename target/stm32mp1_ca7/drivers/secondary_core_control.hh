@@ -1,5 +1,5 @@
 #pragma once
-#include "stm32xx.h"
+#include "drivers/stm32xx.h"
 
 extern uint32_t aux_core_start; // defined in startup.s
 
