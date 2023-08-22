@@ -1,4 +1,3 @@
-#include "debug.hh"
 #include "drivers/stm32xx.h"
 
 void recover_from_task_fault() {
