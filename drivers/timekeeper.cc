@@ -1,9 +1,9 @@
-#include "timekeeper.hh"
-#include "arch.hh"
-#include "clocks.hh"
-#include "interrupt.hh"
-#include "stm32xx.h"
-#include "tim.hh"
+#include "drivers/timekeeper.hh"
+#include "drivers/arch.hh"
+#include "drivers/clocks.hh"
+#include "drivers/interrupt.hh"
+#include "drivers/stm32xx.h"
+#include "drivers/tim.hh"
 
 namespace mdrivlib
 {
