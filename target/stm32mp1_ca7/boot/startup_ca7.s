@@ -169,7 +169,11 @@ bss_loop:
 
 .global aux_core_start
 aux_core_start:
-	cpsid   if 										// Disable Interrupts: keep them disabled since we use IRQ as a inter-processor signal
+	cpsid   if 										// Disable Interrupts
+
+													// Set Vector Base Address Register (VBAR) to point to this application's vector table
+	ldr    R0, =0xC2000040
+	mcr    p15, 0, R0, c12, c0, 0
 													
 	bl SystemInitAuxCore 							// System and libc/cpp init
 
@@ -183,7 +187,7 @@ auxcore_usrsys_loop:
     strlt r0, [r1], #4
     blt auxcore_usrsys_loop
 
-	cpsid   if 										// Disable Interrupts: keep them disabled since we use IRQ as a inter-processor signal
+	cpsie   i 										// Enable interrupts
 	bl aux_core_main 								// Go to secondary core main code
 
 
