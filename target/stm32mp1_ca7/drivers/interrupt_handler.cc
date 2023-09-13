@@ -27,8 +27,9 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 		"ldr r0, [r3, #12]				\n" // IAR: Acknowledge it with a read to the Interrupt Acknowledge Register
 		//"dsb sy							\n" // Data barrier (Todo: research why)
 
+		"bfc r0, #10, #3		   		\n" // Clear the sending CPU ID bits (which are set for SGIs)
 		"cmp r0, #0x03fc 				\n" // Check if it's a valid IRQ number
-		"bge InvalidIRQNum 				\n" // Skip this if it's invalid
+		"bge ExitISRHandler				\n" // Skip this if it's invalid
 
 		"and r2, sp, #4  	 			\n" // Ensure stack is 8-byte aligned.
 		"sub sp, sp, r2  				\n" // r2 contains the stack adjustment
@@ -51,7 +52,7 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 
 		"add sp, sp, r2  				\n" // Restore previous stack pointer
 
-		"InvalidIRQNum: 				\n"
+		"ExitISRHandler: 				\n"
 		"pop {r0-r3, r12, lr} 			\n" //
 		"rfeia sp! 						\n" // Return to address on stack, and pop SPSR (which restores the en/disable
 											// state of IRQs)
