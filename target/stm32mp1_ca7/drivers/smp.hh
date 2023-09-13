@@ -9,6 +9,9 @@ namespace mdrivlib
 {
 
 struct SMPControl {
+
+	static constexpr std::array<IRQn_Type, 4> SMPIRQn{SGI1_IRQn, SGI2_IRQn, SGI3_IRQn, SGI4_IRQn};
+
 	static constexpr uint32_t NumCores = 2;
 	static constexpr uint32_t NumRegs = 8;
 	static inline __attribute__((section(".noncachable"))) std::atomic<uint32_t> regs[NumRegs] = {
@@ -16,18 +19,13 @@ struct SMPControl {
 
 	template<uint32_t channel>
 	static void notify() {
-		if constexpr (channel == 1)
-			SecondaryCore::send_sgi(SGI1_IRQn);
-		else if (channel == 2)
-			SecondaryCore::send_sgi(SGI2_IRQn);
-		else if (channel == 3)
-			SecondaryCore::send_sgi(SGI3_IRQn);
-		else if (channel == 4)
-			SecondaryCore::send_sgi(SGI4_IRQn);
+		static_assert(channel <= SMPIRQn.size());
+		SecondaryCore::send_sgi(SMPIRQn[channel - 1]);
 	}
 
 	static void notify(uint32_t channel) {
-		SecondaryCore::send_sgi(static_cast<IRQn_Type>(channel));
+		if (channel <= SMPIRQn.size())
+			SecondaryCore::send_sgi(SMPIRQn[channel - 1]);
 	}
 
 	template<uint32_t reg_num = 0>
