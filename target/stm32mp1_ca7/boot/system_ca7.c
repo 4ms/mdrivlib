@@ -82,5 +82,5 @@ void SystemInitAuxCore(void) {
 	L1C_EnableCaches();
 	L1C_EnableBTAC();
 
-	GIC_CPUInterfaceInit();
+	IRQ_Initialize();
 }

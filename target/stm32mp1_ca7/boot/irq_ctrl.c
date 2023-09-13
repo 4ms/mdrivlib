@@ -45,7 +45,10 @@ void GIC_ClearActiveIRQ(IRQn_Type IRQn) {
 
 /// Initialize interrupt controller.
 int32_t IRQ_Initialize(void) {
-	GIC_Enable();
+	uint32_t current_core = __get_MPIDR() & 0xFF; //0 = CA7 Core 1, 1 = CA7 Core 2
+	if (current_core == 0)
+		GIC_DistInit();
+	GIC_CPUInterfaceInit(); //per CPU
 
 	unsigned num_irq = 32U * ((GIC_DistributorInfo() & 0x1FU) + 1U);
 	unsigned x;
