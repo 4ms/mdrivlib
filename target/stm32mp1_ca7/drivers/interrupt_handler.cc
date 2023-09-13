@@ -6,7 +6,8 @@ void __attribute__((used)) ISRHandler(unsigned irqnum) {
 }
 
 void __attribute__((used)) SVC_Handler() {
-	__BKPT();
+	__NOP();
+	//__BKPT();
 }
 
 void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler() {
@@ -24,8 +25,8 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 
 		"mov r3, #GICCPU_BASE_low		\n"
 		"movt r3, #GICCPU_BASE_high		\n" // Load address of the GIC CPU Interface
-		"ldr r0, [r3, #12]				\n" // IAR: Acknowledge it with a read to the Interrupt Acknowledge Register
-		//"dsb sy							\n" // Data barrier (Todo: research why)
+		"ldr r0, [r3, #12]				\n" // AIAR: Acknowledge it with a read to the Interrupt Acknowledge Register
+		// "dsb sy							\n" // Data barrier (Todo: research why)
 
 		"bfc r0, #10, #3		   		\n" // Clear the sending CPU ID bits (which are set for SGIs)
 		"cmp r0, #0x03fc 				\n" // Check if it's a valid IRQ number
@@ -60,6 +61,7 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 }
 
 void __attribute__((used)) FIQ_Handler() {
-	__BKPT();
+	__NOP();
+	// __BKPT();
 }
 }
