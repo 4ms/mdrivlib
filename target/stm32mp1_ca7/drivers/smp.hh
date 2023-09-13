@@ -12,6 +12,13 @@ struct SMPControl {
 
 	static constexpr std::array<IRQn_Type, 4> SMPIRQn{SGI1_IRQn, SGI2_IRQn, SGI3_IRQn, SGI4_IRQn};
 
+	static constexpr auto IRQn(uint32_t channel) {
+		if (channel <= SMPIRQn.size())
+			return SMPIRQn[channel - 1];
+		else
+			return IRQn(0);
+	}
+
 	static constexpr uint32_t NumCores = 2;
 	static constexpr uint32_t NumRegs = 8;
 	static inline __attribute__((section(".noncachable"))) std::atomic<uint32_t> regs[NumRegs] = {
@@ -20,12 +27,12 @@ struct SMPControl {
 	template<uint32_t channel>
 	static void notify() {
 		static_assert(channel <= SMPIRQn.size());
-		SecondaryCore::send_sgi(SMPIRQn[channel - 1]);
+		SecondaryCore::send_sgi(IRQn(channel));
 	}
 
 	static void notify(uint32_t channel) {
 		if (channel <= SMPIRQn.size())
-			SecondaryCore::send_sgi(SMPIRQn[channel - 1]);
+			SecondaryCore::send_sgi(IRQn(channel));
 	}
 
 	template<uint32_t reg_num = 0>
