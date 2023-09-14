@@ -77,7 +77,39 @@ struct LED0Brightness : ReadWrite {
 
 	uint8_t Brightness;
 };
-//...
+
+struct LED1Brightness : ReadWrite {
+	enum : uint8_t { Address = 0x08 };
+
+	uint8_t Brightness;
+};
+
+struct LED2Brightness : ReadWrite {
+	enum : uint8_t { Address = 0x09 };
+
+	uint8_t Brightness;
+};
+
+struct LED3Brightness : ReadWrite {
+	enum : uint8_t { Address = 0x0a };
+
+	uint8_t Brightness;
+};
+struct LED4Brightness : ReadWrite {
+	enum : uint8_t { Address = 0x0b };
+
+	uint8_t Brightness;
+};
+struct LED5Brightness : ReadWrite {
+	enum : uint8_t { Address = 0x0c };
+
+	uint8_t Brightness;
+};
+struct LED6Brightness : ReadWrite {
+	enum : uint8_t { Address = 0x0d };
+
+	uint8_t Brightness;
+};
 struct LED7Brightness : ReadWrite {
 	enum : uint8_t { Address = 0x0e };
 

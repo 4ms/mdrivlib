@@ -47,6 +47,25 @@ struct Device {
 		write(Out0Brightness::Address, values);
 	}
 
+	void set_rgb_led_brightness(unsigned rgb_led_id, uint8_t brightness) {
+		if (rgb_led_id < 8)
+			write(LED0Brightness::Address + rgb_led_id, brightness);
+	}
+
+	void set_rgb_led_brightness(unsigned rgb_led_id, float brightness) {
+		auto u8_brightness = std::clamp<uint8_t>(0, 255, brightness * 255.f);
+		set_rgb_led_brightness(rgb_led_id, u8_brightness);
+	}
+
+	void set_all_led_brightness(const std::span<const uint8_t, 8> brightnesses) {
+		write(LED0Brightness::Address, brightnesses);
+	}
+
+	void dim_all_leds(uint8_t brightness) {
+		for (unsigned i = 0; i < 8; i++)
+			write(LED0Brightness::Address + i, brightness);
+	}
+
 	void all_leds_off() {
 		uint8_t data[24]{};
 		set_all_leds(data);
