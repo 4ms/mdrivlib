@@ -97,5 +97,9 @@ struct UartTarget {
 		while ((uart->ISR & USART_ISR_TXFE) == 0) //requires FIFO mode
 			;
 	}
+
+	static bool has_rx(auto uart) {
+		return (uart->ISR & USART_ISR_RXNE) != 0;
+	}
 };
 } // namespace mdrivlib
