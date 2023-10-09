@@ -25,6 +25,10 @@ public:
 		UartTarget<Conf>::uart_init();
 	}
 
+	bool set_baudrate(uint32_t baudrate_in_hz) {
+		return UartTarget<Conf>::set_baudrate(baudrate_in_hz);
+	}
+
 	void putchar(char c) {
 		uart->TDR = c;
 		UartTarget<Conf>::delay_for_write(uart);

@@ -4,6 +4,9 @@
 #include "drivers/stm32xx.h"
 #include "drivers/uart_conf.hh"
 
+#include <stm32mp1xx_ll_usart.h>
+#include <stm32mp1xx_ll_rcc.h>
+
 namespace mdrivlib
 {
 template<UartConf Conf>
@@ -112,6 +115,57 @@ struct UartTarget {
 
 	static bool has_rx(auto uart) {
 		return (uart->ISR & USART_ISR_RXNE) != 0;
+	}
+
+	static bool set_baudrate(uint32_t baudrate_in_hz)
+	{
+		auto instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
+
+		uint32_t peripheral_clock_source = 0;
+
+		#ifdef USART1_BASE
+		if constexpr (Conf.base_addr == USART1_BASE) peripheral_clock_source = LL_RCC_USART1_CLKSOURCE;
+		#endif
+
+		#ifdef USART2_BASE
+		if constexpr (Conf.base_addr == USART2_BASE) peripheral_clock_source = LL_RCC_UART24_CLKSOURCE;
+		#endif
+
+		#ifdef USART3_BASE
+		if constexpr (Conf.base_addr == USART3_BASE) peripheral_clock_source = LL_RCC_UART35_CLKSOURCE;
+		#endif
+
+		#ifdef USART4_BASE
+		if constexpr (Conf.base_addr == USART4_BASE) peripheral_clock_source = LL_RCC_UART24_CLKSOURCE;
+		#endif
+
+		#ifdef USART5_BASE
+		if constexpr (Conf.base_addr == USART5_BASE) peripheral_clock_source = LL_RCC_UART35_CLKSOURCE;
+		#endif
+
+		#ifdef USART6_BASE
+		if constexpr (Conf.base_addr == USART6_BASE) peripheral_clock_source = LL_RCC_USART6_CLKSOURCE;
+		#endif
+
+		#ifdef USART7_BASE
+		if constexpr (Conf.base_addr == USART7_BASE) peripheral_clock_source = LL_RCC_USART7_CLKSOURCE;
+		#endif
+
+		#ifdef USART8_BASE
+		if constexpr (Conf.base_addr == USART8_BASE) peripheral_clock_source = LL_RCC_USART8_CLKSOURCE;
+		#endif	   
+
+		LL_USART_Disable(instance);
+		while (LL_USART_IsEnabled(instance));
+
+		auto periphClock = LL_RCC_GetUARTClockFreq(peripheral_clock_source);   
+		LL_USART_SetBaudRate(instance, periphClock, LL_USART_GetPrescaler(instance), LL_USART_GetOverSampling(instance), baudrate_in_hz);
+
+		// TODO: add check baudrate change suceeded
+
+		LL_USART_Enable(instance);
+
+		return true;
 	}
 };
 } // namespace mdrivlib
