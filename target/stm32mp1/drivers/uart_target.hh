@@ -60,10 +60,22 @@ struct UartTarget {
 			if (err != HAL_OK) {
 				// __BKPT(43);
 			}
-			//HAL_USART_Init() does not enable Fifo Mode, so we must do it manually
+
+			// disable peripheral and wait for completion
 			hal_h.Instance->CR1 &= ~USART_CR1_UE;
+			while(hal_h.Instance->CR1 & USART_CR1_UE);
+
+			// HAL_USART_Init() enables synchronous mode by default
+			// this triggers RX for every TX
+			hal_h.Instance->CR2 &= ~USART_CR2_CLKEN;
+			if((hal_h.Instance->CR2 & USART_CR2_CLKEN) != 0) __BKPT();
+
+			//HAL_USART_Init() does not enable Fifo Mode, so we must do it manually
 			hal_h.Instance->CR1 |= USART_CR1_FIFOEN;
+
+			// enable peripheral
 			hal_h.Instance->CR1 |= USART_CR1_UE;
+			
 		} else {
 			UART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
