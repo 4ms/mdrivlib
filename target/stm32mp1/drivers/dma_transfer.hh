@@ -76,41 +76,40 @@ struct DMATransfer {
 		if constexpr (ConfT::DMAx == 2) {
 			RCC_Enable::DMA2_::set();
 
-			//FIXME: should these be DMAMUX1_Channel8-15?
 			//See RM sec 19.3.2:
 			// • DMAMUX channels 0 to 7 are connected to DMA1 channels 0 to 7
 			// • DMAMUX channels 8 to 15 are connected to DMA2 channels 0 to 7
 			if constexpr (ConfT::StreamNum == 0) {
 				stream = DMA2_Stream0;
-				dmamux_chan = DMAMUX1_Channel0;
+				dmamux_chan = DMAMUX1_Channel8;
 			}
 			if constexpr (ConfT::StreamNum == 1) {
 				stream = DMA2_Stream1;
-				dmamux_chan = DMAMUX1_Channel1;
+				dmamux_chan = DMAMUX1_Channel9;
 			}
 			if constexpr (ConfT::StreamNum == 2) {
 				stream = DMA2_Stream2;
-				dmamux_chan = DMAMUX1_Channel2;
+				dmamux_chan = DMAMUX1_Channel10;
 			}
 			if constexpr (ConfT::StreamNum == 3) {
 				stream = DMA2_Stream3;
-				dmamux_chan = DMAMUX1_Channel3;
+				dmamux_chan = DMAMUX1_Channel11;
 			}
 			if constexpr (ConfT::StreamNum == 4) {
 				stream = DMA2_Stream4;
-				dmamux_chan = DMAMUX1_Channel4;
+				dmamux_chan = DMAMUX1_Channel12;
 			}
 			if constexpr (ConfT::StreamNum == 5) {
 				stream = DMA2_Stream5;
-				dmamux_chan = DMAMUX1_Channel5;
+				dmamux_chan = DMAMUX1_Channel13;
 			}
 			if constexpr (ConfT::StreamNum == 6) {
 				stream = DMA2_Stream6;
-				dmamux_chan = DMAMUX1_Channel6;
+				dmamux_chan = DMAMUX1_Channel14;
 			}
 			if constexpr (ConfT::StreamNum == 7) {
 				stream = DMA2_Stream7;
-				dmamux_chan = DMAMUX1_Channel7;
+				dmamux_chan = DMAMUX1_Channel15;
 			}
 		}
 		dma_tc_flag_index = dma_get_TC_flag_index(stream);
