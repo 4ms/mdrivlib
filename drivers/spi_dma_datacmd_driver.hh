@@ -27,6 +27,14 @@ struct SpiDmaDataCmdDriver {
 		spi_dr = spi.get_tx_datareg_addr();
 	}
 
+	void reinit() {
+		spi.disable();
+		spi.configure();
+		spi.set_tx_message_size(1); // not needed?
+		spi.enable();
+		dma.init();
+	}
+
 	// Clears the OVR flag whenever its set, by enabling the IRQ
 	void clear_overrun_on_interrupt() {
 		InterruptControl::disable_irq(ScreenConfT::IRQn);
@@ -44,6 +52,7 @@ struct SpiDmaDataCmdDriver {
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
 		spi.set_tx_message_size(1);
+		spi.set_data_size(8);
 		spi.set_fifo_threshold(1);
 		spi.disable_end_of_xfer_interrupt();
 		spi.enable();
@@ -124,6 +133,14 @@ struct SpiDmaDataCmdDriver {
 		spi.enable_tx_dma();
 		spi.enable();
 		spi.start_transfer();
+	}
+
+	bool had_transfer_error() {
+		return dma.had_transfer_error();
+	}
+
+	bool had_fifo_error() {
+		return dma.had_fifo_error();
 	}
 
 private:
