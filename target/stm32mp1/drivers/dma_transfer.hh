@@ -25,6 +25,9 @@ struct DMATransfer {
 	uint32_t dma_te_flag_index;
 	uint32_t dma_fe_flag_index;
 
+	bool fifo_error = false;
+	bool transfer_error = false;
+
 	DMAMUX_Channel_TypeDef *dmamux_chan;
 
 	// ST-HAL:
@@ -73,6 +76,10 @@ struct DMATransfer {
 		if constexpr (ConfT::DMAx == 2) {
 			RCC_Enable::DMA2_::set();
 
+			//FIXME: should these be DMAMUX1_Channel8-15?
+			//See RM sec 19.3.2:
+			// • DMAMUX channels 0 to 7 are connected to DMA1 channels 0 to 7
+			// • DMAMUX channels 8 to 15 are connected to DMA2 channels 0 to 7
 			if constexpr (ConfT::StreamNum == 0) {
 				stream = DMA2_Stream0;
 				dmamux_chan = DMAMUX1_Channel0;
@@ -182,10 +189,12 @@ struct DMATransfer {
 			if (*dma_isr_reg & dma_te_flag_index) {
 				// __BKPT(32);
 				*dma_ifcr_reg = dma_te_flag_index;
+				transfer_error = true;
 			}
 			if (*dma_isr_reg & dma_fe_flag_index) {
 				// __BKPT(33);
 				*dma_ifcr_reg = dma_fe_flag_index;
+				fifo_error = true;
 			}
 		});
 	}
@@ -227,6 +236,18 @@ struct DMATransfer {
 
 	uint32_t get_transfer_size() {
 		return _transfer_size;
+	}
+
+	bool had_transfer_error() {
+		auto err = transfer_error;
+		transfer_error = false;
+		return err;
+	}
+
+	bool had_fifo_error() {
+		auto err = fifo_error;
+		fifo_error = false;
+		return err;
 	}
 
 	// constrain: param has a .DMA_Handle of type DMA_HandleTypeDef*
