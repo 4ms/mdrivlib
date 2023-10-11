@@ -3,9 +3,8 @@
 #include "drivers/rcc.hh"
 #include "drivers/stm32xx.h"
 #include "drivers/uart_conf.hh"
-
-#include <stm32mp1xx_ll_usart.h>
-#include <stm32mp1xx_ll_rcc.h>
+#include "stm32mp1xx_ll_rcc.h"
+#include "stm32mp1xx_ll_usart.h"
 
 namespace mdrivlib
 {
@@ -66,19 +65,21 @@ struct UartTarget {
 
 			// disable peripheral and wait for completion
 			hal_h.Instance->CR1 &= ~USART_CR1_UE;
-			while(hal_h.Instance->CR1 & USART_CR1_UE);
+			while (hal_h.Instance->CR1 & USART_CR1_UE)
+				;
 
 			// HAL_USART_Init() enables synchronous mode by default
 			// this triggers RX for every TX
 			hal_h.Instance->CR2 &= ~USART_CR2_CLKEN;
-			if((hal_h.Instance->CR2 & USART_CR2_CLKEN) != 0) __BKPT();
+			if ((hal_h.Instance->CR2 & USART_CR2_CLKEN) != 0)
+				__BKPT();
 
 			//HAL_USART_Init() does not enable Fifo Mode, so we must do it manually
 			hal_h.Instance->CR1 |= USART_CR1_FIFOEN;
 
 			// enable peripheral
 			hal_h.Instance->CR1 |= USART_CR1_UE;
-			
+
 		} else {
 			UART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
@@ -117,49 +118,58 @@ struct UartTarget {
 		return (uart->ISR & USART_ISR_RXNE) != 0;
 	}
 
-	static bool set_baudrate(uint32_t baudrate_in_hz)
-	{
+	static bool set_baudrate(uint32_t baudrate_in_hz) {
 		auto instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
 
 		uint32_t peripheral_clock_source = 0;
 
-		#ifdef USART1_BASE
-		if constexpr (Conf.base_addr == USART1_BASE) peripheral_clock_source = LL_RCC_USART1_CLKSOURCE;
-		#endif
+#ifdef USART1_BASE
+		if constexpr (Conf.base_addr == USART1_BASE)
+			peripheral_clock_source = LL_RCC_USART1_CLKSOURCE;
+#endif
 
-		#ifdef USART2_BASE
-		if constexpr (Conf.base_addr == USART2_BASE) peripheral_clock_source = LL_RCC_UART24_CLKSOURCE;
-		#endif
+#ifdef USART2_BASE
+		if constexpr (Conf.base_addr == USART2_BASE)
+			peripheral_clock_source = LL_RCC_UART24_CLKSOURCE;
+#endif
 
-		#ifdef USART3_BASE
-		if constexpr (Conf.base_addr == USART3_BASE) peripheral_clock_source = LL_RCC_UART35_CLKSOURCE;
-		#endif
+#ifdef USART3_BASE
+		if constexpr (Conf.base_addr == USART3_BASE)
+			peripheral_clock_source = LL_RCC_UART35_CLKSOURCE;
+#endif
 
-		#ifdef USART4_BASE
-		if constexpr (Conf.base_addr == USART4_BASE) peripheral_clock_source = LL_RCC_UART24_CLKSOURCE;
-		#endif
+#ifdef USART4_BASE
+		if constexpr (Conf.base_addr == USART4_BASE)
+			peripheral_clock_source = LL_RCC_UART24_CLKSOURCE;
+#endif
 
-		#ifdef USART5_BASE
-		if constexpr (Conf.base_addr == USART5_BASE) peripheral_clock_source = LL_RCC_UART35_CLKSOURCE;
-		#endif
+#ifdef USART5_BASE
+		if constexpr (Conf.base_addr == USART5_BASE)
+			peripheral_clock_source = LL_RCC_UART35_CLKSOURCE;
+#endif
 
-		#ifdef USART6_BASE
-		if constexpr (Conf.base_addr == USART6_BASE) peripheral_clock_source = LL_RCC_USART6_CLKSOURCE;
-		#endif
+#ifdef USART6_BASE
+		if constexpr (Conf.base_addr == USART6_BASE)
+			peripheral_clock_source = LL_RCC_USART6_CLKSOURCE;
+#endif
 
-		#ifdef USART7_BASE
-		if constexpr (Conf.base_addr == USART7_BASE) peripheral_clock_source = LL_RCC_USART7_CLKSOURCE;
-		#endif
+#ifdef USART7_BASE
+		if constexpr (Conf.base_addr == USART7_BASE)
+			peripheral_clock_source = LL_RCC_USART7_CLKSOURCE;
+#endif
 
-		#ifdef USART8_BASE
-		if constexpr (Conf.base_addr == USART8_BASE) peripheral_clock_source = LL_RCC_USART8_CLKSOURCE;
-		#endif	   
+#ifdef USART8_BASE
+		if constexpr (Conf.base_addr == USART8_BASE)
+			peripheral_clock_source = LL_RCC_USART8_CLKSOURCE;
+#endif
 
 		LL_USART_Disable(instance);
-		while (LL_USART_IsEnabled(instance));
+		while (LL_USART_IsEnabled(instance))
+			;
 
-		auto periphClock = LL_RCC_GetUARTClockFreq(peripheral_clock_source);   
-		LL_USART_SetBaudRate(instance, periphClock, LL_USART_GetPrescaler(instance), LL_USART_GetOverSampling(instance), baudrate_in_hz);
+		auto periphClock = LL_RCC_GetUARTClockFreq(peripheral_clock_source);
+		LL_USART_SetBaudRate(
+			instance, periphClock, LL_USART_GetPrescaler(instance), LL_USART_GetOverSampling(instance), baudrate_in_hz);
 
 		// TODO: add check baudrate change suceeded
 

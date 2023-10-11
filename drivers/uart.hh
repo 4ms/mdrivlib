@@ -66,20 +66,16 @@ public:
 		write(buf);
 	}
 
-	void transmit(uint8_t val)
-	{
+	void transmit(uint8_t val) {
 		uart->TDR = val;
 		UartTarget<Conf>::delay_for_write(uart);
 	}
 
-	bool receive(uint8_t* val) {
-		if (UartTarget<Conf>::has_rx(uart))
-		{
+	bool receive(uint8_t *val) {
+		if (UartTarget<Conf>::has_rx(uart)) {
 			*val = uint8_t(uart->RDR);
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
