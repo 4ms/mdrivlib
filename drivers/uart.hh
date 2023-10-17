@@ -25,6 +25,10 @@ public:
 		UartTarget<Conf>::uart_init();
 	}
 
+	bool set_baudrate(uint32_t baudrate_in_hz) {
+		return UartTarget<Conf>::set_baudrate(baudrate_in_hz);
+	}
+
 	void putchar(char c) {
 		uart->TDR = c;
 		UartTarget<Conf>::delay_for_write(uart);
@@ -60,6 +64,20 @@ public:
 		}
 
 		write(buf);
+	}
+
+	void transmit(uint8_t val) {
+		uart->TDR = val;
+		UartTarget<Conf>::delay_for_write(uart);
+	}
+
+	bool receive(uint8_t *val) {
+		if (UartTarget<Conf>::has_rx(uart)) {
+			*val = uint8_t(uart->RDR);
+			return true;
+		} else {
+			return false;
+		}
 	}
 };
 

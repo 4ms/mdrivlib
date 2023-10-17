@@ -86,5 +86,15 @@ struct UartTarget {
 		while ((uart->ISR & USART_ISR_TXE) == 0)
 			;
 	}
+
+	static bool has_rx(auto uart) {
+		//FIXME: Implement
+		return false;
+	}
+
+	static bool set_baudrate(uint32_t baudrate_in_hz) {
+		//FIXME: Implement
+		return false;
+	}
 };
 } // namespace mdrivlib
