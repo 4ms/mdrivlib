@@ -71,8 +71,6 @@ struct UartTarget {
 			// HAL_USART_Init() enables synchronous mode by default
 			// this triggers RX for every TX
 			hal_h.Instance->CR2 &= ~USART_CR2_CLKEN;
-			if ((hal_h.Instance->CR2 & USART_CR2_CLKEN) != 0)
-				__BKPT();
 
 			//HAL_USART_Init() does not enable Fifo Mode, so we must do it manually
 			hal_h.Instance->CR1 |= USART_CR1_FIFOEN;
