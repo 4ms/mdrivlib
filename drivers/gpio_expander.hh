@@ -55,7 +55,7 @@ struct GPIOExpander {
 	}
 
 	bool is_present() {
-		auto err = _i2c.read(_device_addr, _data, 1);
+		auto err = _i2c.mem_read(_device_addr, InputPort0, I2C_MEMADD_SIZE_8BIT, _data, 1);
 		return err == I2CPeriph::I2C_NO_ERR;
 	}
 
@@ -65,6 +65,14 @@ struct GPIOExpander {
 	// 	callback = std::move(cb);
 	// 	InterruptManager::registerISR(_conf.IRQn, _conf.pri1, _conf.pri2, [&]() { callback(); });
 	// }
+
+	void set_address(uint8_t dev_addr_unshifted) {
+		_device_addr = dev_addr_unshifted << 1;
+	}
+
+	uint8_t dev_address() {
+		return _device_addr >> 1;
+	}
 
 	auto prepare_read() {
 		_data[0] = InputPort0;
@@ -108,7 +116,7 @@ struct GPIOExpander {
 
 private:
 	const GPIO_expander_conf &_conf;
-	const uint8_t _device_addr;
+	uint8_t _device_addr;
 	I2CPeriph &_i2c;
 	uint16_t last_reading{0};
 	uint8_t _data[3];
