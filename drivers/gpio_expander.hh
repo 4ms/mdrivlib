@@ -3,6 +3,7 @@
 #include "interrupt.hh"
 #include "pin.hh"
 #include <cstdint>
+#include <span>
 
 namespace mdrivlib
 {
@@ -19,7 +20,7 @@ struct GPIO_expander_conf {
 	static constexpr uint16_t AllOutputs() {
 		return 0x0000;
 	}
-	static constexpr uint16_t Config(PinDirection pindirs[16]) {
+	static constexpr uint16_t Config(std::array<PinDirection, 16> pindirs) {
 		uint16_t c = 0;
 		for (unsigned i = 0; i < 16; i++)
 			c |= (pindirs[i] == Input) ? (1 << i) : 0;
@@ -73,6 +74,11 @@ struct GPIOExpander {
 
 	auto read_pins() {
 		auto err = _i2c.read_IT(_device_addr, _data, 2);
+		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadFailed;
+	}
+
+	auto read_inputs() {
+		auto err = _i2c.mem_read_IT(_device_addr, InputPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadFailed;
 	}
 
