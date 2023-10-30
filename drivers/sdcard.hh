@@ -5,8 +5,6 @@
 #include "drivers/stm32xx.h"
 #include <span>
 
-#include "printf.h"
-
 namespace mdrivlib
 {
 
@@ -75,7 +73,7 @@ struct SDCard {
 					set_status_mounted();
 					HAL_SD_DeInit(&hsd);
 					if (HAL_SD_Init(&hsd) != HAL_OK) {
-						printf_("Cannot re-mount, err %d\n", HAL_SD_GetError(&hsd));
+						// printf_("Cannot re-mount, err %d\n", (unsigned)HAL_SD_GetError(&hsd));
 						set_status_nocard();
 					}
 				}
