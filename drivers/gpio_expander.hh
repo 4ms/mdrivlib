@@ -45,9 +45,10 @@ struct GPIOExpander {
 	}
 
 	auto start() {
-		_data[0] = static_cast<uint8_t>(_conf.config & 0x00FF);
-		_data[1] = static_cast<uint8_t>(_conf.config >> 8);
-		auto err = _i2c.mem_write(_device_addr, ConfigPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
+		_data[0] = ConfigPort0;
+		_data[1] = static_cast<uint8_t>(_conf.config & 0x00FF);
+		_data[2] = static_cast<uint8_t>(_conf.config >> 8);
+		auto err = _i2c.write(_device_addr, _data, 3);
 		if (err != I2CPeriph::I2C_NO_ERR)
 			return Error::WriteConfigFailed;
 		return Error::None;
@@ -73,6 +74,17 @@ struct GPIOExpander {
 		return _device_addr >> 1;
 	}
 
+	auto prepare_read() {
+		_data[0] = InputPort0;
+		auto err = _i2c.write_IT(_device_addr, _data, 1);
+		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::WriteFailed;
+	}
+
+	auto read_pins() {
+		auto err = _i2c.read_IT(_device_addr, _data, 2);
+		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadFailed;
+	}
+
 	auto read_inputs() {
 		auto err = _i2c.mem_read_IT(_device_addr, InputPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadFailed;
@@ -80,14 +92,15 @@ struct GPIOExpander {
 
 	auto set_output_values(uint16_t mask) {
 		// Todo: test this on hardware
-		_data[0] = mask & 0x00FF;
-		_data[1] = mask >> 8;
-		auto err = _i2c.mem_write_IT(_device_addr, OutputPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
+		_data[0] = OutputPort0;
+		_data[1] = mask & 0x00FF;
+		_data[2] = mask >> 8;
+		auto err = _i2c.write_IT(_device_addr, _data, 3);
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::WriteFailed;
 	}
 
 	uint16_t collect_last_reading() {
-		last_reading = (_data[1] << 8) | _data[0];
+		last_reading = _data[1] << 8 | _data[0];
 		return last_reading;
 	}
 
@@ -106,7 +119,9 @@ private:
 	uint8_t _device_addr;
 	I2CPeriph &_i2c;
 	uint16_t last_reading{0};
-	uint8_t _data[2];
+	uint8_t _data[3];
+	uint16_t _data16;
+	unsigned _cur_port = 0;
 
 	enum Registers : uint8_t {
 		InputPort0 = 0x00,
