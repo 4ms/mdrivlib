@@ -17,14 +17,17 @@ inline void invalidate_dcache_by_addr(ptr addr) {
 	L1C_InvalidateDCacheMVA(reinterpret_cast<void *>(addr));
 }
 
-inline void invalidate_dcache_by_range(void *addr, int32_t size) {
-	auto addr_line = reinterpret_cast<uint32_t>(addr) & ~0b11111; // just keep Tag and Set/Index
-	while (size > 0) {
-		__set_DCIMVAC(addr_line);
-		addr_line += 0b100000;
-		size -= 4;
-	}
-	__DMB();
+static constexpr uint32_t CacheLineBytes = 64;
+static constexpr uint32_t CacheLineMask = ~(CacheLineBytes - 1);
+
+inline void invalidate_dcache_by_range(void *addr, uint32_t size) {
+	// starting address of cache line containing the data
+	auto start_addr = reinterpret_cast<uint32_t>(addr) & CacheLineMask;
+	// ending address of cache line containing the data
+	auto end_addr = (reinterpret_cast<uint32_t>(addr) + size + CacheLineBytes - 1) & CacheLineMask;
+
+	for (uint32_t addr = start_addr; addr < end_addr; addr += CacheLineBytes)
+		L1C_InvalidateDCacheMVA(reinterpret_cast<void *>(addr));
 }
 
 inline void clean_dcache() {
