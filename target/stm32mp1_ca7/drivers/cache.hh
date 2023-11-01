@@ -23,11 +23,13 @@ static constexpr uint32_t CacheLineMask = ~(CacheLineBytes - 1);
 inline void invalidate_dcache_by_range(void *addr, uint32_t size) {
 	// starting address of cache line containing the data
 	auto start_addr = reinterpret_cast<uint32_t>(addr) & CacheLineMask;
-	// ending address of cache line containing the data
+
+	// starting address of next cache line after end of data
 	auto end_addr = (reinterpret_cast<uint32_t>(addr) + size + CacheLineBytes - 1) & CacheLineMask;
 
-	for (uint32_t addr = start_addr; addr < end_addr; addr += CacheLineBytes)
+	for (uint32_t addr = start_addr; addr <= end_addr; addr += CacheLineBytes) {
 		L1C_InvalidateDCacheMVA(reinterpret_cast<void *>(addr));
+	}
 }
 
 inline void clean_dcache() {
