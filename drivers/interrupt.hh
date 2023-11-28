@@ -13,24 +13,8 @@
 #include "drivers/interrupt_control.hh"
 #endif
 
-// template<typename T, size_t N>
-// std::array<T, N> fill_arr(T val) {
-// 	std::array<T, N> arr;
-// 	for (auto &a : arr)
-// 		a = val;
-// 	return arr;
-// }
-
 namespace mdrivlib
 {
-
-template<typename T, size_t N>
-auto fill_arr(auto &&f) {
-	std::array<T, N> x;
-	for (size_t i = 0l; i < N; i++)
-		x[i] = f;
-	return x;
-}
 
 // Interrupt Manager class
 class Interrupt {
@@ -66,12 +50,20 @@ public:
 	}
 
 private:
+	static inline std::array<ISRType, NumISRs> ISRs;
+
+	// The following can be useful for debugging missing ISRs:
 	// static void null_func() {
 	// 	__BKPT();
 	// }
-
+	// template<typename T, size_t N>
+	// static std::array<T, N> fill_arr(T val) {
+	// 	std::array<T, N> arr;
+	// 	for (auto &a : arr)
+	// 		a = val;
+	// 	return arr;
+	// }
 	// static inline std::array<ISRType, NumISRs> ISRs{fill_arr<ISRType, NumISRs>(null_func)};
-	static inline std::array<ISRType, NumISRs> ISRs;
 };
 
 using InterruptManager = Interrupt;
