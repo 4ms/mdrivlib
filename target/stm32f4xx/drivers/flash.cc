@@ -1,38 +1,26 @@
-#include "flash.hh"
+#include "drivers/flash.hh"
 #include "drivers/flash_sectors.hh"
 #include "drivers/stm32xx.h"
 #include <cstdint>
+#include <span>
 
 namespace mdrivlib
 {
+static void _clear_error_codes();
+static bool _erase_sector(uint32_t sector);
 
-bool flash_read(std::span<uint32_t> data, uint32_t address) {
+bool InternalFlash::read(std::span<uint32_t> data, uint32_t address) {
 	for (auto &d : data) {
-		d = (uint32_t)(*(__IO uint32_t *)address);
+		d = (uint32_t)(*(volatile uint32_t *)address);
 		address += 4;
 	}
 	return true;
 }
 
-static void _clear_error_codes();
-
-static bool _erase_sector(uint32_t sector) {
-	FLASH_EraseInitTypeDef erase_conf = {
-		.TypeErase = FLASH_TYPEERASE_SECTORS,
-		.Banks = FLASH_BANK_1,
-		.Sector = sector,
-		.NbSectors = 1,
-		.VoltageRange = FLASH_VOLTAGE_RANGE_3,
-	};
-
-	uint32_t err;
-	return HAL_FLASHEx_Erase(&erase_conf, &err) == HAL_OK;
-}
-
-bool flash_erase_sector(uint32_t address) {
+bool InternalFlash::erase_sector(uint32_t address) {
 	_clear_error_codes();
 	HAL_FLASH_Unlock();
-	for (uint32_t i = 0; i < 8; ++i) {
+	for (uint32_t i = 0; i < NumFlashSectors; ++i) {
 		if (address == get_sector_addr(i)) {
 			return _erase_sector(i);
 		}
@@ -42,7 +30,7 @@ bool flash_erase_sector(uint32_t address) {
 	return false; // address out of range
 }
 
-bool flash_write(std::span<const uint32_t> data, uint32_t address) {
+bool InternalFlash::write(std::span<const uint32_t> data, uint32_t address) {
 	_clear_error_codes();
 	HAL_FLASH_Unlock();
 
@@ -59,6 +47,19 @@ bool flash_write(std::span<const uint32_t> data, uint32_t address) {
 
 	HAL_FLASH_Lock();
 	return true;
+}
+
+static bool _erase_sector(uint32_t sector) {
+	FLASH_EraseInitTypeDef erase_conf = {
+		.TypeErase = FLASH_TYPEERASE_SECTORS,
+		.Banks = FLASH_BANK_1,
+		.Sector = sector,
+		.NbSectors = 1,
+		.VoltageRange = FLASH_VOLTAGE_RANGE_3,
+	};
+
+	uint32_t err;
+	return HAL_FLASHEx_Erase(&erase_conf, &err) == HAL_OK;
 }
 
 static void _clear_error_codes() {
