@@ -1,7 +1,7 @@
 #include "drivers/stm32xx.h"
 
-// Timing is off: Delay(1ms) actually delays by 0.888ms, almost like HSE is running at 27MHz. Is it?
-inline constexpr float TickConversion = (float)(27000000UL >> 6) / 1000.f;
+// Note: STGEN source must be set to HSE (which is 24MHz) in order for this to be accurate
+inline constexpr float TickConversion = (float)(24000000UL >> 6) / 1000.f;
 
 extern "C" {
 uint32_t HAL_GetTick(void) {
