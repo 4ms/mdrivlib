@@ -1,4 +1,3 @@
-#define printf_ printf
 #define __DMB()
 
 // static inline unsigned HAL_GetTick() {
@@ -48,7 +47,7 @@ struct InterCoreCommMessage {
 	}
 };
 
-static volatile InterCoreCommMessage sharedmsg;
+static InterCoreCommMessage sharedmsg;
 static mdrivlib::InterCoreComm<mdrivlib::ICCCoreType::Initiator, InterCoreCommMessage> tx{sharedmsg};
 static mdrivlib::InterCoreComm<mdrivlib::ICCCoreType::Responder, InterCoreCommMessage> rx{sharedmsg};
 
