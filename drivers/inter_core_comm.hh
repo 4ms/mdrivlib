@@ -16,14 +16,13 @@ class InterCoreComm {
 	static constexpr uint32_t Chan = 1;
 	using IPCCHalfDuplex = typename mdrivlib::IPCC_<(uint32_t)Core>::template HalfDuplexMode<Chan>;
 
-	//This can change by another core, so it's volatile
 	//Access is protected via IPCC hardware Flag, so it does not need to be atomic
-	volatile MessageT &shared_message_;
+	MessageT &shared_message_;
 
 	bool was_my_turn = false;
 
 public:
-	InterCoreComm(volatile MessageT &shared_message)
+	InterCoreComm(MessageT &shared_message)
 		: shared_message_{shared_message} {
 		mdrivlib::RCC_Enable::IPCC_::set();
 	}
