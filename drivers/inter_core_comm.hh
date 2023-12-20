@@ -50,7 +50,7 @@ public:
 		// Process messages once
 		auto is_my_turn = IPCCHalfDuplex::is_my_turn();
 
-		MessageT msg{.message_type = MessageT::None};
+		MessageT msg{};
 
 		if (is_my_turn && !was_my_turn) {
 			// DebugN<CoreN - 1>::Pin::high();
@@ -58,7 +58,7 @@ public:
 			msg = shared_message_;
 
 			// pr_dbg("[%d] %d: got msg %d\n", HAL_GetTick(), Core, msg.message_type);
-			shared_message_.message_type = MessageT::None;
+			shared_message_ = MessageT{};
 
 			// DebugN<CoreN - 1>::Pin::low();
 		} else if (!is_my_turn) {
