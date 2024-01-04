@@ -348,18 +348,18 @@ void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 		}
 
 		if (*dma_isr_reg & dma_te_flag_index) {
-			//*dma_ifcr_reg = dma_te_flag_index;
-			__BKPT(21);
+			*dma_ifcr_reg = dma_te_flag_index;
+			// __BKPT(21);
 			// Error: debug breakpoint or logging here
 		}
 		if (*dma_isr_reg & dma_fe_flag_index) {
-			//*dma_ifcr_reg = dma_fe_flag_index;
-			__BKPT(22);
+			*dma_ifcr_reg = dma_fe_flag_index;
+			// __BKPT(22);
 			// Error: debug breakpoint or logging here
 		}
 		if (*dma_isr_reg & dma_dme_flag_index) {
-			//*dma_ifcr_reg = dma_dme_flag_index;
-			__BKPT(23);
+			*dma_ifcr_reg = dma_dme_flag_index;
+			// __BKPT(23);
 			// Error: debug breakpoint or logging here
 		}
 	});
