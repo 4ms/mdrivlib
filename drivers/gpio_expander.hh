@@ -8,10 +8,10 @@
 namespace mdrivlib
 {
 struct GPIO_expander_conf {
-	uint8_t addr;
-	// Pin int_pin;
-	// IRQType IRQn;
-	uint16_t config;
+	uint8_t addr{};
+	uint16_t config{};
+	uint16_t irq_priority = 3;
+	uint16_t irq_subpriority = 3;
 
 	enum PinDirection { Output = 0, Input = 1 };
 	static constexpr uint16_t AllInputs() {
@@ -42,6 +42,7 @@ struct GPIOExpander {
 		: _conf{conf}
 		, _device_addr(conf.addr << 1)
 		, _i2c{i2c} {
+		i2c.enable_IT(conf.irq_priority, conf.irq_subpriority);
 	}
 
 	auto start() {
@@ -74,13 +75,14 @@ struct GPIOExpander {
 		return _device_addr >> 1;
 	}
 
-	auto prepare_read() {
+	// start/finish_read() can be used to split up blocking time
+	auto start_read() {
 		_data[0] = InputPort0;
 		auto err = _i2c.write_IT(_device_addr, _data, 1);
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::WriteFailed;
 	}
 
-	auto read_pins() {
+	auto finish_read() {
 		auto err = _i2c.read_IT(_device_addr, _data, 2);
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::ReadFailed;
 	}
@@ -92,15 +94,14 @@ struct GPIOExpander {
 
 	auto set_output_values(uint16_t mask) {
 		// Todo: test this on hardware
-		_data[0] = OutputPort0;
-		_data[1] = mask & 0x00FF;
-		_data[2] = mask >> 8;
-		auto err = _i2c.write_IT(_device_addr, _data, 3);
+		_data[0] = mask & 0x00FF;
+		_data[1] = mask >> 8;
+		auto err = _i2c.mem_write_IT(_device_addr, OutputPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
 		return err == I2CPeriph::I2C_NO_ERR ? Error::None : Error::WriteFailed;
 	}
 
 	uint16_t collect_last_reading() {
-		last_reading = _data[1] << 8 | _data[0];
+		last_reading = (_data[1] << 8) | _data[0];
 		return last_reading;
 	}
 
@@ -119,9 +120,7 @@ private:
 	uint8_t _device_addr;
 	I2CPeriph &_i2c;
 	uint16_t last_reading{0};
-	uint8_t _data[3];
-	uint16_t _data16;
-	unsigned _cur_port = 0;
+	uint8_t _data[3]{};
 
 	enum Registers : uint8_t {
 		InputPort0 = 0x00,
