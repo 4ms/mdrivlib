@@ -8,9 +8,9 @@
 namespace mdrivlib
 {
 template<UartConf Conf>
-class UartPeriph {
+class LazyUartPeriph {
 public:
-	UartPeriph()
+	LazyUartPeriph()
 		: periph{reinterpret_cast<USART_TypeDef *const>(Conf.base_addr)} {
 		init();
 	}
@@ -26,11 +26,11 @@ public:
 };
 
 template<UartConf Conf>
-class Uart {
+class LazyUart {
 
 public:
 	USART_TypeDef *const uart() {
-		static auto _uart = UartPeriph<Conf>{};
+		static auto _uart = LazyUartPeriph<Conf>{};
 		return _uart.periph;
 	}
 
