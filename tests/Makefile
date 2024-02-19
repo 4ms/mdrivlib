@@ -78,5 +78,5 @@ $(DEPDIR): ; @mkdir -p $@
 DEPFILES := $(addprefix $(DEPDIR)/, $(addsuffix .d, $(basename $(TEST_SOURCES))))
 $(DEPFILES):
 
-include $(wildcard $(DEPFILES))
+include $(DEPFILES)
 
