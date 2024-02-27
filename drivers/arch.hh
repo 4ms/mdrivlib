@@ -38,6 +38,14 @@ constexpr auto TargetName = Targets::stm32h7x5;
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::stm32f7;
 
+// STM32F730
+#elif defined(STM32F730xx)
+#ifndef STM32F7xx
+#define STM32F7xx
+#endif
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::stm32f7;
+
 // STM32F746
 #elif defined(STM32F746xx)
 #ifndef STM32F7xx
