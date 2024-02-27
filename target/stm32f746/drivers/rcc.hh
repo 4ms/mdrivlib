@@ -1,6 +1,6 @@
 #pragma once
-#include "register_access.hh"
-#include "stm32xx.h"
+#include "drivers/register_access.hh"
+#include "drivers/stm32xx.h"
 
 namespace mdrivlib
 {
