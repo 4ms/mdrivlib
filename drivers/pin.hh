@@ -269,4 +269,8 @@ private:
 	static PinSetHigh<Gpio, PinNum> _sethigh;
 	static PinRead<Gpio, PinNum> _read;
 };
+
+template<PinDef pindef, PinMode Mode = PinMode::Output, PinPolarity Polarity = PinPolarity::Normal>
+using PinF = FPin<pindef.gpio, pindef.pin, Mode, Polarity>;
+
 } // namespace mdrivlib
