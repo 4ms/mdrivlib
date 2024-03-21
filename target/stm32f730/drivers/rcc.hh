@@ -1,6 +1,7 @@
 #pragma once
 #include "drivers/register_access.hh"
 #include "drivers/stm32xx.h"
+#include <variant>
 
 namespace mdrivlib
 {
@@ -75,6 +76,10 @@ using USART2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR
 using USART3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR), RCC_APB1ENR_USART3EN>;
 using USART6_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), RCC_APB2ENR_USART6EN>;
 using WWDG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR), RCC_APB1ENR_WWDGEN>;
+
+using SPI_variant = std::variant<SPI1_, SPI2_, SPI3_, SPI4_, SPI5_>;
+template<unsigned N>
+using SPI = typename std::variant_alternative_t<N - 1, SPI_variant>;
 
 struct GPIO {
 	static void enable(GPIO_TypeDef *periph) {
