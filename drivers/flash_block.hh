@@ -32,6 +32,9 @@ template<typename DataT,
 struct FlashBlock {
 	using data_t = DataT;
 	static constexpr size_t data_size_ = sizeof(DataT);
+	static_assert(data_size_ % (1 << AlignmentBits) == 0, "Data Type size must be aligned to AlignmentBits");
+
+	static_assert(AlignmentBits >= 2, "AlignmentBits must at least 2");
 
 	static constexpr size_t aligned_data_size_ = ((data_size_ >> AlignmentBits) + 1) << AlignmentBits;
 	static_assert(aligned_data_size_ < SectorSize, "Data plus alignment padding must fit into sector");
