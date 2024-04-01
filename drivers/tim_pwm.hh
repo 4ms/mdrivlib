@@ -77,6 +77,12 @@ struct TimPwmChan {
 		if constexpr (Conf.channum == TimChannelNum::_6)
 			get_TIM()->CCR1 = val;
 #endif
+		if constexpr (Conf.channum == TimChannelNum::_1N)
+			get_TIM()->CCR1 = Conf.period - 1 - val;
+		if constexpr (Conf.channum == TimChannelNum::_2N)
+			get_TIM()->CCR2 = Conf.period - 1 - val;
+		if constexpr (Conf.channum == TimChannelNum::_3N)
+			get_TIM()->CCR3 = Conf.period - 1 - val;
 	}
 
 	static void start_output() {
