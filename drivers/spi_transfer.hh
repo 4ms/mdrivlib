@@ -34,9 +34,19 @@ public:
 	}
 
 	void transmit_blocking(uint32_t word) {
-		transmit_when_ready(word);
-		begin_open_transmission();
+		transmit(word);
 		wait_until_tx_complete();
+	}
+
+	uint32_t transmit_receive_blocking(uint32_t word) {
+		transmit_blocking(word);
+		return received_data();
+	}
+
+	void clear_rx_fifo() {
+		//two bytes max fifo depth, just read twice to clear..
+		static_cast<void>(received_data());
+		static_cast<void>(received_data());
 	}
 
 	//
@@ -78,10 +88,10 @@ public:
 	//
 	void transmit_when_ready(uint32_t word) {
 		wait_until_ready_to_tx();
-		spi.load_tx_data(word);
+		transmit(word);
 	}
 	void transmit(uint32_t word) {
-		spi.load_tx_data(word);
+		spi.load_tx_data_8(word);
 	}
 	bool is_tx_complete() {
 		return spi.is_tx_complete();
@@ -102,7 +112,7 @@ public:
 	// Receive
 	//
 	uint32_t received_data() {
-		return spi.received_data();
+		return spi.received_data_8();
 	}
 	bool is_rx_packet_available() {
 		return spi.rx_packet_available();
