@@ -3,6 +3,7 @@
 #include "drivers/rcc.hh"
 #include "drivers/spi_config_struct.hh"
 #include "drivers/spi_registers.hh"
+#include "stm32f730xx.h"
 #include "util/math.hh"
 
 // Todo: move to target-specific dir (is shared between H7 and MP1, so one can #include the other)
@@ -183,7 +184,7 @@ public:
 	void clear_tx_reload_flag() { }
 
 	// Status flags
-	// bool rx_packet_available() { return false; }
+	bool rx_packet_available() { return SR<SPI_SR_RXNE>::read() ? true : false; }
 	bool tx_space_available() { return SR<SPI_SR_TXE>::read() ? true : false; }
 	// bool duplex_space_available() { return false; }
 	bool is_end_of_transfer() { return SR<SPI_SR_BSY>::read() ? false : true; }
@@ -207,7 +208,7 @@ public:
 	}
 	void set_data_size() {
         static_assert(ConfT::data_size <= 16 && ConfT::data_size >= 4);
-        CR2<SPI_CR2_DS>::write(ConfT::data_size);
+        CR2<SPI_CR2_DS>::write(ConfT::data_size - 1u);
         if constexpr (ConfT::data_size <= 8){
             CR2<SPI_CR2_FRXTH>::set();
         }
