@@ -33,7 +33,9 @@ struct FlashBlock {
 	using data_t = DataT;
 	static constexpr size_t data_size_ = sizeof(DataT);
 
-	static constexpr size_t aligned_data_size_ = ((data_size_ >> AlignmentBits) + 1) << AlignmentBits;
+	static constexpr bool pre_aligned = !(data_size_ & ((1u << AlignmentBits) - 1));
+	static constexpr size_t aligned_data_size_ =
+		pre_aligned ? data_size_ : ((data_size_ >> AlignmentBits) + 1) << AlignmentBits;
 	static_assert(aligned_data_size_ < SectorSize, "Data plus alignment padding must fit into sector");
 
 	static constexpr int cell_nr_ = SectorSize / aligned_data_size_;
