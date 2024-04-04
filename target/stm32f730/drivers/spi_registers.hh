@@ -25,6 +25,7 @@ struct SPI_ {
 	template <RegisterDataT Mask = 0xFFFFFFFF> using CR2 = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, CR2), Mask>;
     template <RegisterDataT Mask = 0xFFFFFFFF> using SR = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, SR), Mask>;
     using DR = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, DR), 0xFFFF>;
+    using DR_8 = RegisterBits8<BASE + offsetof(SPI_TypeDef, DR)>;
 	template <RegisterDataT Mask = 0xFFFFFFFF> using CRCPOLY = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, CRCPR), Mask>;
     template <RegisterDataT Mask = 0xFFFFFFFF> using RXCRC = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, RXCRCR), Mask>;
     template <RegisterDataT Mask = 0xFFFFFFFF> using TXCRC = RegisterBits<ReadWrite, BASE + offsetof(SPI_TypeDef, TXCRCR), Mask>;

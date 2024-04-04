@@ -4,7 +4,8 @@
 
 namespace mdrivlib
 {
-using regsize_t = unsigned long; //32bits on Cortex-M, 64-bits on x86_64 and ARM64
+using regsize_t = unsigned long;  //32bits on Cortex-M, 64-bits on x86_64 and ARM64
+using regsize8_t = unsigned char; //8bits on Cortex-M
 
 // Mask Helpers
 // from github.com/kensmith/cortex-from-scratch
@@ -59,6 +60,17 @@ struct RegisterBits {
 	}
 	static void clear() {
 		AccessPolicyT::clear(reinterpret_cast<volatile regsize_t *>(address), mask);
+	}
+};
+
+//8
+template<uint32_t address>
+struct RegisterBits8 {
+	static regsize8_t read() {
+		return *reinterpret_cast<volatile regsize8_t *>(address);
+	}
+	static void write(regsize8_t val) {
+		*reinterpret_cast<volatile regsize8_t *>(address) = val;
 	}
 };
 

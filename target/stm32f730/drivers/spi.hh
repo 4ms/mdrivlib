@@ -208,20 +208,29 @@ public:
 	void set_data_size() {
         static_assert(ConfT::data_size <= 16 && ConfT::data_size >= 4);
         CR2<SPI_CR2_DS>::write(ConfT::data_size);
+        if constexpr (ConfT::data_size <= 8){
+            CR2<SPI_CR2_FRXTH>::set();
+        }
 	}
 	void set_fifo_threshold(uint8_t num_bytes) {
 	}
 	// void load_tx_data(uint16_t data0, uint16_t data1) {
 	// 	SPI_<N>::TXDR::write(data0 << 16 | data1);
 	// }
-	void load_tx_data(uint8_t data) {
+	void load_tx_data(uint16_t data) {
 		SPI_<N>::DR::write(data);
+	}
+	void load_tx_data_8(uint8_t data) {
+		SPI_<N>::DR_8::write(data);
 	}
 	// void start_transfer() {
 		//starts on load_tx_data()
 	// }
 	uint16_t received_data() {
 		return SPI_<N>::DR::read();
+	}
+	uint8_t received_data_8() {
+		return SPI_<N>::DR_8::read();
 	}
 
 	// Half-duplex mode
