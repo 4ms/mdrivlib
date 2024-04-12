@@ -71,12 +71,11 @@ struct FlashBlock {
 		if (cell >= cell_nr_)
 			return false;
 
-		data_t check_data;
+		std::array<unsigned char, sizeof(data_t)> check_data;
 
-		if (read(check_data, cell)) {
-			auto p = reinterpret_cast<uint8_t *>(&check_data);
-			for (unsigned i = 0; i < data_size_; i++) {
-				if (p[i] != 0xFF)
+		if (read(*reinterpret_cast<data_t *>(check_data.data()), cell)) {
+			for (auto i : check_data) {
+				if (i != 0xff)
 					return false;
 			}
 			return true;
