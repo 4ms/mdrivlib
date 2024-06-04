@@ -115,7 +115,11 @@ private:
 	static std::optional<uint32_t> calc_clock_div() {
 		uint32_t source_clock;
 		//Clock sel bit selects PLL48 clock or system clock
+#ifdef RCC_DCKCFGR2_SDMMC2SEL
 		constexpr uint32_t cksel_bit = (ConfT::SDPeriphNum == 1) ? RCC_DCKCFGR2_SDMMC1SEL : RCC_DCKCFGR2_SDMMC2SEL;
+#else
+		constexpr uint32_t cksel_bit = RCC_DCKCFGR2_SDMMC1SEL;
+#endif
 		if ((RCC->DCKCFGR2 & cksel_bit) == 0)
 			source_clock = 48'000'000;
 		else
