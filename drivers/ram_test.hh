@@ -15,6 +15,10 @@ struct RamTest {
 		auto bitinvert_countdown_func = [](uint32_t x) { return 0xFFFFFFFFU - x; };
 		num_fails += do_sdram_test(bitinvert_countdown_func, ram_start, ram_size);
 
+		constexpr uint32_t freq = 987654321;
+		auto thrash_func = [](uint32_t x) { return x * freq; };
+		num_fails += do_sdram_test(thrash_func, ram_start, ram_size);
+
 		return num_fails;
 	}
 
