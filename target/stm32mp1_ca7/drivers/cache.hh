@@ -68,12 +68,24 @@ inline void clean_dcache_by_range(void *addr, uint32_t size) {
 }
 
 inline void clean_and_invalidate_dcache_by_range(void *addr, int32_t size) {
-	auto *u32_ptr = reinterpret_cast<uint32_t *>(addr);
-	while (size > 0) {
-		__set_DCCIMVAC((uint32_t)u32_ptr);
-		u32_ptr += 1;
-		size -= 4;
+	// starting address of cache line containing the data
+	auto start_addr = reinterpret_cast<uint32_t>(addr) & CacheLineMask;
+
+	// starting address of next cache line after end of the data
+	auto end_addr = (reinterpret_cast<uint32_t>(addr) + size + CacheLineBytes - 1) & CacheLineMask;
+
+	for (uint32_t addr = start_addr; addr < end_addr; addr += CacheLineBytes) {
+		L1C_CleanInvalidateDCacheMVA(reinterpret_cast<void *>(addr));
+		__DMB();
 	}
-	__DMB();
+	__DSB();
+
+	// auto *u32_ptr = reinterpret_cast<uint32_t *>(addr);
+	// while (size > 0) {
+	// 	__set_DCCIMVAC((uint32_t)u32_ptr);
+	// 	u32_ptr += 1;
+	// 	size -= 4;
+	// }
+	// __DMB();
 }
 } // namespace mdrivlib::SystemCache
