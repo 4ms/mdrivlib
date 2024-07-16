@@ -78,6 +78,16 @@ CodecPCM3168::Error CodecPCM3168::init() {
 	return _write_all_registers(samplerate_);
 }
 
+CodecPCM3168::Error CodecPCM3168::change_samplerate(unsigned sample_rate) {
+	samplerate_ = sample_rate;
+
+	if (sai_.change_samplerate(sample_rate) == SaiTdmPeriph::SAI_NO_ERR) {
+		return CodecPCM3168::CODEC_NO_ERR;
+	} else {
+		return CodecPCM3168::I2S_INIT_ERR;
+	}
+}
+
 uint32_t CodecPCM3168::get_samplerate() {
 	return samplerate_;
 }
@@ -87,7 +97,7 @@ void CodecPCM3168::start() {
 }
 
 CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
-	CodecPCM3168::Error err;
+	CodecPCM3168::Error err{CODEC_NO_ERR};
 
 	for (auto packet : default_codec_init) {
 		err = _write_register(packet.reg_num, packet.value);

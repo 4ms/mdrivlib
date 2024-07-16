@@ -46,6 +46,7 @@ public:
 	CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef);
 
 	Error init();
+	Error change_samplerate(unsigned sample_rate);
 	uint32_t get_samplerate();
 	void start();
 
