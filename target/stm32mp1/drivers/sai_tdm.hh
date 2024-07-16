@@ -28,8 +28,10 @@ public:
 	void start();
 	void stop();
 
+	Error change_samplerate(unsigned samplerate);
+
 private:
-	const SaiConfig &saidef_;
+	SaiConfig saidef_;
 	DMA_HandleTypeDef hdma_tx;
 	DMA_HandleTypeDef hdma_rx;
 	SAI_HandleTypeDef hsai_tx;

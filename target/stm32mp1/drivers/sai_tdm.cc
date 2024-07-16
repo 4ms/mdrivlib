@@ -8,6 +8,15 @@
 namespace mdrivlib
 {
 
+SaiTdmPeriph::Error SaiTdmPeriph::change_samplerate(unsigned samplerate) {
+	saidef_.samplerate = samplerate;
+	if (init() == Error::SAI_NO_ERR) {
+		start();
+		return Error::SAI_NO_ERR;
+	} else
+		return Error::SAI_INIT_ERR;
+}
+
 SaiTdmPeriph::Error SaiTdmPeriph::init() {
 	_init_pins();
 
