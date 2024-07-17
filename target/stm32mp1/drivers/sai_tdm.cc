@@ -8,8 +8,12 @@
 namespace mdrivlib
 {
 
-SaiTdmPeriph::Error SaiTdmPeriph::change_samplerate(unsigned samplerate) {
-	saidef_.samplerate = samplerate;
+SaiTdmPeriph::Error SaiTdmPeriph::change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size) {
+	saidef_.samplerate = sample_rate;
+
+	tx_block_size_ = block_size * (saidef_.num_tdm_outs * 2);
+	rx_block_size_ = block_size * (saidef_.num_tdm_ins * 2);
+
 	if (init() == Error::SAI_NO_ERR) {
 		start();
 		return Error::SAI_NO_ERR;

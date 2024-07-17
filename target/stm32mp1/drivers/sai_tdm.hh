@@ -28,7 +28,7 @@ public:
 	void start();
 	void stop();
 
-	Error change_samplerate(unsigned samplerate);
+	Error change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size);
 
 private:
 	SaiConfig saidef_;

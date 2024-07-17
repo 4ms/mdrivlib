@@ -78,10 +78,10 @@ CodecPCM3168::Error CodecPCM3168::init() {
 	return _write_all_registers(samplerate_);
 }
 
-CodecPCM3168::Error CodecPCM3168::change_samplerate(unsigned sample_rate) {
+CodecPCM3168::Error CodecPCM3168::change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size) {
 	samplerate_ = sample_rate;
 
-	if (sai_.change_samplerate(sample_rate) == SaiTdmPeriph::SAI_NO_ERR) {
+	if (sai_.change_samplerate_blocksize(sample_rate, block_size) == SaiTdmPeriph::SAI_NO_ERR) {
 		return CodecPCM3168::CODEC_NO_ERR;
 	} else {
 		return CodecPCM3168::I2S_INIT_ERR;
