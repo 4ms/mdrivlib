@@ -23,6 +23,8 @@ public:
 	Error init();
 	void set_rx_buffer_start(uint8_t *rx_buf_ptr, uint32_t block_size);
 	void set_tx_buffer_start(uint8_t *tx_buf_ptr, uint32_t block_size);
+	void set_tx_buffer(uint8_t *tx_buf_ptr, uint32_t frames_per_block);
+	void set_rx_buffer(uint8_t *tx_buf_ptr, uint32_t frames_per_block);
 	void set_callbacks(Interrupt::ISRType &&tx_complete_cb, Interrupt::ISRType &&tx_half_complete_cb);
 
 	void start();

@@ -304,6 +304,16 @@ void SaiTdmPeriph::_init_pins() {
 					PinOType::PushPull};
 }
 
+void SaiTdmPeriph::set_tx_buffer(uint8_t *tx_buf_ptr, uint32_t frames_per_block) {
+	tx_buf_ptr_ = tx_buf_ptr;
+	tx_block_size_ = frames_per_block * saidef_.num_tdm_outs * 2;
+}
+
+void SaiTdmPeriph::set_rx_buffer(uint8_t *rx_buf_ptr, uint32_t frames_per_block) {
+	rx_buf_ptr_ = rx_buf_ptr;
+	rx_block_size_ = frames_per_block * saidef_.num_tdm_ins * 2;
+}
+
 void SaiTdmPeriph::set_tx_buffer_start(uint8_t *tx_buf_ptr, uint32_t block_size) {
 	tx_buf_ptr_ = tx_buf_ptr;
 	tx_block_size_ = block_size;

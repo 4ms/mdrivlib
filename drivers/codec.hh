@@ -17,6 +17,16 @@ public:
 	}
 
 	template<typename T>
+	void set_tx_buffer(std::span<T> tx_buf, uint32_t frames_per_block) {
+		sai_.set_tx_buffer(reinterpret_cast<uint8_t *>(tx_buf.data()), frames_per_block);
+	}
+
+	template<typename T>
+	void set_rx_buffer(std::span<T> rx_buf, uint32_t frames_per_block) {
+		sai_.set_rx_buffer(reinterpret_cast<uint8_t *>(rx_buf.data()), frames_per_block);
+	}
+
+	template<typename T>
 	void set_tx_buffer_start(std::span<T> tx_buf) {
 		constexpr uint32_t BytesPerDMAXfer = 4; //must match DMA MemAlign
 		sai_.set_tx_buffer_start(reinterpret_cast<uint8_t *>(tx_buf.data()), tx_buf.size() / BytesPerDMAXfer);
