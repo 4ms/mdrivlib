@@ -50,6 +50,8 @@ public:
 	uint32_t get_samplerate();
 	void start();
 
+	uint32_t get_sai_errors();
+
 private:
 	I2CPeriph &i2c_;
 	uint32_t samplerate_;

@@ -96,6 +96,10 @@ void CodecPCM3168::start() {
 	sai_.start();
 }
 
+uint32_t CodecPCM3168::get_sai_errors() {
+	return sai_.fe_errors + sai_.te_errors + sai_.dme_errors;
+}
+
 CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
 	CodecPCM3168::Error err{CODEC_NO_ERR};
 

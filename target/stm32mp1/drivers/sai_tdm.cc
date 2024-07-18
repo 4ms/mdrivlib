@@ -354,6 +354,10 @@ void SaiTdmPeriph::start() {
 		stop(); //disable interrupts for synced SAI
 	}
 
+	fe_errors = 0;
+	te_errors = 0;
+	dme_errors = 0;
+
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
 }
@@ -372,16 +376,19 @@ void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 
 		if (*dma_isr_reg & dma_te_flag_index) {
 			*dma_ifcr_reg = dma_te_flag_index;
+			te_errors++;
 			// __BKPT(21);
 			// Error: debug breakpoint or logging here
 		}
 		if (*dma_isr_reg & dma_fe_flag_index) {
 			*dma_ifcr_reg = dma_fe_flag_index;
+			fe_errors++;
 			// __BKPT(22);
 			// Error: debug breakpoint or logging here
 		}
 		if (*dma_isr_reg & dma_dme_flag_index) {
 			*dma_ifcr_reg = dma_dme_flag_index;
+			dme_errors++;
 			// __BKPT(23);
 			// Error: debug breakpoint or logging here
 		}

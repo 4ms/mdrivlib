@@ -32,6 +32,10 @@ public:
 
 	Error change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size);
 
+	uint32_t te_errors = 0;
+	uint32_t fe_errors = 0;
+	uint32_t dme_errors = 0;
+
 private:
 	SaiConfig saidef_;
 	DMA_HandleTypeDef hdma_tx;
