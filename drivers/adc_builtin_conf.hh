@@ -36,6 +36,9 @@ enum class AdcChanNum : uint32_t {
 #if defined(ADC_CHANNEL_19)
 	_19 = ADC_CHANNEL_19,
 #endif
+#if defined(ADC_CHANNEL_TEMPSENSOR)
+	Temp = ADC_CHANNEL_TEMPSENSOR,
+#endif
 };
 
 enum AdcSamplingTime : uint32_t {
