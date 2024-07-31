@@ -71,7 +71,7 @@ public:
 
 	template<typename... Ts>
 	static void pr_dbg(Ts... args) {
-		printf(args...);
+		// printf(args...);
 	}
 	template<typename... Ts>
 	static void pr_trace(Ts... args) {
