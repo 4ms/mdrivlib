@@ -1,9 +1,7 @@
 #pragma once
+// #include "debug.hh"
 #include "drivers/ipcc.hh"
 #include "drivers/rcc.hh"
-
-// #include "debug.hh"
-// #include "printf.h"
 
 namespace mdrivlib
 {
@@ -62,7 +60,7 @@ public:
 
 			// DebugN<CoreN - 1>::Pin::low();
 		} else if (!is_my_turn) {
-			pr_trace("%d: get_new_message: not my turn\n", RoleN);
+			// pr_trace("%d: get_new_message: not my turn\n", RoleN);
 		} else if (was_my_turn) {
 			// pr_dbg("%d:%d: get_new_message: already got message\n", Chan, CoreN);
 		}
