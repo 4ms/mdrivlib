@@ -26,7 +26,6 @@ public:
 
 	[[nodiscard]] bool send_message(const MessageT &msg) {
 		// DebugN<CoreN + 1>::Pin::high();
-		//TODO: try take lock or return false
 
 		if (!IPCCHalfDuplex::is_my_turn()) {
 			pr_dbg("%d:%d send aborted: not my turn\n", Chan, RoleN);
@@ -37,7 +36,7 @@ public:
 		was_my_turn = false;
 
 		__DMB();
-		pr_dbg("[%d] %d:%d: sending %d\n", HAL_GetTick(), Chan, RoleN, msg.message_type);
+		pr_dbg("[%d] %d:%d: sending %d\n", HAL_GetTick(), Chan, RoleN);
 		IPCCHalfDuplex::notify_other();
 
 		// DebugN<CoreN + 1>::Pin::low();
@@ -55,14 +54,14 @@ public:
 
 			msg = shared_message_;
 
-			pr_dbg("[%d] %d:%d: got msg %d\n", HAL_GetTick(), Chan, RoleN, msg.message_type);
+			pr_dbg("[%d] %d:%d: got msg\n", HAL_GetTick(), Chan, RoleN);
 			shared_message_ = MessageT{};
 
 			// DebugN<CoreN - 1>::Pin::low();
 		} else if (!is_my_turn) {
-			// pr_trace("%d: get_new_message: not my turn\n", RoleN);
+			pr_trace("%d: get_new_message: not my turn\n", RoleN);
 		} else if (was_my_turn) {
-			// pr_dbg("%d:%d: get_new_message: already got message\n", Chan, CoreN);
+			pr_trace("%d:%d: get_new_message: already got message\n", Chan, RoleN);
 		}
 		was_my_turn = is_my_turn;
 
