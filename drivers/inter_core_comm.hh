@@ -8,13 +8,12 @@
 namespace mdrivlib
 {
 
-enum class ICCCoreType { Initiator = 1, Responder = 2 };
+enum class ICCRoleType { Initiator = 1, Responder = 2 };
 
-template<ICCCoreType Core, typename MessageT>
+template<ICCRoleType Role, typename MessageT, uint32_t Chan = 1>
 class InterCoreComm {
-	static constexpr auto CoreN = static_cast<uint32_t>(Core); //1 or 2
-	static constexpr uint32_t Chan = 1;
-	using IPCCHalfDuplex = typename mdrivlib::IPCC_<(uint32_t)Core>::template HalfDuplexMode<Chan>;
+	static constexpr auto RoleN = static_cast<uint32_t>(Role); //1 or 2
+	using IPCCHalfDuplex = typename mdrivlib::IPCC_<RoleN>::template HalfDuplexMode<Chan>;
 
 	//Access is protected via IPCC hardware Flag, so it does not need to be atomic
 	MessageT &shared_message_;
@@ -29,9 +28,10 @@ public:
 
 	[[nodiscard]] bool send_message(const MessageT &msg) {
 		// DebugN<CoreN + 1>::Pin::high();
+		//TODO: try take lock or return false
 
 		if (!IPCCHalfDuplex::is_my_turn()) {
-			pr_dbg("%d: send aborted: not my turn\n", Core);
+			pr_dbg("%d:%d send aborted: not my turn\n", Chan, RoleN);
 			return false;
 		}
 
@@ -39,7 +39,7 @@ public:
 		was_my_turn = false;
 
 		__DMB();
-		// pr_dbg("[%d] %d: sending %d\n", HAL_GetTick(), Core, msg.message_type);
+		pr_dbg("[%d] %d:%d: sending %d\n", HAL_GetTick(), Chan, RoleN, msg.message_type);
 		IPCCHalfDuplex::notify_other();
 
 		// DebugN<CoreN + 1>::Pin::low();
@@ -57,14 +57,14 @@ public:
 
 			msg = shared_message_;
 
-			// pr_dbg("[%d] %d: got msg %d\n", HAL_GetTick(), Core, msg.message_type);
+			pr_dbg("[%d] %d:%d: got msg %d\n", HAL_GetTick(), Chan, RoleN, msg.message_type);
 			shared_message_ = MessageT{};
 
 			// DebugN<CoreN - 1>::Pin::low();
 		} else if (!is_my_turn) {
-			pr_trace("%d: get_new_message: not my turn\n", Core);
+			pr_trace("%d: get_new_message: not my turn\n", RoleN);
 		} else if (was_my_turn) {
-			pr_dbg("%d: get_new_message: already got message\n", Core);
+			// pr_dbg("%d:%d: get_new_message: already got message\n", Chan, CoreN);
 		}
 		was_my_turn = is_my_turn;
 
@@ -73,7 +73,7 @@ public:
 
 	template<typename... Ts>
 	static void pr_dbg(Ts... args) {
-		// printf_(args...);
+		printf(args...);
 	}
 	template<typename... Ts>
 	static void pr_trace(Ts... args) {
