@@ -28,7 +28,7 @@ public:
 		// DebugN<CoreN + 1>::Pin::high();
 
 		if (!IPCCHalfDuplex::is_my_turn()) {
-			pr_dbg("%d:%d send aborted: not my turn\n", Chan, RoleN);
+			InterCoreComm::pr_dbg("%d:%d send aborted: not my turn\n", Chan, RoleN);
 			return false;
 		}
 
@@ -59,9 +59,9 @@ public:
 
 			// DebugN<CoreN - 1>::Pin::low();
 		} else if (!is_my_turn) {
-			pr_trace("%d: get_new_message: not my turn\n", RoleN);
+			InterCoreComm::pr_trace("%d: get_new_message: not my turn\n", RoleN);
 		} else if (was_my_turn) {
-			pr_trace("%d:%d: get_new_message: already got message\n", Chan, RoleN);
+			InterCoreComm::pr_trace("%d:%d: get_new_message: already got message\n", Chan, RoleN);
 		}
 		was_my_turn = is_my_turn;
 
