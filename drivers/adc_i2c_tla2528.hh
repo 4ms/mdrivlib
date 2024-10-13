@@ -37,57 +37,85 @@ public:
 		i2c.enable_IT(conf.irq_priority, conf.irq_subpriority);
 	}
 
-	auto start() {
-		// TODO: Calibrate?
-		// Enable oversampling: OSR[2:0] bits in the OSR_CFG
+	bool start() {
+		// TODO: Calibrate mode
+		bool ok = true;
+		ok &= write(GeneralCfg{.Reset = 1, .ForceChannelsAnalog = 1});
+		ok &= write(OpMode{.ClockDiv = 0, .OscSel = OpMode::OscSelHighSpeed});
 
-		// Set sampling rate with CLK_DIV and OSC_SEL
-		// Auto sequence: AUTO_SEQ_CHSEL, SEQ_MODE = 1, SEQ_START = 1
-		return Error::None;
+		ok &= write(PinCfg{.BitMaskDigitalGPIO = 0});
+		ok &= write(SequenceCfg{.SeqModeAuto = 1});
+		ok &= write(AutoSeqChanSel{.BitMaskChannelEnabled = 0xFF});
+		ok &= write(DataCfg{.AppendStatus = 1, .DebugOutput0xA5A = 0});
+		ok &= write(OversampleCfg{.OversampleBits = 0b000});
+
+		// Start conversion:
+		ok &= write(SequenceCfg{.SeqModeAuto = 1, .SeqStart = 1});
+		return ok;
 	}
 
-	bool is_present() {
-		auto val = read<SystemStatus>();
-		return (val.RsvdAlwaysHigh == 1);
+	bool is_present() const {
+		auto [val, ok] = read<SystemStatus>();
+		return ok && (val.RsvdAlwaysHigh == 1);
+	}
+
+	bool read_channel() {
+		auto err = _i2c.read_IT(_device_addr, _data, 2);
+		return err == I2CPeriph::I2C_NO_ERR;
+	}
+
+	struct Reading {
+		uint16_t value;
+		uint8_t chan;
+	};
+
+	Reading collect_reading() const {
+		//Top 12 bits are the reading, bottom 4 bits are the channel number
+		uint8_t chan = _data[1] & 0b1111;
+		uint16_t value = (uint16_t(_data[0]) << 4) | (_data[1] >> 4);
+		return Reading{.value = value, .chan = chan};
 	}
 
 	void set_address(uint8_t dev_addr_unshifted) {
 		_device_addr = dev_addr_unshifted << 1;
 	}
 
-	enum Error {
-		None,
-		WriteConfigFailed,
-		InvalidChannelID,
-		ReadChannelFailed,
-	};
-
 private:
 	uint8_t _device_addr;
 	I2CPeriph &_i2c;
+	uint8_t _data[2]{};
 
 	// Returns true on success
 	template<typename Reg>
-	bool write(Reg data) {
-		auto err = _i2c.write_reg(_device_addr, data);
-		if (err == mdrivlib::I2CPeriph::I2C_NO_ERR)
+	requires std::derived_from<Reg, BusReg::WriteAccess>
+	bool write(Reg reg_value) {
+		// TLA2528 has specific way of writing a register:
+		// Write the "Write opcode", then register addr, then register data
+		uint8_t bytes[3] = {Operation::WriteReg, Reg::Address, uint8_t(reg_value)};
+		if (auto err = _i2c.write(_device_addr, bytes, 3); err == mdrivlib::I2CPeriph::I2C_NO_ERR) {
 			return true;
-		else {
-			tla2528_debug("Failed to write to reg 0x%x\n", Reg::Address);
+		} else {
+			tla2528_debug("TLA2528: Error writing reg 0x%x to device 0x%x\n", Reg::Address, _device_addr);
 			return false;
 		}
 	}
 
 	template<typename Reg>
-	Reg read() {
-		static bool got_error_once = false;
-		auto reg = _i2c.read_reg<Reg>(_device_addr);
+	requires std::derived_from<Reg, BusReg::ReadAccess>
+	std::pair<Reg, bool> read() const {
+		// TLA2528 has specific way of reading a register:
+		// 1) Write the "Read opcode" and register addr
+		uint8_t data[2] = {Operation::ReadReg, Reg::Address};
+		if (auto err = _i2c.write(_device_addr, data, 2); err == I2CPeriph::I2C_NO_ERR) {
 
-		if (!reg.has_value() && !got_error_once) {
-			tla2528_debug("TLA2528: Error reading Reg 0x%x\n", Reg::Address);
-			got_error_once = true;
+			// 2) Read register contents (1 byte)
+			if (auto err = _i2c.read(_device_addr, data, 1); err == I2CPeriph::I2C_NO_ERR)
+				return {Reg::make(data[0]), true};
 		}
-		return reg.value_or(Reg::make(0));
+
+		// Failure:
+		tla2528_debug("TLA2528: Error reading reg 0x%x from device 0x%x\n", Reg::Address, _device_addr);
+		return {Reg::make(0), false};
 	}
 };
 
