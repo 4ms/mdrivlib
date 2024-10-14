@@ -45,14 +45,12 @@ struct GPIOExpander {
 		i2c.enable_IT(conf.irq_priority, conf.irq_subpriority);
 	}
 
-	auto start() {
+	bool start() {
 		_data[0] = ConfigPort0;
 		_data[1] = static_cast<uint8_t>(_conf.config & 0x00FF);
 		_data[2] = static_cast<uint8_t>(_conf.config >> 8);
 		auto err = _i2c.write(_device_addr, _data, 3);
-		if (err != I2CPeriph::I2C_NO_ERR)
-			return Error::WriteConfigFailed;
-		return Error::None;
+		return err == I2CPeriph::I2C_NO_ERR;
 	}
 
 	bool is_present() {
