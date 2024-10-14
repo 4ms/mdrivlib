@@ -30,10 +30,13 @@ struct Config {
 };
 
 class Device {
+	static constexpr bool oversample_append_channel = false;
+
 public:
 	Device(I2CPeriph &i2c, const Config &conf)
-		: _device_addr(conf.addr << 1)
-		, _i2c{i2c} {
+		: _i2c{i2c}
+		, _device_addr(conf.addr << 1)
+		, _oversample{conf.oversample} {
 		i2c.enable_IT(conf.irq_priority, conf.irq_subpriority);
 	}
 
@@ -46,8 +49,17 @@ public:
 		ok &= write(PinCfg{.BitMaskDigitalGPIO = 0});
 		ok &= write(SequenceCfg{.SeqModeAuto = 1});
 		ok &= write(AutoSeqChanSel{.BitMaskChannelEnabled = 0xFF});
-		ok &= write(DataCfg{.AppendStatus = 1, .DebugOutput0xA5A = 0});
-		ok &= write(OversampleCfg{.OversampleBits = 0b000});
+
+		if (_oversample) {
+			ok &= write(OversampleCfg{.OversampleBits = 0b111});
+			if constexpr (oversample_append_channel)
+				ok &= write(DataCfg{.AppendStatus = 1});
+			else
+				ok &= write(DataCfg{.AppendStatus = 0});
+		} else {
+			ok &= write(OversampleCfg{.OversampleBits = 0b000});
+			ok &= write(DataCfg{.AppendStatus = 1});
+		}
 
 		// Start conversion:
 		ok &= write(SequenceCfg{.SeqModeAuto = 1, .SeqStart = 1});
@@ -59,8 +71,13 @@ public:
 		return ok && (val.RsvdAlwaysHigh == 1);
 	}
 
-	bool read_channel() {
-		auto err = _i2c.read_IT(_device_addr, _data, 2);
+	bool read_channels() {
+		// no oversampling: 1.6ms
+		// oversampling with chan_id appended: 3.3ms
+		// oversampling with no chan_id: 2.6ms
+		auto num_bytes = _oversample && oversample_append_channel ? 24 : 16;
+		auto err = _i2c.read_IT(_device_addr, _data, num_bytes);
+		chan_ctr = 0;
 		return err == I2CPeriph::I2C_NO_ERR;
 	}
 
@@ -69,11 +86,15 @@ public:
 		uint8_t chan;
 	};
 
-	Reading collect_reading() const {
-		//Top 12 bits are the reading, bottom 4 bits are the channel number
-		uint8_t chan = _data[1] & 0b1111;
-		uint16_t value = (uint16_t(_data[0]) << 4) | (_data[1] >> 4);
-		return Reading{.value = value, .chan = chan};
+	Reading collect_reading(uint32_t chan) {
+		if (_oversample) {
+			if constexpr (oversample_append_channel)
+				return process_16bit(_data[chan * 3], _data[chan * 3 + 1], _data[chan * 3 + 2]);
+			else
+				return process_16bit(_data[chan * 2], _data[chan * 2 + 1], chan_ctr++);
+
+		} else
+			return process_12bit(_data[chan * 2], _data[chan * 2 + 1]);
 	}
 
 	void set_address(uint8_t dev_addr_unshifted) {
@@ -81,9 +102,27 @@ public:
 	}
 
 private:
-	uint8_t _device_addr;
 	I2CPeriph &_i2c;
-	uint8_t _data[2]{};
+	uint8_t _device_addr;
+	bool _oversample;
+	uint8_t chan_ctr = 0;
+
+	uint8_t _data[oversample_append_channel ? 24 : 16]{};
+
+	static Reading process_12bit(uint8_t data0, uint8_t data1) {
+		//Top 12 bits are the reading, bottom 4 bits are the channel number
+		uint8_t chan = data1 & 0b1111;
+		uint16_t value = (uint16_t(data0) << 4) | (data1 >> 4);
+		return Reading{.value = value, .chan = chan};
+	}
+
+	static Reading process_16bit(uint8_t data0, uint8_t data1, uint8_t chan) {
+		// Scale and round 16-bit value to 12-bit value
+		uint16_t value = (uint16_t(data0) << 4) | (data1 >> 4);
+		if (data1 & 0b1000)
+			value++;
+		return Reading{.value = value, .chan = chan};
+	}
 
 	// Returns true on success
 	template<typename Reg>
