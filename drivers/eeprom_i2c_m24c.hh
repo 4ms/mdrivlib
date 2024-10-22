@@ -4,7 +4,8 @@
 #include <span>
 
 // Debugging:
-// #define MC24C_DEBUG
+//#define MC24C_DEBUG
+
 #ifdef MC24C_DEBUG
 #include <cstdio>
 #define MC24C_debug printf
@@ -47,6 +48,8 @@ struct M24C_EEPROM {
 			auto page = data.subspan(offset, bytes_to_write);
 			auto err =
 				i2c.mem_write(device_addr, start_addr + offset, I2C_MEMADD_SIZE_8BIT, page.data(), bytes_to_write);
+
+			HAL_Delay(6); // Datasheet: tWR: worst-case write time = 5ms
 
 			MC24C_debug("Wrote %u bytes to addr %u: err=%d\n", bytes_to_write, start_addr + offset, err);
 			for (auto b : page)
