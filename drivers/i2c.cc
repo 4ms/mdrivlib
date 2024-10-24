@@ -123,6 +123,7 @@ bool I2CPeriph::is_ready() {
 void I2CPeriph::deinit() {
 	Clocks::I2C::disable(hal_i2c_.Instance);
 	Clocks::I2C::force_reset(hal_i2c_.Instance);
+	already_init = false;
 }
 
 I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
