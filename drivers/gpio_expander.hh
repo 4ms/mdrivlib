@@ -91,7 +91,6 @@ struct GPIOExpander {
 	}
 
 	auto set_output_values(uint16_t mask) {
-		// Todo: test this on hardware
 		_data[0] = mask & 0x00FF;
 		_data[1] = mask >> 8;
 		auto err = _i2c.mem_write_IT(_device_addr, OutputPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);

@@ -27,6 +27,7 @@ struct I2CTimingConfig {
 
 // struct I2CTimingConfigBitfld {
 // 	uint8_t PRESC : 4;	// 4 bits: (PRESC + 1) * tI2CCLK = tPRESC
+//  uint8_t :4; 		// padding
 // 	uint8_t SCLDEL : 4; // 4 bits: SCLDEL * tPRESC = SCL Delay between SDA edge and SCL rising edge
 // 	uint8_t SDADEL : 4; // 4 bits: = SDADEL * tPRESC = SDA Delay between SCL falling edge and SDA edge
 // 	uint8_t SCLH : 8;	// SCL high period = (SCLH+1) * tPRESC
