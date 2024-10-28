@@ -48,8 +48,8 @@ struct InterCoreCommMessage {
 };
 
 static InterCoreCommMessage sharedmsg;
-static mdrivlib::InterCoreComm<mdrivlib::ICCCoreType::Initiator, InterCoreCommMessage> tx{sharedmsg};
-static mdrivlib::InterCoreComm<mdrivlib::ICCCoreType::Responder, InterCoreCommMessage> rx{sharedmsg};
+static mdrivlib::InterCoreComm<mdrivlib::ICCRoleType::Initiator, InterCoreCommMessage> tx{sharedmsg};
+static mdrivlib::InterCoreComm<mdrivlib::ICCRoleType::Responder, InterCoreCommMessage> rx{sharedmsg};
 
 TEST_CASE("ICC") {
 

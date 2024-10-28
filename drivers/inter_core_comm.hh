@@ -36,7 +36,7 @@ public:
 		was_my_turn = false;
 
 		__DMB();
-		pr_dbg("[%d] %d:%d: sending %d\n", HAL_GetTick(), Chan, RoleN);
+		// pr_dbg("[%d] %d:%d: sending %d\n", HAL_GetTick(), Chan, RoleN);
 		IPCCHalfDuplex::notify_other();
 
 		// DebugN<CoreN + 1>::Pin::low();
@@ -54,7 +54,7 @@ public:
 
 			msg = shared_message_;
 
-			pr_dbg("[%d] %d:%d: got msg\n", HAL_GetTick(), Chan, RoleN);
+			// pr_dbg("[%d] %d:%d: got msg\n", HAL_GetTick(), Chan, RoleN);
 			shared_message_ = MessageT{};
 
 			// DebugN<CoreN - 1>::Pin::low();
