@@ -1,6 +1,7 @@
 #pragma once
 #include "drivers/secondary_core_control.hh"
 #include "drivers/stm32xx.h"
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <functional>
@@ -20,9 +21,8 @@ struct SMPControl {
 	}
 
 	static constexpr uint32_t NumCores = 2;
-	static constexpr uint32_t NumRegs = 8;
-	static inline __attribute__((section(".noncachable"))) std::atomic<uint32_t> regs[NumRegs] = {
-		0, 0, 0, 0, 0, 0, 0, 0};
+	static constexpr uint32_t NumRegs = 64;
+	static inline __attribute__((section(".noncachable"))) std::array<std::atomic<uint32_t>, NumRegs> regs{};
 
 	template<uint32_t channel>
 	static void notify() {
