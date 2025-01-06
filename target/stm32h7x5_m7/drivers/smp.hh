@@ -16,6 +16,9 @@ struct SMPControl {
 	static void write(uint32_t) {
 	}
 
+	static void write(uint32_t, uint32_t) {
+	}
+
 	template<uint32_t channel = 31>
 	static uint32_t read() {
 		return 0;
