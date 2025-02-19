@@ -1,11 +1,9 @@
 #pragma once
 #include "drivers/arch.hh"
 #include "drivers/callable.hh"
-#include "drivers/stm32xx.h"
 #include <array>
-#include <cstddef>
+#include <cstdint>
 
-// FixMe: how to get around this ugly PP stuff?
 #ifdef TESTPROJECT
 #include "stubs/system.hh"
 #define __BKPT()
