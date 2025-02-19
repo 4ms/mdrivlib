@@ -1,4 +1,7 @@
 #include "gic.hh"
+#include <cstdint>
+
+#include <cstdio>
 
 namespace mdrivlib
 {
@@ -13,8 +16,11 @@ void IRQ_init() {
 	// printf("Read PMR back %u\n", GIC_GetInterfacePriorityMask());
 
 	// printf("Set BPR (priority point)\n");
-	GIC_SetBinaryPoint(4);		 // Group priority: [7:4], Subpriority [3:0]
-	GIC_SetBinaryPointGroup1(2); //not used?
+	// 2 -> Group priority: [7:3], Subpriority [2:0]
+	// 3 -> Group priority: [7:4], Subpriority [3:0]
+	// 4 -> Group priority: [7:5], Subpriority [4:0]
+	GIC_SetBinaryPoint(4);
+	GIC_SetBinaryPointGroup1(4);
 
 	// printf("Set EOI mode to single step\n");
 	GIC_SetEOIModeTwoStep(false);

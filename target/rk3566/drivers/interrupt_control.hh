@@ -10,9 +10,13 @@ struct InterruptControl {
 	InterruptControl() = delete;
 
 	// Binary Point is set to 4 in IRQ_init().
+	// 4 -> Group priority: [7:5], Subpriority [4:0]
+	// But only 5 bits are used on the RK3566. So we have:
+	// gggSSxxx
+	//
 	static void set_irq_priority(IRQn_Type irqn, uint32_t pri1, uint32_t pri2) {
-		pri1 = pri1 > 7 ? 7 : pri1;
-		pri2 = pri2 > 3 ? 3 : pri2;
+		pri1 = pri1 > 0b111 ? 0b111 : pri1;
+		pri2 = pri2 > 0b11 ? 0b11 : pri2;
 		auto pri = (pri1 << 5) | (pri2 << 3);
 		GIC_SetPriority(irqn, pri);
 	}
