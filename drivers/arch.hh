@@ -9,6 +9,7 @@ enum class Targets {
 	stm32f7,
 	stm32f4,
 	stm32f0,
+	rk3566,
 	simulator,
 };
 
@@ -82,6 +83,10 @@ constexpr auto TargetName = Targets::stm32f0;
 #elif defined(SIMULATOR) || defined(TESTPROJECT)
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::simulator;
+
+#elif defined(RK3566)
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::rk3566;
 
 #endif
 } // namespace mdrivlib
