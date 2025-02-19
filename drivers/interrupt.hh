@@ -1,15 +1,9 @@
 #pragma once
 #include "drivers/arch.hh"
 #include "drivers/callable.hh"
+#include "drivers/interrupt_control.hh"
 #include <array>
 #include <cstdint>
-
-#ifdef TESTPROJECT
-#include "stubs/system.hh"
-#define __BKPT()
-#else
-#include "drivers/interrupt_control.hh"
-#endif
 
 namespace mdrivlib
 {
