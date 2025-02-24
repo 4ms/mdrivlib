@@ -97,7 +97,12 @@ void CodecPCM3168::start() {
 }
 
 uint32_t CodecPCM3168::get_sai_errors() {
-	return sai_.fe_errors + sai_.te_errors + sai_.dme_errors;
+	uint32_t errs = std::min<uint32_t>(sai_.fe_errors, 0xFF);
+	errs <<= 8;
+	errs += std::min<uint32_t>(sai_.te_errors, 0xFF);
+	errs <<= 8;
+	errs += std::min<uint32_t>(sai_.dme_errors, 0xFF);
+	return errs;
 }
 
 CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
