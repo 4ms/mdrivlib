@@ -68,6 +68,34 @@ struct Gpio {
 			data_H = low(D(pin));
 	}
 
+	void dir_output(Port port, uint8_t pin) volatile {
+		if (port == Port::A)
+			dir_L = high(A(pin));
+
+		if (port == Port::B)
+			dir_L = high(B(pin));
+
+		if (port == Port::C)
+			dir_H = high(C(pin));
+
+		if (port == Port::D)
+			dir_H = high(D(pin));
+	}
+
+	void dir_input(Port port, uint8_t pin) volatile {
+		if (port == Port::A)
+			dir_L = low(A(pin));
+
+		if (port == Port::B)
+			dir_L = low(B(pin));
+
+		if (port == Port::C)
+			dir_H = low(C(pin));
+
+		if (port == Port::D)
+			dir_H = low(D(pin));
+	}
+
 	// 0 = Output low, 1 = Output high
 	uint32_t data_L; // 0x00
 	uint32_t data_H; // 0x04
