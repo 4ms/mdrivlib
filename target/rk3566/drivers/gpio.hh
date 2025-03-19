@@ -1,4 +1,5 @@
-#include <cstdint>
+#include <cstdio>
+#include <stdint.h>
 
 namespace RockchipPeriph
 {
@@ -18,82 +19,75 @@ struct Gpio {
 
 	// valid for _L registers only
 	static uint32_t A(uint32_t x) {
-		return x << 0;
+		return x;
 	}
 	static uint32_t B(uint32_t x) {
-		return x << 8;
+		return x + 8;
 	}
 
 	// valid for _H registers only
 	static uint32_t C(uint32_t x) {
-		return x << 0;
+		return x;
 	}
 	static uint32_t D(uint32_t x) {
-		return x << 8;
-	}
-
-	static uint32_t high(uint8_t bit) {
-		return masked_set_bit(bit);
-	}
-	static uint32_t low(uint8_t bit) {
-		return masked_clr_bit(bit);
+		return x + 8;
 	}
 
 	enum class Port { A, B, C, D };
 	void high(Port port, uint8_t pin) volatile {
 		if (port == Port::A)
-			data_L = high(A(pin));
+			data_L = masked_set_bit(A(pin));
 
 		if (port == Port::B)
-			data_L = high(B(pin));
+			data_L = masked_set_bit(B(pin));
 
 		if (port == Port::C)
-			data_H = high(C(pin));
+			data_H = masked_set_bit(C(pin));
 
 		if (port == Port::D)
-			data_H = high(D(pin));
+			data_H = masked_set_bit(D(pin));
 	}
 
 	void low(Port port, uint8_t pin) volatile {
 		if (port == Port::A)
-			data_L = low(A(pin));
+			data_L = masked_clr_bit(A(pin));
 
 		if (port == Port::B)
-			data_L = low(B(pin));
+			data_L = masked_clr_bit(B(pin));
 
 		if (port == Port::C)
-			data_H = low(C(pin));
+			data_H = masked_clr_bit(C(pin));
 
 		if (port == Port::D)
-			data_H = low(D(pin));
+			data_H = masked_clr_bit(D(pin));
 	}
 
 	void dir_output(Port port, uint8_t pin) volatile {
 		if (port == Port::A)
-			dir_L = high(A(pin));
+			dir_L = masked_set_bit(A(pin));
 
 		if (port == Port::B)
-			dir_L = high(B(pin));
+			dir_L = masked_set_bit(B(pin));
 
 		if (port == Port::C)
-			dir_H = high(C(pin));
+			dir_H = masked_set_bit(C(pin));
 
 		if (port == Port::D)
-			dir_H = high(D(pin));
+			dir_H = masked_set_bit(D(pin));
 	}
 
 	void dir_input(Port port, uint8_t pin) volatile {
 		if (port == Port::A)
-			dir_L = low(A(pin));
+			dir_L = masked_clr_bit(A(pin));
 
 		if (port == Port::B)
-			dir_L = low(B(pin));
+			dir_L = masked_clr_bit(B(pin));
 
 		if (port == Port::C)
-			dir_H = low(C(pin));
+			dir_H = masked_clr_bit(C(pin));
 
 		if (port == Port::D)
-			dir_H = low(D(pin));
+			dir_H = masked_clr_bit(D(pin));
 	}
 
 	// 0 = Output low, 1 = Output high
