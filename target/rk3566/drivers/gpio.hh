@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <stdint.h>
+#include <stdint.h> // clangd complains about cstdint????
 
 namespace RockchipPeriph
 {
