@@ -26,6 +26,7 @@ struct I2S_TDM {
 	uint32_t VERSION;	 // 0x3c
 	static constexpr uint32_t Version = 0x013376F1;
 
+	// Setup as 8-channel TX TDM, 24-bit Left Justified I2S
 	void tdm_tx8_mode() {
 		// Left Justified I2S mode
 
@@ -62,8 +63,8 @@ struct I2S_TDM {
 		TXCR = t;
 	}
 
+	// Setup as 6-channel RX TDM, 24-bit Left Justified I2S
 	void tdm_rx6_mode() {
-		// Left Justified I2S mode
 
 		enum Path { Path0 = 0, Path1 = 1, Path2 = 2, Path3 = 3 };
 
@@ -95,6 +96,14 @@ struct I2S_TDM {
 		t |= valid_data_width(24) << 0;
 
 		RXCR = t;
+	}
+
+	//
+	void master_mode() {
+		uint32_t t = 0;
+		enum LRCK_COMMON { SyncSeparate = 0, SyncBothToTX = 1, SyncBothToRX = 2 };
+		t |= SyncBothToTX << 28;
+		CKR = t;
 	}
 };
 
