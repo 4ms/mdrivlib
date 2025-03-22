@@ -28,7 +28,6 @@ struct I2S_TDM {
 
 	// Setup as 8-channel TX TDM, 24-bit Left Justified I2S
 	void tdm_tx8_mode() {
-		// Left Justified I2S mode
 
 		enum Path { Path0 = 0, Path1 = 1, Path2 = 2, Path3 = 3 };
 
@@ -98,12 +97,54 @@ struct I2S_TDM {
 		RXCR = t;
 	}
 
-	//
-	void master_mode() {
+	// TX is the master channel. TX sends LR CLK which RX channel syncs to
+	void master_tx() {
 		uint32_t t = 0;
-		enum LRCK_COMMON { SyncSeparate = 0, SyncBothToTX = 1, SyncBothToRX = 2 };
-		t |= SyncBothToTX << 28;
+
+		// TODO: not sure what this one does
+		// Linux driver uses SeparateLRClks, but we might want to share one LR line
+		enum LRCK_COMMON { SeparateLRClks = 0b00, SyncToTx = 0b01, SyncToRx = 0b10 };
+		t |= SyncToTx << 28;
+
+		enum MSS { Master = 0, Slave = 1 };
+		t |= Master << 27;
+
+		enum CKP { SclkPolarityNormal = 0, SclkPolarityInverted = 1 };
+		t |= SclkPolarityNormal << 26;
+
+		enum RLP { RxLrclkPolarityNormal = 0, RxLrclkPolarityInverted = 1 };
+		t |= RxLrclkPolarityNormal << 25;
+
+		enum TLP { TxLrclkPolarityNormal = 0, TxLrclkPolarityInverted = 1 };
+		t |= TxLrclkPolarityNormal << 24;
+
+		// RSD: RX Sclk Divider
+		// FreqSclk = (DIV / 2) * 2 * FreqLRClk
+		// I think this means that DIV is a ratio:
+		//      Ratio = FreqSclk / FreqLRClk
+		// Only matters in non-TDM mode
+		t |= 255 << 8;
+
+		// TSD: Transmit Sclk Divider
+		t |= 255 << 0;
+
 		CKR = t;
+	}
+
+	void enable_DMA() {
+		uint32_t t = 0;
+		enum { RXDMAEnableBit = 24, RXDMALevelShift = 16, TXDMAEnableBit = 8, TXDMALevelShift = 0 };
+
+		constexpr uint32_t LevelMask = 0b11111;
+
+		t |= 1 << RXDMAEnableBit;
+		t |= 1 << TXDMAEnableBit;
+
+		// "level at which a DMA request is made by the receive logic."
+		t |= (16 | LevelMask) << RXDMALevelShift;
+		t |= (16 | LevelMask) << TXDMALevelShift;
+
+		DMACR = t;
 	}
 };
 
