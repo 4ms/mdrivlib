@@ -1,7 +1,12 @@
-#include "masks.hh"
-#include <stdint.h> // clangd complains about cstdint????
+#pragma once
+#include "drivers/periph_base_addr.hh"
+#include "drivers/register_access.hh"
+#include <cstdint>
 
-namespace RockchipPeriph::Cru
+namespace mdrivlib::RockchipPeriph
+{
+
+namespace Cru
 {
 
 struct CLKSEL {
@@ -18,58 +23,58 @@ struct CLKSEL {
 		//
 	};
 
-	void i2s1_mclkout_tx(bool enable) {
-		con[I2S1_tx] = enable ? masked_set_bit(15) : masked_clr_bit(15);
-	}
-	void i2s1_mclkout_rx(bool enable) {
-		con[I2S1_rx] = enable ? masked_set_bit(15) : masked_clr_bit(15);
-	}
-
-	enum mclk_i2s1_8ch_src {
-		clk_i2s1_8ch = 0b00,
-		clk_i2s1_8ch_frac = 0b01,
-		i2s1_mclkin = 0b10,
-		xin_osc0_half = 0b11,
-	};
-	void mclk_i2s1_8ch_tx_sel(enum mclk_i2s1_8ch_src source) {
-		con[I2S1_tx] = masked(0b11 << 10, source << 10);
-	}
-	void mclk_i2s1_8ch_rx_sel(enum mclk_i2s1_8ch_src source) {
-		con[I2S1_rx] = masked(0b11 << 10, source << 10);
-	}
-
-	enum clk_i2s1_8ch_src { gpll = 0b00, cpll = 0b00, npll = 0b00 };
-
-	void i2s1_8ch_tx_src_sel(enum clk_i2s1_8ch_src source) {
-		con[I2S1_tx] = masked(0b11 << 8, source << 8);
-	}
-	void i2s1_8ch_rx_src_sel(enum clk_i2s1_8ch_src source) {
-		con[I2S1_rx] = masked(0b11 << 8, source << 8);
-	}
-
-	void i2s1_8ch_tx_src_div(uint8_t div_con) {
-		// Divide clk_i2s1_8ch_tx_src by (div_con + 1)
-		con[I2S1_tx] = masked(0b111111 << 0, div_con << 0);
-	}
-	void i2s1_8ch_rx_src_div(uint8_t div_con) {
-		// Divide clk_i2s1_8ch_rx_src by (div_con + 1)
-		con[I2S1_rx] = masked(0b111111 << 0, div_con << 0);
-	}
-
-	void i2s1_8ch_tx_frac_div(uint16_t num, uint16_t denom) {
-		con[I2S1_tx_frac] = (uint32_t)num << 16 | (uint32_t)denom;
-	}
-	void i2s1_8ch_rx_frac_div(uint16_t num, uint16_t denom) {
-		con[I2S1_rx_frac] = (uint32_t)num << 16 | (uint32_t)denom;
+	constexpr static uint32_t reg(Registers regnum) {
+		return CRU_CLKSEL_BASE + (regnum * 4);
 	}
 };
 
-} // namespace RockchipPeriph::Cru
+// Note: these names match what's in the TRM so you can search the PDF
+// The enum names are the same, but with 'i2sN' => 'i2s' and removing _tx and _rx
 
-namespace HW
-{
+// MCLKOUT
+enum class i2s_mclkout_sel {
+	mclk_i2s_8ch_tx = 0b0,
+	xin_osc0_half = 0b1,
+};
+using i2s1_mclkout_tx_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_tx), 1 << 15, i2s_mclkout_sel>;
+using i2s1_mclkout_rx_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_rx), 1 << 15, i2s_mclkout_sel>;
 
-static inline volatile RockchipPeriph::Cru::CLKSEL *ClkSel =
-	reinterpret_cast<RockchipPeriph::Cru::CLKSEL *>(0xFDD20100);
+// MCLK Clock Mux
+enum class mclk_i2s_8ch_sel {
+	clk_i2s_8ch_src = 0b00,	 // e.g. clk_i2s1_8ch_tx_src or clk_i2s1_8ch_rx_src in TRM
+	clk_i2s_8ch_frac = 0b01, // e.g. clk_i2s1_8ch_tx_frac or clk_i2s1_8ch_rx_frac in TRM
+	i2s_mclkin = 0b10,		 // e.g. i2s1_mclkin in TRM
+	xin_osc0_half = 0b11,
+};
+using mclk_i2s1_8ch_tx_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_tx), (0b11 << 10), mclk_i2s_8ch_sel>;
+using mclk_i2s1_8ch_rx_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_rx), (0b11 << 10), mclk_i2s_8ch_sel>;
 
-}
+// Clk i2s Clock Mux
+enum class clk_i2s_8ch_src_sel {
+	clk_gpll_mux = 0b00,
+	clk_cpll_mux = 0b01,
+	clk_npll_mux = 0b10,
+};
+using i2s1_8ch_tx_src_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_tx), (0b11 << 8), clk_i2s_8ch_src_sel>;
+using i2s1_8ch_rx_src_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_rx), (0b11 << 8), clk_i2s_8ch_src_sel>;
+
+// I2s Clk divider -- "Divide clk_i2s1_8ch_tx_src by (div_con + 1)"
+using i2s1_8ch_tx_src_div = RegisterMasked16<CLKSEL::reg(CLKSEL::I2S1_tx), (0b111'1111 << 0)>;
+using i2s1_8ch_rx_src_div = RegisterMasked16<CLKSEL::reg(CLKSEL::I2S1_rx), (0b111'1111 << 0)>;
+
+// i2s fractional clock divider
+struct i2s1_8ch_tx_frac_div : RegisterBits<ReadWrite, CLKSEL::reg(CLKSEL::I2S1_tx_frac), 0xFFFFFFFF> {
+	static void write(uint16_t numerator, uint16_t denominator) {
+		RegisterBits::write((uint32_t)numerator << 16 | (uint32_t)denominator);
+	}
+};
+
+struct i2s1_8ch_rx_frac_div : RegisterBits<ReadWrite, CLKSEL::reg(CLKSEL::I2S1_rx_frac), 0xFFFFFFFF> {
+	static void write(uint16_t numerator, uint16_t denominator) {
+		RegisterBits::write((uint32_t)numerator << 16 | (uint32_t)denominator);
+	}
+};
+
+} // namespace Cru
+
+} // namespace mdrivlib::RockchipPeriph
