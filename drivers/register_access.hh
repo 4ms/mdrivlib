@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <limits>
+#include <utility>
 
 namespace mdrivlib
 {
@@ -124,5 +124,48 @@ struct RegisterDualSetClear {
 // RegisterSetClear<>: shortcut for RegisterDualSetClear by specifying types
 template<typename SetT, typename ClearT>
 using RegisterSetClear = RegisterDualSetClear<SetT::BaseAddress, SetT::Mask, ClearT::BaseAddress, ClearT::Mask>;
+
+// Helpers for RegisterMasked16:
+static constexpr uint32_t masked_set_bit(uint8_t bit) {
+	return (1 << bit) | (1 << (bit + 16));
+}
+
+static constexpr uint32_t masked_clr_bit(uint8_t bit) {
+	return (1 << (bit + 16));
+}
+
+static constexpr uint32_t masked(uint16_t mask, uint16_t bits) {
+	return (mask << 16) | bits;
+}
+
+// Rockchip-style 32-bit register where:
+// - Top 16 bits are a mask of which bits to set/clear in the register.
+// - Bottom 16 bits are the actual bits to set and clear.
+//
+// e.g. 0xFF001234 (== 0b 1111'1111'0000'0000 ' 0001'0010'0011'0100)
+// will set bits 12 and 9; clear bits 8, 10, 11, 13, 14, 15; (i.e. 0x1200)
+// and not modify bits 0-7 (i.e. the 0x34 is ignored)
+template<regsize_t Address, uint16_t Mask>
+struct RegisterMasked16 {
+	static void set() {
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, Mask));
+	}
+	static void write(uint16_t value) {
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, value & Mask));
+	}
+	static void clear() {
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, 0));
+	}
+};
+
+template<regsize_t Address, uint16_t Mask, typename ValuesT>
+struct RegisterMaskedChoice {
+	static void write(ValuesT value) {
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, std::to_underlying(value) & Mask));
+	}
+};
+
+template<regsize_t Address, uint16_t BitNum>
+using RegisterMasked16BitNum = RegisterMasked16<Address, (1 << BitNum)>;
 
 } // namespace mdrivlib
