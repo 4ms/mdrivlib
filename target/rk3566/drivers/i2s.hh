@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <stdint.h> // clangd complains about cstdint????
 
 namespace RockchipPeriph
@@ -27,7 +28,7 @@ struct I2S_TDM {
 	static constexpr uint32_t Version = 0x013376F1;
 
 	// Setup as 8-channel TX TDM, 24-bit Left Justified I2S
-	void tdm_tx8_mode() {
+	void tdm_tx8_mode() volatile {
 
 		enum Path { Path0 = 0, Path1 = 1, Path2 = 2, Path3 = 3 };
 
@@ -59,11 +60,13 @@ struct I2S_TDM {
 		auto valid_data_width = [](unsigned bits) { return bits - 1; };
 		t |= valid_data_width(24) << 0;
 
+		// printf("Setting TXCR to %08x\n", t);
+		// 00019057
 		TXCR = t;
 	}
 
 	// Setup as 6-channel RX TDM, 24-bit Left Justified I2S
-	void tdm_rx6_mode() {
+	void tdm_rx6_mode() volatile {
 
 		enum Path { Path0 = 0, Path1 = 1, Path2 = 2, Path3 = 3 };
 
@@ -94,11 +97,12 @@ struct I2S_TDM {
 		auto valid_data_width = [](unsigned bits) { return bits - 1; };
 		t |= valid_data_width(24) << 0;
 
+		printf("Setting RXCR to %08x\n", t);
 		RXCR = t;
 	}
 
 	// TX is the master channel. TX sends LR CLK which RX channel syncs to
-	void master_tx() {
+	void master_tx() volatile {
 		uint32_t t = 0;
 
 		// TODO: not sure what this one does
@@ -128,10 +132,12 @@ struct I2S_TDM {
 		// TSD: Transmit Sclk Divider
 		t |= 255 << 0;
 
+		// printf("Setting CKR to %08x\n", t);
+		// 0x1000ffff
 		CKR = t;
 	}
 
-	void enable_DMA() {
+	void enable_DMA() volatile {
 		uint32_t t = 0;
 		enum { RXDMAEnableBit = 24, RXDMALevelShift = 16, TXDMAEnableBit = 8, TXDMALevelShift = 0 };
 
