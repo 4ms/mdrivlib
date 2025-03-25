@@ -1,5 +1,7 @@
 #pragma once
 
+#include "drivers/periph_base_addr.hh"
+#include "drivers/register_access.hh"
 #include "gpiomux.hh"
 
 namespace Rockchip
@@ -52,12 +54,35 @@ struct SYS {
 
 	// TODO: finish the registers in the sys
 };
+
 } // namespace Rockchip
+
+namespace mdrivlib::RockchipPeriph
+{
+namespace GRF_SOC
+{
+
+enum class con1_i2s1_mclk_sel {
+	i2s1_mclk_rx = 0,
+	i2s1_mclk_tx = 1,
+};
+using i2s1_mclk_sel = RegisterMaskedChoice<SYS_GRF_BASE + 0x0504, 1 << 5, con1_i2s1_mclk_sel>;
+
+enum class con2_i2s1_mclk_oe {
+	from_ext_chip = 0,
+	from_cru = 1,
+};
+using i2s1_mclk_tx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 1 << 1, con2_i2s1_mclk_oe>;
+using i2s1_mclk_rx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 1 << 0, con2_i2s1_mclk_oe>;
+
+} // namespace GRF_SOC
+} // namespace mdrivlib::RockchipPeriph
 
 namespace HW
 {
 
 static inline volatile Rockchip::PMU *const PMU = reinterpret_cast<Rockchip::PMU *>(0xfdc20000);
-static inline volatile Rockchip::SYS *const SYS = reinterpret_cast<Rockchip::SYS *>(0xfdc60000);
+static inline volatile Rockchip::SYS *const SYS =
+	reinterpret_cast<Rockchip::SYS *>(mdrivlib::RockchipPeriph::SYS_GRF_BASE);
 
 }; // namespace HW

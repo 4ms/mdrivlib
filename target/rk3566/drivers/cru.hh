@@ -33,7 +33,7 @@ struct CLKSEL {
 
 // MCLKOUT
 enum class i2s_mclkout_sel {
-	mclk_i2s_8ch_tx = 0b0,
+	mclk_i2s_8ch = 0b0,
 	xin_osc0_half = 0b1,
 };
 using i2s1_mclkout_tx_sel = RegisterMaskedChoice<CLKSEL::reg(CLKSEL::I2S1_tx), 1 << 15, i2s_mclkout_sel>;
