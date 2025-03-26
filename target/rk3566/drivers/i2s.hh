@@ -5,7 +5,45 @@ namespace RockchipPeriph
 {
 struct I2S {
 	uint32_t TXCR;
+	//TODO... I2S 2 channel registers
 };
+
+// hclk_i2s1_8ch <-- hclk_gic_audio <-- gpll_100m (selectable)
+//
+// GATE(HCLK_I2S1_8CH, "hclk_i2s1_8ch", "hclk_gic_audio", 0, RK3568_CLKGATE_CON(5), 11, GFLAGS),
+// { .id = HCLK_I2S1_8CH == 58,
+//   .branch_type = branch_gate,
+//   .name = "hclk_i2s1_8ch"
+//   .parent_names = "hclk_gic_audio",
+//   .num_parents = 1,
+//   .flags = 0,
+//   .gate_offset = RK3568_CLKGATE_CON(5), == 5*0x4 + 0x300 = 0x314  is CRU_GATE_CON05
+//   .gate_shift = 11,
+//   .gate_flags = GFLAGS == (CLK_GATE_HIWORD_MASK | CLK_GATE_SET_TO_DISABLE)
+
+// parent clock is hclk_gic_audio:
+// 	COMPOSITE_NODIV(HCLK_GIC_AUDIO, "hclk_gic_audio", gpll150_gpll100_gpll75_xin24m_p, CLK_IGNORE_UNUSED,
+//			RK3568_CLKSEL_CON(10), 10, 2, MFLAGS,
+//			RK3568_CLKGATE_CON(5), 1, GFLAGS),
+// parent_names = gpll150_gpll100_gpll75_xin24m_p
+// .muxdiv_offset = RK3568_CLKSEL_CON(10)
+// .mux_shift = 10
+// .mux_width = 2
+// .mux_flags = MFLAGS == CLK_MUX_HIWORD_MASK
+// gate = CON05 bit 1
+
+// parent is selectable, e.g. gpll_100m
+// Gate is CON35 bit 4, Divider is CLKSEL_CON77 bits 4:0 (default 0x0b, confirmed they are that after uboot)
+
+// mclk_i2s1_8ch_tx <-- clk_i2s1_8ch_tx <--
+// 	GATE(MCLK_I2S1_8CH_TX, "mclk_i2s1_8ch_tx", "clk_i2s1_8ch_tx", 0, RK3568_CLKGATE_CON(6), 10, GFLAGS),
+//  GATE_CON06, bit 10
+
+//	COMPOSITE_NODIV(I2S1_MCLKOUT_TX, "i2s1_mclkout_tx", i2s1_mclkout_tx_p, CLK_SET_RATE_PARENT,
+//			RK3568_CLKSEL_CON(15), 15, 1, MFLAGS,
+//			RK3568_CLKGATE_CON(6), 11, GFLAGS),
+
+//
 
 struct I2S_TDM {
 
@@ -60,7 +98,7 @@ struct I2S_TDM {
 		auto valid_data_width = [](unsigned bits) { return bits - 1; };
 		t |= valid_data_width(24) << 0;
 
-		// printf("Setting TXCR to %08x\n", t);
+		printf("Setting TXCR %p to %08x\n", &TXCR, t);
 		// 00019057
 		TXCR = t;
 	}
@@ -97,7 +135,7 @@ struct I2S_TDM {
 		auto valid_data_width = [](unsigned bits) { return bits - 1; };
 		t |= valid_data_width(24) << 0;
 
-		printf("Setting RXCR to %08x\n", t);
+		printf("Setting RXCR %p to %08x\n", &RXCR, t);
 		RXCR = t;
 	}
 
@@ -108,7 +146,7 @@ struct I2S_TDM {
 		// TODO: not sure what this one does
 		// Linux driver uses SeparateLRClks, but we might want to share one LR line
 		enum LRCK_COMMON { SeparateLRClks = 0b00, SyncToTx = 0b01, SyncToRx = 0b10 };
-		t |= SyncToTx << 28;
+		t |= SeparateLRClks << 28;
 
 		enum MSS { Master = 0, Slave = 1 };
 		t |= Master << 27;
@@ -132,7 +170,7 @@ struct I2S_TDM {
 		// TSD: Transmit Sclk Divider
 		t |= 255 << 0;
 
-		// printf("Setting CKR to %08x\n", t);
+		printf("Setting CKR %p to %08x\n", &CKR, t);
 		// 0x1000ffff
 		CKR = t;
 	}
@@ -150,6 +188,7 @@ struct I2S_TDM {
 		t |= (16 | LevelMask) << RXDMALevelShift;
 		t |= (16 | LevelMask) << TXDMALevelShift;
 
+		printf("Setting DMACR %p to %08x\n", &DMACR, t);
 		DMACR = t;
 	}
 };
