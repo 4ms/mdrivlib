@@ -10,6 +10,7 @@
 #include "stm32mp1xx_ll_usart.h"
 #include <atomic>
 #include <cstdio>
+#include <functional>
 #include <span>
 
 namespace mdrivlib
@@ -72,11 +73,15 @@ requires(Conf.base_addr == UART4_BASE || Conf.base_addr == UART5_BASE || Conf.ba
 		 Conf.base_addr == UART8_BASE)
 struct UartDma {
 
+private:
 	UART_HandleTypeDef hal_h{};
 	DMA_HandleTypeDef dma_h{};
+	static inline UartDma *_instance;
+	std::atomic<bool> _is_busy = false;
 
-	std::atomic<bool> is_busy = false;
+	std::function<void(uint8_t)> _rx_callback;
 
+public:
 	void init() {
 		init_uart_clock<Conf>();
 
@@ -114,8 +119,8 @@ struct UartDma {
 
 		if (Conf.base_addr == UART5_BASE) {
 			// TODO: set this with the DMA config
-			dma_irq_num = DMA2_Stream0_IRQn;
-			dma_h.Instance = DMA2_Stream0;
+			dma_irq_num = DMA2_Stream7_IRQn;
+			dma_h.Instance = DMA2_Stream7;
 			dma_h.Init.Request = DMA_REQUEST_UART5_TX;
 		} else {
 			//Not yet supported: TODO
@@ -137,19 +142,42 @@ struct UartDma {
 
 		__HAL_LINKDMA(&hal_h, hdmatx, dma_h);
 
+		_instance = this;
 		if (irq_num) {
-			// Interrupt::register_and_start_isr(irq_num, 0, 0, [this]() { HAL_UART_IRQHandler(&hal_h); });
+			Interrupt::register_and_start_isr(irq_num, 0, 0, [this]() {
+				HAL_UART_IRQHandler(&hal_h);
+				if (_rx_callback) {
+					_rx_callback(hal_h.Instance->RDR);
+				}
+			});
 			Interrupt::register_and_start_isr(dma_irq_num, 0, 0, [this]() { HAL_DMA_IRQHandler(&dma_h); });
 		}
 	}
 
+	bool is_busy() {
+		return _is_busy;
+	}
+
+	void rx_callback(auto &&func) {
+		_rx_callback = func;
+	}
+
 	// Data must be non-cacheable and remain in memory until xfer is complete
 	bool send_dma(std::span<uint8_t> data) {
+		while (_is_busy) {
+			;
+		}
+
+		_is_busy = true;
 		return HAL_UART_Transmit_DMA(&hal_h, data.data(), data.size()) == HAL_OK;
 	}
 
 	static void dma_xfer_complete(DMA_HandleTypeDef *dma) {
-		printf("dma xfer complete\n");
+		printf("DMA XFER COMPLETE\n");
+		volatile int x = 1;
+		while (x)
+			;
+		_instance->_is_busy = false;
 	}
 
 	// static void delay_for_write(auto uart) {
