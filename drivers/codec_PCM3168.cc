@@ -96,6 +96,10 @@ void CodecPCM3168::start() {
 	sai_.start();
 }
 
+void CodecPCM3168::stop() {
+	sai_.stop();
+}
+
 uint32_t CodecPCM3168::get_sai_errors() {
 	return sai_.fe_errors + sai_.te_errors + sai_.dme_errors;
 }

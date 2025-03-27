@@ -49,6 +49,7 @@ public:
 	Error change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size);
 	uint32_t get_samplerate();
 	void start();
+	void stop();
 
 	uint32_t get_sai_errors();
 
