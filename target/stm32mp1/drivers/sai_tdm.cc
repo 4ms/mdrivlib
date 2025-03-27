@@ -398,6 +398,8 @@ void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 void SaiTdmPeriph::stop() {
 	InterruptControl::disable_irq(tx_irqn);
 	InterruptControl::disable_irq(rx_irqn);
+	HAL_SAI_Abort(&hsai_tx);
+	HAL_SAI_Abort(&hsai_rx);
 }
 
 void SaiTdmPeriph::_sai_enable(SAI_HandleTypeDef *hsai) {
