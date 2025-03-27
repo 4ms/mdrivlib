@@ -96,6 +96,10 @@ void CodecPCM3168::start() {
 	sai_.start();
 }
 
+void CodecPCM3168::stop() {
+	sai_.stop();
+}
+
 uint32_t CodecPCM3168::get_sai_errors() {
 	uint32_t errs = std::min<uint32_t>(sai_.fe_errors, 0xFF);
 	errs <<= 8;
