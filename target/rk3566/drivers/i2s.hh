@@ -3,24 +3,12 @@
 
 namespace RockchipPeriph
 {
-struct I2S {
-	uint32_t TXCR;
-	//TODO... I2S 2 channel registers
-};
 
-// hclk_i2s1_8ch <-- hclk_gic_audio <-- gpll_100m (selectable)
+// hclk_i2s1_8ch <-- hclk_gic_audio <-- gpll_100m (selectable) <--- gpll <--- xin 24MHz
 //
-// GATE(HCLK_I2S1_8CH, "hclk_i2s1_8ch", "hclk_gic_audio", 0, RK3568_CLKGATE_CON(5), 11, GFLAGS),
-// { .id = HCLK_I2S1_8CH == 58,
-//   .branch_type = branch_gate,
-//   .name = "hclk_i2s1_8ch"
-//   .parent_names = "hclk_gic_audio",
-//   .num_parents = 1,
-//   .flags = 0,
-//   .gate_offset = RK3568_CLKGATE_CON(5), == 5*0x4 + 0x300 = 0x314  is CRU_GATE_CON05
-//   .gate_shift = 11,
-//   .gate_flags = GFLAGS == (CLK_GATE_HIWORD_MASK | CLK_GATE_SET_TO_DISABLE)
-
+// hclk_i2s1_8ch:
+// CLKGATE_CON(5) is CRU_GATE_CON05 at bit 11
+//
 // parent clock is hclk_gic_audio:
 // 	COMPOSITE_NODIV(HCLK_GIC_AUDIO, "hclk_gic_audio", gpll150_gpll100_gpll75_xin24m_p, CLK_IGNORE_UNUSED,
 //			RK3568_CLKSEL_CON(10), 10, 2, MFLAGS,
@@ -33,16 +21,30 @@ struct I2S {
 // gate = CON05 bit 1
 
 // parent is selectable, e.g. gpll_100m
-// Gate is CON35 bit 4, Divider is CLKSEL_CON77 bits 4:0 (default 0x0b, confirmed they are that after uboot)
+// gpll_100m Gate is CON35 bit 4,
+// gpll_100m Divider is CLKSEL_CON77 bits 4:0 (default 0x0b, confirmed they are that after uboot)
 
-// mclk_i2s1_8ch_tx <-- clk_i2s1_8ch_tx <--
-// 	GATE(MCLK_I2S1_8CH_TX, "mclk_i2s1_8ch_tx", "clk_i2s1_8ch_tx", 0, RK3568_CLKGATE_CON(6), 10, GFLAGS),
+// parent is gpll, which is a pll_rk3328
+// PLL_CON16 (offset 16*4 = 0x0040) is CRU_GPLL_CON0 @ 0xfdd20040
+// CRU_MODE_CON00 (@ 0xfdd200c0) bits 7:6 need to be 0b01 (they are after uboot: 0xfdd200c0 is 0x0055)
+// in dtsi, gpll is set to 1.2GHz
+// GPLL_CON0 is 0x2064 => fbdiv=0x64=100d, postdiv=2, no bypass. So 24MHz*100 = 2.4GHz, /2 = 1.2GHz
+// GPLL_CON1 is 0x1441 => refdiv=1, postdiv2=1, locked, modulator disabled, no power down
+//
+// parent is xin24m
+
+// mclk_i2s1_8ch_tx <-- clk_i2s1_8ch_tx <-- selecctable: clk_i2s1_8ch_tx_src, clk_i2s1_8ch_tx_frac, i2s1_mclk_in
+//
+// mclk_i2s1_8ch_tx:
 //  GATE_CON06, bit 10
-
+//
+// parent is clk_i2s1_8ch_tx:
 //	COMPOSITE_NODIV(I2S1_MCLKOUT_TX, "i2s1_mclkout_tx", i2s1_mclkout_tx_p, CLK_SET_RATE_PARENT,
-//			RK3568_CLKSEL_CON(15), 15, 1, MFLAGS,
-//			RK3568_CLKGATE_CON(6), 11, GFLAGS),
-
+//			RK3568_CLKSEL_CON(15), bit 15 (rr 0xfdd2013c -> 0x00000113 or also tried 0x0013). means /20 --> 60MHz
+//											also tried 0x0032 means /50 -> 24MHz
+//			RK3568_CLKGATE_CON(6), bit 11 (rr 0xfdd20318 -> 0x00000000)
+//
+// parent is gpll_cpll_npll_p: which we can select gpll, which we know is 1.2GHz
 //
 
 struct I2S_TDM {
@@ -165,10 +167,10 @@ struct I2S_TDM {
 		// I think this means that DIV is a ratio:
 		//      Ratio = FreqSclk / FreqLRClk
 		// Only matters in non-TDM mode
-		t |= 255 << 8;
+		t |= 0x1f << 8;
 
 		// TSD: Transmit Sclk Divider
-		t |= 255 << 0;
+		t |= 0x1f << 0;
 
 		printf("Setting CKR %p to %08x\n", &CKR, t);
 		// 0x1000ffff
@@ -191,6 +193,33 @@ struct I2S_TDM {
 		printf("Setting DMACR %p to %08x\n", &DMACR, t);
 		DMACR = t;
 	}
+
+	void clear_tx_underrun() volatile {
+		enum Bits { TXEmpty = 0, TXUnderrun = 1 };
+		if (INTSR & (1 << TXUnderrun)) {
+			uint32_t t = INTCR;
+			t |= 1 << 2;
+			printf("Clear underrun: Setting INTCR %p to %08x\n", &INTCR, t);
+			INTCR = t;
+		}
+		if (INTSR & (1 << TXEmpty)) {
+			printf("TX empty\n");
+		}
+	}
+
+	void enable_ISR() volatile {
+		uint32_t t = INTCR;
+
+		enum Bits { TXEmptyInterruptEnable = 0, TXUnderrunInterruptEnable = 1, TXFIFOThreshold = 4 };
+		enum Mask { TXFIFOThresholdMask = 0b11111 };
+
+		t |= 1 << TXEmptyInterruptEnable;
+		t |= 0 << TXUnderrunInterruptEnable;
+		t |= (1 & TXFIFOThresholdMask) << TXFIFOThreshold;
+
+		printf("Setting INTCR %p to %08x\n", &INTCR, t);
+		INTCR = t;
+	}
 };
 
 } // namespace RockchipPeriph
@@ -199,9 +228,9 @@ namespace HW
 {
 
 // TODO: check which ones are TDM (8chan) and which ones are not (2chan)
-static inline volatile RockchipPeriph::I2S *const I2S0 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe400000);
+// static inline volatile RockchipPeriph::I2S *const I2S0 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe400000);
 static inline volatile RockchipPeriph::I2S_TDM *const I2S1 = reinterpret_cast<RockchipPeriph::I2S_TDM *>(0xfe410000);
-static inline volatile RockchipPeriph::I2S *const I2S2 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe420000);
-static inline volatile RockchipPeriph::I2S *const I2S3 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe430000);
+// static inline volatile RockchipPeriph::I2S *const I2S2 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe420000);
+// static inline volatile RockchipPeriph::I2S *const I2S3 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe430000);
 
 } // namespace HW

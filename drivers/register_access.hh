@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstdio>
 #include <utility>
 
 namespace mdrivlib
@@ -90,9 +91,11 @@ struct ReadOnly {
 
 struct WriteOnly {
 	static void write(volatile regsize_t *address, regsize_t offset, regsize_t mask, regsize_t val) {
+		printf("wr %p 0x%08x\n", address, (val << offset) & mask);
 		*address = ((val << offset) & mask);
 	}
 	static void set(volatile regsize_t *address, regsize_t mask) {
+		printf("wr %p 0x%08x\n", address, (unsigned int)mask);
 		*address = mask;
 	}
 };
@@ -145,27 +148,32 @@ static constexpr uint32_t masked(uint16_t mask, uint16_t bits) {
 // e.g. 0xFF001234 (== 0b 1111'1111'0000'0000 ' 0001'0010'0011'0100)
 // will set bits 12 and 9; clear bits 8, 10, 11, 13, 14, 15; (i.e. 0x1200)
 // and not modify bits 0-7 (i.e. the 0x34 is ignored)
-template<regsize_t Address, uint16_t Mask>
+template<regsize_t Address, uint16_t Mask, uint16_t Shift>
 struct RegisterMasked16 {
+	static constexpr uint32_t ShiftedMask = Mask << Shift;
+
 	static void set() {
-		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, Mask));
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(ShiftedMask, ShiftedMask));
 	}
 	static void write(uint16_t value) {
-		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, value & Mask));
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(ShiftedMask, value << Shift));
 	}
 	static void clear() {
-		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, 0));
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(ShiftedMask, 0));
 	}
 };
 
-template<regsize_t Address, uint16_t Mask, typename ValuesT>
+template<regsize_t Address, uint16_t Mask, uint16_t Shift, typename ValuesT>
 struct RegisterMaskedChoice {
+	static constexpr uint32_t ShiftedMask = Mask << Shift;
+
 	static void write(ValuesT value) {
-		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address), masked(Mask, std::to_underlying(value) & Mask));
+		WriteOnly::set(reinterpret_cast<volatile regsize_t *>(Address),
+					   masked(ShiftedMask, (std::to_underlying(value) << Shift) & ShiftedMask));
 	}
 };
 
 template<regsize_t Address, uint16_t BitNum>
-using RegisterMasked16BitNum = RegisterMasked16<Address, (1 << BitNum)>;
+using RegisterMasked16BitNum = RegisterMasked16<Address, 0b1, BitNum>;
 
 } // namespace mdrivlib

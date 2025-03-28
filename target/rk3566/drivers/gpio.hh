@@ -1,4 +1,4 @@
-#include "masks.hh"
+#include "drivers/register_access.hh"
 #include <stdint.h> // clangd complains about cstdint????
 
 namespace RockchipPeriph
@@ -24,6 +24,7 @@ struct Gpio {
 
 	enum class Port { A, B, C, D };
 	void high(Port port, uint8_t pin) volatile {
+		using namespace mdrivlib;
 		if (port == Port::A)
 			data_L = masked_set_bit(A(pin));
 
@@ -38,6 +39,7 @@ struct Gpio {
 	}
 
 	void low(Port port, uint8_t pin) volatile {
+		using namespace mdrivlib;
 		if (port == Port::A)
 			data_L = masked_clr_bit(A(pin));
 
@@ -52,6 +54,7 @@ struct Gpio {
 	}
 
 	void dir_output(Port port, uint8_t pin) volatile {
+		using namespace mdrivlib;
 		if (port == Port::A)
 			dir_L = masked_set_bit(A(pin));
 
@@ -66,6 +69,7 @@ struct Gpio {
 	}
 
 	void dir_input(Port port, uint8_t pin) volatile {
+		using namespace mdrivlib;
 		if (port == Port::A)
 			dir_L = masked_clr_bit(A(pin));
 
