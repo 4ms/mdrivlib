@@ -116,13 +116,67 @@ struct I2S_TDM {
 		TDM_TXCTRL = t;
 
 		t = 0;
-		t |= 0xFF << 8; // RX:
-		t |= 0xFF << 0; // TX:divide MCLK by 256 to get SCLK
+		t |= 0xff << 8; // RX:
+		t |= 0xff << 0; // TX:divide MCLK by 1 to get SCLK
 
 		printf("Setting CLKDIV %p to %08x\n", &CLKDIV, t);
-		CLKDIV = 0xFFFF; //
+		CLKDIV = t;
 	}
 
+	// setup as 8channel non-tdm
+	void tx8_parallel_mode() volatile {
+
+		enum Path { Path0 = 0, Path1 = 1, Path2 = 2, Path3 = 3 };
+
+		uint32_t t = 0;
+		t |= Path3 << 29; //SDO3 to path3
+		t |= Path2 << 27; //SDO2 to path2
+		t |= Path1 << 25; //SDO1 to path1
+		t |= Path0 << 23; //SDO0 to path0
+
+		enum NumChannels { Two = 0, Four = 1, Six = 2, Eight = 3 };
+		t |= Two << 15;
+
+		enum Justify { Right = 0, Left = 1 };
+		t |= Left << 12;
+
+		enum FirstBitMode { MSB = 0, LSB = 1 };
+		t |= FirstBitMode::MSB;
+
+		enum BusMode { Normal = 0, LeftJust = 1, RightJust = 2 };
+		t |= Normal << 9;
+
+		// enum PBM { PCMNoDelay = 0, PCMDelay1 = 1, PCMDelay2 = 2, PCMDelay3 = 3 };
+		// t |= PCMNoDelay << 7;
+
+		enum TransferFormat { I2S = 0, PCM = 1, TDM_PCM = 2, TDM_I2S = 2 };
+		t |= I2S << 5;
+
+		// ValidData [16, 32]
+		auto valid_data_width = [](unsigned bits) { return bits - 1; };
+		t |= valid_data_width(24) << 0;
+
+		printf("Setting TXCR %p to %08x\n", &TXCR, t);
+		// 00019057
+		TXCR = t;
+
+		t = 0;
+		// TODO: use enums instead of magic numbers:
+		t |= 0 << 17;	  // fsync is half frame
+		t |= 0b000 << 14; // I2S format 0 (normal)
+		t |= 0x1f << 9;	  // TX Slot bit width (32)
+		t |= 0x1f << 0;	  // TX Frame width (64)?
+
+		printf("Setting TDM_TXCTRL %p to %08x\n", &TDM_TXCTRL, t);
+		TDM_TXCTRL = t;
+
+		t = 0;
+		t |= 0x3 << 8; // RX:
+		t |= 0x3 << 0; // TX:divide MCLK by 4 to get SCLK
+
+		printf("Setting CLKDIV %p to %08x\n", &CLKDIV, t);
+		CLKDIV = t;
+	}
 	// Setup as 6-channel RX TDM, 24-bit Left Justified I2S
 	void tdm_rx6_mode() volatile {
 
@@ -185,10 +239,10 @@ struct I2S_TDM {
 		// I think this means that DIV is a ratio:
 		//      Ratio = FreqSclk / FreqLRClk
 		// Only matters in non-TDM mode
-		t |= 0x1f << 8;
+		t |= 0x3f << 8;
 
 		// TSD: Transmit Sclk Divider
-		t |= 0x1f << 0;
+		t |= 0x3f << 0;
 
 		printf("Setting CKR %p to %08x\n", &CKR, t);
 		// 0x1000ffff
@@ -217,11 +271,11 @@ struct I2S_TDM {
 		if (INTSR & (1 << TXUnderrun)) {
 			uint32_t t = INTCR;
 			t |= 1 << 2;
-			printf("Clear underrun: Setting INTCR %p to %08x\n", &INTCR, t);
+			// printf("Clear underrun: Setting INTCR %p to %08x\n", &INTCR, t);
 			INTCR = t;
 		}
 		if (INTSR & (1 << TXEmpty)) {
-			printf("TX empty\n");
+			// printf("TX empty\n");
 		}
 	}
 
