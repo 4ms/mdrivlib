@@ -103,6 +103,24 @@ struct I2S_TDM {
 		printf("Setting TXCR %p to %08x\n", &TXCR, t);
 		// 00019057
 		TXCR = t;
+
+		t = 0;
+
+		// TODO: use enums instead of magic numbers:
+		t |= 0 << 17;	  // fsync is half frame
+		t |= 0b000 << 14; // I2S format 0 (normal)
+		t |= 0x1f << 9;	  // TX Slot bit width (32)
+		t |= 0xff << 0;	  // TX Frame width (256)
+
+		printf("Setting TDM_TXCTRL %p to %08x\n", &TDM_TXCTRL, t);
+		TDM_TXCTRL = t;
+
+		t = 0;
+		t |= 0xFF << 8; // RX:
+		t |= 0xFF << 0; // TX:divide MCLK by 256 to get SCLK
+
+		printf("Setting CLKDIV %p to %08x\n", &CLKDIV, t);
+		CLKDIV = 0xFFFF; //
 	}
 
 	// Setup as 6-channel RX TDM, 24-bit Left Justified I2S
