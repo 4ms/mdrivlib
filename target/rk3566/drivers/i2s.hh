@@ -157,7 +157,6 @@ struct I2S_TDM {
 		t |= valid_data_width(24) << 0;
 
 		printf("Setting TXCR %p to %08x\n", &TXCR, t);
-		// 00019057
 		TXCR = t;
 
 		t = 0;
@@ -236,8 +235,7 @@ struct I2S_TDM {
 
 		// RSD: RX Sclk Divider
 		// FreqSclk = (DIV / 2) * 2 * FreqLRClk
-		// I think this means that DIV is a ratio:
-		//      Ratio = FreqSclk / FreqLRClk
+		//      DIV = FreqSclk / FreqLRClk
 		// Only matters in non-TDM mode
 		t |= 0x3f << 8;
 
@@ -279,15 +277,16 @@ struct I2S_TDM {
 		}
 	}
 
-	void enable_ISR() volatile {
+	void enable_TX_ISR_with_block_size(uint32_t block_size) volatile {
 		uint32_t t = INTCR;
 
 		enum Bits { TXEmptyInterruptEnable = 0, TXUnderrunInterruptEnable = 1, TXFIFOThreshold = 4 };
-		enum Mask { TXFIFOThresholdMask = 0b11111 };
+		enum Mask { TXFIFOThresholdMask = 0b11111 }; //31 max
 
+		t |= 0 << TXFIFOThreshold;
 		t |= 1 << TXEmptyInterruptEnable;
 		t |= 0 << TXUnderrunInterruptEnable;
-		t |= (1 & TXFIFOThresholdMask) << TXFIFOThreshold;
+		t |= ((block_size - 1) & TXFIFOThresholdMask) << TXFIFOThreshold;
 
 		printf("Setting INTCR %p to %08x\n", &INTCR, t);
 		INTCR = t;
