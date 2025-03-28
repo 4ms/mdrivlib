@@ -67,7 +67,9 @@ struct SYS {
 namespace HW
 {
 
-static inline volatile Rockchip::PMU *const PMU = reinterpret_cast<Rockchip::PMU *>(0xfdc20000);
+static inline volatile Rockchip::PMU *const PMU =
+	reinterpret_cast<Rockchip::PMU *>(mdrivlib::RockchipPeriph::PMU_GRF_BASE);
+
 static inline volatile Rockchip::SYS *const SYS =
 	reinterpret_cast<Rockchip::SYS *>(mdrivlib::RockchipPeriph::SYS_GRF_BASE);
 
@@ -91,7 +93,7 @@ struct SOC {
 
 enum class choice_pwm2_iomux {
 	m0 = 0b00,
-	m1 = 0b11,
+	m1 = 0b01,
 };
 
 using pwm2_iomux_sel = RegisterMaskedChoice<SOC::CON4, 0b11, 4, choice_pwm2_iomux>;
@@ -118,23 +120,29 @@ using i2s1_mclk_rx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 0b1, 0, con2
 
 } // namespace SysGrf
 
-namespace GRF_IOFUNC
+namespace GrfIofunc
 {
 
-enum class choice_iomux1 {
+enum Registers {
+	SEL2 = 0x0308,
+	SEL3 = 0x030C,
+	SEL4 = 0x0310,
+};
+
+enum class choice_iomux2 {
 	m0 = 0b00,
 	m1 = 0b01,
 };
 
-using pwm11_iomux_sel = RegisterMaskedChoice<SYS_GRF_BASE + 0x0308, 0b11, 4, choice_iomux1>;
+using pwm11_iomux_sel = RegisterMaskedChoice<SYS_GRF_BASE + SEL2, 0b11, 4, choice_iomux2>;
 
-enum class choice_i2s1_iomux {
+enum class choice_iomux3 {
 	m0 = 0b00,
 	m1 = 0b01,
 	m2 = 0b10,
 };
-using i2s1_iomux_sel_m1 = RegisterMaskedChoice<SYS_GRF_BASE + 0x0310, 0b11, 10, choice_i2s1_iomux>;
+using i2s1_iomux_sel_m1 = RegisterMaskedChoice<SYS_GRF_BASE + SEL4, 0b11, 10, choice_iomux3>;
 
-} // namespace GRF_IOFUNC
+} // namespace GrfIofunc
 
 } // namespace mdrivlib::RockchipPeriph
