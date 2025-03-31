@@ -1,5 +1,9 @@
+#include "drivers/periph_base_addr.hh"
+#include <cstdint>
 #include <cstdio>
-#include <stdint.h> // clangd complains about cstdint????
+
+namespace mdrivlib
+{
 
 namespace RockchipPeriph
 {
@@ -302,15 +306,15 @@ struct I2S_TDM {
 	}
 };
 
+struct I2S_2CH {
+	//TODO
+};
+
 } // namespace RockchipPeriph
 
-namespace HW
-{
+static inline volatile RockchipPeriph::I2S_TDM *const I2S0 = reinterpret_cast<RockchipPeriph::I2S_TDM *>(I2S0_8CH_BASE);
+static inline volatile RockchipPeriph::I2S_TDM *const I2S1 = reinterpret_cast<RockchipPeriph::I2S_TDM *>(I2S1_8CH_BASE);
+static inline volatile RockchipPeriph::I2S_2CH *const I2S2 = reinterpret_cast<RockchipPeriph::I2S_2CH *>(I2S2_2CH_BASE);
+static inline volatile RockchipPeriph::I2S_2CH *const I2S3 = reinterpret_cast<RockchipPeriph::I2S_2CH *>(I2S3_2CH_BASE);
 
-// TODO: check which ones are TDM (8chan) and which ones are not (2chan)
-// static inline volatile RockchipPeriph::I2S *const I2S0 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe400000);
-static inline volatile RockchipPeriph::I2S_TDM *const I2S1 = reinterpret_cast<RockchipPeriph::I2S_TDM *>(0xfe410000);
-// static inline volatile RockchipPeriph::I2S *const I2S2 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe420000);
-// static inline volatile RockchipPeriph::I2S *const I2S3 = reinterpret_cast<RockchipPeriph::I2S *>(0xfe430000);
-
-} // namespace HW
+} // namespace mdrivlib

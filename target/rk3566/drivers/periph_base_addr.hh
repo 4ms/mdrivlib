@@ -28,4 +28,18 @@ inline constexpr uint32_t GPIO2_BASE = 0xfe750000;
 inline constexpr uint32_t GPIO3_BASE = 0xfe760000;
 inline constexpr uint32_t GPIO4_BASE = 0xfe770000;
 
+// I2C
+inline constexpr uint32_t I2C0_BASE = 0xfdd40000;
+inline constexpr uint32_t I2C1_BASE = 0xfe5a0000;
+inline constexpr uint32_t I2C2_BASE = 0xfe5b0000;
+inline constexpr uint32_t I2C3_BASE = 0xfe5c0000;
+inline constexpr uint32_t I2C4_BASE = 0xfe5d0000;
+inline constexpr uint32_t I2C5_BASE = 0xfe5e0000;
+
+// I2S
+inline constexpr uint32_t I2S0_8CH_BASE = 0xfe400000;
+inline constexpr uint32_t I2S1_8CH_BASE = 0xfe410000;
+inline constexpr uint32_t I2S2_2CH_BASE = 0xfe420000;
+inline constexpr uint32_t I2S3_2CH_BASE = 0xfe430000;
+
 } // namespace mdrivlib
