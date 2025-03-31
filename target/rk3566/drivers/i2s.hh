@@ -4,48 +4,34 @@
 namespace RockchipPeriph
 {
 
+// I2S clock tree:
 // hclk_i2s1_8ch <-- hclk_gic_audio <-- gpll_100m (selectable) <--- gpll <--- xin 24MHz
 //
-// hclk_i2s1_8ch:
-// CLKGATE_CON(5) is CRU_GATE_CON05 at bit 11
+// hclk_i2s1_8ch: Gate is CRU_GATE_CON05 at bit 11
 //
-// parent clock is hclk_gic_audio:
-// 	COMPOSITE_NODIV(HCLK_GIC_AUDIO, "hclk_gic_audio", gpll150_gpll100_gpll75_xin24m_p, CLK_IGNORE_UNUSED,
-//			RK3568_CLKSEL_CON(10), 10, 2, MFLAGS,
-//			RK3568_CLKGATE_CON(5), 1, GFLAGS),
-// parent_names = gpll150_gpll100_gpll75_xin24m_p
-// .muxdiv_offset = RK3568_CLKSEL_CON(10)
-// .mux_shift = 10
-// .mux_width = 2
-// .mux_flags = MFLAGS == CLK_MUX_HIWORD_MASK
-// gate = CON05 bit 1
+// hclk_gic_audio: CRU_CLKSEL_CON10 bit 10 to select gpll_150m or gpll_100m etc; CRU_GATE_CON05 bit 1
+//
+// gpll_100m: Gate is CON35 bit 4, Divider is CLKSEL_CON77 bits 4:0
+// gpll_150m ...TODO...
+//
+// gpll: CRU_GPLL_CON0 @ 0xfdd20040, CRU_MODE_CON00 (@ 0xfdd200c0) bits 7:6 need to be 0b01
+// gpll is set to 1.2GHz with:
+//   GPLL_CON0 is 0x2064 => fbdiv=0x64=100d, postdiv=2, no bypass. So 24MHz*100 = 2.4GHz, /2 = 1.2GHz
+//   GPLL_CON1 is 0x1441 => refdiv=1, postdiv2=1, locked, modulator disabled, no power down
 
-// parent is selectable, e.g. gpll_100m
-// gpll_100m Gate is CON35 bit 4,
-// gpll_100m Divider is CLKSEL_CON77 bits 4:0 (default 0x0b, confirmed they are that after uboot)
-
-// parent is gpll, which is a pll_rk3328
-// PLL_CON16 (offset 16*4 = 0x0040) is CRU_GPLL_CON0 @ 0xfdd20040
-// CRU_MODE_CON00 (@ 0xfdd200c0) bits 7:6 need to be 0b01 (they are after uboot: 0xfdd200c0 is 0x0055)
-// in dtsi, gpll is set to 1.2GHz
-// GPLL_CON0 is 0x2064 => fbdiv=0x64=100d, postdiv=2, no bypass. So 24MHz*100 = 2.4GHz, /2 = 1.2GHz
-// GPLL_CON1 is 0x1441 => refdiv=1, postdiv2=1, locked, modulator disabled, no power down
+// mclk clock tree:
+// mclk_i2s1_8ch_tx <-- clk_i2s1_8ch_tx <-- selectable: clk_i2s1_8ch_tx_src, clk_i2s1_8ch_tx_frac, i2s1_mclk_in <-- gpll
 //
-// parent is xin24m
-
-// mclk_i2s1_8ch_tx <-- clk_i2s1_8ch_tx <-- selecctable: clk_i2s1_8ch_tx_src, clk_i2s1_8ch_tx_frac, i2s1_mclk_in
+// mclk_i2s1_8ch_tx: GATE_CON06, bit 10
 //
-// mclk_i2s1_8ch_tx:
-//  GATE_CON06, bit 10
+// clk_i2s1_8ch_tx:
+//			CRU_CLKSEL_CON15, bit 15  set to 0 to enable
+//			CRU_CLKSEL_CON15, bits 11:10  set to 0b00 to use integer divider
 //
-// parent is clk_i2s1_8ch_tx:
-//	COMPOSITE_NODIV(I2S1_MCLKOUT_TX, "i2s1_mclkout_tx", i2s1_mclkout_tx_p, CLK_SET_RATE_PARENT,
-//			RK3568_CLKSEL_CON(15), bit 15 (rr 0xfdd2013c -> 0x00000113 or also tried 0x0013). means /20 --> 60MHz
-//											also tried 0x0032 means /50 -> 24MHz
-//			RK3568_CLKGATE_CON(6), bit 11 (rr 0xfdd20318 -> 0x00000000)
-//
-// parent is gpll_cpll_npll_p: which we can select gpll, which we know is 1.2GHz
-//
+// clk_i2s1_8ch_tx_src (integer divider clock):
+//			CRU_CLKSEL_CON15, bits 9:8  set to 0b00 to use gpll
+//			CRU_CLKSEL_CON15, bits 6:0  selects the divider for gpll (e.g. /98)
+//			CRU_GATE_CON06, bit 11 cleared = enable mclkout_tx
 
 struct I2S_TDM {
 
@@ -66,6 +52,29 @@ struct I2S_TDM {
 	uint32_t CLKDIV;	 // 0x38
 	uint32_t VERSION;	 // 0x3c
 	static constexpr uint32_t Version = 0x013376F1;
+
+	bool check_version() {
+		return VERSION == Version;
+	}
+
+	void reset() volatile {
+		XFER = 0;
+		CLR = 1;
+		while (CLR != 0)
+			;
+	}
+
+	void start_tx() volatile {
+		XFER = 0b01;
+	}
+
+	void start_txrx() volatile {
+		XFER = 0b11;
+	}
+
+	void start_rx() volatile {
+		XFER = 0b10;
+	}
 
 	// Setup as 8-channel TX TDM, 24-bit Left Justified I2S
 	void tdm_tx8_mode() volatile {

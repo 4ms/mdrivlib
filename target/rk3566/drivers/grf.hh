@@ -67,11 +67,9 @@ struct SYS {
 namespace HW
 {
 
-static inline volatile Rockchip::PMU *const PMU =
-	reinterpret_cast<Rockchip::PMU *>(mdrivlib::RockchipPeriph::PMU_GRF_BASE);
+static inline volatile Rockchip::PMU *const PMU = reinterpret_cast<Rockchip::PMU *>(mdrivlib::PMU_GRF_BASE);
 
-static inline volatile Rockchip::SYS *const SYS =
-	reinterpret_cast<Rockchip::SYS *>(mdrivlib::RockchipPeriph::SYS_GRF_BASE);
+static inline volatile Rockchip::SYS *const SYS = reinterpret_cast<Rockchip::SYS *>(mdrivlib::SYS_GRF_BASE);
 
 }; // namespace HW
 

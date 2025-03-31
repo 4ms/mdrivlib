@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace mdrivlib::RockchipPeriph
+namespace mdrivlib
 {
 
 // TRM Chapter 2 (CRU: Clock & Reset Unit)
@@ -21,4 +21,11 @@ inline constexpr uint32_t SYS_GRF_BASE = 0xFDC60000;
 inline constexpr uint32_t PMU_BASE = 0xFDD90000;
 inline constexpr uint32_t PMU_CRU_PWR_BASE = 0xFDD900B0;
 
-} // namespace mdrivlib::RockchipPeriph
+// GPIO
+inline constexpr uint32_t GPIO0_BASE = 0xfdd60000;
+inline constexpr uint32_t GPIO1_BASE = 0xfe740000;
+inline constexpr uint32_t GPIO2_BASE = 0xfe750000;
+inline constexpr uint32_t GPIO3_BASE = 0xfe760000;
+inline constexpr uint32_t GPIO4_BASE = 0xfe770000;
+
+} // namespace mdrivlib

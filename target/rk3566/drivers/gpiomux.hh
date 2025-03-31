@@ -28,7 +28,6 @@ private:
 		auto mask = 0x7 << (offset + 16);
 		auto val = static_cast<uint32_t>(opt) << offset;
 		reg = mask | val;
-		printf("GPIO_IOMUX: Write %p with %08x\n", &reg, mask | val);
 	}
 };
 
