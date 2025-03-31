@@ -154,7 +154,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 
 	deinit();
 
-	hal_i2c_.Instance = defs.I2Cx;
+	hal_i2c_.Instance = PeriphUtil::I2C(defs.I2C_periph_num);
 	hal_i2c_.Init.OwnAddress1 = 0x33;
 	hal_i2c_.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	hal_i2c_.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;

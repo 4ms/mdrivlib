@@ -1,13 +1,14 @@
 #pragma once
 #include "drivers/bus_register.hh"
-#include "i2c_config_struct.hh"
-#include "interrupt.hh"
-#include "pin.hh"
+#include "drivers/i2c_arch.hh"
+#include "drivers/i2c_config_struct.hh"
+#include "drivers/interrupt.hh"
 #include <cstdint>
 #include <optional>
 
 namespace mdrivlib
 {
+
 class I2CPeriph {
 public:
 	enum Error { I2C_NO_ERR, I2C_INIT_ERR, I2C_ALREADY_INIT, I2C_XMIT_ERR };
@@ -57,14 +58,16 @@ public:
 	void enable_IT(uint8_t pri1 = 2, uint8_t pri2 = 2);
 	void disable_IT();
 
+#ifndef RK3566
 	void link_DMA_TX(DMA_HandleTypeDef *dmatx);
 	void link_DMA_RX(DMA_HandleTypeDef *dmarx);
+#endif
 
 	void enable_FMP();
 
 private:
 	bool already_init = false;
-	I2C_HandleTypeDef hal_i2c_;
+	I2C_Hal hal_i2c_;
 	IRQn_Type i2c_irq_num_;
 	IRQn_Type i2c_err_irq_num_;
 	Interrupt event_isr;
@@ -76,10 +79,5 @@ private:
 	void i2c_event_handler();
 
 	uint32_t _check_errors(uint32_t retries);
-
-	Error _init_periph(I2C_TypeDef *periph, const I2CTimingConfig &timing);
-	Error _init_periph(I2C_TypeDef *periph) {
-		return _init_periph(periph, I2CTimingConfig{});
-	}
 };
 } // namespace mdrivlib

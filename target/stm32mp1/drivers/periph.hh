@@ -20,6 +20,25 @@ struct ADC {
 struct SAI {
 	const static inline uint32_t NumPeriph = 4;
 };
+
+I2C_TypeDef *I2C(uint32_t periph_num) {
+	if (periph_num == 0)
+		return I2C0;
+	if (periph_num == 1)
+		return I2C1;
+	if (periph_num == 2)
+		return I2C2;
+	if (periph_num == 3)
+		return I2C3;
+	if (periph_num == 4)
+		return I2C4;
+	if (periph_num == 5)
+		return I2C5;
+	if (periph_num == 6)
+		return I2C6;
+	return nullptr;
+}
+
 struct TIM {
 	const static inline unsigned NumPeriph = 17;
 	static uint8_t to_num(TIM_TypeDef *TIMx) {
