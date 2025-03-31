@@ -1,7 +1,9 @@
+#pragma once
+#include "drivers/periph_base_addr.hh"
 #include "drivers/register_access.hh"
-#include <stdint.h> // clangd complains about cstdint????
+#include <cstdint>
 
-namespace RockchipPeriph
+namespace mdrivlib
 {
 
 struct Gpio {
@@ -23,6 +25,7 @@ struct Gpio {
 	}
 
 	enum class Port { A, B, C, D };
+
 	void high(Port port, uint8_t pin) volatile {
 		using namespace mdrivlib;
 		if (port == Port::A)
@@ -88,6 +91,11 @@ struct Gpio {
 	uint32_t data_H; // 0x04
 
 	// 0 = Input, 1 = Output
+	enum class PinMode : uint32_t {
+		Input = 0,
+		Output = 1,
+		Alt = 2, // flag to use the gpiomux
+	};
 	uint32_t dir_L; // 0x08
 	uint32_t dir_H; // 0x0C
 
@@ -101,6 +109,10 @@ struct Gpio {
 	uint32_t intr_type_H;
 
 	// active low = 0, active high = 1
+	enum class PinPolarity {
+		Normal = 0,
+		Inverted = 1,
+	};
 	uint32_t intr_pol_L;
 	uint32_t intr_pol_H;
 
@@ -134,15 +146,83 @@ struct Gpio {
 	uint32_t ver_id; // 0x78
 };
 
-} // namespace RockchipPeriph
+static inline volatile Gpio *const GPIO0 = reinterpret_cast<Gpio *const>(GPIO0_BASE);
+static inline volatile Gpio *const GPIO1 = reinterpret_cast<Gpio *const>(GPIO1_BASE);
+static inline volatile Gpio *const GPIO2 = reinterpret_cast<Gpio *const>(GPIO2_BASE);
+static inline volatile Gpio *const GPIO3 = reinterpret_cast<Gpio *const>(GPIO3_BASE);
+static inline volatile Gpio *const GPIO4 = reinterpret_cast<Gpio *const>(GPIO4_BASE);
 
-namespace HW
-{
+enum class GPIO : uint32_t {
+	GPIO0 = GPIO0_BASE,
+	GPIO1 = GPIO1_BASE,
+	GPIO2 = GPIO2_BASE,
+	GPIO3 = GPIO3_BASE,
+	GPIO4 = GPIO4_BASE,
+	Unused = 0,
+};
 
-static inline volatile RockchipPeriph::Gpio *const GPIO0 = reinterpret_cast<RockchipPeriph::Gpio *>(0xfdd60000);
-static inline volatile RockchipPeriph::Gpio *const GPIO1 = reinterpret_cast<RockchipPeriph::Gpio *>(0xfe740000);
-static inline volatile RockchipPeriph::Gpio *const GPIO2 = reinterpret_cast<RockchipPeriph::Gpio *>(0xfe750000);
-static inline volatile RockchipPeriph::Gpio *const GPIO3 = reinterpret_cast<RockchipPeriph::Gpio *>(0xfe760000);
-static inline volatile RockchipPeriph::Gpio *const GPIO4 = reinterpret_cast<RockchipPeriph::Gpio *>(0xfe770000);
+using PinMode = Gpio::PinMode;
+using PinPolarity = Gpio::PinPolarity;
 
-}; // namespace HW
+// TODO: gpio config registers
+enum class PinPull : uint32_t {
+	Up,
+	Down,
+	None,
+};
+
+enum class PinSpeed : uint32_t {
+	Low,
+	Medium,
+	High,
+	VeryHigh,
+};
+
+enum class PinOType : uint32_t {
+	PushPull,
+	OpenDrain,
+};
+
+enum PinNum : uint8_t {
+	A0,
+	A1,
+	A2,
+	A3,
+	A4,
+	A5,
+	A6,
+	A7,
+	B0,
+	B1,
+	B2,
+	B3,
+	B4,
+	B5,
+	B6,
+	B7,
+	C0,
+	C1,
+	C2,
+	C3,
+	C4,
+	C5,
+	C6,
+	C7,
+	D0,
+	D1,
+	D2,
+	D3,
+	D4,
+	D5,
+	D6,
+	D7,
+};
+
+enum PinAF : uint8_t {
+	AFNone = 0,
+	AltFunc1,
+	AltFunc2,
+	AltFunc3,
+};
+
+}; // namespace mdrivlib

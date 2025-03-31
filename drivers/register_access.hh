@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <cstdio>
 #include <utility>
 
 namespace mdrivlib
@@ -91,11 +90,11 @@ struct ReadOnly {
 
 struct WriteOnly {
 	static void write(volatile regsize_t *address, regsize_t offset, regsize_t mask, regsize_t val) {
-		printf("wr %p 0x%08x\n", address, (val << offset) & mask);
+		// printf("wr %p 0x%08x\n", address, (val << offset) & mask);
 		*address = ((val << offset) & mask);
 	}
 	static void set(volatile regsize_t *address, regsize_t mask) {
-		printf("wr %p 0x%08x\n", address, (unsigned int)mask);
+		// printf("wr %p 0x%08x\n", address, (unsigned int)mask);
 		*address = mask;
 	}
 };
