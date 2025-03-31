@@ -1,6 +1,6 @@
 CompileFlags:
 	Add: [
-		"--target=arm-none-eabi",
+		# "--target=arm-none-eabi",
 	]
 ---
 If:
