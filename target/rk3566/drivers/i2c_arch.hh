@@ -39,12 +39,13 @@ struct I2C_DEBUG {
 struct I2C_Hal {
 	volatile RockchipPeriph::I2C *Instance;
 };
-static inline volatile RockchipPeriph::I2C *I2C0 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C0_BASE);
-static inline volatile RockchipPeriph::I2C *I2C1 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C1_BASE);
-static inline volatile RockchipPeriph::I2C *I2C2 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C2_BASE);
-static inline volatile RockchipPeriph::I2C *I2C3 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C3_BASE);
-static inline volatile RockchipPeriph::I2C *I2C4 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C4_BASE);
-static inline volatile RockchipPeriph::I2C *I2C5 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C5_BASE);
+
+inline volatile RockchipPeriph::I2C *I2C0 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C0_BASE);
+inline volatile RockchipPeriph::I2C *I2C1 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C1_BASE);
+inline volatile RockchipPeriph::I2C *I2C2 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C2_BASE);
+inline volatile RockchipPeriph::I2C *I2C3 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C3_BASE);
+inline volatile RockchipPeriph::I2C *I2C4 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C4_BASE);
+inline volatile RockchipPeriph::I2C *I2C5 = reinterpret_cast<volatile RockchipPeriph::I2C *>(I2C5_BASE);
 
 inline volatile RockchipPeriph::I2C *TXDATA(volatile RockchipPeriph::I2C *i2c) {
 	return i2c + 0x100;

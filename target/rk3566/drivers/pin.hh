@@ -1,5 +1,5 @@
 #pragma once
-#include "gpio.hh"
+#include "drivers/gpio.hh"
 #include <cstdint>
 
 namespace mdrivlib

@@ -218,11 +218,6 @@ enum PinNum : uint8_t {
 	D7,
 };
 
-enum PinAF : uint8_t {
-	AFNone = 0,
-	AltFunc1,
-	AltFunc2,
-	AltFunc3,
-};
+using PinAF = uint8_t;
 
 }; // namespace mdrivlib
