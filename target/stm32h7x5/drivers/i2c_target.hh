@@ -5,7 +5,7 @@
 namespace mdrivlib
 {
 
-struct I2C {
+struct I2CTarget {
 	static void init(const I2CConfig &defs) {
 		// if (calc_clock_kHz(defs.timing) > 800000UL)
 		// enable_fast_mode_plus(defs);

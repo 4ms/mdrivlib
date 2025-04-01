@@ -145,7 +145,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 			PinOType::OpenDrain};
 
 	// Call target-specific init:
-	I2C::init(defs);
+	I2CTarget::init(defs);
 
 	// We let the pins be re-init because the app may have used them for some other purpose
 	// But we don't re-init the I2C peripheral with each device on the bus

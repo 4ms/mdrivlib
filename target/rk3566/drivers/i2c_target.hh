@@ -3,7 +3,8 @@
 
 namespace mdrivlib
 {
-struct I2C {
+
+struct I2CTarget {
 	static void init(const I2CConfig &defs) {
 	}
 };
