@@ -1,8 +1,12 @@
 #include "drivers/i2c.hh"
+#include "drivers/cru_clksel.hh"
+#include "drivers/cru_gate.hh"
+#include "drivers/cru_reset.hh"
 #include "drivers/i2c_target.hh"
 #include "drivers/interrupt.hh"
 #include "drivers/register_access.hh"
 #include <cstdint>
+#include <utility>
 
 namespace mdrivlib
 {
@@ -14,8 +18,8 @@ constexpr uint32_t _I2C_VLONG_TIMEOUT = 100;
 uint32_t I2CPeriph::_check_errors(uint32_t retries) {
 	if (retries == 0)
 		return 0;
-	// if (HAL_I2C_GetError(&hal_i2c_) != HAL_I2C_ERROR_AF)
-	// 	return 0;
+	if (true)
+		return 0;
 	return --retries;
 }
 
@@ -39,9 +43,58 @@ I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_
 	return I2C_XMIT_ERR;
 }
 
+static void transmit(volatile RockchipPeriph::I2C *instance, unsigned size) {
+	instance->MTXCNT = size;
+
+	auto finished_bit = std::to_underlying(RockchipPeriph::I2C::IPD_bits::mtxcnt_tx_finished);
+	while ((instance->IPD & finished_bit) == 0) {
+		instance->IPD = finished_bit;
+	}
+}
+
 I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
 	uint32_t retries = 16;
 	while (retries) {
+		hal_i2c_.instance->tx_mode();
+		hal_i2c_.instance->send_start();
+
+		int word_cnt = 0;
+		int filled = 0;
+
+		while (size >= 4) {
+			uint32_t word = *data++;
+			word |= (*data++ << 8);
+			word |= (*data++ << 16);
+			word |= (*data++ << 24);
+			hal_i2c_.instance->TXDATA[word_cnt] = word;
+			word_cnt++;
+			filled += 4;
+			size -= 4;
+
+			if (word_cnt == 8) {
+				transmit(hal_i2c_.instance, 32);
+				word_cnt = 0;
+				filled = 0;
+			}
+		}
+
+		if (size > 0) {
+			uint32_t word = 0;
+			word |= *data++;
+			if (size > 1)
+				word |= (*data++ << 8);
+			if (size > 2)
+				word |= (*data++ << 16);
+			filled += size;
+			hal_i2c_.instance->TXDATA[word_cnt] = word;
+		}
+
+		if (filled) {
+			transmit(hal_i2c_.instance, filled);
+		}
+
+		hal_i2c_.instance->send_stop();
+
 		// if (HAL_I2C_Master_Transmit(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
 		// 	return I2C_NO_ERR;
 		retries = _check_errors(retries);
@@ -52,6 +105,7 @@ I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t 
 I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
 	uint32_t retries = 16;
 	while (retries) {
+
 		// if (HAL_I2C_Master_Transmit_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
 		// 	return I2C_NO_ERR;
 		retries = _check_errors(retries);
@@ -127,6 +181,8 @@ void I2CPeriph::deinit() {
 }
 
 I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
+	using namespace RockchipPeriph;
+
 	Pin sda{defs.SDA.gpio,
 			defs.SDA.pin,
 			PinMode::Alt,
@@ -135,6 +191,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 			PinPolarity::Normal,
 			PinSpeed::High,
 			PinOType::OpenDrain};
+
 	Pin scl{defs.SCL.gpio,
 			defs.SCL.pin,
 			PinMode::Alt,
@@ -145,7 +202,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 			PinOType::OpenDrain};
 
 	// Call target-specific init:
-	I2C::init(defs);
+	I2CTarget::init(defs);
 
 	// We let the pins be re-init because the app may have used them for some other purpose
 	// But we don't re-init the I2C peripheral with each device on the bus
@@ -154,6 +211,25 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 
 	deinit();
 
+	if (defs.I2C_periph_num == 2) {
+		CruClksel::clk_i2c_sel::write(CruClksel::clk_i2c_clock_mux::clk_gpll_div_100m);
+		CruGate::clk_i2c_en::write(CruGate::clock_enable);
+		CruGate::clk_i2c2_en::write(CruGate::clock_enable);
+		CruGate::pclk_i2c2_en::write(CruGate::clock_enable);
+
+		Cru::resetn_i2c2::set();
+		Cru::presetn_i2c2::set();
+		Cru::presetn_i2c2::clear();
+		Cru::resetn_i2c2::clear();
+
+		hal_i2c_.instance = I2C2;
+
+	} else {
+		return I2C_INIT_ERR;
+	}
+
+	hal_i2c_.instance->enable();
+	hal_i2c_.instance->clock_div(100, 100);
 	// hal_i2c_.Instance = PeriphUtil::I2C(defs.I2C_periph_num);
 	// hal_i2c_.Init.OwnAddress1 = 0x33;
 	// hal_i2c_.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
