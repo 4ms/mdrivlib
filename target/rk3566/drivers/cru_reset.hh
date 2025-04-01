@@ -25,6 +25,15 @@ using mresetn_i2s1_8ch_tx = RegisterMasked16BitNum<SOFTRST::reg(5), 2>;
 using mresetn_i2s0_8ch_rx = RegisterMasked16BitNum<SOFTRST::reg(5), 1>;
 using mresetn_i2s0_8ch_tx = RegisterMasked16BitNum<SOFTRST::reg(5), 0>;
 
+using resetn_i2c4 = RegisterMasked16BitNum<SOFTRST::reg(22), 9>;
+using presetn_i2c4 = RegisterMasked16BitNum<SOFTRST::reg(22), 8>;
+using resetn_i2c3 = RegisterMasked16BitNum<SOFTRST::reg(22), 7>;
+using presetn_i2c3 = RegisterMasked16BitNum<SOFTRST::reg(22), 6>;
+using resetn_i2c2 = RegisterMasked16BitNum<SOFTRST::reg(22), 5>;
+using presetn_i2c2 = RegisterMasked16BitNum<SOFTRST::reg(22), 4>;
+using resetn_i2c1 = RegisterMasked16BitNum<SOFTRST::reg(22), 3>;
+using presetn_i2c1 = RegisterMasked16BitNum<SOFTRST::reg(22), 2>;
+
 } // namespace Cru
 
 } // namespace mdrivlib::RockchipPeriph

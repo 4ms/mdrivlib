@@ -83,43 +83,16 @@ enum class con1_i2s1_mclk_sel {
 	i2s1_mclk_rx = 0,
 	i2s1_mclk_tx = 1,
 };
-
 using i2s1_mclk_sel = RegisterMaskedChoice<SYS_GRF_BASE + 0x0504, 1, 5, con1_i2s1_mclk_sel>;
 
 enum class con2_i2s1_mclk_oe {
 	from_ext_chip = 0,
 	from_cru = 1,
 };
-
 using i2s1_mclk_tx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 0b1, 1, con2_i2s1_mclk_oe>;
 using i2s1_mclk_rx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 0b1, 0, con2_i2s1_mclk_oe>;
 
 } // namespace SysGrf
-
-namespace GrfIofunc
-{
-
-enum Registers {
-	SEL2 = 0x0308,
-	SEL3 = 0x030C,
-	SEL4 = 0x0310,
-};
-
-enum class choice_iomux2 {
-	m0 = 0b00,
-	m1 = 0b01,
-};
-
-using pwm11_iomux_sel = RegisterMaskedChoice<SYS_GRF_BASE + SEL2, 0b11, 4, choice_iomux2>;
-
-enum class choice_iomux3 {
-	m0 = 0b00,
-	m1 = 0b01,
-	m2 = 0b10,
-};
-using i2s1_iomux_sel_m1 = RegisterMaskedChoice<SYS_GRF_BASE + SEL4, 0b11, 10, choice_iomux3>;
-
-} // namespace GrfIofunc
 
 } // namespace RockchipPeriph
 
