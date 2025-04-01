@@ -1,33 +1,30 @@
 #pragma once
-
 #include <cstdint>
 
-namespace Rockchip
+namespace mdrivlib::RockchipPeriph
 {
+
+uint32_t write_3bits_masked(auto opt, int offset) {
+	auto mask = 0x7 << (offset + 16);
+	auto val = static_cast<uint32_t>(opt) << offset;
+	return mask | val;
+}
 
 template<typename SEL0, typename SEL1, typename SEL2, typename SEL3>
 struct GPIO_IOMUX {
-
-	void write(SEL0 opt) volatile {
-		write(opt, 0x00);
-	}
-	void write(SEL1 opt) volatile {
-		write(opt, 0x04);
-	}
-	void write(SEL2 opt) volatile {
-		write(opt, 0x08);
-	}
-	void write(SEL3 opt) volatile {
-		write(opt, 0x0c);
-	}
-
 	uint32_t reg;
 
-private:
-	void write(auto opt, int offset) volatile {
-		auto mask = 0x7 << (offset + 16);
-		auto val = static_cast<uint32_t>(opt) << offset;
-		reg = mask | val;
+	void write(SEL0 opt) volatile {
+		reg = write_3bits_masked(opt, 0x00);
+	}
+	void write(SEL1 opt) volatile {
+		reg = write_3bits_masked(opt, 0x04);
+	}
+	void write(SEL2 opt) volatile {
+		reg = write_3bits_masked(opt, 0x08);
+	}
+	void write(SEL3 opt) volatile {
+		reg = write_3bits_masked(opt, 0x0c);
 	}
 };
 
@@ -460,7 +457,7 @@ using GPIO4C_IOMUX_H =
 
 using GPIO4D_IOMUX_L = GPIO_IOMUX<GPIO4D_IOMUX_L_SEL_0, GPIO4D_IOMUX_L_SEL_1, GPIO4D_IOMUX_L_SEL_2, GPIOX_RESERVED>;
 
-} // namespace Rockchip
+} // namespace mdrivlib::RockchipPeriph
 
 // inline void example()
 //{
