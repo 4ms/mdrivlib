@@ -1,20 +1,18 @@
 #pragma once
-
+#include "drivers/gpiomux.hh"
 #include "drivers/periph_base_addr.hh"
 #include "drivers/register_access.hh"
-#include "gpiomux.hh"
 
-// TODO:
-// - use mdrivlib namespace
-// - PMU => is actually PMU_GRF (actual PMU is covered in Chapter 7)
-// - SYS => is actually SYS_GRF
-// combine these into the PmuGrf and SysGrf below:
-//     namespace PmuGrf{  struct GPIO_IOMUX {
-//     namespace SysGrf{  struct GPIO_IOMUX {
-namespace Rockchip
+namespace mdrivlib
 {
 
-struct PMU {
+namespace RockchipPeriph
+{
+
+namespace PmuGrf
+{
+
+struct GPIO_IOMUX {
 	GPIO0A_IOMUX_L gpio0_a_l;
 	GPIO0A_IOMUX_H gpio0_a_h;
 	GPIO0B_IOMUX_L gpio0_b_l;
@@ -23,10 +21,31 @@ struct PMU {
 	GPIO0C_IOMUX_H gpio0_c_h;
 	GPIO0D_IOMUX_L gpio0_d_l;
 	GPIO0D_IOMUX_H gpio0_d_h;
-	// TODO: finish the registers in the pmu
 };
 
-struct SYS {
+struct SOC {
+	enum Registers {
+		CON0 = PMU_GRF_SOC_BASE + 0x0,
+		CON1 = PMU_GRF_SOC_BASE + 0x4,
+		CON2 = PMU_GRF_SOC_BASE + 0x8,
+		CON3 = PMU_GRF_SOC_BASE + 0xC,
+		CON4 = PMU_GRF_SOC_BASE + 0x10,
+	};
+};
+
+enum class choice_pwm2_iomux {
+	m0 = 0b00,
+	m1 = 0b01,
+};
+
+using pwm2_iomux_sel = RegisterMaskedChoice<SOC::CON4, 0b11, 4, choice_pwm2_iomux>;
+
+} // namespace PmuGrf
+
+namespace SysGrf
+{
+
+struct GPIO_IOMUX {
 	GPIO1A_IOMUX_L gpio1_a_l;
 	GPIO1A_IOMUX_H gpio1_a_h;
 	GPIO1B_IOMUX_L gpio1_b_l;
@@ -58,48 +77,7 @@ struct SYS {
 	GPIO4C_IOMUX_L gpio4_c_l;
 	GPIO4C_IOMUX_H gpio4_c_h;
 	GPIO4D_IOMUX_L gpio4_d_l;
-
-	// TODO: finish the registers in the sys
 };
-
-} // namespace Rockchip
-
-namespace HW
-{
-
-static inline volatile Rockchip::PMU *const PMU = reinterpret_cast<Rockchip::PMU *>(mdrivlib::PMU_GRF_BASE);
-
-static inline volatile Rockchip::SYS *const SYS = reinterpret_cast<Rockchip::SYS *>(mdrivlib::SYS_GRF_BASE);
-
-}; // namespace HW
-
-namespace mdrivlib::RockchipPeriph
-{
-
-namespace PmuGrf
-{
-
-struct SOC {
-	enum Registers {
-		CON0 = PMU_GRF_SOC_BASE + 0x0,
-		CON1 = PMU_GRF_SOC_BASE + 0x4,
-		CON2 = PMU_GRF_SOC_BASE + 0x8,
-		CON3 = PMU_GRF_SOC_BASE + 0xC,
-		CON4 = PMU_GRF_SOC_BASE + 0x10,
-	};
-};
-
-enum class choice_pwm2_iomux {
-	m0 = 0b00,
-	m1 = 0b01,
-};
-
-using pwm2_iomux_sel = RegisterMaskedChoice<SOC::CON4, 0b11, 4, choice_pwm2_iomux>;
-
-} // namespace PmuGrf
-
-namespace SysGrf
-{
 
 enum class con1_i2s1_mclk_sel {
 	i2s1_mclk_rx = 0,
@@ -143,4 +121,12 @@ using i2s1_iomux_sel_m1 = RegisterMaskedChoice<SYS_GRF_BASE + SEL4, 0b11, 10, ch
 
 } // namespace GrfIofunc
 
-} // namespace mdrivlib::RockchipPeriph
+} // namespace RockchipPeriph
+
+static inline volatile RockchipPeriph::PmuGrf::GPIO_IOMUX *const PMU_GPIO_IOMUX =
+	reinterpret_cast<RockchipPeriph::PmuGrf::GPIO_IOMUX *>(PMU_GRF_BASE);
+
+static inline volatile RockchipPeriph::SysGrf::GPIO_IOMUX *const SYS_GPIO_IOMUX =
+	reinterpret_cast<RockchipPeriph::SysGrf::GPIO_IOMUX *>(SYS_GRF_BASE);
+
+} // namespace mdrivlib
