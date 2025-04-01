@@ -1,6 +1,7 @@
 #include "pin.hh"
 #include "drivers/gpiomux.hh"
 #include "drivers/register_access.hh"
+#include <cstdio>
 
 namespace mdrivlib
 {
@@ -132,15 +133,15 @@ void Pin::set_pull(PinPull pull) {
 
 void Pin::set_alt(uint8_t af) {
 	uint32_t base = port_ == GPIO::GPIO0 ? PMU_GRF_BASE
-				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x00
-				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x20
-				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x40
-				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x60
+				  : port_ == GPIO::GPIO1 ? SYS_GRF_BASE + 0x00
+				  : port_ == GPIO::GPIO2 ? SYS_GRF_BASE + 0x20
+				  : port_ == GPIO::GPIO3 ? SYS_GRF_BASE + 0x40
+				  : port_ == GPIO::GPIO4 ? SYS_GRF_BASE + 0x60
 										 : 0;
 
 	// pin_ is 0 to 31 (A0 - D7): each register controls 4 pins
 	auto mux_register = (uint32_t(pin_ / 4)) * 4;
-	auto offset = pin_ % 4;
+	auto offset = (pin_ % 4) * 4;
 
 	auto io_mux = reinterpret_cast<volatile uint32_t *>(base + mux_register);
 	*io_mux = RockchipPeriph::write_3bits_masked(af, offset);
