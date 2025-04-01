@@ -1,4 +1,5 @@
 #include "pin.hh"
+#include "drivers/gpiomux.hh"
 #include "drivers/register_access.hh"
 
 namespace mdrivlib
@@ -120,15 +121,31 @@ void Pin::set_mode(PinMode mode) {
 		}
 	}
 }
+
 void Pin::set_speed(PinSpeed speed) {
 	//TODO
 }
+
 void Pin::set_pull(PinPull pull) {
 	//TODO
 }
+
 void Pin::set_alt(uint8_t af) {
-	//TODO
+	uint32_t base = port_ == GPIO::GPIO0 ? PMU_GRF_BASE
+				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x00
+				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x20
+				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x40
+				  : port_ == GPIO::GPIO0 ? SYS_GRF_BASE + 0x60
+										 : 0;
+
+	// pin_ is 0 to 31 (A0 - D7): each register controls 4 pins
+	auto mux_register = (uint32_t(pin_ / 4)) * 4;
+	auto offset = pin_ % 4;
+
+	auto io_mux = reinterpret_cast<volatile uint32_t *>(base + mux_register);
+	*io_mux = RockchipPeriph::write_3bits_masked(af, offset);
 }
+
 void Pin::set_otype(PinOType otype) {
 	//TODO
 }
