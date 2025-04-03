@@ -125,7 +125,6 @@ struct I2C {
 		uint32_t timeout = 1000000; // maybe ~10ms?
 		while ((is_pending(bit)) == 0) {
 			if (timeout-- == 0) {
-				printf("timeout: IPD=%x\n", IPD);
 				return false;
 			}
 		}
@@ -149,8 +148,6 @@ struct I2C {
 	}
 
 	bool transmit(unsigned size) volatile {
-		printf("Transmit %u\n", size);
-
 		enable_events(EventBits::mtxcnt_tx_finished, EventBits::nak_received);
 
 		MTXCNT = size;
@@ -166,7 +163,6 @@ struct I2C {
 				return false;
 			}
 			if (timeout-- == 0) {
-				printf("timeout: IPD=%x\n", IPD);
 				return false;
 			}
 		}

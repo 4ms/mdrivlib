@@ -13,8 +13,6 @@ namespace mdrivlib
 // Return the number of times left to retry
 // Return 0 if we should stop retrying
 uint32_t I2CPeriph::_check_errors(uint32_t retries) {
-	printf("Retries left: %u, IPD = %08x\n", retries, hal_i2c_.instance->IPD);
-
 	if (retries == 0)
 		return 0;
 
@@ -66,7 +64,6 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 	auto append_data = [&txdata, &pos](uint8_t byte) {
 		if (pos < 32) {
 			txdata[pos / 4] |= byte << ((pos % 4) * 8);
-			printf("%d: txdata[%d] |= %02x << %d\n", pos, pos / 4, byte, (pos % 4) * 8);
 			pos++;
 		}
 	};
@@ -84,14 +81,9 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 		append_data(*data++);
 		if (pos >= 32) {
 			pos = 31;
-			printf("buffer is full: TODO\n");
+			printf("I2C buffer is full: TODO\n");
 			break;
 		}
-	}
-
-	// Debug print data
-	for (auto i = 0; i < (pos / 4) + 1; i++) {
-		printf("TX: %08x\n", txdata[i]);
 	}
 
 	// Transmit
@@ -123,7 +115,7 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 		return I2C_NO_ERR;
 	}
 
-	printf("XMIT ERR\n");
+	printf("I2C XMIT ERR\n");
 	return I2C_XMIT_ERR;
 }
 
