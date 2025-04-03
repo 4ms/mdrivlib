@@ -61,39 +61,14 @@ I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t mema
 
 I2CPeriph::Error
 I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	std::array<uint32_t, 8> txdata{0};
+	// std::array<uint32_t, 8> txdata{0};
+	uint32_t txdata = 0;
 	int pos = 0;
 
-	auto append_data = [&txdata, &pos](uint8_t byte) {
-		if (pos < 32) {
-			txdata[pos / 4] |= byte << ((pos % 4) * 8);
-			printf("%d: txdata[%d] |= %02x << %d\n", pos, pos / 4, byte, (pos % 4) * 8);
-			pos++;
-		}
+	auto append_data = [&txdata, &pos, this, size](uint8_t byte) {
+		txdata |= byte << ((pos % 4) * 8);
+		printf("%d: txdata[%d] |= %02x << %d\n", pos, pos / 4, byte, (pos % 4) * 8);
 	};
-
-	// 1st: Device address:
-	append_data(dev_address);
-
-	// 2nd: Register (memory) address (8 or 16-bit):
-	append_data((uint8_t)mem_address);
-	if (memadd_size == I2C_MEMADD_SIZE_16BIT)
-		append_data((uint8_t)(mem_address >> 8));
-
-	// 3rd: data to write to register (memory)
-	while (size--) {
-		append_data(*data++);
-		if (pos >= 32) {
-			pos = 31;
-			printf("buffer is full: TODO\n");
-			break;
-		}
-	}
-
-	// Debug print data
-	for (auto i = 0; i < (pos / 4) + 1; i++) {
-		printf("TX: %08x\n", txdata[i]);
-	}
 
 	// Transmit
 	using enum RockchipPeriph::I2C::EventBits;
@@ -105,16 +80,38 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 			continue;
 		}
 
-		for (auto i = 0; i < (pos / 4) + 1; i++) {
-			hal_i2c_.instance->TXDATA[i] = txdata[i];
+		// 1st: Device address:
+		append_data(dev_address);
+
+		// 2nd: Register (memory) address (8 or 16-bit):
+		append_data((uint8_t)mem_address);
+		if (memadd_size == I2C_MEMADD_SIZE_16BIT)
+			append_data((uint8_t)(mem_address >> 8));
+
+		// 3rd: data to write to register (memory)
+		while (size) {
+			uint32_t fifo_remaining = std::min<unsigned>(size, 32);
+			size -= fifo_remaining;
+
+			while (fifo_remaining--) {
+				append_data(*data++);
+
+				pos++;
+				if (pos % 4 == 0) {
+					hal_i2c_.instance->TXDATA[pos / 4] = txdata;
+					txdata = 0;
+				}
+			}
+
+			hal_i2c_.instance->tx_mode();
+
+			if (!hal_i2c_.instance->transmit(pos)) {
+				retries = _check_errors(retries);
+				continue;
+			}
 		}
 
-		hal_i2c_.instance->tx_mode();
-
-		if (!hal_i2c_.instance->transmit(pos)) {
-			retries = _check_errors(retries);
-			continue;
-		}
+		hal_i2c_.instance.disable();
 
 		if (!hal_i2c_.instance->perform_stop()) {
 			retries = _check_errors(retries);
