@@ -5,7 +5,6 @@
 #include "drivers/i2c_target.hh"
 #include <cstdint>
 #include <cstdio>
-#include <utility>
 
 namespace mdrivlib
 {
@@ -58,15 +57,16 @@ I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t mema
 	return I2C_XMIT_ERR;
 }
 
-I2CPeriph::Error
-I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	// std::array<uint32_t, 8> txdata{0};
-	uint32_t txdata = 0;
-	int pos = 0;
+I2CPeriph::Error I2CPeriph::mem_write(
+	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t data_size) {
 
-	auto append_data = [&txdata, &pos, this, size](uint8_t byte) {
-		txdata |= byte << ((pos % 4) * 8);
-		printf("%d: txdata[%d] |= %02x << %d\n", pos, pos / 4, byte, (pos % 4) * 8);
+	uint32_t txdata = 0;
+	int written = 0;
+
+	auto append_data = [&txdata, &written](uint8_t byte) {
+		txdata |= byte << ((written % 4) * 8);
+		printf("%d: txdata |= %02x << %d\n", written, byte, (written % 4) * 8);
+		written++;
 	};
 
 	// Transmit
@@ -74,10 +74,14 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 	uint32_t retries = 16;
 	while (retries) {
 
-		if (!hal_i2c_.instance->perform_start()) {
+		if (error != I2C_NO_ERR)
 			retries = _check_errors(retries);
+
+		bool ok = true;
+
+		ok = hal_i2c_.instance->perform_start();
+		if (!ok)
 			continue;
-		}
 
 		// 1st: Device address:
 		append_data(dev_address);
@@ -88,34 +92,43 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 			append_data((uint8_t)(mem_address >> 8));
 
 		// 3rd: data to write to register (memory)
-		while (size) {
-			uint32_t fifo_remaining = std::min<unsigned>(size, 32);
-			size -= fifo_remaining;
+		while (data_size) {
+			uint32_t fifo_remaining = std::min<unsigned>(data_size, 32);
+			data_size -= fifo_remaining;
 
-			while (fifo_remaining--) {
-				append_data(*data++);
+			while (fifo_remaining) {
+				printf("fifo_remaining = %u, written = %u\n", fifo_remaining, written);
 
-				pos++;
-				if (pos % 4 == 0) {
-					hal_i2c_.instance->TXDATA[pos / 4] = txdata;
-					txdata = 0;
+				// Append to local buffer until it's full
+				while (true) {
+					append_data(*data++);
+
+					// Stop early if we're out of data to write
+					if ((--fifo_remaining == 0) || ((written % 4) == 0))
+						break;
 				}
+				// Copy local buffer to register
+				hal_i2c_.instance->tx_data((written - 1) / 4, txdata);
+				txdata = 0;
 			}
 
 			hal_i2c_.instance->tx_mode();
 
-			if (!hal_i2c_.instance->transmit(pos)) {
-				retries = _check_errors(retries);
-				continue;
-			}
+			ok = hal_i2c_.instance->transmit(written);
+			if (!ok)
+				break;
+
+			written = 0;
 		}
-
-		hal_i2c_.instance.disable();
-
-		if (!hal_i2c_.instance->perform_stop()) {
-			retries = _check_errors(retries);
+		if (!ok)
 			continue;
-		}
+
+		hal_i2c_.instance->disable();
+
+		ok = hal_i2c_.instance->perform_stop();
+
+		if (!ok)
+			continue;
 
 		return I2C_NO_ERR;
 	}
@@ -177,8 +190,10 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 
 	deinit();
 
+#ifndef TESTPROJECT
 	CruClksel::clk_i2c_sel::write(CruClksel::clk_i2c_clock_mux::clk_gpll_div_100m);
 	CruGate::clk_i2c_en::write(CruGate::clock_enable);
+#endif
 
 	if (defs.I2C_periph_num == 1) {
 		CruGate::clk_i2c1_en::write(CruGate::clock_enable);
@@ -192,6 +207,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 		hal_i2c_.instance = I2C1;
 
 	} else if (defs.I2C_periph_num == 2) {
+#ifndef TESTPROJECT
 		CruGate::clk_i2c2_en::write(CruGate::clock_enable);
 		CruGate::pclk_i2c2_en::write(CruGate::clock_enable);
 
@@ -199,6 +215,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 		Cru::presetn_i2c2::set();
 		Cru::presetn_i2c2::clear();
 		Cru::resetn_i2c2::clear();
+#endif
 
 		hal_i2c_.instance = I2C2;
 
