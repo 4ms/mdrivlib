@@ -10,10 +10,6 @@
 namespace mdrivlib
 {
 
-constexpr uint32_t _I2C_FLAG_TIMEOUT = 1;
-constexpr uint32_t _I2C_LONG_TIMEOUT = 30;
-constexpr uint32_t _I2C_VLONG_TIMEOUT = 100;
-
 // Return the number of times left to retry
 // Return 0 if we should stop retrying
 uint32_t I2CPeriph::_check_errors(uint32_t retries) {
@@ -22,11 +18,14 @@ uint32_t I2CPeriph::_check_errors(uint32_t retries) {
 	if (retries == 0)
 		return 0;
 
-	else if (error != I2C_TIMEOUT)
+	else if (error == I2C_TIMEOUT)
+		return --retries;
+
+	else if (error == I2C_NO_ERR)
 		return 0;
 
 	else
-		return --retries;
+		return 0;
 }
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
@@ -127,23 +126,11 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 
 I2CPeriph::Error I2CPeriph::mem_write_IT(
 	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-		// if (HAL_I2C_Mem_Write_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
 	return I2C_XMIT_ERR;
 }
 
 I2CPeriph::Error I2CPeriph::mem_write_dma(
 	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	// HAL_StatusTypeDef err;
-	// while ((err = HAL_I2C_Mem_Write_DMA(&hal_i2c_, dev_address, mem_address, memadd_size, data, size)) != HAL_OK) {
-	// if (HAL_I2C_GetError(&hal_i2c_) != HAL_I2C_ERROR_AF)
-	// 	return I2C_XMIT_ERR;
-	// }
-	// return err == HAL_OK ? I2C_NO_ERR : I2C_XMIT_ERR;
 	return I2C_XMIT_ERR;
 }
 
