@@ -1,48 +1,57 @@
 ---
-If:
-	PathMatch: [".*stm32.*"]
 CompileFlags:
-	Add: [
-		# "--target=arm-none-eabi",
-	]
+  Compiler: aarch64-none-elf-g++
+  Add: [
+    "-DRK3566",
+    "-mcpu=cortex-a55",
+    "-I../../../target/rk3566",
+    "-I../target/rk3566",
+    "-I../target/aarch64",
+    "-I..",
+    "-I../../../lib/cpputil",
+    "-I.",
+    "-std=c++23",
+  ]
 ---
 If:
-	PathMatch: [".*rk3566.*"]
+  PathMatch: .*rk3566.*
 CompileFlags:
-	Add: [
-		"-DRK3566",
-		"-I../../",
-		"-I../../../",
-		"-I../../../../",
-		"-I../../../target/rk3566",
-	]
+  Add: [
+    # "--target=arm-none-eabi",
+    "-DRK3566",
+    "-I../",
+    "-I../../",
+    "-I../../../",
+    "-I../../../../",
+    "-I../../../target/rk3566",
+  ]
 ---
 If:
-	PathMatch: [".*test.*"]
+  PathMatch: [".*test.*"]
 CompileFlags:
-	Add: [
-		"-Ilib/mdrivlib/tests",
-		"-Ilib/mdrivlib/tests/stubs",
-		"-Ilib/mdrivlib/tests/stubs/stm32",
-	]
+  Add: [
+    "-Ilib/mdrivlib/tests",
+    "-Ilib/mdrivlib/tests/stubs",
+    "-Ilib/mdrivlib/tests/stubs/stm32",
+  ]
 ---
 If:
-	PathMatch: [".*h7.*"]
+  PathMatch: [".*h7.*"]
 CompileFlags:
-	Add: [
-		"-DSTM32H7",
-		"-DSTM32H755xx",
-		"-DCORE_CM7",
-		"-Ilib/mdrivlib/target/stm32h7x5/drivers",
-		"-Ilib/mdrivlib/target/stm32h7x5/boot",
-		"-Ilib/cmsis-device/stm32h7x5/include",
-		"-Isrc/m7",
-		"-Ilib/stm32-hal/stm32h7x5/include"
-	]
-	Remove: [
-		"-DSTM32MP1",
-		"-Ilib/mdrivlib/target/stm32mp1/drivers",
-		"-Ilib/mdrivlib/target/stm32mp1_ca7/drivers",
-		"-Ilib/mdrivlib/target/stm32mp1_cm4/drivers",
-		"-Ilib/cmsis-device/stm32mp157c/include",
-	]
+  Add: [
+    "-DSTM32H7",
+    "-DSTM32H755xx",
+    "-DCORE_CM7",
+    "-Ilib/mdrivlib/target/stm32h7x5/drivers",
+    "-Ilib/mdrivlib/target/stm32h7x5/boot",
+    "-Ilib/cmsis-device/stm32h7x5/include",
+    "-Isrc/m7",
+    "-Ilib/stm32-hal/stm32h7x5/include"
+  ]
+  Remove: [
+    "-DSTM32MP1",
+    "-Ilib/mdrivlib/target/stm32mp1/drivers",
+    "-Ilib/mdrivlib/target/stm32mp1_ca7/drivers",
+    "-Ilib/mdrivlib/target/stm32mp1_cm4/drivers",
+    "-Ilib/cmsis-device/stm32mp157c/include",
+  ]
