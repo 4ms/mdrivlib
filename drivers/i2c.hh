@@ -9,9 +9,13 @@
 namespace mdrivlib
 {
 
+#ifndef I2C_MEMADD_SIZE_8BIT
+enum { I2C_MEMADD_SIZE_8BIT = 1, I2C_MEMADD_SIZE_16BIT = 2 };
+#endif
+
 class I2CPeriph {
 public:
-	enum Error { I2C_NO_ERR, I2C_INIT_ERR, I2C_ALREADY_INIT, I2C_XMIT_ERR };
+	enum Error { I2C_NO_ERR, I2C_INIT_ERR, I2C_ALREADY_INIT, I2C_XMIT_ERR, I2C_TIMEOUT };
 
 	I2CPeriph() = default;
 	~I2CPeriph() = default;
@@ -79,5 +83,6 @@ private:
 	void i2c_event_handler();
 
 	uint32_t _check_errors(uint32_t retries);
+	Error error{I2C_NO_ERR};
 };
 } // namespace mdrivlib

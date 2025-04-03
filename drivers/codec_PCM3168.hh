@@ -27,8 +27,8 @@
  */
 
 #pragma once
-#include "codec.hh"
-#include "i2c.hh"
+#include "drivers/codec.hh"
+#include "drivers/i2c.hh"
 #include <cstdint>
 
 namespace mdrivlib

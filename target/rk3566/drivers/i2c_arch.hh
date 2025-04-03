@@ -9,6 +9,12 @@ namespace mdrivlib
 namespace RockchipPeriph
 {
 
+// Note: CM3 board has pullups on:
+// GPIO0-B1/B2 (I2C0 for PMIC)
+// GPIO0-B5/B6 (I2C2_M0)
+// GPIO4-B4/B5 (I2C2_M1)
+// GPIO1-A0/A1 (I2C3 for codec)
+
 struct I2C {
 	uint32_t CON;		// control register
 	uint32_t CLKDIV;	// clock diver PCLK / (16*CLKDIV)

@@ -1,5 +1,6 @@
 #pragma once
-#include "stm32xx.h"
+#include "drivers/dma_config.hh"
+#include "drivers/stm32xx.h"
 #include <concepts>
 
 namespace mdrivlib
@@ -43,28 +44,6 @@ struct DefaultDMAConf {
 
 template<typename T>
 concept DMAPeriphConfC = requires(T) { requires std::derived_from<T, DefaultDMAConf>; };
-
-struct DMA_Config {
-	DMA_TypeDef *DMAx;
-#if defined(DMA1_Stream1)
-	DMA_Stream_TypeDef *stream;
-#endif
-	uint32_t channel;
-	IRQn_Type IRQn;
-	uint32_t pri;
-	uint32_t subpri;
-	bool continuous;
-};
-
-struct DMA_LL_Config {
-	DMA_TypeDef *DMAx;
-	uint32_t stream;
-	uint32_t channel;
-	IRQn_Type IRQn;
-	uint32_t pri;
-	uint32_t subpri;
-	// bool continuous;
-};
 
 // Todo: rectify these util with dma_registers.hh
 // Move these to target-specific files

@@ -6,6 +6,7 @@
 #include "drivers/interrupt.hh"
 #include "drivers/register_access.hh"
 #include <cstdint>
+#include <cstdio>
 #include <utility>
 
 namespace mdrivlib
@@ -15,12 +16,17 @@ constexpr uint32_t _I2C_FLAG_TIMEOUT = 1;
 constexpr uint32_t _I2C_LONG_TIMEOUT = 30;
 constexpr uint32_t _I2C_VLONG_TIMEOUT = 100;
 
+// Return the number of times left to retry
+// Return 0 if we should stop retrying
 uint32_t I2CPeriph::_check_errors(uint32_t retries) {
 	if (retries == 0)
 		return 0;
-	if (true)
+
+	else if (error != I2C_TIMEOUT)
 		return 0;
-	return --retries;
+
+	else
+		return --retries;
 }
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
@@ -43,60 +49,62 @@ I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_
 	return I2C_XMIT_ERR;
 }
 
-static void transmit(volatile RockchipPeriph::I2C *instance, unsigned size) {
+static I2CPeriph::Error transmit(volatile RockchipPeriph::I2C *instance, unsigned size) {
+	printf("Transmit %u\n", size);
+
 	instance->MTXCNT = size;
 
 	auto finished_bit = std::to_underlying(RockchipPeriph::I2C::IPD_bits::mtxcnt_tx_finished);
+
+	uint32_t timeout = 1000000; // maybe ~10ms?
 	while ((instance->IPD & finished_bit) == 0) {
-		instance->IPD = finished_bit;
+		if (timeout-- == 0) {
+			return I2CPeriph::Error::I2C_TIMEOUT;
+		}
 	}
+	// Write to clear
+	instance->IPD = finished_bit;
+
+	return I2CPeriph::Error::I2C_NO_ERR;
 }
 
 I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	std::array<uint32_t, 8> txdata{0};
+	int pos = 0;
+
+	auto append_data = [&txdata, &pos](uint8_t byte) {
+		if (pos < 32) {
+			txdata[pos / 4] |= byte << ((pos % 4) * 8);
+			printf("%d: txdata[%d] |= %02x << %d\n", pos, pos / 4, byte, (pos % 4) * 8);
+			pos++;
+		}
+	};
+
+	append_data(dev_address);
+
+	while (size--) {
+		append_data(*data++);
+		if (pos >= 32) {
+			printf("buffer is full: TODO\n");
+			break;
+		}
+	}
+
+	for (auto i = 0; i < std::min<int>(pos / 4, 7) + 1; i++) {
+		hal_i2c_.instance->TXDATA[i] = txdata[i];
+		printf("TX: %08x\n", txdata[i]);
+	}
+
 	uint32_t retries = 16;
 	while (retries) {
 		hal_i2c_.instance->tx_mode();
 		hal_i2c_.instance->send_start();
-
-		int word_cnt = 0;
-		int filled = 0;
-
-		while (size >= 4) {
-			uint32_t word = *data++;
-			word |= (*data++ << 8);
-			word |= (*data++ << 16);
-			word |= (*data++ << 24);
-			hal_i2c_.instance->TXDATA[word_cnt] = word;
-			word_cnt++;
-			filled += 4;
-			size -= 4;
-
-			if (word_cnt == 8) {
-				transmit(hal_i2c_.instance, 32);
-				word_cnt = 0;
-				filled = 0;
-			}
-		}
-
-		if (size > 0) {
-			uint32_t word = 0;
-			word |= *data++;
-			if (size > 1)
-				word |= (*data++ << 8);
-			if (size > 2)
-				word |= (*data++ << 16);
-			filled += size;
-			hal_i2c_.instance->TXDATA[word_cnt] = word;
-		}
-
-		if (filled) {
-			transmit(hal_i2c_.instance, filled);
-		}
-
+		error = transmit(hal_i2c_.instance, pos);
 		hal_i2c_.instance->send_stop();
 
-		// if (HAL_I2C_Master_Transmit(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
-		// 	return I2C_NO_ERR;
+		if (error == I2C_NO_ERR)
+			return I2C_NO_ERR;
+
 		retries = _check_errors(retries);
 	}
 	return I2C_XMIT_ERR;
@@ -137,14 +145,15 @@ I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t mema
 
 I2CPeriph::Error
 I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-		// if (HAL_I2C_Mem_Write(&hal_i2c_, dev_address, mem_address, memadd_size, data, size, _I2C_LONG_TIMEOUT) ==
-		// 	HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
-	return I2C_XMIT_ERR;
+	uint8_t mem_addr[2] = {(uint8_t)mem_address, (uint8_t)(mem_address >> 8)};
+
+	auto num_bytes = (memadd_size == I2C_MEMADD_SIZE_8BIT) ? 1 : 2;
+
+	Error err = write(dev_address, mem_addr, num_bytes);
+	if (err == Error::I2C_NO_ERR)
+		err = write(dev_address, data, size);
+
+	return err;
 }
 
 I2CPeriph::Error I2CPeriph::mem_write_IT(

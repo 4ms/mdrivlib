@@ -1,14 +1,18 @@
 #pragma once
-#include "dma_config_struct.hh"
-#include "pin.hh"
-#include "stm32xx.h"
+#include "drivers/dma_config.hh"
+#include "drivers/pin.hh"
 
 namespace mdrivlib
 {
 struct SaiConfig {
-	SAI_TypeDef *sai;
-	SAI_Block_TypeDef *tx_block;
-	SAI_Block_TypeDef *rx_block;
+	uint32_t sai_periphnum;
+	// SAI_TypeDef *sai;
+
+	uint32_t tx_block_num;
+	// SAI_Block_TypeDef *tx_block;
+
+	uint32_t rx_block_num;
+	// SAI_Block_TypeDef *rx_block;
 
 	enum SAIRxTxMode { RXMaster, TXMaster, ExtSynced } mode;
 
