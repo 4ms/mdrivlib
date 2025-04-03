@@ -30,6 +30,7 @@ CXXFLAGS = 	-Wall \
 			-I../stm32-hal/stm32h7x5/include \
 			-I../../../shared \
 			-I../../../shared/cpputil \
+			-I../../lib/cpputil \
 			-I../cpputil \
 			-DTESTPROJECT \
 			-Wno-deprecated-volatile \

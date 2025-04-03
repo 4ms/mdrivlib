@@ -13,13 +13,13 @@ static void some_func(int some_arg) {
 }
 
 static IRQn_Type irqmap[7] = {
-	ADC_IRQn,
-	CEC_IRQn,
-	COMP_IRQn,
-	CRS_IRQn,
-	ECC_IRQn,
-	DCMI_IRQn,
-	FPU_IRQn,
+	IRQn_Type(1),
+	IRQn_Type(2),
+	IRQn_Type(3),
+	IRQn_Type(4),
+	IRQn_Type(5),
+	IRQn_Type(6),
+	IRQn_Type(7),
 };
 
 static void register_a_local_lamba(uint32_t testIRQnum, uint32_t state_value) {
