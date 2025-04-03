@@ -59,12 +59,14 @@ static RegisterData default_codec_init[] = {
 };
 
 static RegisterData stereo_codec_init[] = {
-	{ResetControl::Address, bitfield(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)},
-	{DacControl1::Address, bitfield(DacControl1::I2S_24bit, DacControl1::SlaveMode)},
+	{ResetControl::Address, bitfield(ResetControl::NoReset, ResetControl::NoResync, ResetControl::Single)}, //41 c1
+	{DacControl1::Address, bitfield(DacControl1::I2S_24bit, DacControl1::SlaveMode)},						//42 00
 	{DacControl2::Address,
-	 bitfield(
-		 DacControl2::Dac12Enable, DacControl2::Dac34Disable, DacControl2::Dac56Disable, DacControl2::Dac78Disable)},
-	{DacSoftMute::Address, bitfield(DacSoftMute::NoDacMuted)},
+	 bitfield(DacControl2::Dac12Enable,
+			  DacControl2::Dac34Disable,
+			  DacControl2::Dac56Disable,
+			  DacControl2::Dac78Disable)},					   // 43 e0
+	{DacSoftMute::Address, bitfield(DacSoftMute::NoDacMuted)}, //44 00
 	{DacAllAtten::Address, bitfield(DacAtten::ZeroDB)},
 	{AdcSamplingMode::Address, bitfield(AdcSamplingMode::Single)},
 	{AdcControl1::Address, bitfield(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
@@ -130,13 +132,14 @@ CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
 }
 
 CodecPCM3168::Error CodecPCM3168::_write_register(uint8_t reg_address, uint8_t reg_value) {
-	uint8_t data[2] = {reg_address, reg_value};
 
 	if constexpr (DISABLE_I2C)
 		return CODEC_NO_ERR;
 
-	auto err = i2c_.write(I2C_address, &data[0], 2);
-	// auto err = i2c_.mem_write(I2C_address, reg_address, REGISTER_ADDR_SIZE, &data[1], 1);
+	// uint8_t data[2] = {reg_address, reg_value};
+	// auto err = i2c_.write(I2C_address, &data[0], 2);
+
+	auto err = i2c_.mem_write(I2C_address, reg_address, REGISTER_ADDR_SIZE, &reg_value, 1);
 
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }

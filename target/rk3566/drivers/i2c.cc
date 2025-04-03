@@ -3,8 +3,6 @@
 #include "drivers/cru_gate.hh"
 #include "drivers/cru_reset.hh"
 #include "drivers/i2c_target.hh"
-#include "drivers/interrupt.hh"
-#include "drivers/register_access.hh"
 #include <cstdint>
 #include <cstdio>
 #include <utility>
@@ -19,6 +17,8 @@ constexpr uint32_t _I2C_VLONG_TIMEOUT = 100;
 // Return the number of times left to retry
 // Return 0 if we should stop retrying
 uint32_t I2CPeriph::_check_errors(uint32_t retries) {
+	printf("Retries left: %u, IPD = %08x\n", retries, hal_i2c_.instance->IPD);
+
 	if (retries == 0)
 		return 0;
 
@@ -30,45 +30,37 @@ uint32_t I2CPeriph::_check_errors(uint32_t retries) {
 }
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-		// if (HAL_I2C_Master_Receive(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
 	return I2C_XMIT_ERR;
 }
 
 I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-		// if (HAL_I2C_Master_Receive_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
 	return I2C_XMIT_ERR;
 }
 
-static I2CPeriph::Error transmit(volatile RockchipPeriph::I2C *instance, unsigned size) {
-	printf("Transmit %u\n", size);
-
-	instance->MTXCNT = size;
-
-	auto finished_bit = std::to_underlying(RockchipPeriph::I2C::IPD_bits::mtxcnt_tx_finished);
-
-	uint32_t timeout = 1000000; // maybe ~10ms?
-	while ((instance->IPD & finished_bit) == 0) {
-		if (timeout-- == 0) {
-			return I2CPeriph::Error::I2C_TIMEOUT;
-		}
-	}
-	// Write to clear
-	instance->IPD = finished_bit;
-
-	return I2CPeriph::Error::I2C_NO_ERR;
+I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	if (size > 0)
+		// Note if size == 1, then data param is ignored by mem_write
+		return mem_write(dev_address, data[0], I2C_MEMADD_SIZE_8BIT, data + 1, size - 1);
+	else
+		return Error::I2C_XMIT_ERR;
 }
 
-I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
+I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	return I2C_XMIT_ERR;
+}
+
+I2CPeriph::Error
+I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	return I2C_XMIT_ERR;
+}
+
+I2CPeriph::Error
+I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	return I2C_XMIT_ERR;
+}
+
+I2CPeriph::Error
+I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
 	std::array<uint32_t, 8> txdata{0};
 	int pos = 0;
 
@@ -80,80 +72,60 @@ I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t 
 		}
 	};
 
+	// 1st: Device address:
 	append_data(dev_address);
 
+	// 2nd: Register (memory) address (8 or 16-bit):
+	append_data((uint8_t)mem_address);
+	if (memadd_size == I2C_MEMADD_SIZE_16BIT)
+		append_data((uint8_t)(mem_address >> 8));
+
+	// 3rd: data to write to register (memory)
 	while (size--) {
 		append_data(*data++);
 		if (pos >= 32) {
+			pos = 31;
 			printf("buffer is full: TODO\n");
 			break;
 		}
 	}
 
-	for (auto i = 0; i < std::min<int>(pos / 4, 7) + 1; i++) {
-		hal_i2c_.instance->TXDATA[i] = txdata[i];
+	// Debug print data
+	for (auto i = 0; i < (pos / 4) + 1; i++) {
 		printf("TX: %08x\n", txdata[i]);
 	}
 
+	// Transmit
+	using enum RockchipPeriph::I2C::EventBits;
 	uint32_t retries = 16;
 	while (retries) {
+
+		if (!hal_i2c_.instance->perform_start()) {
+			retries = _check_errors(retries);
+			continue;
+		}
+
+		for (auto i = 0; i < (pos / 4) + 1; i++) {
+			hal_i2c_.instance->TXDATA[i] = txdata[i];
+		}
+
 		hal_i2c_.instance->tx_mode();
-		hal_i2c_.instance->send_start();
-		error = transmit(hal_i2c_.instance, pos);
-		hal_i2c_.instance->send_stop();
 
-		if (error == I2C_NO_ERR)
-			return I2C_NO_ERR;
+		if (!hal_i2c_.instance->transmit(pos)) {
+			retries = _check_errors(retries);
+			continue;
+		}
 
-		retries = _check_errors(retries);
+		if (!hal_i2c_.instance->perform_stop()) {
+			retries = _check_errors(retries);
+			continue;
+		}
+
+		return I2C_NO_ERR;
 	}
+
+	printf("XMIT ERR\n");
 	return I2C_XMIT_ERR;
-}
-
-I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-
-		// if (HAL_I2C_Master_Transmit_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
-	return I2C_XMIT_ERR;
-}
-
-I2CPeriph::Error
-I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-		// if (HAL_I2C_Mem_Read(&hal_i2c_, dev_address, mem_address, memadd_size, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
-	return I2C_XMIT_ERR;
-}
-
-I2CPeriph::Error
-I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	uint32_t retries = 16;
-	while (retries) {
-		// if (HAL_I2C_Mem_Read_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
-		// 	return I2C_NO_ERR;
-		retries = _check_errors(retries);
-	}
-	return I2C_XMIT_ERR;
-}
-
-I2CPeriph::Error
-I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
-	uint8_t mem_addr[2] = {(uint8_t)mem_address, (uint8_t)(mem_address >> 8)};
-
-	auto num_bytes = (memadd_size == I2C_MEMADD_SIZE_8BIT) ? 1 : 2;
-
-	Error err = write(dev_address, mem_addr, num_bytes);
-	if (err == Error::I2C_NO_ERR)
-		err = write(dev_address, data, size);
-
-	return err;
 }
 
 I2CPeriph::Error I2CPeriph::mem_write_IT(
@@ -179,8 +151,9 @@ I2CPeriph::Error I2CPeriph::mem_write_dma(
 }
 
 bool I2CPeriph::is_ready() {
-	// return (HAL_I2C_GetState(&hal_i2c_) == HAL_I2C_STATE_READY);
-	return false;
+	auto pending = hal_i2c_.instance->IPD & 0xFF;
+	// TODO: need to check individual bits?
+	return (pending);
 }
 
 void I2CPeriph::deinit() {
@@ -220,9 +193,21 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 
 	deinit();
 
-	if (defs.I2C_periph_num == 2) {
-		CruClksel::clk_i2c_sel::write(CruClksel::clk_i2c_clock_mux::clk_gpll_div_100m);
-		CruGate::clk_i2c_en::write(CruGate::clock_enable);
+	CruClksel::clk_i2c_sel::write(CruClksel::clk_i2c_clock_mux::clk_gpll_div_100m);
+	CruGate::clk_i2c_en::write(CruGate::clock_enable);
+
+	if (defs.I2C_periph_num == 1) {
+		CruGate::clk_i2c1_en::write(CruGate::clock_enable);
+		CruGate::pclk_i2c1_en::write(CruGate::clock_enable);
+
+		Cru::resetn_i2c1::set();
+		Cru::presetn_i2c1::set();
+		Cru::presetn_i2c1::clear();
+		Cru::resetn_i2c1::clear();
+
+		hal_i2c_.instance = I2C1;
+
+	} else if (defs.I2C_periph_num == 2) {
 		CruGate::clk_i2c2_en::write(CruGate::clock_enable);
 		CruGate::pclk_i2c2_en::write(CruGate::clock_enable);
 
@@ -233,72 +218,70 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 
 		hal_i2c_.instance = I2C2;
 
+	} else if (defs.I2C_periph_num == 3) {
+		CruGate::clk_i2c3_en::write(CruGate::clock_enable);
+		CruGate::pclk_i2c3_en::write(CruGate::clock_enable);
+
+		Cru::resetn_i2c3::set();
+		Cru::presetn_i2c3::set();
+		Cru::presetn_i2c3::clear();
+		Cru::resetn_i2c3::clear();
+
+		hal_i2c_.instance = I2C3;
+
+	} else if (defs.I2C_periph_num == 4) {
+		CruGate::clk_i2c4_en::write(CruGate::clock_enable);
+		CruGate::pclk_i2c4_en::write(CruGate::clock_enable);
+
+		Cru::resetn_i2c4::set();
+		Cru::presetn_i2c4::set();
+		Cru::presetn_i2c4::clear();
+		Cru::resetn_i2c4::clear();
+
+		hal_i2c_.instance = I2C4;
+
+	} else if (defs.I2C_periph_num == 5) {
+		CruGate::clk_i2c5_en::write(CruGate::clock_enable);
+		CruGate::pclk_i2c5_en::write(CruGate::clock_enable);
+
+		// TODO:
+		Cru::resetn_i2c5::set();
+		Cru::presetn_i2c5::set();
+		Cru::presetn_i2c5::clear();
+		Cru::resetn_i2c5::clear();
+
+		hal_i2c_.instance = I2C5;
+
 	} else {
+		// periph 0 is reserved for PMIC
 		return I2C_INIT_ERR;
 	}
 
+	i2c_irq_num_ = 78 + defs.I2C_periph_num;
+
 	hal_i2c_.instance->enable();
+
+	// TODO: defs.timing.speed_hz => clock_div
 	hal_i2c_.instance->clock_div(100, 100);
-	// hal_i2c_.Instance = PeriphUtil::I2C(defs.I2C_periph_num);
-	// hal_i2c_.Init.OwnAddress1 = 0x33;
-	// hal_i2c_.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-	// hal_i2c_.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-	// hal_i2c_.Init.OwnAddress2 = 0;
-	// hal_i2c_.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	// hal_i2c_.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-	// #ifdef STM32F4
-	// hal_i2c_.Init.ClockSpeed = defs.timing.speed_hz;
-	// hal_i2c_.Init.DutyCycle = I2C_DUTYCYCLE_2;
-	// #else
-	// hal_i2c_.Init.Timing = defs.timing.calc();
-	// hal_i2c_.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-	// #endif
 
-	// if (hal_i2c_.Instance == I2C1) {
-	// 	i2c_irq_num_ = I2C1_EV_IRQn;
-	// 	i2c_err_irq_num_ = I2C1_ER_IRQn;
-	// } else if (hal_i2c_.Instance == I2C2) {
-	// 	i2c_irq_num_ = I2C2_EV_IRQn;
-	// 	i2c_err_irq_num_ = I2C2_ER_IRQn;
-	// } else if (hal_i2c_.Instance == I2C3) {
-	// 	i2c_irq_num_ = I2C3_EV_IRQn;
-	// 	i2c_err_irq_num_ = I2C3_ER_IRQn;
-	// } else if (hal_i2c_.Instance == I2C4) {
-	// 	i2c_irq_num_ = I2C4_EV_IRQn;
-	// 	i2c_err_irq_num_ = I2C4_ER_IRQn;
-	// } else if (hal_i2c_.Instance == I2C5) {
-	// 	i2c_irq_num_ = I2C5_EV_IRQn;
-	// 	i2c_err_irq_num_ = I2C5_ER_IRQn;
-	// } else if (hal_i2c_.Instance == I2C6) {
-	// 	i2c_irq_num_ = I2C6_EV_IRQn;
-	// 	i2c_err_irq_num_ = I2C6_ER_IRQn;
-	// }
+	// TODO: try these settings
+	hal_i2c_.instance->enable_edge_glitch_filter();
+	hal_i2c_.instance->h0_check_scl();
+	hal_i2c_.instance->nack_release_scl_high();
+	hal_i2c_.instance->set_slave_hold_scl_threshold(2);
+	hal_i2c_.instance->filter_rising_edges(2);
+	hal_i2c_.instance->filter_falling_edges(2);
 
-	// Clocks::I2C::enable(defs.I2Cx);
-
-	// HAL_I2C_DeInit(&hal_i2c_);
-	// if (HAL_I2C_Init(&hal_i2c_) != HAL_OK)
-	// 	return I2C_INIT_ERR;
-
-	// if (HAL_I2CEx_ConfigAnalogFilter(&hal_i2c_,
-	// 								 defs.analog_filter ? I2C_ANALOGFILTER_ENABLE : I2C_ANALOGFILTER_DISABLE) != HAL_OK)
-	// 	return I2C_INIT_ERR;
-
-	// if (HAL_I2CEx_ConfigDigitalFilter(&hal_i2c_, defs.digital_filter) != HAL_OK)
-	// 	return I2C_INIT_ERR;
-
-	// already_init = true;
+	already_init = true;
 	return I2C_NO_ERR;
 }
 
 void I2CPeriph::enable_IT(uint8_t pri1, uint8_t pri2) {
 	event_isr.register_and_start_isr(i2c_irq_num_, pri1, pri2, [this]() { i2c_event_handler(); });
-	error_isr.register_and_start_isr(i2c_err_irq_num_, pri1, pri2, [this]() { i2c_error_handler(); });
 }
 
 void I2CPeriph::disable_IT() {
 	InterruptControl::disable_irq(i2c_irq_num_);
-	InterruptControl::disable_irq(i2c_err_irq_num_);
 }
 
 void I2CPeriph::i2c_event_handler() {
