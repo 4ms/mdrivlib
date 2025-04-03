@@ -26,7 +26,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#include "codec_PCM3168.hh"
+#include "drivers/codec_PCM3168.hh"
 #include "codec_PCM3168_registers.hh"
 #include "drivers/delay.hh"
 #include "util/bitfield.hh"

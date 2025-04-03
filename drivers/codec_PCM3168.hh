@@ -27,6 +27,7 @@
  */
 
 #pragma once
+#include "drivers/arch.hh"
 #include "drivers/codec.hh"
 #include "drivers/i2c.hh"
 #include <cstdint>
