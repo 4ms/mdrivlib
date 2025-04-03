@@ -4,12 +4,14 @@ CompileFlags:
   Add: [
     "-DRK3566",
     "-mcpu=cortex-a55",
-    "-I../../../target/rk3566",
     "-I../target/rk3566",
     "-I../target/aarch64",
-    "-I..",
     "-I../../../lib/cpputil",
-    "-I.",
+    "-I..",
+    "-I../../../target/rk3566",
+    "-I../../../target/aarch64",
+    "-I../../../../../lib/cpputil",
+    "-I../../..",
     "-std=c++23",
   ]
 ---
@@ -17,7 +19,6 @@ If:
   PathMatch: .*rk3566.*
 CompileFlags:
   Add: [
-    # "--target=arm-none-eabi",
     "-DRK3566",
     "-I../",
     "-I../../",
