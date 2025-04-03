@@ -58,6 +58,9 @@ struct I2C {
 	void enable() volatile {
 		CON = std::to_underlying(CON_bits::enable);
 	}
+	void disable() volatile {
+		CON = 0;
+	}
 	void tx_mode() volatile {
 		CON = (0b00 << std::to_underlying(CON_bits::mode_shift)) | std::to_underlying(CON_bits::enable);
 	}
@@ -81,6 +84,9 @@ struct I2C {
 		CON = std::to_underlying(CON_bits::stop) | std::to_underlying(CON_bits::enable);
 	}
 
+	void tx_data(unsigned wordnum, uint32_t val) volatile {
+		TXDATA[wordnum] = val;
+	}
 	//
 	// Events/interrupts
 	//

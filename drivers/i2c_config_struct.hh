@@ -7,7 +7,6 @@ namespace mdrivlib
 
 struct I2CConfig {
 	uint32_t I2C_periph_num;
-	// I2C_TypeDef *I2Cx;
 	PinDef SCL;
 	PinDef SDA;
 	I2CTimingConfig timing;
