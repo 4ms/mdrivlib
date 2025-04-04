@@ -5,6 +5,7 @@ namespace mdrivlib
 {
 
 // TRM Chapter 2 (CRU: Clock & Reset Unit)
+inline constexpr uint32_t CRU_BASE = 0xFDD20000;
 inline constexpr uint32_t CRU_CLKSEL_BASE = 0xFDD20100;
 inline constexpr uint32_t CRU_GATE_BASE = 0xFDD20300;
 inline constexpr uint32_t CRU_SOFTRST_BASE = 0xFDD20400;

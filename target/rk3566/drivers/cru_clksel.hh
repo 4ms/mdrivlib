@@ -6,6 +6,19 @@
 namespace mdrivlib::RockchipPeriph
 {
 
+namespace Cru::Apll
+{
+
+constexpr static uint32_t CON(uint32_t regnum) {
+	return CRU_BASE + (regnum * 4);
+}
+
+using fbdiv = RegisterMasked16<CON(0), 0b1111'1111'1111, 0>;
+using postdiv1 = RegisterMasked16<CON(0), 0b111, 12>;
+using bypass = RegisterMasked16<CON(0), 0b1, 15>;
+
+} // namespace Cru::Apll
+
 namespace CruClksel
 {
 
