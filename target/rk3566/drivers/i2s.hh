@@ -225,6 +225,40 @@ struct I2S_TDM {
 		RXCR = t;
 	}
 
+	void rx_stereo_mode() volatile {
+
+		enum Path { Path0 = 0, Path1 = 1, Path2 = 2, Path3 = 3 };
+
+		//TODO constants for shift amount for each reg
+
+		uint32_t t = 0;
+		t |= Path3 << 29; //SDI3 from path0
+		t |= Path2 << 27; //SDI2 from path0
+		t |= Path1 << 25; //SDI1 from path0
+		t |= Path0 << 23; //SDI0 from path0
+
+		enum NumChannels { Two = 0, Four = 1, Six = 2, Eight = 3 };
+		t |= Two << 15;
+
+		enum Justify { Right = 0, Left = 1 };
+		t |= Left << 12;
+
+		enum FirstBitMode { MSB = 0, LSB = 1 };
+		t |= FirstBitMode::MSB;
+
+		enum BusMode { Normal = 0, LeftJust = 1, RightJust = 2 };
+		t |= Normal << 9;
+
+		enum TransferFormat { I2S = 0, PCM = 1, TDM_PCM = 2, TDM_I2S = 2 };
+		t |= I2S << 5;
+
+		// ValidData [16, 32]
+		auto valid_data_width = [](unsigned bits) { return bits - 1; };
+		t |= valid_data_width(24) << 0;
+
+		printf("Setting RXCR %p to %08x\n", &RXCR, t);
+		RXCR = t;
+	}
 	// TX is the master channel. TX sends LR CLK which RX channel syncs to
 	void master_tx() volatile {
 		uint32_t t = 0;
@@ -232,7 +266,7 @@ struct I2S_TDM {
 		// TODO: not sure what this one does
 		// Linux driver uses SeparateLRClks, but we might want to share one LR line
 		enum LRCK_COMMON { SeparateLRClks = 0b00, SyncToTx = 0b01, SyncToRx = 0b10 };
-		t |= SeparateLRClks << 28;
+		t |= SyncToTx << 28;
 
 		enum MSS { Master = 0, Slave = 1 };
 		t |= Master << 27;

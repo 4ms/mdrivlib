@@ -69,9 +69,10 @@ static RegisterData stereo_codec_init[] = {
 	{DacSoftMute::Address, bitfield(DacSoftMute::NoDacMuted)}, //44 00
 	{DacAllAtten::Address, bitfield(DacAtten::ZeroDB)},
 	{AdcSamplingMode::Address, bitfield(AdcSamplingMode::Single)},
-	{AdcControl1::Address, bitfield(AdcControl1::SlaveMode, AdcControl1::I2S_TDM_24bit)},
+	{AdcControl1::Address, bitfield(AdcControl1::SlaveMode, AdcControl1::I2S_24bit)},
 	{AdcControl2::Address, bitfield(AdcControl2::AdcAllHPFDisabled)},
-	{AdcSoftMute::Address, bitfield(AdcSoftMute::NoAdcMuted)},
+	{AdcSoftMute::Address,
+	 bitfield(AdcSoftMute::Adc3Mute, AdcSoftMute::Adc4Mute, AdcSoftMute::Adc5Mute, AdcSoftMute::Adc6Mute)},
 	{AdcAllAtten::Address, bitfield(AdcAtten::ZeroDB)},
 	{AdcInputType::Address, bitfield(AdcInputType::AllAdcDifferential)},
 
