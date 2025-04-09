@@ -36,6 +36,7 @@ using presetn_i2c2 = RegisterMasked16BitNum<SOFTRST::reg(22), 4>;
 using resetn_i2c1 = RegisterMasked16BitNum<SOFTRST::reg(22), 3>;
 using presetn_i2c1 = RegisterMasked16BitNum<SOFTRST::reg(22), 2>;
 
+using areset_mcu = RegisterMasked16BitNum<SOFTRST::reg(26), 10>;
 } // namespace Cru
 
 } // namespace mdrivlib::RockchipPeriph

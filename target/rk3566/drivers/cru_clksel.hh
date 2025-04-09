@@ -110,6 +110,22 @@ enum class clk_i2c_clock_mux {
 };
 using clk_i2c_sel = RegisterMaskedChoice<CON(71), 0b11, 8, clk_i2c_clock_mux>;
 
+enum class aclk_bus_clock_mux {
+	clk_gpll_div_200m = 0b00,
+	clk_gpll_div_150m = 0b01,
+	clk_gpll_div_100m = 0b10,
+	xin_osc0_func_mux = 0b11,
+};
+using aclk_bus_sel = RegisterMaskedChoice<CON(50), 0b11, 0, aclk_bus_clock_mux>;
+
+enum class pclk_bus_clock_mux {
+	clk_gpll_div_100m = 0b00,
+	clk_gpll_div_75m = 0b01,
+	clk_gpll_div_50m = 0b10,
+	xin_osc0_func_mux = 0b11,
+};
+using pclk_bus_sel = RegisterMaskedChoice<CON(50), 0b11, 4, pclk_bus_clock_mux>;
+
 } // namespace CruClksel
 
 } // namespace mdrivlib::RockchipPeriph

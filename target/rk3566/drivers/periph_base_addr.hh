@@ -17,6 +17,7 @@ inline constexpr uint32_t PMU_GRF_SOC_BASE = PMU_GRF_BASE + 0x100;
 inline constexpr uint32_t CPU_GRF_BASE = 0xFDC30000;
 
 inline constexpr uint32_t SYS_GRF_BASE = 0xFDC60000;
+inline constexpr uint32_t GRF_CON_BASE = 0xFDC60500;
 
 // TRM Chapter 7: (PMU: Power Management Unit)
 inline constexpr uint32_t PMU_BASE = 0xFDD90000;

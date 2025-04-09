@@ -54,6 +54,8 @@ using pclk_i2c1_en = RegisterMaskedChoice<CON(30), 1, 0, cru_gate>;
 
 using clk_i2c_en = RegisterMaskedChoice<CON(32), 1, 10, cru_gate>;
 
+using aclk_mcu_en = RegisterMaskedChoice<CON(32), 1, 13, cru_gate>;
+
 } // namespace CruGate
 
 } // namespace mdrivlib::RockchipPeriph

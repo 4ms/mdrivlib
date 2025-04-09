@@ -79,18 +79,31 @@ struct GPIO_IOMUX {
 	GPIO4D_IOMUX_L gpio4_d_l;
 };
 
+constexpr uint32_t SOC_CON(uint32_t con) {
+	return GRF_CON_BASE + con * 4;
+}
+
 enum class con1_i2s1_mclk_sel {
 	i2s1_mclk_rx = 0,
 	i2s1_mclk_tx = 1,
 };
-using i2s1_mclk_sel = RegisterMaskedChoice<SYS_GRF_BASE + 0x0504, 1, 5, con1_i2s1_mclk_sel>;
+using i2s1_mclk_sel = RegisterMaskedChoice<SOC_CON(1), 1, 5, con1_i2s1_mclk_sel>;
 
 enum class con2_i2s1_mclk_oe {
 	from_ext_chip = 0,
 	from_cru = 1,
 };
-using i2s1_mclk_tx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 0b1, 1, con2_i2s1_mclk_oe>;
-using i2s1_mclk_rx_oe = RegisterMaskedChoice<SYS_GRF_BASE + 0x0508, 0b1, 0, con2_i2s1_mclk_oe>;
+using i2s1_mclk_tx_oe = RegisterMaskedChoice<SOC_CON(2), 0b1, 1, con2_i2s1_mclk_oe>;
+using i2s1_mclk_rx_oe = RegisterMaskedChoice<SOC_CON(2), 0b1, 0, con2_i2s1_mclk_oe>;
+
+using mcu_ahb2axi_d_buf_flush = RegisterMasked16<SOC_CON(3), 0b1, 15>;
+using mcu_ahb2axi_i_buf_flush = RegisterMasked16<SOC_CON(3), 0b1, 14>;
+
+enum class mcu_sel_axi_choice {
+	use_ahb = 0b0,
+	use_axi = 0b1,
+};
+using mcu_sel_axi = RegisterMaskedChoice<SOC_CON(3), 0b1, 13, mcu_sel_axi_choice>;
 
 } // namespace SysGrf
 
