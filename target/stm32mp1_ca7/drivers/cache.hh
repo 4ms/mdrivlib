@@ -12,6 +12,10 @@ inline void invalidate_dcache() {
 	L1C_InvalidateDCacheAll();
 }
 
+inline void invalidate_icache() {
+	L1C_InvalidateICacheAll();
+}
+
 template<typename ptr>
 inline void invalidate_dcache_by_addr(ptr addr) {
 	L1C_InvalidateDCacheMVA(reinterpret_cast<void *>(addr));
