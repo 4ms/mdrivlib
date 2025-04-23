@@ -21,6 +21,15 @@ inline void invalidate_dcache_by_addr(ptr addr) {
 	L1C_InvalidateDCacheMVA(reinterpret_cast<void *>(addr));
 }
 
+template<typename ptr>
+inline void invalidate_dcache_by_addr_fast(ptr addr) {
+	__set_DCIMVAC((uint32_t)addr);
+}
+
+inline void mem_barrier() {
+	__DMB(); //ensure the ordering of data cache maintenance operations and their effects
+}
+
 static constexpr uint32_t CacheLineBytes = 64;
 static constexpr uint32_t CacheLineMask = ~(CacheLineBytes - 1);
 
