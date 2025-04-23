@@ -55,6 +55,11 @@ inline void clean_dcache_by_addr(ptr addr) {
 	L1C_CleanDCacheMVA(reinterpret_cast<void *>(addr));
 }
 
+template<typename ptr>
+inline void clean_dcache_by_addr_fast(ptr addr) {
+	__set_DCCMVAC((uint32_t)reinterpret_cast<void *>(addr));
+}
+
 inline void clean_dcache_by_range(void *addr, uint32_t size) {
 	// starting address of cache line containing the data
 	auto start_addr = reinterpret_cast<uint32_t>(addr) & CacheLineMask;
