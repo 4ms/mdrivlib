@@ -26,6 +26,7 @@ public:
 
 	void start();
 	void stop();
+	void unpause();
 
 private:
 	TIM_TypeDef *timx;

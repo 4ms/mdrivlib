@@ -32,6 +32,13 @@ void Timekeeper::start() {
 	tim_update_IT_clear();
 }
 
+// Similar to start(), but on MP1 A7 , it does
+// not change the core the interrupt runs on
+void Timekeeper::unpause() {
+	InterruptControl::reenable_irq(irqn);
+	tim_update_IT_clear();
+}
+
 void Timekeeper::stop() {
 	InterruptControl::disable_irq(irqn);
 }
