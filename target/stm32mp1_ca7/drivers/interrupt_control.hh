@@ -31,9 +31,13 @@ struct InterruptControl {
 	enum TriggerType { LevelTriggered = 0b01, EdgeTriggered = 0b10 };
 	static void enable_irq(IRQn_Type irqn, TriggerType trig = EdgeTriggered) {
 		uint32_t current_core = __get_MPIDR() & 0xFF; //0 = CA7 Core 1, 1 = CA7 Core 2
-		GIC_SetTarget(irqn, current_core + 1);
+		GIC_SetTarget(irqn, 1 << current_core);		  //0 => 0b01, 1 => 0b10
 		GIC_SetConfiguration(irqn, trig);
 		GIC_ClearPendingIRQ(irqn);
+		GIC_EnableIRQ(irqn);
+	}
+
+	static void reenable_irq(IRQn_Type irqn) {
 		GIC_EnableIRQ(irqn);
 	}
 };

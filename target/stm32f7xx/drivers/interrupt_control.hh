@@ -18,5 +18,9 @@ struct InterruptControl {
 	static void enable_irq(IRQn_Type irqn) {
 		NVIC_EnableIRQ(irqn);
 	}
+
+	static void reenable_irq(IRQn_Type irqn) {
+		NVIC_EnableIRQ(irqn);
+	}
 };
 } // namespace mdrivlib
