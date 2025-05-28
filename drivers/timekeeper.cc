@@ -28,7 +28,12 @@ void Timekeeper::_init(const TimekeeperConfig &config) {
 }
 
 void Timekeeper::start() {
+#ifdef STM32MP1
+	printf("Starting timer irq %u LevelTriggered\n", irqn);
+	InterruptControl::enable_irq(irqn, InterruptControl::LevelTriggered);
+#else
 	InterruptControl::enable_irq(irqn);
+#endif
 	tim_update_IT_clear();
 }
 
