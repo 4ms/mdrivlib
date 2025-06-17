@@ -1,5 +1,4 @@
 #pragma once
-#include "debug.hh"
 #include "drivers/ltdc_screen_config_struct.hh"
 #include "drivers/parallel_writer.hh"
 #include "drivers/pin.hh"
