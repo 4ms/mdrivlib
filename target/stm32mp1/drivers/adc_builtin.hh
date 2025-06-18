@@ -23,6 +23,9 @@ public:
 		: _dma_buffer{dma_buffer.data()}
 		, num_channels{N} {
 
+		if constexpr (N == 0)
+			return;
+
 		Clocks::ADCn<ConfT::adc_periph_num>::enable();
 		hadc = {
 			.Instance = get_ADC_base(ConfT::adc_periph_num),
