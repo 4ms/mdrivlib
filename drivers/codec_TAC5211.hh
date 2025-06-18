@@ -50,8 +50,25 @@ private:
 	I2CPeriph &i2c_;
 	uint32_t samplerate_;
 
-	Error _write_register(uint8_t RegisterAddr, uint8_t RegisterValue);
-	Error _write_all_registers(uint32_t sample_rate);
+	Error init_registers(uint32_t sample_rate);
+
+	// Returns true on success
+	template<typename Reg>
+	bool write(Reg data) {
+		return i2c_.write_reg(I2C_address, data) == mdrivlib::I2CPeriph::I2C_NO_ERR;
+	}
+
+	template<typename Reg>
+	Reg read() {
+		static bool got_error_once = false;
+		auto reg = i2c_.read_reg<Reg>(I2C_address);
+
+		if (!reg.has_value() && !got_error_once) {
+			pr_dbg("Error reading Reg 0x%x\n", Reg::Address);
+			got_error_once = true;
+		}
+		return reg.value_or(Reg::make(0));
+	}
 
 	const uint8_t I2C_address;
 	static inline constexpr auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;

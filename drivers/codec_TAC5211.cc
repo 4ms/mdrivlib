@@ -28,25 +28,32 @@
 
 #include "codec_TAC5211.hh"
 #include "codec_TAC5211_registers.hh"
-#include "conf/debug.hh"
-#include "util/bitfield.hh"
 
 namespace mdrivlib
 {
-
-static constexpr bool DISABLE_I2C = false;
-
 using namespace CodecTAC5211Register;
 
-struct RegisterData {
-	uint8_t reg_num;
-	uint8_t value;
-};
+// Wake up the device by writing to P0_R2 to disable sleep mode
+// Wait for at least 2ms to allow the device to complete the internal wake-up sequence
+// Override the default configuration registers or programmable coefficients value as required
+// Enable all desired input channels by writing to P0_R118
+// Enable all desired audio serial interface input/output channels by writing to P0_R40 to P0_R47 for DAC
+//   and P0_R30 to P0_R37 for ADC
+// Power-up the ADC, DAC and MICBIAS by writing to P0_R120
 
-static RegisterData default_codec_init[] = {
-	{Page::Address, bitfield(Page::Page0)},
-	{SwReset::Address, bitfield(SwReset::Reset)},
-	{Config0::Address, bitfield(Config0::I2S, Config0::Bits24)},
+constexpr std::array<Registers, 4> default_init{
+	Page{.page = 0},
+
+	SwReset{.Reset = 1},
+
+	DeviceMiscConfig{.WakeFromSleep = 1},
+
+	Config0{.BusErrorRecovery = Config0::ResumeAfterBusErr,
+			.BusErrorDetection = Config0::DetectBusErr,
+			.SlotLength = Config0::Bits24,
+			.Format = Config0::I2S},
+
+	//
 };
 
 CodecTAC5211::CodecTAC5211(I2CPeriph &i2c, const SaiConfig &saidef)
@@ -61,8 +68,7 @@ CodecTAC5211::Error CodecTAC5211::init() {
 	if (err != SaiTdmPeriph::SAI_NO_ERR)
 		return CodecTAC5211::I2S_INIT_ERR;
 
-	HAL_Delay(1);
-	return _write_all_registers(samplerate_);
+	return init_registers(samplerate_);
 }
 
 CodecTAC5211::Error CodecTAC5211::change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size) {
@@ -97,26 +103,17 @@ uint32_t CodecTAC5211::get_sai_errors() {
 	return errs;
 }
 
-CodecTAC5211::Error CodecTAC5211::_write_all_registers(uint32_t sample_rate) {
-	CodecTAC5211::Error err{CODEC_NO_ERR};
+CodecTAC5211::Error CodecTAC5211::init_registers(uint32_t sample_rate) {
+	using namespace CodecTAC5211Register;
 
-	for (auto packet : default_codec_init) {
-		err = _write_register(packet.reg_num, packet.value);
-		if (err != CODEC_NO_ERR)
-			return err;
+	for (auto reg : default_init) {
+		HAL_Delay(2);
+
+		if (!std::visit([this](auto r) { return i2c_.write_reg(I2C_address, r) == I2CPeriph::Error::I2C_NO_ERR; }, reg))
+			return Error::CODEC_I2C_ERR;
 	}
-	return err;
-}
 
-GCC_OPTIMIZE_OFF
-CodecTAC5211::Error CodecTAC5211::_write_register(uint8_t reg_address, uint8_t reg_value) {
-	uint8_t data[2] = {reg_address, reg_value};
-
-	if constexpr (DISABLE_I2C)
-		return CODEC_NO_ERR;
-
-	auto err = i2c_.mem_write(I2C_address, reg_address, REGISTER_ADDR_SIZE, &data[1], 1);
-	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
+	return Error::CODEC_NO_ERR;
 }
 
 } // namespace mdrivlib
