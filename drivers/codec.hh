@@ -60,6 +60,13 @@ public:
 		sai_.set_callbacks(std::forward<CallbackT>(tx_complete_cb), std::forward<CallbackT>(tx_half_complete_cb));
 	}
 
+	enum Error {
+		CODEC_NO_ERR = 0,
+		CODEC_I2C_ERR,
+		I2C_INIT_ERR,
+		I2S_INIT_ERR,
+	};
+
 protected:
 	SaiTdmPeriph sai_;
 };
