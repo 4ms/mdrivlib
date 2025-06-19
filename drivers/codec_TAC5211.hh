@@ -43,6 +43,7 @@ public:
 	uint32_t get_samplerate();
 	void start();
 	void stop();
+	void dump_registers();
 
 	uint32_t get_sai_errors();
 

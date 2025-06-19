@@ -83,6 +83,19 @@ struct DeviceMiscConfig : ReadWrite {
 	}
 };
 
+struct IntFConfig1 : ReadWrite {
+	static constexpr uint8_t Address = 0x10;
+
+	uint8_t DoutDrive : 3;
+	uint8_t DoutGPIOVal : 1;
+	uint8_t DoutSel : 4;
+
+	constexpr operator uint8_t() {
+		return (DoutDrive << 0) | (DoutGPIOVal << 3) | (DoutSel << 4);
+		;
+	}
+};
+
 struct Config0 : ReadWrite {
 	static constexpr uint8_t Address = 0x1A;
 
@@ -108,7 +121,45 @@ struct Config0 : ReadWrite {
 		;
 	}
 };
+static_assert((uint8_t)Config0{.SlotLength = Config0::Bits24, .Format = Config0::I2S} == 0x50);
 
-using Registers = std::variant<Page, SwReset, DeviceMiscConfig, Config0>;
+struct ClockConfig2 : ReadWrite {
+	static constexpr uint8_t Address = 0x34;
+
+	uint8_t RatioClockEdge : 1;
+	enum RatioClockEdges { Rising = 0, Falling = 1 };
+
+	uint8_t ClockSource : 3;
+	enum ClockSources { BCLK = 0, CCLK_FSync = 1, BCLK2 = 2, CCLK_FSync2 = 3, CCLK_Fixed = 4, Internal = 5 };
+
+	uint8_t : 2;
+	uint8_t AllowFractionalPLL : 1;
+	uint8_t DisablePLL : 1;
+
+	constexpr operator uint8_t() {
+		return (RatioClockEdge << 0) | (ClockSource << 1) | (AllowFractionalPLL << 6) | (DisablePLL << 7);
+	}
+};
+
+struct PowerConfig : ReadWrite {
+	static constexpr uint8_t Address = 0x78;
+
+	uint8_t : 1;
+	uint8_t UagEnable : 1;
+	uint8_t VoiceActivityEnable : 1;
+	uint8_t UadEnable : 1;
+	uint8_t : 1;
+	uint8_t MicBiasPowered : 1;
+	uint8_t DacPowered : 1;
+	uint8_t AdcPowered : 1;
+
+	constexpr operator uint8_t() {
+		return (AdcPowered << 0) | (DacPowered << 1) | (MicBiasPowered << 2) | (UadEnable << 4) |
+			   (VoiceActivityEnable << 5) | (UagEnable << 6);
+		;
+	}
+};
+
+using Registers = std::variant<Page, SwReset, DeviceMiscConfig, IntFConfig1, Config0, ClockConfig2, PowerConfig>;
 
 } // namespace mdrivlib::CodecTAC5211Register
