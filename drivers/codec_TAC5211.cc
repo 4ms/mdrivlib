@@ -33,63 +33,99 @@ namespace mdrivlib
 {
 using namespace CodecTAC5211Register;
 
-// Wake up the device by writing to P0_R2 to disable sleep mode
-// Wait for at least 2ms to allow the device to complete the internal wake-up sequence
-// Override the default configuration registers or programmable coefficients value as required
-// Enable all desired input channels by writing to P0_R118
-// Enable all desired audio serial interface input/output channels by writing to P0_R40 to P0_R47 for DAC
-//   and P0_R30 to P0_R37 for ADC
-// Power-up the ADC, DAC and MICBIAS by writing to P0_R120
-
-constexpr std::array<Registers, 7> default_init{
+constexpr std::array<Registers, 10> default_init{
 	Page{.page = 0},
 
-	// SwReset{.Reset = 1},
-
-	DeviceMiscConfig{.WakeFromSleep = 1},
+	DeviceMiscConfig{.WakeFromSleep = 1, .SleepExitEnableVref = 1},
 
 	Config0{
-		.BusErrorRecovery = Config0::ResumeAfterBusErr,
-		.BusErrorDetection = Config0::DontDetectBusErr,
+		// .BusErrorRecovery = Config0::ResumeAfterBusErr,
+		// .BusErrorDetection = Config0::DontDetectBusErr,
 		.SlotLength = Config0::Bits24,
-		.Format = Config0::I2S,
+		.Format = Config0::TDM,
 	},
 
-	ClockConfig2{
-		.AllowFractionalPLL = 1,
-		.DisablePLL = 0,
+	VrefMicBiasConfig{
+		.VrefFullScale = VrefMicBiasConfig::Vref2750mV,
+	},
+
+	AdcChan1Config{
+		.Bandwidth = AdcChan1Config::Audio24kHz,
+		.FullScaleValue = AdcChan1Config::Diff2Vrms,
+		.InSource = AdcChan1Config::Single,
+	},
+
+	Out1Config0{
+		.Vcom = Out1Config0::Vref_div_0_6,
+		.RoutingConfig = Out1Config0::Diff,
+		.OutSource = Out1Config0::DAC,
+	},
+
+	Out1Config1{
+		.LevelOut1P = Out1Config1::dB0,
+		.DriveOut1P = Out1Config1::LineOut300,
+	},
+
+	Out1Config2{
+		.LevelOut1M = Out1Config2::dB0,
+		.DriveOut1M = Out1Config2::LineOut300,
+	},
+
+	ChannelEnable{
+		.OutChan1Enable = 1,
+		.InChan1Enable = 1,
 	},
 
 	PowerConfig{
-		.MicBiasPowered = 1,
+		.MicBiasPowered = 0,
 		.DacPowered = 1,
 		.AdcPowered = 1,
 	},
 
-	IntFConfig1{
-		.DoutDrive = 0b1,  // active low, active high
-		.DoutSel = 0b0101, // primary DOUT
-	},
+	// ClockConfig2{
+	// 	.AllowFractionalPLL = 1,
+	// 	.DisablePLL = 0,
+	// },
 
-	/*
-00 = 00 01 = 00 02 = 01 03 = 00 04 = 00 05 = 15 06 = 35 07 = 00
-08 = 00 09 = 00 0a = 32 0b = 00 0c = 00 0d = 00 0e = 00 0f = 00
-10 = 51 11 = 80 12 = 00 13 = 00 14 = 00 15 = 00 16 = 00 17 = 00
-18 = 40 19 = 00 1a = 70 1b = 00 1c = 00 1d = 00 1e = 20 1f = 21
-20 = 02 21 = 03 22 = 04 23 = 05 24 = 06 25 = 07 26 = 00 27 = 00
-28 = 20 29 = 21 2a = 02 2b = 03 2c = 04 2d = 05 2e = 06 2f = 07
-30 = 00 31 = 00 32 = 00 33 = 00 34 = 40 35 = 00 36 = 00 37 = 20
-38 = 00 39 = 00 3a = 00 3b = 00 3c = 00 3d = 10 3e = 50 3f = 00
-40 = 00 41 = 40 42 = 00 43 = 54 44 = 00 45 = 00 46 = 00 47 = 00
-48 = 00 49 = 00 4a = 00 4b = 00 4c = 2e 4d = 00 4e = 00 4f = 00
-50 = 00 51 = 00 52 = a1 53 = 80 54 = 00 55 = 00 56 = 00 57 = a1
-58 = 80 59 = 00 5a = 00 5b = a1 5c = 80 5d = 00 5e = 00 5f = a1
-60 = 80 61 = 00 62 = 00 63 = 00 64 = 20 65 = 20 66 = 20 67 = c9
-68 = 80 69 = c9 6a = 80 6b = 20 6c = 20 6d = 20 6e = c9 6f = 80
-70 = c9 71 = 80 72 = 18 73 = 18 74 = 00 75 = 00 76 = cc 77 = 00
-78 = 06 79 = 80 7a = e0 7b = 00 7c = c0 7d = 10 7e = 24
-	   */
+	// IntFConfig1{
+	// 	.DoutDrive = 0b1,  // active low, active high
+	// 	.DoutSel = 0b0101, // primary DOUT
+	// },
+
 };
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[0]) == 0x00);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[0]) == 0x00);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[1]) == 0x02);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[1]) == 0x09);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[2]) == 0x1a);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[2]) == 0x10);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[3]) == 0x4d);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[3]) == 0x00);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[4]) == 0x50);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[4]) == 0x40); // example: 0x00
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[5]) == 0x64);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[5]) == 0x20);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[5]) == 0x64);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[5]) == 0x20);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[6]) == 0x65);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[6]) == 0x20);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[7]) == 0x66);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[7]) == 0x20);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[8]) == 0x76);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[8]) == 0x88);
+
+// static_assert(std::visit([](auto v) { return v.Address; }, default_init[9]) == 0x78);
+// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[9]) == 0xc0);
 
 CodecTAC5211::CodecTAC5211(I2CPeriph &i2c, const SaiConfig &saidef)
 	: CodecBase{saidef}
@@ -141,12 +177,16 @@ uint32_t CodecTAC5211::get_sai_errors() {
 CodecTAC5211::Error CodecTAC5211::init_registers(uint32_t sample_rate) {
 	using namespace CodecTAC5211Register;
 
+	// From datasheet:
+	// Wake up the device by writing to P0_R2 to disable sleep mode
+	// Wait for at least 2ms to allow the device to complete the internal wake-up sequence
+
 	HAL_Delay(2);
-	write<DeviceMiscConfig>({.WakeFromSleep = 1});
+	write<Page>({.page = 0});
+	write<SwReset>({.Reset = 1});
 	HAL_Delay(2);
 
 	for (auto reg : default_init) {
-
 		if (!std::visit([this](auto r) -> bool { return write(r); }, reg))
 			return Error::CODEC_I2C_ERR;
 	}
