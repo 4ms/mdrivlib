@@ -14,28 +14,6 @@ constexpr uint8_t I2C_BASE_ADDR = 0xA0; // Shifted address. See Datasheet sectio
 // • Read or write data from or to valid registers in page M
 // • Repeat as needed
 
-// struct Page {
-// 	static constexpr uint8_t Address = 0x00;
-// 	enum PAGE_CFG : uint8_t { Page0 = 0, Page1 = 1, Page3 = 3 };
-// };
-
-// struct SwReset {
-// 	static constexpr uint8_t Address = 0x01;
-// 	enum SW_RESET : uint8_t { Reset = (1 << 0) };
-// };
-
-// struct Config0 {
-// 	static constexpr uint8_t Address = 0x1A;
-// 	enum Format : uint8_t { TDM = 0, I2S = 1, LeftJust = 2 };
-// 	enum WLen : uint8_t { Bits16 = 0, Bits24 = 1, Bits32 = 3 };
-// 	enum FsyncPolarity : uint8_t { Standard = 0, Inverted = 1 };
-// 	enum BitClkPolarity : uint8_t { BClkStandard = 0, BClkInverted = 1 };
-// 	enum BusErr : uint8_t { DetectBusErr = 0, DontDetectBusErr = 1 };
-// 	enum BusErrRecover : uint8_t { ResumeAfterBusErr = 0, DontResumeAfterBusErr = 1 };
-// };
-
-/////////////////
-
 using BusReg::Bits;
 using BusReg::ReadClear;
 using BusReg::ReadOnly;
@@ -44,39 +22,34 @@ using BusReg::WriteClear;
 
 struct Page : ReadWrite {
 	static constexpr uint8_t Address = 0x00;
-	uint8_t page;
 
-	constexpr operator uint8_t() {
-		return page;
-	}
+	uint8_t page;
 };
 
 struct SwReset : ReadWrite {
 	static constexpr uint8_t Address = 0x01;
+
 	uint8_t Reset : 1;
 	uint8_t : 7;
-
-	constexpr operator uint8_t() {
-		return Reset;
-	}
 };
 
 struct DeviceMiscConfig : ReadWrite {
 	static constexpr uint8_t Address = 0x02;
+
 	uint8_t WakeFromSleep : 1;
 	uint8_t IOvddIs1_8V : 1;
 	uint8_t AvddIs1_8V : 1;
 	uint8_t SleepExitEnableVref : 1;
-	uint8_t VrefQuickCharge : 2;
-	enum VrefQuickCharges { Duration_3_5ms = 0, Duration_10ms = 1, Duration_50ms = 2, Duration_100ms = 3 };
+
+	enum class VrefQuickCharges : uint8_t {
+		Duration_3_5ms = 0,
+		Duration_10ms = 1,
+		Duration_50ms = 2,
+		Duration_100ms = 3
+	};
+	VrefQuickCharges VrefQuickCharge : 2;
 
 	uint8_t : 2;
-
-	constexpr operator uint8_t() {
-		return (WakeFromSleep << 0) | (IOvddIs1_8V << 1) | (AvddIs1_8V << 2) | (SleepExitEnableVref << 3) |
-			   (VrefQuickCharge << 4);
-		;
-	}
 };
 
 struct IntFConfig1 : ReadWrite {
@@ -85,38 +58,33 @@ struct IntFConfig1 : ReadWrite {
 	uint8_t DoutDrive : 3;
 	uint8_t DoutGPIOVal : 1;
 	uint8_t DoutSel : 4;
-
-	constexpr operator uint8_t() {
-		return (DoutDrive << 0) | (DoutGPIOVal << 3) | (DoutSel << 4);
-		;
-	}
 };
 
 struct Config0 : ReadWrite {
 	static constexpr uint8_t Address = 0x1A;
 
-	uint8_t BusErrorRecovery : 1;
-	enum BusErrRecover : uint8_t { ResumeAfterBusErr = 0, DontResumeAfterBusErr = 1 };
+	enum class BusErrorRecoveries : uint8_t { ResumeAfterBusErr = 0, DontResumeAfterBusErr = 1 };
+	BusErrorRecoveries BusErrorRecovery : 1;
 
-	uint8_t BusErrorDetection : 1;
-	enum BusErr : uint8_t { DetectBusErr = 0, DontDetectBusErr = 1 };
+	enum class BusErr : uint8_t { DetectBusErr = 0, DontDetectBusErr = 1 };
+	BusErr BusErrorDetection : 1;
 
-	uint8_t BitClkPolarity : 1;
-	uint8_t FsyncPolarity : 1;
-	enum Polarity : uint8_t { Standard = 0, Inverted = 1 };
+	enum class Polarity : uint8_t { Standard = 0, Inverted = 1 };
+	Polarity BitClkPolarity : 1;
+	Polarity FsyncPolarity : 1;
 
-	uint8_t SlotLength : 2;
-	enum WLen : uint8_t { Bits16 = 0, Bits24 = 1, Bits32 = 3 };
+	enum class Length : uint8_t { Bits16 = 0, Bits24 = 1, Bits32 = 3 };
+	Length SlotLength : 2;
 
-	uint8_t Format : 2;
-	enum Format : uint8_t { TDM = 0, I2S = 1, LeftJust = 2 };
-
-	constexpr operator uint8_t() {
-		return (BusErrorRecovery << 0) | (BusErrorDetection << 1) | (BitClkPolarity << 2) | (FsyncPolarity << 3) |
-			   (SlotLength << 4) | (Format << 6);
-		;
-	}
+	enum class Formats : uint8_t { TDM = 0, I2S = 1, LeftJust = 2 };
+	Formats Format : 2;
 };
+
+using enum Config0::BusErrorRecoveries;
+using enum Config0::BusErr;
+using enum Config0::Polarity;
+using enum Config0::Length;
+using enum Config0::Formats;
 
 // P0_R30: 0x1E
 // P0_R37: 0x25
@@ -135,10 +103,6 @@ struct ClockConfig2 : ReadWrite {
 	uint8_t : 2;
 	uint8_t AllowFractionalPLL : 1;
 	uint8_t DisablePLL : 1;
-
-	constexpr operator uint8_t() {
-		return (RatioClockEdge << 0) | (ClockSource << 1) | (AllowFractionalPLL << 6) | (DisablePLL << 7);
-	}
 };
 
 struct VrefMicBiasConfig : ReadWrite {
@@ -152,10 +116,6 @@ struct VrefMicBiasConfig : ReadWrite {
 
 	uint8_t MicBiasLdoGain1_096 : 1;
 	uint8_t : 3;
-
-	constexpr operator uint8_t() {
-		return (VrefFullScale << 0) | (MicBias << 2) | (MicBiasLdoGain1_096 << 4);
-	}
 };
 
 struct AdcChan1Config : ReadWrite {
@@ -175,11 +135,6 @@ struct AdcChan1Config : ReadWrite {
 
 	uint8_t InSource : 2;
 	enum InSources { Diff = 0, Single = 1, SingleInP1 = 2, SingleInM1 = 3 };
-
-	constexpr operator uint8_t() {
-		return (Bandwidth << 0) | (FullScaleValue << 1) | (CommonModeTolerance << 2) | (Impedance << 4) |
-			   (InSource << 6);
-	}
 };
 
 struct Out1Config0 : ReadWrite {
@@ -202,10 +157,6 @@ struct Out1Config0 : ReadWrite {
 
 	uint8_t OutSource : 2;
 	enum OutSources { DAC = 1, Bypass = 2, DACandBypass = 3, DACOut1P_BypassOut1M = 4, DACOut1M_BypassOut1P = 5 };
-
-	constexpr operator uint8_t() {
-		return (Vcom << 1) | (RoutingConfig << 2) | (OutSource << 5);
-	}
 };
 
 struct Out1Config1 : ReadWrite {
@@ -225,11 +176,6 @@ struct Out1Config1 : ReadWrite {
 
 	uint8_t DriveOut1P : 2;
 	enum Drives { LineOut300 = 0, Headphone16 = 1, Low4ohm = 2, FDreceiverLoad = 3 };
-
-	constexpr operator uint8_t() {
-		return (Bandwidth << 0) | (BypassIN1Config << 1) | (AIn1MBypassImpedance << 2) | (LevelOut1P << 3) |
-			   (DriveOut1P << 6);
-	}
 };
 
 struct Out1Config2 : ReadWrite {
@@ -248,10 +194,6 @@ struct Out1Config2 : ReadWrite {
 
 	uint8_t DriveOut1M : 2;
 	enum Drives { LineOut300 = 0, Headphone16 = 1, Low4ohm = 2, FDreceiverLoad = 3 };
-
-	constexpr operator uint8_t() {
-		return (CommonModeTolerance << 0) | (AIn1PBypassImpedance << 2) | (LevelOut1M << 3) | (DriveOut1M << 6);
-	}
 };
 
 struct ChannelEnable : ReadWrite {
@@ -265,11 +207,6 @@ struct ChannelEnable : ReadWrite {
 	uint8_t InChan3Enable : 1;
 	uint8_t InChan2Enable : 1;
 	uint8_t InChan1Enable : 1;
-
-	constexpr operator uint8_t() {
-		return (OutChan4Enable << 0) | (OutChan3Enable << 1) | (OutChan2Enable << 2) | (OutChan1Enable << 3) |
-			   (InChan4Enable << 4) | (InChan3Enable << 5) | (InChan2Enable << 6) | (InChan1Enable << 7);
-	}
 };
 
 struct PowerConfig : ReadWrite {
@@ -283,12 +220,6 @@ struct PowerConfig : ReadWrite {
 	uint8_t MicBiasPowered : 1;
 	uint8_t DacPowered : 1;
 	uint8_t AdcPowered : 1;
-
-	constexpr operator uint8_t() {
-		return (UagEnable << 1) | (VoiceActivityEnable << 2) | (UadEnable << 3) | (MicBiasPowered << 5) |
-			   (DacPowered << 6) | (AdcPowered << 7);
-		;
-	}
 };
 
 using Registers = std::variant<Page,
