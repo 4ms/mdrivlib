@@ -3,6 +3,7 @@
 #include "i2c_config_struct.hh"
 #include "interrupt.hh"
 #include "pin.hh"
+#include <bit>
 #include <cstdint>
 #include <optional>
 
@@ -26,7 +27,7 @@ public:
 	template<typename Reg>
 	requires std::derived_from<Reg, BusReg::WriteAccess>
 	Error write_reg(uint16_t dev_address, Reg data) {
-		auto d = static_cast<uint8_t>(data);
+		auto d = std::bit_cast<uint8_t>(data);
 		return mem_write(dev_address, Reg::Address, 1, &d, 1);
 	}
 
