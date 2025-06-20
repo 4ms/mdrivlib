@@ -33,16 +33,17 @@ namespace mdrivlib
 {
 using namespace CodecTAC5211Register;
 
-constexpr std::array<Registers, 10> default_init{
+constexpr std::array<Registers, 11> default_init{
 	Page{.page = 0},
 
-	DeviceMiscConfig{.WakeFromSleep = 1, .SleepExitEnableVref = 1},
+	DeviceMiscConfig{
+		.WakeFromSleep = 1,
+		.SleepExitEnableVref = 1,
+	},
 
 	Config0{
-		// .BusErrorRecovery = Config0::ResumeAfterBusErr,
-		// .BusErrorDetection = Config0::DontDetectBusErr,
-		.SlotLength = Config0::Bits24,
-		.Format = Config0::TDM,
+		.SlotLength = Bits24,
+		.Format = I2S,
 	},
 
 	VrefMicBiasConfig{
@@ -72,7 +73,9 @@ constexpr std::array<Registers, 10> default_init{
 	},
 
 	ChannelEnable{
+		.OutChan2Enable = 1,
 		.OutChan1Enable = 1,
+		.InChan2Enable = 1,
 		.InChan1Enable = 1,
 	},
 
@@ -82,50 +85,12 @@ constexpr std::array<Registers, 10> default_init{
 		.AdcPowered = 1,
 	},
 
-	// ClockConfig2{
-	// 	.AllowFractionalPLL = 1,
-	// 	.DisablePLL = 0,
-	// },
-
-	// IntFConfig1{
-	// 	.DoutDrive = 0b1,  // active low, active high
-	// 	.DoutSel = 0b0101, // primary DOUT
-	// },
+	IntFConfig1{
+		.DoutDrive = 0b1,  // active low, active high
+		.DoutSel = 0b0101, // primary DOUT
+	},
 
 };
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[0]) == 0x00);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[0]) == 0x00);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[1]) == 0x02);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[1]) == 0x09);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[2]) == 0x1a);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[2]) == 0x10);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[3]) == 0x4d);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[3]) == 0x00);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[4]) == 0x50);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[4]) == 0x40); // example: 0x00
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[5]) == 0x64);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[5]) == 0x20);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[5]) == 0x64);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[5]) == 0x20);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[6]) == 0x65);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[6]) == 0x20);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[7]) == 0x66);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[7]) == 0x20);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[8]) == 0x76);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[8]) == 0x88);
-
-// static_assert(std::visit([](auto v) { return v.Address; }, default_init[9]) == 0x78);
-// static_assert(std::visit([](auto v) { return (uint8_t)v; }, default_init[9]) == 0xc0);
 
 CodecTAC5211::CodecTAC5211(I2CPeriph &i2c, const SaiConfig &saidef)
 	: CodecBase{saidef}
