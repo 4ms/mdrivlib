@@ -37,9 +37,17 @@ void Timekeeper::start() {
 	tim_update_IT_clear();
 }
 
+void Timekeeper::pause() const {
+	LL_TIM_DisableCounter(timx);
+}
+
+void Timekeeper::resume() const {
+	LL_TIM_EnableCounter(timx);
+}
+
 // Similar to start(), but on MP1 A7 , it does
 // not change the core the interrupt runs on
-void Timekeeper::unpause() {
+void Timekeeper::restart() {
 	InterruptControl::reenable_irq(irqn);
 	tim_update_IT_clear();
 }

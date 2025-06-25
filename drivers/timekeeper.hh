@@ -25,8 +25,10 @@ public:
 	void init(const TimekeeperConfig &config, CallbackT &&func);
 
 	void start();
+	void restart();
 	void stop();
-	void unpause();
+	void pause() const;
+	void resume() const;
 
 private:
 	TIM_TypeDef *timx;
