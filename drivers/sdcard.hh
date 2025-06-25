@@ -27,11 +27,11 @@ struct SDCard {
 		hsd.Instance = SDMMC1;
 		HAL_SD_DeInit(&hsd);
 
-		Pin{ConfT::D0, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		Pin{ConfT::D1, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		Pin{ConfT::D2, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		Pin{ConfT::CMD, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
-		Pin{ConfT::SCLK, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::D0, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::D1, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::D2, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::CMD, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
+		Pin{ConfT::SCLK, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
 
 		//Note: We do not init D3 as AltFunc; it's used as card detect
 
