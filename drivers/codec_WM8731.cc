@@ -28,6 +28,7 @@
 
 #include "codec_WM8731.hh"
 #include "codec_WM8731_registers.h"
+#include "drivers/codec.hh"
 #include "stm32xx.h"
 #include "util/bitfield.hh"
 
@@ -65,7 +66,6 @@ const uint16_t default_codec_init_data[] = {
 CodecWM8731::CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef)
 	: CodecBase{saidef}
 	, i2c_(i2c)
-	, samplerate_{saidef.samplerate}
 	, I2C_address{static_cast<uint8_t>((WM8731_ADDR_0 + (saidef.bus_address & 0b1)) << 1)} {
 }
 
@@ -74,14 +74,11 @@ CodecWM8731::Error CodecWM8731::init() {
 
 	auto err = sai_.init();
 	if (err != SaiTdmPeriph::SAI_NO_ERR)
-		return I2S_CLK_INIT_ERR;
+		return I2S_INIT_ERR;
 
 	return CODEC_NO_ERR;
 }
 
-uint32_t CodecWM8731::get_samplerate() {
-	return samplerate_;
-}
 void CodecWM8731::start() {
 	sai_.start();
 }

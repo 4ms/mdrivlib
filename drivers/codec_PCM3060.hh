@@ -37,17 +37,10 @@ namespace mdrivlib
 
 class CodecPCM3060 : public CodecBase {
 public:
-	enum Error {
-		CODEC_NO_ERR = 0,
-		CODEC_I2C_ERR,
-		I2C_INIT_ERR,
-		I2S_INIT_ERR,
-	};
-
 	CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef);
 
+	Error init();
 	Error init(const std::span<const CodecPCM3060Register::AnyRegister> init_regs);
-	uint32_t get_samplerate();
 	void start();
 	void stop();
 

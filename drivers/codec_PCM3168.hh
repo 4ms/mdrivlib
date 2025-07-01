@@ -36,26 +36,14 @@ namespace mdrivlib
 
 class CodecPCM3168 : public CodecBase {
 public:
-	enum Error {
-		CODEC_NO_ERR = 0,
-		CODEC_I2C_ERR,
-		I2C_INIT_ERR,
-		I2S_INIT_ERR,
-	};
-
 	CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef);
 
 	Error init();
-	Error change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size);
-	uint32_t get_samplerate();
 	void start();
 	void stop();
 
-	uint32_t get_sai_errors();
-
 private:
 	I2CPeriph &i2c_;
-	uint32_t samplerate_;
 	Pin reset_pin_;
 
 	Error _write_register(uint8_t RegisterAddr, uint8_t RegisterValue);

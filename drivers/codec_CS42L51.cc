@@ -51,7 +51,6 @@ static RegisterData default_codec_init[] = {
 CodecCS42L51::CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef)
 	: CodecBase{saidef}
 	, i2c_(i2c)
-	, samplerate_{saidef.samplerate}
 	, reset_pin_{saidef.reset_pin, PinMode::Output}
 	, I2C_address{static_cast<uint8_t>((0x4A + (saidef.bus_address ? 1 : 0)) << 1)} {
 	reset_pin_.low();
@@ -59,11 +58,7 @@ CodecCS42L51::CodecCS42L51(I2CPeriph &i2c, const SaiConfig &saidef)
 
 CodecCS42L51::Error CodecCS42L51::init() {
 	init_at_samplerate(samplerate_);
-	return sai_.init() == SaiTdmPeriph::SAI_NO_ERR ? CODEC_NO_ERR : SAI_INIT_ERR;
-}
-
-uint32_t CodecCS42L51::get_samplerate() {
-	return samplerate_;
+	return sai_.init() == SaiTdmPeriph::SAI_NO_ERR ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }
 
 void CodecCS42L51::start() {
@@ -88,8 +83,6 @@ CodecCS42L51::Error CodecCS42L51::init_at_samplerate(uint32_t sample_rate) {
 }
 
 CodecCS42L51::Error CodecCS42L51::_write_samplerate_register(uint32_t sample_rate) {
-	CodecCS42L51::Error err;
-
 	auto sr_mode = _calc_samplerate(sample_rate);
 	return _write_register(MIC_POWER_CTL, MIC_POWER_CTL_AUTO | sr_mode);
 }
@@ -121,12 +114,10 @@ CodecCS42L51::Error CodecCS42L51::_write_all_registers() {
 CodecCS42L51::Error CodecCS42L51::_write_register(uint8_t reg_address, uint16_t reg_value) {
 	uint8_t Byte1 = ((reg_address << 1) & 0xFE) | ((reg_value >> 8) & 0x01);
 	uint8_t Byte2 = reg_value & 0xFF;
-	uint8_t data[2] = {Byte1, Byte2};
 
 	if constexpr (DISABLE_I2C)
 		return CODEC_NO_ERR;
 
-	// auto err = i2c_.write(I2C_address, data, 2);
 	auto err = i2c_.mem_write(I2C_address, Byte1, REGISTER_ADDR_SIZE, &Byte2, 1);
 	return (err == I2CPeriph::I2C_NO_ERR) ? CODEC_NO_ERR : CODEC_I2C_ERR;
 }

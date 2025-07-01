@@ -61,7 +61,6 @@ static RegisterData default_codec_init[] = {
 CodecPCM3168::CodecPCM3168(I2CPeriph &i2c, const SaiConfig &saidef)
 	: CodecBase{saidef}
 	, i2c_(i2c)
-	, samplerate_{saidef.samplerate}
 	, reset_pin_{saidef.reset_pin, PinMode::Output}
 	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b11) << 1)))} {
 	reset_pin_.low();
@@ -78,20 +77,6 @@ CodecPCM3168::Error CodecPCM3168::init() {
 	return _write_all_registers(samplerate_);
 }
 
-CodecPCM3168::Error CodecPCM3168::change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size) {
-	samplerate_ = sample_rate;
-
-	if (sai_.change_samplerate_blocksize(sample_rate, block_size) == SaiTdmPeriph::SAI_NO_ERR) {
-		return CodecPCM3168::CODEC_NO_ERR;
-	} else {
-		return CodecPCM3168::I2S_INIT_ERR;
-	}
-}
-
-uint32_t CodecPCM3168::get_samplerate() {
-	return samplerate_;
-}
-
 void CodecPCM3168::start() {
 	sai_.start();
 }
@@ -99,15 +84,6 @@ void CodecPCM3168::start() {
 void CodecPCM3168::stop() {
 	sai_.stop();
 	sai_.init();
-}
-
-uint32_t CodecPCM3168::get_sai_errors() {
-	uint32_t errs = std::min<uint32_t>(sai_.fe_errors, 0xFF);
-	errs <<= 8;
-	errs += std::min<uint32_t>(sai_.te_errors, 0xFF);
-	errs <<= 8;
-	errs += std::min<uint32_t>(sai_.dme_errors, 0xFF);
-	return errs;
 }
 
 CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {

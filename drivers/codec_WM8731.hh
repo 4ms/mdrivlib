@@ -37,35 +37,16 @@ namespace mdrivlib
 
 class CodecWM8731 : public CodecBase {
 public:
-	enum Error {
-		CODEC_NO_ERR = 0,
-		CODEC_I2C_ERR,
-		I2C_INIT_ERR,
-		I2S_CLK_INIT_ERR,
-		I2STX_INIT_ERR,
-		I2SRX_INIT_ERR,
-		I2STX_DMA_INIT_ERR,
-		I2SRX_DMA_INIT_ERR,
-		I2STX_XMIT_DMA_ERR,
-		I2SRX_XMIT_DMA_ERR,
-		SAI_DMA_IT_FE,
-		SAI_DMA_IT_TE,
-		SAI_DMA_IT_DME,
-		INVALID_PARAM
-	};
-
 	CodecWM8731(I2CPeriph &i2c, const SaiConfig &saidef);
 
 	Error init();
 	void start();
-	uint32_t get_samplerate();
 
 	Error init_at_samplerate(uint32_t sample_rate);
 	Error power_down();
 
 private:
 	I2CPeriph &i2c_;
-	uint32_t samplerate_;
 
 	Error _write_register(uint8_t RegisterAddr, uint16_t RegisterValue);
 	Error _write_all_registers(uint32_t sample_rate);

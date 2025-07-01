@@ -95,7 +95,6 @@ constexpr std::array<Registers, 11> default_init{
 CodecTAC5211::CodecTAC5211(I2CPeriph &i2c, const SaiConfig &saidef)
 	: CodecBase{saidef}
 	, i2c_(i2c)
-	, samplerate_{saidef.samplerate}
 	, I2C_address{static_cast<uint8_t>((I2C_BASE_ADDR + ((saidef.bus_address & 0b11) << 1)))} {
 }
 
@@ -105,16 +104,6 @@ CodecTAC5211::Error CodecTAC5211::init() {
 		return CodecTAC5211::I2S_INIT_ERR;
 
 	return init_registers(samplerate_);
-}
-
-CodecTAC5211::Error CodecTAC5211::change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size) {
-	samplerate_ = sample_rate;
-
-	if (sai_.change_samplerate_blocksize(sample_rate, block_size) == SaiTdmPeriph::SAI_NO_ERR) {
-		return CodecTAC5211::CODEC_NO_ERR;
-	} else {
-		return CodecTAC5211::I2S_INIT_ERR;
-	}
 }
 
 uint32_t CodecTAC5211::get_samplerate() {
@@ -128,15 +117,6 @@ void CodecTAC5211::start() {
 void CodecTAC5211::stop() {
 	sai_.stop();
 	sai_.init();
-}
-
-uint32_t CodecTAC5211::get_sai_errors() {
-	uint32_t errs = std::min<uint32_t>(sai_.fe_errors, 0xFF);
-	errs <<= 8;
-	errs += std::min<uint32_t>(sai_.te_errors, 0xFF);
-	errs <<= 8;
-	errs += std::min<uint32_t>(sai_.dme_errors, 0xFF);
-	return errs;
 }
 
 CodecTAC5211::Error CodecTAC5211::init_registers(uint32_t sample_rate) {

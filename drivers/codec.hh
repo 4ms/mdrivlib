@@ -13,7 +13,8 @@ class CodecBase {
 
 public:
 	CodecBase(const SaiConfig &sai_def)
-		: sai_{sai_def} {
+		: sai_{sai_def}
+		, samplerate_{sai_def.samplerate} {
 	}
 
 	template<typename T>
@@ -67,8 +68,32 @@ public:
 		I2S_INIT_ERR,
 	};
 
+	Error change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size) {
+		samplerate_ = sample_rate;
+
+		if (sai_.change_samplerate_blocksize(sample_rate, block_size) == SaiTdmPeriph::SAI_NO_ERR) {
+			return CODEC_NO_ERR;
+		} else {
+			return I2S_INIT_ERR;
+		}
+	}
+
+	uint32_t get_samplerate() {
+		return samplerate_;
+	}
+
+	uint32_t get_sai_errors() {
+		uint32_t errs = std::min<uint32_t>(sai_.fe_errors, 0xFF);
+		errs <<= 8;
+		errs += std::min<uint32_t>(sai_.te_errors, 0xFF);
+		errs <<= 8;
+		errs += std::min<uint32_t>(sai_.dme_errors, 0xFF);
+		return errs;
+	}
+
 protected:
 	SaiTdmPeriph sai_;
+	uint32_t samplerate_;
 };
 
 } // namespace mdrivlib

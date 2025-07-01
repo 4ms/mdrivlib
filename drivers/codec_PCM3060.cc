@@ -52,6 +52,10 @@ CodecPCM3060::CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef)
 	reset_pin_.high();
 }
 
+CodecPCM3060::Error CodecPCM3060::init() {
+	return init(mdrivlib::CodecPCM3060Register::default_setup_i2s_24bit_hpf);
+}
+
 CodecPCM3060::Error CodecPCM3060::init(const std::span<const AnyRegister> init_regs) {
 	auto err = sai_.init();
 	if (err != SaiTdmPeriph::SAI_NO_ERR)
@@ -61,10 +65,6 @@ CodecPCM3060::Error CodecPCM3060::init(const std::span<const AnyRegister> init_r
 
 	HAL_Delay(1); // 3846 SYSCLKI cycles = 0.313ms
 	return _write_all_registers(init_regs, samplerate_);
-}
-
-uint32_t CodecPCM3060::get_samplerate() {
-	return samplerate_;
 }
 
 void CodecPCM3060::start() {
