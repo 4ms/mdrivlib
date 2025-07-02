@@ -106,10 +106,6 @@ CodecTAC5211::Error CodecTAC5211::init() {
 	return init_registers(samplerate_);
 }
 
-uint32_t CodecTAC5211::get_samplerate() {
-	return samplerate_;
-}
-
 void CodecTAC5211::start() {
 	sai_.start();
 }
