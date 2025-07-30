@@ -74,6 +74,9 @@ struct SDCard {
 					HAL_SD_DeInit(&hsd);
 					if (HAL_SD_Init(&hsd) != HAL_OK) {
 						// printf_("Cannot re-mount, err %d\n", (unsigned)HAL_SD_GetError(&hsd));
+						mdrivlib::RCC_Reset::SDMMC1_::set();
+						HAL_Delay(100);
+						mdrivlib::RCC_Reset::SDMMC1_::clear();
 						set_status_nocard();
 					}
 				}
