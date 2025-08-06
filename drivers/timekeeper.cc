@@ -29,7 +29,6 @@ void Timekeeper::_init(const TimekeeperConfig &config) {
 
 void Timekeeper::start() {
 #ifdef STM32MP1
-	printf("Starting timer irq %u LevelTriggered\n", irqn);
 	InterruptControl::enable_irq(irqn, InterruptControl::LevelTriggered);
 #else
 	InterruptControl::enable_irq(irqn);
@@ -38,11 +37,13 @@ void Timekeeper::start() {
 }
 
 void Timekeeper::pause() const {
-	LL_TIM_DisableCounter(timx);
+	if (timx)
+		LL_TIM_DisableCounter(timx);
 }
 
 void Timekeeper::resume() const {
-	LL_TIM_EnableCounter(timx);
+	if (timx)
+		LL_TIM_EnableCounter(timx);
 }
 
 // Similar to start(), but on MP1 A7 , it does

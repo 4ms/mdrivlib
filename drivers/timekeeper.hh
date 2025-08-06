@@ -31,10 +31,10 @@ public:
 	void resume() const;
 
 private:
-	TIM_TypeDef *timx;
-	IRQn_Type irqn;
+	TIM_TypeDef *timx = nullptr;
+	IRQn_Type irqn{};
 
-	CallbackT task_func;
+	CallbackT task_func{};
 
 	void _set_periph(TIM_TypeDef *timx);
 	void _set_timing(uint32_t period_ns, uint32_t priority1 = 3, uint32_t priority2 = 3);
