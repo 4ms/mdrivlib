@@ -40,5 +40,9 @@ struct InterruptControl {
 	static void reenable_irq(IRQn_Type irqn) {
 		GIC_EnableIRQ(irqn);
 	}
+
+	static bool is_enabled_irq(IRQn_Type irqn) {
+		return GIC_GetEnableIRQ(irqn);
+	}
 };
 } // namespace mdrivlib
