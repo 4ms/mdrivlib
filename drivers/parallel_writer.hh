@@ -3,7 +3,6 @@
 #include "drivers/pin.hh"
 #include "util/base_concepts.hh"
 #include "util/countzip.hh"
-#include "util/zip.hh"
 
 namespace mdrivlib
 {
@@ -16,7 +15,8 @@ struct ParallelWriter {
 	Pin dc;
 
 	void init_pins() {
-		for (auto [pin, PinConf] : zip(datapin, ConfT::data)) {
+		for (unsigned i = 0; auto &pin : datapin) {
+			auto const &PinConf = ConfT::data[i++];
 			pin.init(PinConf, mdrivlib::PinMode::Output);
 		}
 		cs.init(ConfT::chip_sel, mdrivlib::PinMode::Output);
