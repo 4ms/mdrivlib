@@ -9,7 +9,7 @@ namespace mdrivlib
 {
 
 struct Screen9BitPacket {
-	enum class Type { Data, Cmd, DelayMS } type;
+	enum class Type { Data, Cmd, DelayMS } action;
 	uint8_t payload;
 };
 
@@ -34,13 +34,13 @@ public:
 private:
 	void _init_display_driver(std::span<const Screen9BitPacket> packets) {
 		for (auto p : packets) {
-			if (p.type == Screen9BitPacket::Type::Data)
+			if (p.action == Screen9BitPacket::Type::Data)
 				writer.send((1 << 8) | p.payload);
 
-			else if (p.type == Screen9BitPacket::Type::Cmd)
+			else if (p.action == Screen9BitPacket::Type::Cmd)
 				writer.send((0 << 8) | p.payload);
 
-			else if (p.type == Screen9BitPacket::Type::DelayMS)
+			else if (p.action == Screen9BitPacket::Type::DelayMS)
 				HAL_Delay(p.payload);
 		}
 	}
