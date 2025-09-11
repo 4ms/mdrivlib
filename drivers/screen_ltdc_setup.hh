@@ -1,5 +1,4 @@
 #pragma once
-#include "drivers/ltdc_screen_config_struct.hh"
 #include "drivers/parallel_writer.hh"
 #include "drivers/pin.hh"
 #include "util/base_concepts.hh"
@@ -13,8 +12,6 @@ struct ScreenInitCommand {
 	uint8_t num_args = 0;
 	uint16_t delay_ms = 0;
 	uint8_t args[8];
-	// std::span<const uint8_t> args; // FixMe: std::span<uint8_t> or std::span<const uint8_t> gives error: No matching
-	// constructor
 };
 
 template<Derived<ParallelWriterConf> ConfT>
