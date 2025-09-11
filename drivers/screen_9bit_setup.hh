@@ -1,5 +1,6 @@
 #pragma once
-#include "drivers/parallel_writer.hh"
+#include "drivers/bit_bang.hh"
+#include "drivers/bit_bang_spi_conf.hh"
 #include "drivers/pin.hh"
 #include "util/base_concepts.hh"
 #include <span>
@@ -12,47 +13,46 @@ struct Screen9BitPacket {
 	uint8_t payload;
 };
 
-template<Derived<ParallelWriterConf> ConfT>
-class LTDCParallelSetup {
+template<Derived<BitBangSpiTxConf> ConfT>
+class LTDCSerial9BitSetup {
 
-	// static_assert(ConfT::dc.gpio == mdrivlib::GPIO::Unused);
-
-	mdrivlib::ParallelWriter<ConfT> writer;
+	mdrivlib::BitBang9Bit<ConfT> writer;
+	Pin reset_pin;
 
 public:
+	LTDCSerial9BitSetup(PinDef reset_pin)
+		: reset_pin{reset_pin, PinMode::Output} {
+	}
+
 	void setup_driver_chip(std::span<const Screen9BitPacket> packets) {
 		writer.init_pins();
+		// writer.test_pins();
 		_reset();
 		_init_display_driver(packets);
 	}
 
 private:
 	void _init_display_driver(std::span<const Screen9BitPacket> packets) {
-		writer.start_sequence();
-
-		// TODO: delay?
-
 		for (auto p : packets) {
 			if (p.type == Screen9BitPacket::Type::Data)
-				writer.send_arg(p.payload);
+				writer.send((1 << 8) | p.payload);
+
 			else if (p.type == Screen9BitPacket::Type::Cmd)
-				writer.send_cmd(p.payload);
+				writer.send((0 << 8) | p.payload);
+
 			else if (p.type == Screen9BitPacket::Type::DelayMS)
 				HAL_Delay(p.payload);
 		}
-
-		writer.end_sequence();
 	}
 
 	void _reset() {
-		Pin reset_pin{ConfT::reset, PinMode::Output};
-
+		HAL_Delay(200);
 		reset_pin.high();
-		HAL_Delay(10);
+		HAL_Delay(200);
 		reset_pin.low();
-		HAL_Delay(100);
+		HAL_Delay(200);
 		reset_pin.high();
-		HAL_Delay(10);
+		HAL_Delay(200);
 	}
 };
 } // namespace mdrivlib
