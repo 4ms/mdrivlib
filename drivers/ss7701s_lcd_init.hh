@@ -34,10 +34,10 @@ static constexpr mdrivlib::Screen9BitPacket InitCmds[] = {
 	{.action = Screen9BitPacket::Type::Data, .payload = 0x02},
 
 	// toysynth:
-	// {.action = Screen9BitPacket::Type::Cmd, .payload = 0xC3},
-	// {.action = Screen9BitPacket::Type::Data, .payload = 0x00}, //0x80 = DE off, 0x02 = invert pixel clock
-	// {.action = Screen9BitPacket::Type::Data, .payload = 20},   // HBP
-	// {.action = Screen9BitPacket::Type::Data, .payload = 20},   // VBP
+	{.action = Screen9BitPacket::Type::Cmd, .payload = 0xC3},
+	{.action = Screen9BitPacket::Type::Data, .payload = 0x02}, //0x80 = DE off, 0x02 = invert pixel clock
+	{.action = Screen9BitPacket::Type::Data, .payload = 0},	   // HBP
+	{.action = Screen9BitPacket::Type::Data, .payload = 0},	   // VBP
 
 	{.action = Screen9BitPacket::Type::Cmd, .payload = 0xCC},
 	{.action = Screen9BitPacket::Type::Data, .payload = 0x30},

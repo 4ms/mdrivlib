@@ -7,7 +7,6 @@
 // General LTDC driver, setup for double-buffering.
 // Uses STM32-HAL.
 //
-// You must provide a configuration type that derives from LTDCScreenConf.
 // Does not handle configuring the display driver chip, that typically needs to be done before calling init()
 // To use: call init() to begin. Call set_buffer() to change the framebuffer on the next Vsync
 template<Derived<mdrivlib::LTDCScreenConf> ConfT>
@@ -40,6 +39,8 @@ public:
 private:
 	void _init_pins_as_ltdc() {
 		__HAL_RCC_LTDC_CLK_ENABLE();
+		TIM3->CNT = 0;
+
 		for (auto &p : ConfT::r) {
 			if (p.gpio != GPIO::Unused)
 				Pin _init{p, PinMode::Alt};
