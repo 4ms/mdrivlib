@@ -27,11 +27,11 @@ struct BitBang9Bit {
 		// The clock rising edge position relative to the DE pulse wanders anyways
 		__BKPT();
 		data.low();
-		HAL_Delay(200);
+		HAL_Delay(500);
 		data.high();
-		HAL_Delay(200);
+		HAL_Delay(500);
 		data.low();
-		HAL_Delay(300);
+		HAL_Delay(500);
 	}
 
 	void delay(unsigned cycles) {

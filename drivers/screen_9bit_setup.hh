@@ -46,13 +46,13 @@ private:
 	}
 
 	void _reset() {
-		HAL_Delay(1);
+		HAL_Delay(100);
 		reset_pin.high();
-		HAL_Delay(1);
+		HAL_Delay(100);
 		reset_pin.low();
-		HAL_Delay(10);
+		HAL_Delay(100);
 		reset_pin.high();
-		HAL_Delay(10);
+		HAL_Delay(100);
 	}
 };
 } // namespace mdrivlib
