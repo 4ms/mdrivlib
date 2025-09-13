@@ -12,7 +12,7 @@ struct BitBang9Bit {
 	Pin cs;
 	Pin clk;
 
-	void init_pins() {
+	void init() {
 		data.init(ConfT::data, mdrivlib::PinMode::Output);
 		cs.init(ConfT::chip_sel, mdrivlib::PinMode::Output);
 		clk.init(ConfT::clock, mdrivlib::PinMode::Output, {}, ConfT::clk_polarity);
@@ -40,7 +40,7 @@ struct BitBang9Bit {
 			x = x - 1;
 	}
 
-	void send(uint16_t packet9bit) {
+	void transmit_blocking(uint16_t packet9bit) {
 		cs.low();
 		delay(ConfT::ChipSelectSetupTime);
 
@@ -64,6 +64,14 @@ struct BitBang9Bit {
 			delay(ConfT::ClockHighTime);
 		}
 
+		cs.high();
+	}
+
+	void select_cur_chip() {
+		cs.low();
+	}
+
+	void unselect_cur_chip() {
 		cs.high();
 	}
 

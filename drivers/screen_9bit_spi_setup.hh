@@ -1,22 +1,24 @@
 #pragma once
 #include "drivers/pin.hh"
 #include "drivers/screen_9bit_packet.hh"
-#include "drivers/spi_config_struct.hh"
-#include "drivers/spi_transfer.hh"
-#include "util/base_concepts.hh"
 #include <span>
 
 namespace mdrivlib
 {
 
-template<Derived<DefaultSpiConf> ConfT>
-class LTDCSerial9BitSpiSetup {
+// Sets up an LCD screen with 9-bit SPI
+// Caller provides the Pin Driver class.
+//
+// TODO: set reset timing in ConfT
+// Includes reset pin
+template<typename PinDriverT>
+class Screen9BitSpiSetup {
 
-	mdrivlib::SpiTransferDriver<ConfT> writer;
+	PinDriverT writer;
 	Pin reset_pin;
 
 public:
-	LTDCSerial9BitSpiSetup(PinDef reset_pin)
+	Screen9BitSpiSetup(PinDef reset_pin)
 		: reset_pin{reset_pin, PinMode::Output} {
 	}
 
