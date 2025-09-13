@@ -6,6 +6,22 @@
 // Wrapper around a chip's SPI peripheral, handling multi-chip buses.
 // Note: to use the enable_fixed_size_interrupt() method you must enable the ISR outside of this driver.
 // Note: The parent object of this is responsible for controlling any aux gpio pins: (data/cmd, dac latch, etc):
+//
+//
+// Example simple usage (TX only, one chip, blocking)
+//
+// struct SpiConf : mdrivlib::DefaultSpiConf {
+// 	static constexpr uint16_t PeriphNum = 3; //SPI3
+// 	static constexpr PinDef SCLK = {GPIO::C, PinNum::_10, PinAF::AltFunc6};
+// 	static constexpr PinDef COPI = {GPIO::C, PinNum::_12, PinAF::AltFunc6};
+// 	static constexpr PinDef CS0 = {GPIO::A, PinNum::_4, PinAF::AltFunc6};
+//  static constexpr uint16_t data_size = 16;
+// };
+// SpiTransferDriver<SpiConf> spi;
+// for (uint16_t word : data) {
+//   spi.transmit_blocking(word);
+// }
+
 namespace mdrivlib
 {
 
