@@ -14,13 +14,13 @@ struct Screen9BitPacket {
 };
 
 template<Derived<BitBangSpiTxConf> ConfT>
-class LTDCSerial9BitSetup {
+class LTDCSerial9BitBangSetup {
 
 	mdrivlib::BitBang9Bit<ConfT> writer;
 	Pin reset_pin;
 
 public:
-	LTDCSerial9BitSetup(PinDef reset_pin)
+	LTDCSerial9BitBangSetup(PinDef reset_pin)
 		: reset_pin{reset_pin, PinMode::Output} {
 	}
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "screen_9bit_setup.hh"
+#include "screen_9bit_packet.hh"
 
 namespace mdrivlib::ST7701S
 {
