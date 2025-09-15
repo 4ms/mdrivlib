@@ -79,7 +79,6 @@ public:
 			CFG2<SPI_CFG2_COMM>::write(0b11);
 
 		set_data_size(ConfT::data_size);
-		// or: CFG1<SPI_CFG1_DSIZE>::write((ConfT::data_size - 1) << SPI_CFG1_DSIZE_Pos);
 
 		if constexpr (ConfT::clock_high_when_idle)
 			CFG2<SPI_CFG2_CPOL>::set();
@@ -240,13 +239,17 @@ public:
 		SPI_<N>::TXDR::write(data0 << 16 | data1);
 	}
 	void load_tx_data(uint32_t data) {
-		// Todo: Do we need to have variable-sized writes?
-		// if constexpr (ConfT::data_size == 16)
-		// 	SPI_<N>::TXDR_16::write((uint16_t)data);
-		// if constexpr (ConfT::data_size == 8)
-		// 	SPI_<N>::TXDR_8::write((uint8_t)data);
-		// if constexpr (ConfT::data_size > 16)
-		SPI_<N>::TXDR::write(data);
+		if constexpr (ConfT::data_size > 16) {
+			SPI_<N>::TXDR::write(data);
+
+		} else if constexpr (ConfT::data_size > 8) {
+			auto TXDR_16 = reinterpret_cast<uint16_t*>(SPI_<N>::BASE + offsetof(SPI_TypeDef, TXDR));
+			*TXDR_16 = data;
+
+		} else {
+			auto TXDR_8 = reinterpret_cast<uint8_t*>(SPI_<N>::BASE + offsetof(SPI_TypeDef, TXDR));
+			*TXDR_8 = data;
+		}
 	}
 	void start_transfer() {
 		CR1<SPI_CR1_CSTART>::set();
