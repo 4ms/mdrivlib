@@ -25,8 +25,12 @@ public:
 	ScreenParallelWriter() = default;
 
 	void set_buffer(auto *buffer) {
+		while (LTDC->SRCR != 0) {
+		}
+
 		_buffer_addr = reinterpret_cast<uint32_t>(buffer);
-		HAL_LTDC_SetAddress_NoReload(&hltdc_F, _buffer_addr, 0);
+
+		HAL_LTDC_SetAddress_NoReload(&hltdc_F, _buffer_addr, 1);
 		HAL_LTDC_Reload(&hltdc_F, LTDC_RELOAD_VERTICAL_BLANKING);
 	}
 
