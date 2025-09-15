@@ -18,20 +18,8 @@ struct BitBang9Bit {
 		clk.init(ConfT::clock, mdrivlib::PinMode::Output, {}, ConfT::clk_polarity);
 
 		cs.high();
-
 		clk.off();
-
-		// Why is this needed?
-		// Setting a fixed delay does not work, it has to be between data pin toggles
-		// Stepping through the code here always works, too
-		// The clock rising edge position relative to the DE pulse wanders anyways
-		__BKPT();
 		data.low();
-		HAL_Delay(200);
-		data.high();
-		HAL_Delay(200);
-		data.low();
-		HAL_Delay(300);
 	}
 
 	void delay(unsigned cycles) {
@@ -65,6 +53,10 @@ struct BitBang9Bit {
 		}
 
 		cs.high();
+		delay(ConfT::ChipSelectSetupTime);
+
+		clk.off();
+		delay(ConfT::ClockLowTime);
 	}
 
 	void select_cur_chip() {
