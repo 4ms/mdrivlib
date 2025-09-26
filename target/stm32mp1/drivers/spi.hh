@@ -238,19 +238,19 @@ public:
 	void load_tx_data(uint16_t data0, uint16_t data1) {
 		SPI_<N>::TXDR::write(data0 << 16 | data1);
 	}
+
 	void load_tx_data(uint32_t data) {
-		if constexpr (ConfT::data_size > 16) {
-			SPI_<N>::TXDR::write(data);
-
-		} else if constexpr (ConfT::data_size > 8) {
-			auto TXDR_16 = reinterpret_cast<uint16_t*>(SPI_<N>::BASE + offsetof(SPI_TypeDef, TXDR));
-			*TXDR_16 = data;
-
-		} else {
-			auto TXDR_8 = reinterpret_cast<uint8_t*>(SPI_<N>::BASE + offsetof(SPI_TypeDef, TXDR));
-			*TXDR_8 = data;
-		}
+		SPI_<N>::TXDR::write(data);
 	}
+	void load_tx_data(uint16_t data) {
+		auto TXDR_16 = reinterpret_cast<uint16_t*>(SPI_<N>::BASE + offsetof(SPI_TypeDef, TXDR));
+		*TXDR_16 = data;
+	}
+	void load_tx_data(uint8_t data) {
+		auto TXDR_8 = reinterpret_cast<uint8_t*>(SPI_<N>::BASE + offsetof(SPI_TypeDef, TXDR));
+		*TXDR_8 = data;
+	}
+
 	void start_transfer() {
 		CR1<SPI_CR1_CSTART>::set();
 	}
