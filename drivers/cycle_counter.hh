@@ -4,6 +4,7 @@
 
 namespace mdrivlib
 {
+
 class CycleCounter {
 public:
 	CycleCounter() {
@@ -12,6 +13,16 @@ public:
 
 	void init();
 
+	// measure simple period of time
+	void start_simple_measurement() {
+		_start_tm = read_cycle_count();
+	}
+
+	uint32_t stop_simple_measurement() {
+		return read_cycle_count() - _start_tm;
+	}
+
+	// measure duty cycle: on time divided by total on+off time
 	void start_measurement() {
 		_start_tm = read_cycle_count();
 		_period = _start_tm - _last_start_tm;
@@ -50,4 +61,5 @@ private:
 
 	uint32_t read_cycle_count();
 };
+
 } // namespace mdrivlib
