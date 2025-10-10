@@ -402,6 +402,22 @@ void SaiTdmPeriph::stop() {
 	HAL_SAI_Abort(&hsai_rx);
 }
 
+void SaiTdmPeriph::pause() {
+	if (saidef_.mode == SaiConfig::RXMaster)
+		InterruptControl::disable_irq(rx_irqn);
+
+	else if (saidef_.mode == SaiConfig::TXMaster)
+		InterruptControl::disable_irq(tx_irqn);
+}
+
+void SaiTdmPeriph::resume() {
+	if (saidef_.mode == SaiConfig::RXMaster)
+		InterruptControl::enable_irq(rx_irqn);
+
+	else if (saidef_.mode == SaiConfig::TXMaster)
+		InterruptControl::enable_irq(tx_irqn);
+}
+
 void SaiTdmPeriph::_sai_enable(SAI_HandleTypeDef *hsai) {
 	hsai->Instance->CR1 = hsai->Instance->CR1 | (0x1UL << 16U);
 }

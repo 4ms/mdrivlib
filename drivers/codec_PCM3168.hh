@@ -42,6 +42,9 @@ public:
 	void start();
 	void stop();
 
+	void pause_irq();
+	void resume_irq();
+
 private:
 	I2CPeriph &i2c_;
 	Pin reset_pin_;

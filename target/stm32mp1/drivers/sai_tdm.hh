@@ -30,6 +30,9 @@ public:
 	void start();
 	void stop();
 
+	void pause();
+	void resume();
+
 	Error change_samplerate_blocksize(uint32_t sample_rate, uint32_t block_size);
 
 	uint32_t te_errors = 0;

@@ -86,6 +86,14 @@ void CodecPCM3168::stop() {
 	sai_.init();
 }
 
+void CodecPCM3168::pause_irq() {
+	sai_.pause();
+}
+
+void CodecPCM3168::resume_irq() {
+	sai_.resume();
+}
+
 CodecPCM3168::Error CodecPCM3168::_write_all_registers(uint32_t sample_rate) {
 	CodecPCM3168::Error err{CODEC_NO_ERR};
 
