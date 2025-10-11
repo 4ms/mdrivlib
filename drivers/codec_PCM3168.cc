@@ -83,7 +83,7 @@ void CodecPCM3168::start() {
 
 void CodecPCM3168::stop() {
 	sai_.stop();
-	sai_.init();
+	// sai_.init();
 }
 
 void CodecPCM3168::pause_irq() {
