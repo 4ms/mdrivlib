@@ -6,9 +6,7 @@
 // Debugging:
 // #define FUSBDEBUG
 #ifdef FUSBDEBUG
-#include "printf.h"
-#define pr_debug printf_
-#include <optional>
+#define pr_debug printf
 #include <string_view>
 #else
 static inline void pr_debug(...) {
@@ -63,6 +61,46 @@ struct Device {
 		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
 		HAL_Delay(10);
 		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollDRP, .ToggleIgnoreRa = 1});
+
+		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
+		// Note: setting Mask::VBusOK to 0 when HostCurrentReq is 0 results in it
+		// not detecting disconnect as host
+		write<Mask>({.HostCurrentReq = 0,
+					 .Collision = 1,
+					 .Wake = 1,
+					 .Alert = 1,
+					 .CRCCheck = 1,
+					 .CompChange = 1,
+					 .CCBusActivity = 1,
+					 .VBusOK = 1});
+		write<MaskA>({.HardResetRx = 1,
+					  .SoftResetRx = 1,
+					  .TxSent = 1,
+					  .HardResetSent = 1,
+					  .RetryFail = 1,
+					  .SoftFail = 1,
+					  .ToggleDone = 0,
+					  .OCPTempEvent = 1});
+		write<MaskB>({.GoodCRCSent = 1});
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
+
+		dump_all_regs();
+
+		state = ConnectedState::TogglePolling;
+	}
+
+	void start_host_polling() {
+		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
+
+		// Clear interrupts
+		read<Interrupt>();
+		read<InterruptA>();
+		read<InterruptB>();
+
+		// Turn toggle bit off, then on (otherwise TOGGLE mode is not re-started)
+		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+		HAL_Delay(10);
+		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollSRC, .ToggleIgnoreRa = 1});
 
 		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
 		// Note: setting Mask::VBusOK to 0 when HostCurrentReq is 0 results in it
