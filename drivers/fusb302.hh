@@ -102,9 +102,12 @@ struct Device {
 		HAL_Delay(10);
 		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollSRC, .ToggleIgnoreRa = 1});
 
-		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
+		// Host pull-ups to CC1 and CC2
+		write<Switches0>({.PullUpCC1 = 1, .PullUpCC2 = 1});
+
 		// Note: setting Mask::VBusOK to 0 when HostCurrentReq is 0 results in it
 		// not detecting disconnect as host
+		// Mask: 0xFE
 		write<Mask>({.HostCurrentReq = 0,
 					 .Collision = 1,
 					 .Wake = 1,
@@ -113,6 +116,7 @@ struct Device {
 					 .CompChange = 1,
 					 .CCBusActivity = 1,
 					 .VBusOK = 1});
+		//MaskA: 0xBF
 		write<MaskA>({.HardResetRx = 1,
 					  .SoftResetRx = 1,
 					  .TxSent = 1,
@@ -121,7 +125,9 @@ struct Device {
 					  .SoftFail = 1,
 					  .ToggleDone = 0,
 					  .OCPTempEvent = 1});
+		// MaskB: 0x01
 		write<MaskB>({.GoodCRCSent = 1});
+		// Power: 0x01
 		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
 
 		dump_all_regs();
