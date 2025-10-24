@@ -30,10 +30,6 @@ public:
 				auto newval = read_reg(reg).value_or(state);
 				if (newval != state) {
 					state = newval;
-
-					// Debug: just print State of Charge
-					if (reg.addr == 0x1C)
-						printf("%s: %d %s\n", reg.name.data(), state, reg.units.data());
 				}
 			}
 		}
@@ -58,15 +54,18 @@ public:
 
 		for (auto reg : registers) {
 			if (auto st = read_reg(reg))
-				printf("%s: %u\n", reg.name.data(), *st);
+				printf("%s: %d\n", reg.name.data(), *st);
 			else
 				printf("%s: error reading\n", reg.name.data());
 		}
 	}
 
 	uint16_t battery_percent_remaining() const {
-		return states[11];
+		return states[11]; // State of Charge
 	}
+
+	// bool is_charging() const {
+	// }
 
 private:
 	I2CPeriph i2c{};
@@ -80,7 +79,7 @@ private:
 	};
 
 	static constexpr std::array<Registers, 19> registers{{
-		{0x02, "Temperature", "0.1K"},
+		{0x02, "Temperature", "0.1K"}, //0
 		{0x04, "Voltage", "mV"},
 		{0x06, "Flags", ""},
 		{0x08, "NominalAvailableCapacity", "mAh"},
@@ -91,7 +90,7 @@ private:
 		{0x12, "StandbyCurrent", "mA"},
 		{0x14, "MaxLoadCurrent", "mA"},
 		{0x18, "AveragePower", "mAh?"},
-		{0x1C, "StateOfCharge", "% or bits"},
+		{0x1C, "StateOfCharge", "% or bits"}, //11
 		{0x1E, "InternalTemperature", "0.1K"},
 		{0x20, "StateOfHealth", "% or bits"},
 		{0x28, "RemainingCapacityUnfiltered", "mAh"},
