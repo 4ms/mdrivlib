@@ -61,11 +61,12 @@ public:
 	}
 
 	uint16_t battery_percent_remaining() const {
-		return states[11]; // State of Charge
+		return states[StateOfCharge];
 	}
 
-	// bool is_charging() const {
-	// }
+	bool is_charging() const {
+		return states[Flags] & Charging;
+	}
 
 private:
 	I2CPeriph i2c{};
@@ -78,7 +79,31 @@ private:
 		std::string_view units;
 	};
 
-	static constexpr std::array<Registers, 19> registers{{
+	enum {
+		Temperature,
+		Voltage,
+		Flags,
+		NominalAvailableCapacity,
+		FullAvailableCapacity,
+		RemainingCapacity,
+		FullChargeCapacity,
+		AverageCurrent,
+		StandbyCurrent,
+		MaxLoadCurrent,
+		AveragePower,
+		StateOfCharge,
+		InternalTemperature,
+		StateOfHealth,
+		RemainingCapacityUnfiltered,
+		RemainingCapacityFiltered,
+		FullChargeCapacityUnfiltered,
+		FullChargeCapacityFiltered,
+		StateOfChargeUnfiltered,
+
+		NumRegisters
+	};
+
+	static constexpr std::array<Registers, NumRegisters> registers{{
 		{0x02, "Temperature", "0.1K"}, //0
 		{0x04, "Voltage", "mV"},
 		{0x06, "Flags", ""},
@@ -100,7 +125,7 @@ private:
 		{0x30, "StateOfChargeUnfiltered", "% or bits"},
 	}};
 
-	std::array<int16_t, 19> states{};
+	std::array<int16_t, NumRegisters> states{};
 
 	enum FlagBits {
 		OverTemperature = (1 << 15),
