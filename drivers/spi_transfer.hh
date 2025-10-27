@@ -49,8 +49,9 @@ public:
 		spi.enable();
 	}
 
+	template<size_t Bits = 32>
 	void transmit_blocking(uint32_t word) {
-		transmit_when_ready(word);
+		transmit_when_ready<Bits>(word);
 		begin_open_transmission();
 		wait_until_tx_complete();
 	}
@@ -92,10 +93,18 @@ public:
 	//
 	// Transmit
 	//
+	template<size_t Bits = 32>
 	void transmit_when_ready(uint32_t word) {
 		wait_until_ready_to_tx();
-		spi.load_tx_data(word);
+
+		if constexpr (Bits == 32)
+			spi.load_tx_data(word);
+		else if (Bits == 16)
+			spi.load_tx_data_16(word);
+		else
+			spi.load_tx_data_8(word);
 	}
+
 	void transmit(uint32_t word) {
 		spi.load_tx_data(word);
 	}

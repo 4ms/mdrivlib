@@ -34,14 +34,14 @@ private:
 		for (auto p : packets) {
 			if (p.action == Screen9BitPacket::Type::Data) {
 				writer.select_cur_chip();
-				writer.transmit_blocking((1 << 8) | p.payload);
+				writer.template transmit_blocking<16>((1 << 8) | p.payload);
 				writer.unselect_cur_chip();
 			}
 
 			else if (p.action == Screen9BitPacket::Type::Cmd)
 			{
 				writer.select_cur_chip();
-				writer.transmit_blocking((0 << 8) | p.payload);
+				writer.template transmit_blocking<16>((0 << 8) | p.payload);
 				writer.unselect_cur_chip();
 			}
 
