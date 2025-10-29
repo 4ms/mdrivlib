@@ -43,7 +43,6 @@ public:
 private:
 	void _init_pins_as_ltdc() {
 		__HAL_RCC_LTDC_CLK_ENABLE();
-		TIM3->CNT = 0;
 
 		for (auto &p : ConfT::r) {
 			if (p.gpio != GPIO::Unused)
