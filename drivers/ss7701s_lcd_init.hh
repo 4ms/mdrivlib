@@ -251,8 +251,12 @@ static constexpr mdrivlib::Screen9BitPacket InitCmds[] = {
 	{.action = Screen9BitPacket::Type::Cmd, .payload = 0x3A},
 	{.action = Screen9BitPacket::Type::Data, .payload = 0x60},
 
+	// MADCTL
 	{.action = Screen9BitPacket::Type::Cmd, .payload = 0x36},
-	{.action = Screen9BitPacket::Type::Data, .payload = 0x00},
+	{.action = Screen9BitPacket::Type::Data, .payload = 0x10}, //0x10 = reverse scan
+
+	{.action = Screen9BitPacket::Type::Cmd, .payload = 0x51},
+	{.action = Screen9BitPacket::Type::Data, .payload = 0xFF},
 
 	{.action = Screen9BitPacket::Type::Cmd, .payload = 0x35},
 	{.action = Screen9BitPacket::Type::Data, .payload = 0x00},
