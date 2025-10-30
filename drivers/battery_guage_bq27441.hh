@@ -53,9 +53,27 @@ public:
 			printf("Read ERR %d\n", err);
 
 		for (auto reg : registers) {
-			if (auto st = read_reg(reg))
-				printf("%s: %d\n", reg.name.data(), *st);
-			else
+			if (auto st = read_reg(reg)) {
+				if (reg.addr == 6) { //flags
+					printf("Flags: 0x%04x: ", *st);
+					// clang-format off
+					if (*st & FlagBits::OverTemperature) printf("OVT ");
+					if (*st & FlagBits::UnderTemperature) printf("UDT ");
+					if (*st & FlagBits::FullChargeDetected) printf("FUL ");
+					if (*st & FlagBits::Charging) printf("CHG ");
+					if (*st & FlagBits::OCVTAKEN) printf("OCVT ");
+					if (*st & FlagBits::PowerOnOrResetEvent) printf("POW ");
+					if (*st & FlagBits::ConfigUpdateMode) printf("CONF ");
+					if (*st & FlagBits::BatteryDetected) printf("BATT ");
+					if (*st & FlagBits::SOCLessThanThreshold1) printf("SOC<1 ");
+					if (*st & FlagBits::SOCLessThanThresholdF) printf("SOC<F ");
+					if (*st & FlagBits::Discharging) printf("DISCHG ");
+					// clang-format on
+					printf("\n");
+				} else {
+					printf("%s: %d\n", reg.name.data(), *st);
+				}
+			} else
 				printf("%s: error reading\n", reg.name.data());
 		}
 	}
@@ -65,7 +83,7 @@ public:
 	}
 
 	bool is_charging() const {
-		return states[Flags] & Charging;
+		return !(states[Flags] & Discharging);
 	}
 
 private:
