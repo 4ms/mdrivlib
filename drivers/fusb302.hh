@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // Debugging:
-// #define FUSBDEBUG
+#define FUSBDEBUG
 #ifdef FUSBDEBUG
 #define pr_debug printf
 #include <string_view>
@@ -62,7 +62,7 @@ struct Device {
 		HAL_Delay(10);
 		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollDRP, .ToggleIgnoreRa = 1});
 
-		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
+		write<Switches0>({.MeasureCC1 = 1, .MeasureCC2 = 1, .ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
 		// Note: setting Mask::VBusOK to 0 when HostCurrentReq is 0 results in it
 		// not detecting disconnect as host
 		write<Mask>({.HostCurrentReq = 0,
@@ -82,7 +82,7 @@ struct Device {
 					  .ToggleDone = 0,
 					  .OCPTempEvent = 1});
 		write<MaskB>({.GoodCRCSent = 1});
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 1});
 
 		dump_all_regs();
 
@@ -146,22 +146,39 @@ struct Device {
 
 		pr_debug("Int = 0x%x VBusOK=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
 		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", (int)intrA, (int)intrB, intrA.ToggleDone);
+		dump_all_regs();
 
 		switch (state) {
 			case ConnectedState::TogglePolling: {
 				pr_debug("State is currently Polling\n");
 
-				Status1A status1a{read<Status1A>()};
-				if (status1a.ToggleOutcomeIsSink)
-					state = ConnectedState::AsDevice;
+				// auto status0{read<Status0>()};
+				auto status1a{read<Status1A>()};
 
-				else if (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2)
+				if (status1a.ToggleOutcomeIsSink && (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2)) {
+					pr_debug("Toggle outcome: detected sink. Entering host mode\n");
 					state = ConnectedState::AsHost;
+				}
+
+				else if (status1a.ToggleOutcomeIsSink == 0 &&
+						 (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2))
+				{
+					pr_debug("Toggle outcome: detected source. Entering device mode\n");
+					state = ConnectedState::AsHost;
+				}
 
 				// could also check Status0: Comp == 0 && BCLevel < 3
 				// Comp == 0 means CC pin is read as less than reference, meaning device
 				// Rd pull-down was detected BC<3 means CC pin is read as < 1.23V, meaning
 				// a device Rd pull-down was detected
+				// if (status0.Comp == 0 && status0.BCLevel < 3) {
+				// 	state = ConnectedState::AsDevice;
+				// }
+
+				// else if (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2){
+				// 	state = ConnectedState::AsHost;
+				// }
+
 			} break;
 
 			case ConnectedState::AsDevice: {
