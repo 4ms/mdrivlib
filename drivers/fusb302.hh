@@ -6,9 +6,7 @@
 // Debugging:
 // #define FUSBDEBUG
 #ifdef FUSBDEBUG
-#include "printf.h"
-#define pr_debug printf_
-#include <optional>
+#define pr_debug printf
 #include <string_view>
 #else
 static inline void pr_debug(...) {
@@ -91,6 +89,52 @@ struct Device {
 		state = ConnectedState::TogglePolling;
 	}
 
+	void start_host_polling() {
+		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
+
+		// Clear interrupts
+		read<Interrupt>();
+		read<InterruptA>();
+		read<InterruptB>();
+
+		// Turn toggle bit off, then on (otherwise TOGGLE mode is not re-started)
+		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+		HAL_Delay(10);
+		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollSRC, .ToggleIgnoreRa = 1});
+
+		// Host pull-ups to CC1 and CC2
+		write<Switches0>({.PullUpCC1 = 1, .PullUpCC2 = 1});
+
+		// Note: setting Mask::VBusOK to 0 when HostCurrentReq is 0 results in it
+		// not detecting disconnect as host
+		// Mask: 0xFE
+		write<Mask>({.HostCurrentReq = 0,
+					 .Collision = 1,
+					 .Wake = 1,
+					 .Alert = 1,
+					 .CRCCheck = 1,
+					 .CompChange = 1,
+					 .CCBusActivity = 1,
+					 .VBusOK = 1});
+		//MaskA: 0xBF
+		write<MaskA>({.HardResetRx = 1,
+					  .SoftResetRx = 1,
+					  .TxSent = 1,
+					  .HardResetSent = 1,
+					  .RetryFail = 1,
+					  .SoftFail = 1,
+					  .ToggleDone = 0,
+					  .OCPTempEvent = 1});
+		// MaskB: 0x01
+		write<MaskB>({.GoodCRCSent = 1});
+		// Power: 0x01
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
+
+		dump_all_regs();
+
+		state = ConnectedState::TogglePolling;
+	}
+
 	ConnectedState get_state() {
 		return state;
 	}
@@ -101,7 +145,7 @@ struct Device {
 		auto intrB = read<InterruptB>();
 
 		pr_debug("Int = 0x%x VBusOK=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
-		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", intrA, intrB, intrA.ToggleDone);
+		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", (int)intrA, (int)intrB, intrA.ToggleDone);
 
 		switch (state) {
 			case ConnectedState::TogglePolling: {
@@ -174,7 +218,7 @@ struct Device {
 		static uint8_t last_val = 0xFF;
 		auto val = read<Reg>();
 		if ((uint8_t)val != last_val)
-			pr_debug("Changed %s: 0x%x\n", regname.data(), val);
+			pr_debug("Changed %s: 0x%x\n", regname.data(), (int)val);
 		last_val = val;
 	}
 
