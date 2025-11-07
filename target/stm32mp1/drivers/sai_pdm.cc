@@ -91,30 +91,30 @@ SaiPdmPeriph::Error SaiPdmPeriph::_config_rx_sai() {
 	hsai_rx.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
 	hsai_rx.Init.PdmInit.MicPairsNbr = 1;
 
-	if (saidef_.num_tdm_ins > 2) {
-		// Todo: use conf to set slot size
-		// Todo: allow conf to set FS pulse mode (ActiveFrameLength)
-		hsai_rx.Init.Protocol = SAI_FREE_PROTOCOL;
-		hsai_rx.Init.DataSize = saidef_.datasize;
-		hsai_rx.Init.FirstBit = SAI_FIRSTBIT_MSB;
-		hsai_rx.Init.ClockStrobing = SAI_CLOCKSTROBING_RISINGEDGE;
-		hsai_rx.FrameInit.FrameLength = saidef_.framesize;
-		hsai_rx.FrameInit.ActiveFrameLength = 1; // FS pulses at start of frame
-		hsai_rx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
-		hsai_rx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
-		hsai_rx.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
-		hsai_rx.SlotInit.FirstBitOffset = 0;
-		hsai_rx.SlotInit.SlotSize = SAI_SLOTSIZE_32B;
-		hsai_rx.SlotInit.SlotNumber = saidef_.num_tdm_ins;
-		hsai_rx.SlotInit.SlotActive = 0x0000FFFF;
-		HAL_SAI_DeInit(&hsai_rx);
-		if (HAL_SAI_Init(&hsai_rx) != HAL_OK)
-			err = SAI_INIT_ERR;
-	} else {
-		HAL_SAI_DeInit(&hsai_rx);
-		if (HAL_SAI_InitProtocol(&hsai_rx, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2) != HAL_OK)
-			err = SAI_INIT_ERR;
-	}
+	// if (saidef_.num_tdm_ins > 2) {
+	// Todo: use conf to set slot size
+	// Todo: allow conf to set FS pulse mode (ActiveFrameLength)
+	hsai_rx.Init.Protocol = SAI_FREE_PROTOCOL;
+	hsai_rx.Init.DataSize = saidef_.datasize;
+	hsai_rx.Init.FirstBit = SAI_FIRSTBIT_MSB;
+	hsai_rx.Init.ClockStrobing = SAI_CLOCKSTROBING_RISINGEDGE;
+	hsai_rx.FrameInit.FrameLength = saidef_.framesize;
+	hsai_rx.FrameInit.ActiveFrameLength = 1; // FS pulses at start of frame
+	hsai_rx.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
+	hsai_rx.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
+	hsai_rx.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
+	hsai_rx.SlotInit.FirstBitOffset = 0;
+	hsai_rx.SlotInit.SlotSize = SAI_SLOTSIZE_16B;
+	hsai_rx.SlotInit.SlotNumber = saidef_.num_tdm_ins;
+	hsai_rx.SlotInit.SlotActive = 0x0000FFFF;
+	HAL_SAI_DeInit(&hsai_rx);
+	if (HAL_SAI_Init(&hsai_rx) != HAL_OK)
+		err = SAI_INIT_ERR;
+	// } else {
+	// 	HAL_SAI_DeInit(&hsai_rx);
+	// 	if (HAL_SAI_InitProtocol(&hsai_rx, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2) != HAL_OK)
+	// 		err = SAI_INIT_ERR;
+	// }
 
 	return err;
 }
@@ -147,14 +147,14 @@ SaiPdmPeriph::Error SaiPdmPeriph::_init_sai_dma() {
 }
 
 void SaiPdmPeriph::_init_pins() {
-	Pin sai_sclk{saidef_.SCLK.gpio,
-				 saidef_.SCLK.pin,
-				 PinMode::Alt,
-				 saidef_.SCLK.af,
-				 PinPull::None,
-				 PinPolarity::Normal,
-				 PinSpeed::High,
-				 PinOType::PushPull};
+	Pin sai_lrclk{saidef_.LRCLK.gpio,
+				  saidef_.LRCLK.pin,
+				  PinMode::Alt,
+				  saidef_.LRCLK.af,
+				  PinPull::None,
+				  PinPolarity::Normal,
+				  PinSpeed::High,
+				  PinOType::PushPull};
 	Pin sai_mrx_adc{saidef_.SD_ADC.gpio,
 					saidef_.SD_ADC.pin,
 					PinMode::Alt,
