@@ -91,11 +91,9 @@ private:
 		pLayerCfg.WindowY1 = _height;
 		pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
 		pLayerCfg.FBStartAdress = _buffer_addr;
-		//pLayerCfg.FBStartAdress = (uint32_t)&RGB565_480x272;
 		pLayerCfg.Alpha = 255;
 
-		/* Default Color configuration (configure A,R,G,B component values) : no background color */
-		pLayerCfg.Alpha0 = 0; /* fully transparent */
+		pLayerCfg.Alpha0 = 255;
 		pLayerCfg.Backcolor.Blue = 0;
 		pLayerCfg.Backcolor.Green = 0;
 		pLayerCfg.Backcolor.Red = 0;
