@@ -103,12 +103,12 @@ struct LED3Brightness : ReadWrite {
 };
 
 struct Out0Brightness : ReadWrite {
-	enum : uint8_t { Address = 0x0a };
+	enum : uint8_t { Address = 0x0b };
 
 	uint8_t Brightness;
 };
 
-//... Out1-Out7 are 0x0b to 0x12
+//... Out1-Out7 are 0x0c to 0x12
 
 struct Out8Brightness : ReadWrite {
 	enum : uint8_t { Address = 0x13 };

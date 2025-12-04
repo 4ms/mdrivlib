@@ -21,6 +21,7 @@ struct Device {
 	Device(mdrivlib::I2CPeriph &i2c, uint8_t device_addr)
 		: i2c{i2c}
 		, dev_addr{device_addr} {
+		i2c.enable_IT(3, 3);
 	}
 
 	bool init() {
@@ -35,7 +36,7 @@ struct Device {
 							  .PowerSaveEnable = 0,
 							  .LogScaleEnable = 1});
 
-		write<LEDConfig>({.LedBankEnables = 0});
+		write<LEDConfig>({.Led0BankEnable = 0, .Led1BankEnable = 0, .Led2BankEnable = 0, .Led3BankEnable = 0});
 
 		all_leds_off();
 		return true;
@@ -85,23 +86,12 @@ private:
 	}
 
 	bool write(uint16_t mem_address, uint8_t data) {
-		return i2c.mem_write(dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, &data, 1);
+		return i2c.mem_write_IT(dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, &data, 1);
 	}
 
 	bool write(uint16_t mem_address, const std::span<const uint8_t> data) {
-		return i2c.mem_write(
+		return i2c.mem_write_IT(
 			dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, const_cast<uint8_t *>(data.data()), data.size());
-	}
-
-	template<typename Reg>
-	Reg read() {
-		static bool got_error_once = false;
-		auto reg = i2c.read_reg<Reg>(dev_addr);
-
-		if (!reg.has_value() && !got_error_once) {
-			got_error_once = true;
-		}
-		return reg.value_or(Reg::make(0));
 	}
 };
 
