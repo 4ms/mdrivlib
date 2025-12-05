@@ -2,6 +2,7 @@
 #include "pin.hh"
 #include "stm32xx.h"
 #include "tim.hh"
+#include <span>
 
 namespace mdrivlib
 {
@@ -60,29 +61,34 @@ struct TimPwmChan {
 		LL_TIM_EnableCounter(get_TIM());
 	}
 
-	static void set(uint32_t val) {
-		if constexpr (Conf.channum == TimChannelNum::_1)
-			get_TIM()->CCR1 = val;
-		if constexpr (Conf.channum == TimChannelNum::_2)
-			get_TIM()->CCR2 = val;
-		if constexpr (Conf.channum == TimChannelNum::_3)
-			get_TIM()->CCR3 = val;
-		if constexpr (Conf.channum == TimChannelNum::_4)
-			get_TIM()->CCR4 = val;
+	static volatile uint32_t *get_CCR() {
+		if constexpr (get_base_channel() == TimChannelNum::_1)
+			return &get_TIM()->CCR1;
+		if constexpr (get_base_channel() == TimChannelNum::_2)
+			return &get_TIM()->CCR2;
+		if constexpr (get_base_channel() == TimChannelNum::_3)
+			return &get_TIM()->CCR3;
+		if constexpr (get_base_channel() == TimChannelNum::_4)
+			return &get_TIM()->CCR4;
 #ifdef LL_TIM_CHANNEL_CH5
-		if constexpr (Conf.channum == TimChannelNum::_5)
-			get_TIM()->CCR5 = val;
+		if constexpr (get_base_channel() == TimChannelNum::_5)
+			return &get_TIM()->CCR5;
 #endif
 #ifdef LL_TIM_CHANNEL_CH6
-		if constexpr (Conf.channum == TimChannelNum::_6)
-			get_TIM()->CCR1 = val;
+		if constexpr (get_base_channel() == TimChannelNum::_6)
+			return &get_TIM()->CCR1;
 #endif
-		if constexpr (Conf.channum == TimChannelNum::_1N)
-			get_TIM()->CCR1 = Conf.period - 1 - val;
-		if constexpr (Conf.channum == TimChannelNum::_2N)
-			get_TIM()->CCR2 = Conf.period - 1 - val;
-		if constexpr (Conf.channum == TimChannelNum::_3N)
-			get_TIM()->CCR3 = Conf.period - 1 - val;
+
+		// sane fallback
+		return &get_TIM()->CCR1;
+	}
+
+	static void set(uint32_t val) {
+		if constexpr (Conf.channum == TimChannelNum::_1N || Conf.channum == TimChannelNum::_2N ||
+					  Conf.channum == TimChannelNum::_3N)
+			*get_CCR() = Conf.period - 1 - val;
+		else
+			*get_CCR() = val;
 	}
 
 	static void start_output() {
@@ -90,6 +96,19 @@ struct TimPwmChan {
 	}
 	static void stop_output() {
 		LL_TIM_CC_DisableChannel(get_TIM(), static_cast<uint32_t>(Conf.channum));
+	}
+
+	static void enable_dma_mode() {
+		// Before calling this, setup a DMA Mem-To-Periph with Periph Addr get_CCR()
+		LL_TIM_DisableCounter(get_TIM());
+		LL_TIM_CC_SetDMAReqTrigger(get_TIM(), LL_TIM_CCDMAREQUEST_UPDATE);
+		LL_TIM_EnableDMAReq_UPDATE(get_TIM());
+		LL_TIM_EnableCounter(get_TIM());
+		LL_TIM_CC_EnableChannel(get_TIM(), static_cast<uint32_t>(Conf.channum));
+	}
+
+	static constexpr bool is_inverted() {
+		return get_base_channel() == Conf.channum;
 	}
 
 private:
@@ -101,10 +120,6 @@ private:
 		if constexpr (Conf.channum == TimChannelNum::_3N)
 			return TimChannelNum::_3;
 		return Conf.channum;
-	}
-
-	static constexpr bool is_inverted() {
-		return get_base_channel() == Conf.channum;
 	}
 
 	static constexpr TIM_TypeDef *get_TIM() {
