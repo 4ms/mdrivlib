@@ -36,7 +36,7 @@ public:
 					.ScanConvMode = ADC_SCAN_ENABLE,
 					.EOCSelection = ADC_EOC_SEQ_CONV,
 					.LowPowerAutoWait = DISABLE,
-					.ContinuousConvMode = ENABLE,
+					.ContinuousConvMode = ConfT::continuous_adc ? ENABLE : DISABLE,
 					.NbrOfConversion = num_channels,
 					.DiscontinuousConvMode = DISABLE,
 					.NbrOfDiscConversion = 0,

@@ -178,6 +178,10 @@ struct DefaultAdcPeriphConf {
 
 	static constexpr bool enable_end_of_sequence_isr = false;
 	static constexpr bool enable_end_of_conversion_isr = false;
+
+	// Continuous mode means continually scan channels
+	// Otherwise, it's in single conversion mode, which converts the channel sequence and stops.
+	static constexpr bool continuous_adc = true;
 };
 
 template<typename T>
