@@ -48,7 +48,7 @@ public:
 					.OversamplingMode = ConfT::oversample ? ENABLE : DISABLE,
 					.Oversampling =
 						{
-							.Ratio = MathTools::constrain(ConfT::oversampling_ratio, 1, 1024),
+							.Ratio = std::clamp<uint32_t>(ConfT::oversampling_ratio, 1, 1024),
 							.RightBitShift = ConfT::oversampling_right_bitshift,
 							.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
 							.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
