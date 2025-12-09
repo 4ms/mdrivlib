@@ -10,7 +10,9 @@ struct SystemClocks {
 	SystemClocks() {
 		NVIC_SetPriorityGrouping(0b101); // 2/2
 		SystemCoreClock = HAL_RCC_GetSystemCoreClockFreq();
+		SystemCoreClock /= 2;
 		HAL_InitTick(TICK_INT_PRIORITY);
+		SystemCoreClock *= 2;
 	}
 };
 } // namespace mdrivlib
