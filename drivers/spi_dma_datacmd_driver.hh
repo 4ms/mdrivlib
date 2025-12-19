@@ -5,6 +5,7 @@
 #include "drivers/spi.hh"
 #include "util/math.hh"
 #include <functional>
+#include <span>
 
 namespace mdrivlib
 {
@@ -41,9 +42,9 @@ struct SpiDmaDataCmdDriver {
 		spi.clear_overrun_flag();
 		InterruptManager::register_and_start_isr(
 			ScreenConfT::IRQn, ScreenConfT::priority1, ScreenConfT::priority2, [this]() {
-				if (spi.is_overrun())
-					spi.clear_overrun_flag();
-			});
+			if (spi.is_overrun())
+				spi.clear_overrun_flag();
+		});
 	}
 
 	template<PacketType MessageType>
@@ -84,6 +85,37 @@ struct SpiDmaDataCmdDriver {
 		spi.start_transfer();
 		while (!spi.is_tx_complete())
 			;
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+	}
+
+	// Max 64kb
+	template<PacketType MessageType>
+	void transmit_blocking(std::span<const uint8_t> bytes) {
+		spi.disable();
+		spi.clear_EOT_flag();
+		spi.clear_TXTF_flag();
+
+		spi.set_tx_message_size(std::min<uint16_t>(0xFFFF, bytes.size()));
+		spi.set_data_size(8);
+
+		spi.set_fifo_threshold(1);
+		// spi.set_fifo_threshold(std::min(bytes.size(), 8));
+
+		spi.disable_end_of_xfer_interrupt();
+		spi.enable();
+		if constexpr (MessageType == Cmd)
+			dcpin.low();
+		if constexpr (MessageType == Data)
+			dcpin.high();
+
+		for (auto b : bytes) {
+			spi.start_transfer();
+			spi.load_tx_data_8(b);
+			while (!spi.tx_space_available())
+				;
+		}
+
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
 	}
