@@ -25,6 +25,18 @@
 #error "STM32MP1 is #defined, but not CORE_CM4 or CORE_CA7"
 #endif
 
+#elif defined(STM32MP2)
+
+#if defined(CORE_CM33)
+#include "stm32mp2xx.h"
+#elif defined(CORE_CA35)
+#include "stm32mp2xx.h"
+#elif defined(CORE_CM0)
+#include "stm32mp2xx.h"
+#else
+#error "STM32MP2 is #defined, but not CORE_CM33 or CORE_CA35 or CORE_CM0"
+#endif
+
 #elif defined(TESTPROJECT)
 #include "stubs/stm32/cmsis_periphs.hh"
 #else
