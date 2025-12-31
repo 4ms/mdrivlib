@@ -16,6 +16,8 @@ struct FlashCellBlock {
 
 	FlashCellBlock(QSpiFlash &qspi)
 		: qspi_(qspi) {
+		if (!qspi_.check_chip_id(0x180001, 0x00180001)) //182001 or 186001 or 1840EF
+			__BKPT(1);
 	}
 
 	using data_t = DataT;
@@ -34,7 +36,7 @@ struct FlashCellBlock {
 		uint32_t addr = BlockAddr + cell * AlignedDataSize;
 		while (!qspi_.is_ready())
 			;
-		bool read_ok = qspi_.read_background(reinterpret_cast<uint8_t *>(data), addr, DataSize);
+		bool read_ok = qspi_.read(reinterpret_cast<uint8_t *>(data), addr, DataSize);
 		while (!qspi_.is_ready())
 			;
 		return read_ok;
@@ -52,14 +54,14 @@ struct FlashCellBlock {
 	bool erase() {
 		while (!qspi_.is_ready())
 			;
-		return qspi_.erase_background(BlockSize, BlockAddr);
+		return qspi_.erase(BlockSize, BlockAddr);
 	}
 
 	// Verify all bits are 1's
 	bool is_writeable(int cell) {
 		if (cell >= NumCells)
 			return false;
-		uint8_t check[DataSize];
+		static uint8_t check[DataSize];
 		if (read(reinterpret_cast<DataT *>(check), cell)) {
 			for (int i = 0; i < DataSize; i++) {
 				if (check[i] != 0xFF)
