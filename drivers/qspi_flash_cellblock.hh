@@ -1,5 +1,6 @@
 #pragma once
 #include "qspi_flash_driver.hh"
+#include "util/math.hh"
 
 namespace mdrivlib
 {
@@ -7,57 +8,60 @@ namespace mdrivlib
 // FlashBlock<qspi.get_32kblock_addr(3), MyDataStruct, QSPI_32KBLOCK_SIZE, QSPI_PAGE_SIZE> my_block;
 
 // Wrapper reader/writer for a QSPI Flash block of size BlockSize. The block is split into
-// [cell_nr_] cells of equal size, each potentially containing an object of
+// [NumCells] cells of equal size, each potentially containing an object of
 // Data, and aligned to page boundaries
-template<int BlockAddr, class DataT, int BlockSize, int PageSize>
+template<int BlockAddr, class DataT, mdrivlib::QSpiFlash::ErasableSizes BlockSize, int PageSize = QSPI_PAGE_SIZE>
 struct FlashCellBlock {
+	QSpiFlash &qspi_;
+
 	FlashCellBlock(QSpiFlash &qspi)
 		: qspi_(qspi) {
 	}
-	QSpiFlash &qspi_;
-	static constexpr int data_size_ = sizeof(DataT);
 
-	// data size aligned to the next page boundary
+	using data_t = DataT;
+	static constexpr int DataSize = sizeof(DataT);
+	static constexpr int PageSizeBits = MathTools::Log2<PageSize>::val;
+	static constexpr int AlignedDataSize = ((DataSize >> PageSizeBits) + 1) << PageSizeBits;
+	static constexpr int NumCells = BlockSize / AlignedDataSize;
+
 	static_assert(MathTools::is_power_of_2(PageSize));
-	static constexpr int page_size_bits_ = MathTools::Log2<PageSize>::val;
-	static constexpr int aligned_data_size_ = ((data_size_ >> page_size_bits_) + 1) << page_size_bits_;
-	static_assert(aligned_data_size_ < BlockSize);
-	static constexpr int cell_nr_ = BlockSize / aligned_data_size_;
+	static_assert(AlignedDataSize < BlockSize);
+	static_assert(BlockSize < 64 * 1024 * 1024, "BlockSize of ENTIRE_CHIP is not supported");
 
-	bool Read(DataT *data, int cell = 0) {
-		if (cell >= cell_nr_)
+	bool read(DataT *data, int cell = 0) {
+		if (cell >= NumCells)
 			return false;
-		uint32_t addr = BlockAddr + cell * aligned_data_size_;
+		uint32_t addr = BlockAddr + cell * AlignedDataSize;
 		while (!qspi_.is_ready())
 			;
-		bool read_ok = qspi_.Read_Background(reinterpret_cast<uint8_t *>(data), addr, data_size_);
+		bool read_ok = qspi_.read_background(reinterpret_cast<uint8_t *>(data), addr, DataSize);
 		while (!qspi_.is_ready())
 			;
 		return read_ok;
 	}
 
-	bool Write(DataT *data, int cell = 0) {
-		if (cell >= cell_nr_)
+	bool write(DataT const *data, int cell = 0) {
+		if (cell >= NumCells)
 			return false;
-		uint32_t addr = BlockAddr + cell * aligned_data_size_;
+		uint32_t addr = BlockAddr + cell * AlignedDataSize;
 		while (!qspi_.is_ready())
 			;
-		return qspi_.Write(reinterpret_cast<uint8_t *>(data), addr, data_size_);
+		return qspi_.write(reinterpret_cast<uint8_t const *>(data), addr, DataSize);
 	}
 
-	bool Erase() {
+	bool erase() {
 		while (!qspi_.is_ready())
 			;
-		return qspi_.Erase_Background(BlockSize, BlockAddr);
+		return qspi_.erase_background(BlockSize, BlockAddr);
 	}
 
 	// Verify all bits are 1's
-	bool IsWriteable(int cell) {
-		if (cell >= cell_nr_)
+	bool is_writeable(int cell) {
+		if (cell >= NumCells)
 			return false;
-		uint8_t check[data_size_];
-		if (Read(reinterpret_cast<DataT *>(check), cell)) {
-			for (int i = 0; i < data_size_; i++) {
+		uint8_t check[DataSize];
+		if (read(reinterpret_cast<DataT *>(check), cell)) {
+			for (int i = 0; i < DataSize; i++) {
 				if (check[i] != 0xFF)
 					return false;
 			}
