@@ -396,11 +396,13 @@ bool QSpiFlash::write_page(const uint8_t *pData,
 		// Set-up auto polling, which periodically queries the chip in the background
 		auto_polling_mem_ready_it();
 	} else {
+		QSPI_status = STATUS_TXING;
 		if (HAL_QSPI_Transmit(&handle, const_cast<uint8_t *>(pData), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 			return false;
 
-		if (auto_polling_mem_ready_it() != HAL_OK)
+		if (auto_polling_mem_ready(HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
 			return false;
+		QSPI_status = STATUS_READY;
 	}
 
 	return true;
@@ -442,8 +444,10 @@ bool QSpiFlash::read(uint8_t *pData, uint32_t read_addr, uint32_t num_bytes, Use
 		QSPI_status = STATUS_RXING;
 
 		status = HAL_QSPI_Receive_IT(&handle, pData);
-	} else
+	} else {
 		status = HAL_QSPI_Receive(&handle, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE);
+		QSPI_status = STATUS_READY;
+	}
 
 	if (status != HAL_OK)
 		return false;
