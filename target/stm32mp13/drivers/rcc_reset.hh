@@ -289,6 +289,20 @@ using USBH_ = RegisterDualSetClear<Set::USBH_::BaseAddress, Set::USBH_::Mask, Cl
 using USBO_ = RegisterDualSetClear<Set::USBO_::BaseAddress, Set::USBO_::Mask, Clr::USBO_::BaseAddress, Clr::USBO_::Mask>;
 using USBPHY_ = RegisterDualSetClear<Set::USBPHY_::BaseAddress, Set::USBPHY_::Mask, Clr::USBPHY_::BaseAddress, Clr::USBPHY_::Mask>;
 using VREF_ = RegisterDualSetClear<Set::VREF_::BaseAddress, Set::VREF_::Mask, Clr::VREF_::BaseAddress, Clr::VREF_::Mask>;
+
+// Aliases:
+using DMAMUX_ = DMAMUX1_;
+
+// Blanks:
+using ADC3_ = NonexistantRegister;
+using I2C6_ = NonexistantRegister;
+using BDMA_ = NonexistantRegister;
+using TIM9_ = NonexistantRegister;
+using TIM10_ = NonexistantRegister;
+using TIM11_ = NonexistantRegister;
+using SAI3_ = NonexistantRegister;
+using SAI4_ = NonexistantRegister;
+using SPI6_ = NonexistantRegister;
 }
 
 } // namespace mdrivlib

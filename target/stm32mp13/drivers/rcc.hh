@@ -1,5 +1,5 @@
 #pragma once
-#include "drivers/rcc_common.hh"
+#include "drivers/rcc_reset.hh"
 #include "drivers/register_access.hh"
 #include "drivers/stm32xx.h"
 #include <cstddef>
@@ -131,9 +131,10 @@ using VREF_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_APB3EN
 // clang-format on
 
 // Aliases:
+using DMAMUX_ = DMAMUX1_;
 
 // Blanks:
-
+using ADC3_ = NonexistantRegister;
 using I2C6_ = NonexistantRegister;
 using BDMA_ = NonexistantRegister;
 using TIM9_ = NonexistantRegister;
@@ -147,22 +148,21 @@ using SPI6_ = NonexistantRegister;
 struct GPIO {
 	static inline volatile RegisterDataT *const _reg = &(RCC->MP_S_AHB4ENSETR);
 
-	static uint32_t get_gpio_bit(RegisterDataT periph) { return 1 << (((periph >> 12) - 2) & 0b1111); }
+	static uint32_t get_gpio_bit(RegisterDataT periph) {
+		return 1 << (((periph >> 12) - 2) & 0b1111);
+	}
 
-	static void enable(GPIO_TypeDef *periph)
-	{
+	static void enable(GPIO_TypeDef *periph) {
 		*_reg = *_reg | get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
 		[[maybe_unused]] bool delay_after_enabling = is_enabled(periph);
 	}
 
-	static void disable(GPIO_TypeDef *periph)
-	{
+	static void disable(GPIO_TypeDef *periph) {
 		*_reg = *_reg & ~get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
 		[[maybe_unused]] bool delay_after_disabling = is_enabled(periph);
 	}
 
-	static bool is_enabled(GPIO_TypeDef *periph)
-	{
+	static bool is_enabled(GPIO_TypeDef *periph) {
 		return (*_reg) & get_gpio_bit(reinterpret_cast<RegisterDataT>(periph));
 	}
 };
