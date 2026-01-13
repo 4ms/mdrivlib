@@ -100,6 +100,16 @@ struct UartTarget {
 			if (err != HAL_OK) {
 				// __BKPT(43);
 			}
+			// disable peripheral and wait for completion
+			hal_h.Instance->CR1 &= ~USART_CR1_UE;
+			while (hal_h.Instance->CR1 & USART_CR1_UE)
+				;
+
+			//HAL_USART_Init() does not enable Fifo Mode, so we must do it manually
+			hal_h.Instance->CR1 |= USART_CR1_FIFOEN;
+
+			// enable peripheral
+			hal_h.Instance->CR1 |= USART_CR1_UE;
 		}
 	}
 
