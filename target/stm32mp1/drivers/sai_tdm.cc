@@ -3,7 +3,6 @@
 #include "drivers/interrupt.hh"
 #include "drivers/interrupt_control.hh"
 #include "drivers/stm32xx.h"
-#include "drivers/system.hh"
 
 namespace mdrivlib
 {
