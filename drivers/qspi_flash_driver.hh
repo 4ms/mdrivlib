@@ -1,7 +1,7 @@
 #pragma once
-#include "qspi_flash_registers.h"
-#include "qspi_flash_struct.hh"
-#include "stm32xx.h"
+#include "drivers/qspi_flash_registers.h"
+#include "drivers/qspi_flash_struct.hh"
+#include "drivers/stm32xx.h"
 
 namespace mdrivlib
 {
