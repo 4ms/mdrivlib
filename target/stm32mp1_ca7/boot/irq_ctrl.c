@@ -26,7 +26,7 @@
  */
 
 #include "irq_ctrl.h"
-#include "stm32mp1xx.h"
+#include "drivers/stm32xx.h"
 #include <stddef.h>
 
 #if defined(__GIC_PRESENT) && (__GIC_PRESENT == 1U)
