@@ -5,6 +5,7 @@ namespace mdrivlib
 enum class Targets {
 	stm32mp1_ca7,
 	stm32mp1_cm4,
+	stm32mp13,
 	stm32h7x5,
 	stm32f7,
 	stm32f4,
@@ -21,6 +22,10 @@ constexpr auto TargetName = Targets::stm32mp1_ca7;
 #elif defined(STM32MP1) && defined(CORE_CM4)
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::stm32mp1_cm4;
+
+#elif defined(STM32MP13)
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::stm32mp13;
 
 // STM32H745 and STM32H755
 #elif defined(STM32H745xx) || defined(STM32H755xx)

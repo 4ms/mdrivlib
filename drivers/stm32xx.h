@@ -15,6 +15,9 @@
 #elif defined(STM32F0)
 #include "stm32f0xx.h"
 
+#elif defined(STM32MP13)
+#include "stm32mp13xx.h"
+
 #elif defined(STM32MP1)
 
 #if defined(CORE_CM4)
