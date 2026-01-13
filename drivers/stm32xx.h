@@ -207,4 +207,23 @@ using SAI_TypeDef = void;
 #define LL_GPIO_SPEED_FREQ_VERY_HIGH LL_GPIO_SPEED_FREQ_HIGH
 #endif
 
+#ifndef SAI_SYNCHRONOUS_EXT_SAI3
+#define SAI_SYNCHRONOUS_EXT_SAI3 (SAI_SYNCHRONOUS_EXT_SAI2 + 1)
+#endif
+
+#ifndef SAI_SYNCHRONOUS_EXT_SAI4
+#define SAI_SYNCHRONOUS_EXT_SAI4 (SAI_SYNCHRONOUS_EXT_SAI3 + 1)
+#endif
+
+#ifdef STM32MP13
+#if defined(__cplusplus)
+using QSPI_HandleTypeDef = XSPI_HandleTypeDef;
+using QSPI_CommandTypeDef = XSPI_RegularCmdTypeDef;
+#endif
+
+#define GPIOJ_BASE 0
+#define GPIOK_BASE 0
+
+#endif
+
 #endif //#ifndef STM32XX_H_INCLUDE_ONCE
