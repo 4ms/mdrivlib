@@ -9,6 +9,15 @@
 #include <algorithm>
 #include <array>
 
+#define PRINT_ERRORS_ADC_BUILTIN
+
+#ifdef PRINT_ERRORS_ADC_BUILTIN
+#define pr_adc_err printf
+#include <cstdio>
+#else
+#define pr_adc_err(...)
+#endif
+
 namespace mdrivlib
 {
 
@@ -26,6 +35,12 @@ public:
 		if constexpr (N == 0)
 			return;
 
+		const auto osr =
+			ADC_CFGR2_OVSR_Msk &
+			std::clamp<uint32_t>(ConfT::oversampling_ratio, ADC_OVERSAMPLING_RATIO_2, ADC_OVERSAMPLING_RATIO_256);
+		if (osr != ConfT::oversampling_ratio)
+			pr_adc_err("ADC Oversampling ratio value is not valid\n");
+
 		Clocks::ADCn<ConfT::adc_periph_num>::enable();
 		hadc = {
 			.Instance = get_ADC_base(ConfT::adc_periph_num),
@@ -35,7 +50,7 @@ public:
 					.Resolution = ConfT::resolution,
 					.DataAlign = ADC_DATAALIGN_RIGHT,
 					.ScanConvMode = ADC_SCAN_ENABLE,
-					.EOCSelection = ADC_EOC_SEQ_CONV,
+					.EOCSelection = ConfT::eoc_flag_on_end_of_sequence ? ADC_EOC_SEQ_CONV : ADC_EOC_SINGLE_CONV,
 					.LowPowerAutoWait = DISABLE,
 					.ContinuousConvMode = ConfT::continuous_adc ? ENABLE : DISABLE,
 					.NbrOfConversion = num_channels,
@@ -49,22 +64,23 @@ public:
 					.OversamplingMode = ConfT::oversample ? ENABLE : DISABLE,
 					.Oversampling =
 						{
-							.Ratio = std::clamp<uint32_t>(ConfT::oversampling_ratio, 1, 1024),
+							.Ratio = osr,
 							.RightBitShift = ConfT::oversampling_right_bitshift,
 							.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
 							.OversamplingStopReset = ADC_REGOVERSAMPLING_RESUMED_MODE,
 						},
 				},
 		};
-		HAL_ADC_Init(&hadc);
+		auto res = HAL_ADC_Init(&hadc);
+		if (res != HAL_OK)
+			pr_adc_err("HAL ADC Init error %d\n", res);
 
-		dma.link_periph_to_dma(hadc);
+		if constexpr (DmaConf::DMAx > 0)
+			dma.link_periph_to_dma(hadc);
 
 		// ADC_MultiModeTypeDef multimode = {.Mode = ADC_MODE_INDEPENDENT};
 		// HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
 
-		// Todo: allow auto rank.
-		// Todo: what if we manually set rank but skip some numbers?
 		for (auto chan : ChanConfs) {
 			Pin init_adc_pin{chan.pin.gpio, chan.pin.pin, PinMode::Analog};
 
@@ -72,18 +88,29 @@ public:
 				.Channel = static_cast<uint32_t>(chan.adc_chan_num),
 				.Rank = adc_number_to_rank(chan.rank),
 				.SamplingTime = chan.sampling_time,
-				.SingleDiff = ADC_SINGLE_ENDED,	 // Todo: allow conf
-				.OffsetNumber = ADC_OFFSET_NONE, // Todo: allow conf
+				.SingleDiff = ADC_SINGLE_ENDED,
+				.OffsetNumber = ADC_OFFSET_NONE,
 				.Offset = 0,
 				.OffsetSign = ADC_OFFSET_SIGN_NEGATIVE,
 				.OffsetSaturation = ENABLE,
 			};
-			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
+			auto res = HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
+			if (res != HAL_OK)
+				pr_adc_err("HAL ADC Config Channel error %d\n", res);
 		}
 	}
 
 	void start() {
-		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+		HAL_StatusTypeDef res;
+
+		if constexpr (DmaConf::DMAx > 0) {
+			res = HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+		} else {
+			res = HAL_ADC_Start_IT(&hadc);
+		}
+
+		if (res != HAL_OK)
+			pr_adc_err("HAL ADC Start error %d\n", res);
 
 		uint32_t reg = hadc.Instance->IER;
 
@@ -132,8 +159,8 @@ public:
 	}
 
 	ADC_HandleTypeDef hadc;
+
 	DMATransfer<DmaConf> dma;
-	// DMA_HandleTypeDef hdma_adc1;
 
 	ValueT *_dma_buffer;
 	const size_t num_channels;

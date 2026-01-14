@@ -192,6 +192,8 @@ struct DefaultAdcPeriphConf {
 	// Continuous mode means continually scan channels
 	// Otherwise, it's in single conversion mode, which converts the channel sequence and stops.
 	static constexpr bool continuous_adc = true;
+
+	static constexpr bool eoc_flag_on_end_of_sequence = true;
 };
 
 template<typename T>
