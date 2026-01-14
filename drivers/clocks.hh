@@ -70,6 +70,10 @@ struct DMA {
 			RCC_Enable::DMA1_::set();
 		else if (DMAx == DMA2)
 			RCC_Enable::DMA2_::set();
+#ifdef DMA3
+		else if (DMAx == DMA3)
+			RCC_Enable::DMA3_::set();
+#endif
 		else if (DMAx == reinterpret_cast<DMA_TypeDef *>(BDMA))
 			RCC_Enable::BDMA_::set();
 	}
@@ -80,6 +84,10 @@ struct DMA {
 			RCC_Enable::DMA1_::clear();
 		else if (DMAx == DMA2)
 			RCC_Enable::DMA2_::clear();
+#ifdef DMA3
+		else if (DMAx == DMA3)
+			RCC_Enable::DMA3_::clear();
+#endif
 		else if (BDMA && DMAx == reinterpret_cast<DMA_TypeDef *>(BDMA))
 			RCC_Enable::BDMA_::clear();
 	}
@@ -90,6 +98,14 @@ struct DMAMUX {
 		RCC_Enable::DMAMUX_::set();
 	}
 };
+
+#ifdef DMAMUX2
+struct DMAMUX_SECURE {
+	static void enable() {
+		RCC_Enable::DMAMUX2_::set();
+	}
+};
+#endif
 
 struct I2C {
 	static void enable(I2C_TypeDef *I2Cx) {
