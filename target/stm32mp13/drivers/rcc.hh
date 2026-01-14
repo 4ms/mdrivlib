@@ -132,6 +132,7 @@ using VREF_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, MP_APB3EN
 
 // Aliases:
 using DMAMUX_ = DMAMUX1_;
+using DMAMUX_SECURE = DMAMUX2_;
 
 // Blanks:
 using ADC3_ = NonexistantRegister;
