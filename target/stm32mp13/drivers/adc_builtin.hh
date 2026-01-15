@@ -135,6 +135,16 @@ public:
 		// dma.register_callback(std::move(callback));
 	}
 
+	static bool end_of_seq_flag() {
+		auto adc = get_ADC_base(ConfT::adc_periph_num);
+		auto tmp = adc->ISR;
+		if (tmp & ADC_ISR_EOS) {
+			adc->ISR = tmp | ADC_ISR_EOS;
+			return true;
+		}
+		return false;
+	}
+
 	static constexpr ADC_TypeDef *get_ADC_base(AdcPeriphNum p) {
 		return (p == AdcPeriphNum::_1) ? ADC1 : (p == AdcPeriphNum::_2) ? ADC2 : nullptr;
 	}
