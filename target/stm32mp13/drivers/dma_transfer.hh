@@ -40,8 +40,6 @@ struct DMATransfer {
 		if (!RCC_Enable::DMAMUX_::read())
 			RCC_Enable::DMAMUX_::set();
 
-		//TODO support DMA3 and DMAMUX2 (secure)
-
 		if constexpr (ConfT::DMAx == 1) {
 			if (!RCC_Enable::DMA1_::read())
 				RCC_Enable::DMA1_::set();
@@ -123,6 +121,9 @@ struct DMATransfer {
 		if constexpr (ConfT::DMAx == 3) {
 			if (!RCC_Enable::DMA3_::read())
 				RCC_Enable::DMA3_::set();
+
+			if (!RCC_Enable::DMAMUX_SECURE::read())
+				RCC_Enable::DMAMUX_SECURE::set();
 
 			if constexpr (ConfT::StreamNum == 0) {
 				stream = DMA3_Stream0;

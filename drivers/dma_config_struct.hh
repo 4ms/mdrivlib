@@ -96,18 +96,30 @@ constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 template<typename T>
 constexpr volatile uint32_t *dma_get_ISR_reg(T stream) {
 	auto s = (uint32_t)stream;
-	return (s > (uint32_t)DMA2_Stream3) ? &(DMA2->HISR)
-		 : (s > (uint32_t)DMA1_Stream7) ? &(DMA2->LISR)
-		 : (s > (uint32_t)DMA1_Stream3) ? &(DMA1->HISR)
+	return
+#if defined(DMA3)
+		(s >= (uint32_t)DMA3_Stream4)	? &(DMA3->HISR)
+		: (s >= (uint32_t)DMA3_Stream0) ? &(DMA3->LISR)
+		:
+#endif
+		(s >= (uint32_t)DMA2_Stream4)	? &(DMA2->HISR)
+		: (s >= (uint32_t)DMA2_Stream0) ? &(DMA2->LISR)
+		: (s >= (uint32_t)DMA1_Stream4) ? &(DMA1->HISR)
 										: &(DMA1->LISR);
 }
 
 template<typename T>
 constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 	auto s = (uint32_t)stream;
-	return s > (uint32_t)DMA2_Stream3 ? &(DMA2->HIFCR)
-		 : s > (uint32_t)DMA1_Stream7 ? &(DMA2->LIFCR)
-		 : s > (uint32_t)DMA1_Stream3 ? &(DMA1->HIFCR)
+	return
+#if defined(DMA3)
+		(s >= (uint32_t)DMA3_Stream4)	? &(DMA3->HIFCR)
+		: (s >= (uint32_t)DMA3_Stream0) ? &(DMA3->LIFCR)
+		:
+#endif
+		s >= (uint32_t)DMA2_Stream4	  ? &(DMA2->HIFCR)
+		: s >= (uint32_t)DMA2_Stream0 ? &(DMA2->LIFCR)
+		: s >= (uint32_t)DMA1_Stream4 ? &(DMA1->HIFCR)
 									  : &(DMA1->LIFCR);
 }
 
@@ -146,6 +158,16 @@ constexpr uint32_t dma_get_TC_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_TCIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_TCIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_TCIF3_7
+#if defined(DMA3_Stream0)
+		 : s == ((uint32_t)DMA3_Stream0) ? DMA_FLAG_TCIF0_4
+		 : s == ((uint32_t)DMA3_Stream1) ? DMA_FLAG_TCIF1_5
+		 : s == ((uint32_t)DMA3_Stream2) ? DMA_FLAG_TCIF2_6
+		 : s == ((uint32_t)DMA3_Stream3) ? DMA_FLAG_TCIF3_7
+		 : s == ((uint32_t)DMA3_Stream4) ? DMA_FLAG_TCIF0_4
+		 : s == ((uint32_t)DMA3_Stream5) ? DMA_FLAG_TCIF1_5
+		 : s == ((uint32_t)DMA3_Stream6) ? DMA_FLAG_TCIF2_6
+		 : s == ((uint32_t)DMA3_Stream7) ? DMA_FLAG_TCIF3_7
+#endif
 #if defined(HAS_BDMA)
 		 : s == ((uint32_t)BDMA_Channel0) ? BDMA_FLAG_TC0
 		 : s == ((uint32_t)BDMA_Channel1) ? BDMA_FLAG_TC1
@@ -178,6 +200,16 @@ constexpr uint32_t dma_get_TE_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_TEIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_TEIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_TEIF3_7
+#if defined(DMA3_Stream0)
+		 : s == ((uint32_t)DMA3_Stream0) ? DMA_FLAG_TEIF0_4
+		 : s == ((uint32_t)DMA3_Stream1) ? DMA_FLAG_TEIF1_5
+		 : s == ((uint32_t)DMA3_Stream2) ? DMA_FLAG_TEIF2_6
+		 : s == ((uint32_t)DMA3_Stream3) ? DMA_FLAG_TEIF3_7
+		 : s == ((uint32_t)DMA3_Stream4) ? DMA_FLAG_TEIF0_4
+		 : s == ((uint32_t)DMA3_Stream5) ? DMA_FLAG_TEIF1_5
+		 : s == ((uint32_t)DMA3_Stream6) ? DMA_FLAG_TEIF2_6
+		 : s == ((uint32_t)DMA3_Stream7) ? DMA_FLAG_TEIF3_7
+#endif
 #if defined(HAS_BDMA)
 		 : s == ((uint32_t)BDMA_Channel0) ? BDMA_FLAG_TE0
 		 : s == ((uint32_t)BDMA_Channel1) ? BDMA_FLAG_TE1
@@ -210,6 +242,16 @@ constexpr uint32_t dma_get_HT_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_HTIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_HTIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_HTIF3_7
+#if defined(DMA3_Stream0)
+		 : s == ((uint32_t)DMA3_Stream0) ? DMA_FLAG_HTIF0_4
+		 : s == ((uint32_t)DMA3_Stream1) ? DMA_FLAG_HTIF1_5
+		 : s == ((uint32_t)DMA3_Stream2) ? DMA_FLAG_HTIF2_6
+		 : s == ((uint32_t)DMA3_Stream3) ? DMA_FLAG_HTIF3_7
+		 : s == ((uint32_t)DMA3_Stream4) ? DMA_FLAG_HTIF0_4
+		 : s == ((uint32_t)DMA3_Stream5) ? DMA_FLAG_HTIF1_5
+		 : s == ((uint32_t)DMA3_Stream6) ? DMA_FLAG_HTIF2_6
+		 : s == ((uint32_t)DMA3_Stream7) ? DMA_FLAG_HTIF3_7
+#endif
 #if defined(HAS_BDMA)
 		 : s == ((uint32_t)BDMA_Channel0) ? BDMA_FLAG_HT0
 		 : s == ((uint32_t)BDMA_Channel1) ? BDMA_FLAG_HT1
@@ -242,6 +284,16 @@ constexpr uint32_t dma_get_FE_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_FEIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_FEIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_FEIF3_7
+#if defined(DMA3_Stream0)
+		 : s == ((uint32_t)DMA3_Stream0) ? DMA_FLAG_FEIF0_4
+		 : s == ((uint32_t)DMA3_Stream1) ? DMA_FLAG_FEIF1_5
+		 : s == ((uint32_t)DMA3_Stream2) ? DMA_FLAG_FEIF2_6
+		 : s == ((uint32_t)DMA3_Stream3) ? DMA_FLAG_FEIF3_7
+		 : s == ((uint32_t)DMA3_Stream4) ? DMA_FLAG_FEIF0_4
+		 : s == ((uint32_t)DMA3_Stream5) ? DMA_FLAG_FEIF1_5
+		 : s == ((uint32_t)DMA3_Stream6) ? DMA_FLAG_FEIF2_6
+		 : s == ((uint32_t)DMA3_Stream7) ? DMA_FLAG_FEIF3_7
+#endif
 										 : 0x00000000;
 }
 
@@ -264,6 +316,16 @@ constexpr uint32_t dma_get_DME_flag_index(T stream) {
 		 : s == ((uint32_t)DMA2_Stream3) ? DMA_FLAG_DMEIF3_7
 		 : s == ((uint32_t)DMA1_Stream7) ? DMA_FLAG_DMEIF3_7
 		 : s == ((uint32_t)DMA2_Stream7) ? DMA_FLAG_DMEIF3_7
+#if defined(DMA3_Stream0)
+		 : s == ((uint32_t)DMA3_Stream0) ? DMA_FLAG_DMEIF0_4
+		 : s == ((uint32_t)DMA3_Stream1) ? DMA_FLAG_DMEIF1_5
+		 : s == ((uint32_t)DMA3_Stream2) ? DMA_FLAG_DMEIF2_6
+		 : s == ((uint32_t)DMA3_Stream3) ? DMA_FLAG_DMEIF3_7
+		 : s == ((uint32_t)DMA3_Stream4) ? DMA_FLAG_DMEIF0_4
+		 : s == ((uint32_t)DMA3_Stream5) ? DMA_FLAG_DMEIF1_5
+		 : s == ((uint32_t)DMA3_Stream6) ? DMA_FLAG_DMEIF2_6
+		 : s == ((uint32_t)DMA3_Stream7) ? DMA_FLAG_DMEIF3_7
+#endif
 										 : 0x00000000;
 }
 
@@ -283,6 +345,17 @@ inline constexpr uint32_t DMA2StreamBase[8] = {DMA2_Stream0_BASE,
 											   DMA2_Stream5_BASE,
 											   DMA2_Stream6_BASE,
 											   DMA2_Stream7_BASE};
+
+#if defined(DMA3_Stream0_BASE)
+inline constexpr uint32_t DMA3StreamBase[8] = {DMA3_Stream0_BASE,
+											   DMA3_Stream1_BASE,
+											   DMA3_Stream2_BASE,
+											   DMA3_Stream3_BASE,
+											   DMA3_Stream4_BASE,
+											   DMA3_Stream5_BASE,
+											   DMA3_Stream6_BASE,
+											   DMA3_Stream7_BASE};
+#endif
 
 #elif defined(STM32F030x6)
 
