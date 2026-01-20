@@ -1,4 +1,5 @@
 #pragma once
+#include <bit>
 #include <cstdint>
 
 namespace mdrivlib
@@ -11,5 +12,14 @@ struct I2CTimingConfig {
 	uint32_t SCLDEL : 4 = 0x7; // SCL Delay
 	uint32_t : 4;
 	uint32_t PRESC : 4 = 0x5; // Prescaler. (PRESC + 1) * tI2CCLK = tPRESC
+
+	constexpr uint32_t calc() const {
+#if defined(__cpp_lib_bit_cast)
+		return std::bit_cast<uint32_t>(*this);
+#else
+		return *reinterpret_cast<uint32_t *>(this);
+#endif
+	}
 };
+
 } // namespace mdrivlib
