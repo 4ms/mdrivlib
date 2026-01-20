@@ -71,7 +71,7 @@ struct GPIO {
 	static inline volatile RegisterDataT *const _reg = &(RCC->AHB2ENR);
 
 	static uint32_t get_gpio_bit(RegisterDataT periph) {
-		return 1 << (((periph >> 12) - 2) & 0b1111);
+		return 1 << ((periph >> 10) & 0b111);
 	}
 
 	static void enable(GPIO_TypeDef *periph) {
