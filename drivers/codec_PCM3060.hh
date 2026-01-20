@@ -1,5 +1,5 @@
 /*
- * CodecPCM3168.cc
+ * CodecPCM3060.cc
  *
  * Author: Dan Green (danngreen1@gmail.com)
  *
