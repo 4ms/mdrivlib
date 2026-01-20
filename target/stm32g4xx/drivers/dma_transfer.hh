@@ -23,6 +23,8 @@ struct DMATransfer {
 	DMA_HandleTypeDef hdma;
 
 	DMATransfer() {
+		RCC_Enable::DMAMUX1_::set();
+
 		if constexpr (ConfT::DMAx == 1) {
 			RCC_Enable::DMA1_::set();
 			if constexpr (ConfT::StreamNum == 1)

@@ -2,7 +2,6 @@
 #include "drivers/adc_builtin_conf.hh"
 #include "drivers/clocks.hh"
 #include "drivers/dma_transfer.hh"
-#include "drivers/interrupt.hh"
 #include "drivers/interrupt_control.hh"
 #include "drivers/pin.hh"
 #include "drivers/stm32xx.h"
@@ -22,10 +21,10 @@ public:
 		: _dma_buffer{dma_buffer.data()}
 		, num_channels{N} {
 
-		//On the F0 series, sampling time is common to all channels:
 		uint32_t common_sampling_time = ChanConfs[0].sampling_time;
 
 		Clocks::ADCn<ConfT::adc_periph_num>::enable();
+
 		hadc = {
 			.Instance = get_ADC_base(),
 			.Init =
@@ -33,8 +32,10 @@ public:
 					.ClockPrescaler = ConfT::clock_div,
 					.Resolution = ConfT::resolution,
 					.DataAlign = ConfT::align,
-					.ScanConvMode = ENABLE,
+					.GainCompensation = 0,
+					.ScanConvMode = ADC_SCAN_ENABLE,
 					.EOCSelection = ADC_EOC_SEQ_CONV,
+					.LowPowerAutoWait = DISABLE,
 					.ContinuousConvMode = ENABLE,
 					.NbrOfConversion = ChanConfs.size(),
 					.DiscontinuousConvMode = DISABLE,
@@ -42,9 +43,22 @@ public:
 					.ExternalTrigConv = ADC_SOFTWARE_START,
 					.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE,
 					.DMAContinuousRequests = ENABLE,
+					.Overrun = ADC_OVR_DATA_OVERWRITTEN,
+					.OversamplingMode = ENABLE,
+					.Oversampling =
+						{
+							.Ratio = ConfT::oversampling_ratio,
+							.RightBitShift = ADC_RIGHTBITSHIFT_2,
+							.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER,
+							.OversamplingStopReset = ADC_REGOVERSAMPLING_CONTINUED_MODE,
+						},
 				},
 		};
 		HAL_ADC_Init(&hadc);
+
+		ADC_MultiModeTypeDef multimode = {0};
+		multimode.Mode = ADC_MODE_INDEPENDENT;
+		HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
 
 		dma.link_periph_to_dma(hadc);
 
@@ -55,25 +69,57 @@ public:
 				.Channel = static_cast<uint32_t>(chan.adc_chan_num),
 				.Rank = chan.rank,
 				.SamplingTime = common_sampling_time,
+				.SingleDiff = ADC_SINGLE_ENDED,
+				.OffsetNumber = ADC_OFFSET_NONE,
+				.Offset = 0,
 			};
 			HAL_ADC_ConfigChannel(&hadc, &adc_chan_conf);
 		}
 	}
 
 	void start() {
+		HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+		HAL_Delay(10);
+
 		HAL_ADC_Start_DMA(&hadc, (uint32_t *)_dma_buffer, num_channels);
+
 		// Must do this as fix for HAL, which unconditionally enables HT interrupt
 		if constexpr (!DmaConf::half_transfer_interrupt_enable)
 			dma.disable_ht();
 
-		// uint32_t reg = hadc.Instance->CR;
-		// Disable End of Conversion ISR
-		// reg &= ~ADC_CR_EOCIE;
-		// reg &= ~ADC_CR_OVRIE; //overrun
-		// hadc.Instance->CR = reg;
+		uint32_t reg = hadc.Instance->IER;
+		if constexpr (ConfT::enable_end_of_sequence_isr)
+			reg &= ~ADC_IER_EOSIE;
+		else
+			reg |= ADC_IER_EOSIE;
+
+		if constexpr (ConfT::enable_end_of_conversion_isr)
+			reg &= ~ADC_IER_EOCIE;
+		else
+			reg |= ADC_IER_EOCIE;
+
+		// Disable overrun interrupt
+		reg &= ~ADC_IER_OVRIE;
+
+		hadc.Instance->IER = reg;
 	}
 
 	void register_callback(auto callback) {
+		uint32_t reg = hadc.Instance->IER;
+		if constexpr (ConfT::enable_end_of_sequence_isr)
+			reg &= ~ADC_IER_EOSIE;
+		else
+			reg |= ADC_IER_EOSIE;
+
+		if constexpr (ConfT::enable_end_of_conversion_isr)
+			reg &= ~ADC_IER_EOCIE;
+		else
+			reg |= ADC_IER_EOCIE;
+
+		// Disable overrun interrupt
+		reg &= ~ADC_IER_OVRIE;
+
+		hadc.Instance->IER = reg;
 		dma.register_callback(std::move(callback));
 	}
 
