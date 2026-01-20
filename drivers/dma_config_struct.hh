@@ -125,7 +125,7 @@ constexpr volatile uint32_t *dma_get_IFCR_reg(T stream) {
 									  : &(DMA1->LIFCR);
 }
 
-#elif defined(STM32F030x6) || defined(DMA1_Channel1)
+#elif defined(STM32F030x6)
 
 template<typename T>
 constexpr volatile uint32_t *dma_get_ISR_reg(T) {
@@ -135,6 +135,16 @@ constexpr volatile uint32_t *dma_get_ISR_reg(T) {
 template<typename T>
 constexpr volatile uint32_t *dma_get_IFCR_reg(T) {
 	return &(DMA1->IFCR);
+}
+
+#elif defined(DMA1_Channel1) && defined(DMA2_Channel1)
+
+inline volatile uint32_t *dma_get_ISR_reg(DMA_Channel_TypeDef *chan) {
+	return (chan >= DMA2_Channel1) ? &(DMA2->ISR) : &(DMA1->ISR);
+}
+
+inline volatile uint32_t *dma_get_IFCR_reg(DMA_Channel_TypeDef *chan) {
+	return (chan >= DMA2_Channel1) ? &(DMA2->IFCR) : &(DMA1->IFCR);
 }
 
 #endif
