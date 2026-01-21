@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <array>
 
-#define PRINT_ERRORS_ADC_BUILTIN
+// #define PRINT_ERRORS_ADC_BUILTIN
 
 #ifdef PRINT_ERRORS_ADC_BUILTIN
 #define pr_adc_err printf

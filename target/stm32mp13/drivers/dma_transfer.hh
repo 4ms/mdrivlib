@@ -8,6 +8,15 @@
 
 #include "stm32mp13xx_ll_etzpc.h"
 
+// #define PRINT_ERRORS_DMA_TRANSFER
+
+#ifdef PRINT_ERRORS_DMA_TRANSFER
+#define pr_dma_err printf
+#include <cstdio>
+#else
+#define pr_dma_err(...)
+#endif
+
 // Todo: Finish converting to using CMSIS instead of STM32-HAL
 namespace mdrivlib
 {
@@ -217,11 +226,11 @@ struct DMATransfer {
 																		   : DMA_PBURST_INC16;
 		auto res = HAL_DMA_DeInit(&hdma);
 		if (res != HAL_OK)
-			printf("HAL DMA DeInit error %d\n", res);
+			pr_dma_err("HAL DMA DeInit error %d\n", res);
 
 		res = HAL_DMA_Init(&hdma);
 		if (res != HAL_OK)
-			printf("HAL DMA Init error %d\n", res);
+			pr_dma_err("HAL DMA Init error %d\n", res);
 	}
 
 	void register_callback(auto cb) {
