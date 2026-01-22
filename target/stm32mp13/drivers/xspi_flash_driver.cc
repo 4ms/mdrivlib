@@ -80,7 +80,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 	handle.Init.ClockMode = XSPI_CLOCK_MODE_0;
 	handle.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
 
-	auto res = HAL_XSPI_Init(&handle);
+	[[maybe_unused]] auto res = HAL_XSPI_Init(&handle);
 	if (res != HAL_OK)
 		xspi_printf("Failed to init QSPI: %d\n", res);
 
@@ -88,7 +88,7 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 
 	QSPI_status = STATUS_READY; //NOLINT
 
-	if (auto res = Reset())
+	if ([[maybe_unused]] auto res = Reset())
 		xspi_printf("Failed to reset QSPI: %d\n", res);
 
 	if (defs.io_mode == QSPIFlashConfig::QuadSPI) {
@@ -98,10 +98,10 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 		GPIO_init_IO2_IO3_AF();
 	}
 
-	if (auto res = auto_polling_mem_ready(HAL_XSPI_TIMEOUT_DEFAULT_VALUE))
+	if ([[maybe_unused]] auto res = auto_polling_mem_ready(HAL_XSPI_TIMEOUT_DEFAULT_VALUE))
 		xspi_printf("Failed to get autopolling ready for QSPI: %d\n", res);
 
-	if (auto res = write_enable())
+	if ([[maybe_unused]] auto res = write_enable())
 		xspi_printf("Failed to write enable QSPI: %d\n", res);
 
 #ifdef XSPI_DO_TESTS
