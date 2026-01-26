@@ -4,8 +4,6 @@
 #include "drivers/interrupt.hh"
 #include "drivers/rcc.hh"
 #include "drivers/stm32xx.h"
-#include <cstdio>
-
 #include "stm32mp13xx_ll_etzpc.h"
 
 // #define PRINT_ERRORS_DMA_TRANSFER
