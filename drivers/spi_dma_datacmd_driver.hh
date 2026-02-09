@@ -57,14 +57,19 @@ struct SpiDmaDataCmdDriver {
 		spi.set_fifo_threshold(1);
 		spi.disable_end_of_xfer_interrupt();
 		spi.enable();
+
+		if constexpr (ScreenConfT::use_hardware_ss == false)
+			spi.select(0);
 		if constexpr (MessageType == Cmd)
 			dcpin.low();
 		if constexpr (MessageType == Data)
 			dcpin.high();
+
 		spi.start_transfer();
 		spi.load_tx_data(byte);
-		while (!spi.is_tx_complete())
-			;
+
+		wait_complete();
+
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
 	}
@@ -77,14 +82,19 @@ struct SpiDmaDataCmdDriver {
 		spi.set_data_size(8);
 		spi.set_tx_message_size(4);
 		spi.enable();
+
+		if constexpr (ScreenConfT::use_hardware_ss == false)
+			spi.select(0);
 		if constexpr (MessageType == Cmd)
 			dcpin.low();
 		if constexpr (MessageType == Data)
 			dcpin.high();
+
 		spi.load_tx_data(MathTools::swap_bytes_and_combine(halfword2, halfword1));
 		spi.start_transfer();
-		while (!spi.is_tx_complete())
-			;
+
+		wait_complete();
+
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
 	}
@@ -100,10 +110,12 @@ struct SpiDmaDataCmdDriver {
 		spi.set_data_size(8);
 
 		spi.set_fifo_threshold(1);
-		// spi.set_fifo_threshold(std::min(bytes.size(), 8));
 
 		spi.disable_end_of_xfer_interrupt();
 		spi.enable();
+
+		if constexpr (ScreenConfT::use_hardware_ss == false)
+			spi.select(0);
 		if constexpr (MessageType == Cmd)
 			dcpin.low();
 		if constexpr (MessageType == Data)
@@ -116,8 +128,25 @@ struct SpiDmaDataCmdDriver {
 				;
 		}
 
+		if constexpr (ScreenConfT::use_hardware_ss == false) {
+			while (!spi.is_end_of_transfer())
+				;
+			spi.unselect(0);
+		}
+
 		spi.clear_EOT_flag();
 		spi.clear_TXTF_flag();
+	}
+
+	void wait_complete() {
+		if constexpr (ScreenConfT::use_hardware_ss == false) {
+			while (!spi.is_end_of_transfer())
+				;
+			spi.unselect(0);
+		} else {
+			while (!spi.is_tx_complete())
+				;
+		}
 	}
 
 	void config_dma_transfer(uint32_t src, uint32_t sz) {
@@ -145,6 +174,7 @@ struct SpiDmaDataCmdDriver {
 		start_dma_transfer();
 	}
 
+	// Does not handle software CS pin
 	void start_dma_transfer() {
 		spi.disable();
 		dma.start_transfer();
