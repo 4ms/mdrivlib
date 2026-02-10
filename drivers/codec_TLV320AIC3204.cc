@@ -33,9 +33,64 @@ namespace mdrivlib
 {
 using namespace CodecTLV320AIC3204Register;
 
-constexpr std::array<Registers, 1> default_init{
+constexpr std::array<Registers, 17> default_init{
 	{
 		PageSelect{.page = 0},
+		SwReset{.Reset = 1},
+
+		// Program and power up NADC and MADC
+		// CODEC_CLKIN = NADC * MADC * AOSR * ADC_FS, note: AOSR is set next (128)
+		// NADC should be as large as possible as long as the following condition can still be met:
+		// MADC * AOSR / 32 ≥ RC, where RC is 6 or 8 in Table 2-7
+		// MADC * 128 / 32 >= 8, MADC >= 2
+		// Choose: NADC = 128, MADC = 2 => CODEC_CLKIN = 1 * 2 * 128 * 48000 = 12.288MHz
+		ClockSettingNADCValues{.NADCValue = 1, .NADCPowerUp = 1},
+		ClockSettingMADCValues{.MADCValue = 2, .MADCPowerUp = 1},
+
+		// Program OSR value (AOSR)
+		// Filter A with AOSR of 128 should be used for 48kHz high performance operation.
+		// Filter B with AOSR of 64 should be used for 96kHz operations
+		ADCOversampling{.AOSR = ADCOversampling::AOSR128},
+
+		// Program the processing block to be used
+		// Select ADC PRB_R1
+		ADCProcessingBlock{.ProcessingBlock = ADCProcessingBlock::PRB_R1},
+
+		// Program Analog Blocks
+		// 	Set register Page to 1
+		// 	Disable coarse AVdd generation
+		// 	Enable Master Analog Power Control
+		// 	Program Common Mode voltage
+		// 	Program PowerTune (PTM) mode
+		// 	Program MicPGA startup delay
+		// 	Program Reference fast charging
+		// 	Routing of inputs and common mode to ADC input
+		// 	Unmute analog PGAs and set analog gain
+		// Power Up ADC
+		// 	Set register Page to 0
+		// 	Power up ADC Channels
+		// 	Unmute digital volume control
+
+		// Defaults:
+		// MCLK pin -> Codec clock input (B1)
+		ClockSettingMultiplexors{.CodecClkIn = 0b00, .PLLInputClock = 0b00, .HighPLLClockRange = 0},
+
+		// BCLK->I2S BCLK (C2)
+		// WCLK->I2S WCLK (E3)
+		AudioInterfaceSetting1{.DOUTHighImpedance = 0,
+							   .WCLKDirection = 0,
+							   .BCLKDirection = 0,
+							   .WordLength = AudioInterfaceSetting1::Bits24,
+							   .Interface = AudioInterfaceSetting1::I2S},
+
+		// DOUT->I2S DOUT (J5)
+		DOUTControl{.DOUTFunction = DOUTControl::DOUT_PrimaryDOUT},
+
+		// DIN->I2S DIN (I4)
+		DINControl{.DINFunction = DINControl::DIN_Enabled},
+
+		// Try:
+		// MFP3(TP12)->HP Detect (W6) P0_R56 D2-D1=00, P0_R67 D7=1
 	},
 };
 
@@ -92,7 +147,14 @@ CodecTLV320AIC3204::Error CodecTLV320AIC3204::init_registers(uint32_t sample_rat
 	HAL_Delay(2);
 
 	for (auto reg : default_init) {
-		if (!std::visit([this](auto r) -> bool { return write(r); }, reg))
+		auto ok = std::visit([this](auto r) -> bool {
+			if constexpr (std::is_base_of_v<BusReg::WriteAccess, decltype(r)>)
+				return write(r);
+			else
+				return false;
+		}, reg);
+
+		if (!ok)
 			return Error::CODEC_I2C_ERR;
 	}
 
