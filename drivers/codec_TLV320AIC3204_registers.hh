@@ -1051,6 +1051,407 @@ struct RightDCMeasurementOutput3 : ReadOnly {
 
 // Registers 110-127 (0x6E-0x7F): Reserved
 
+// ============================================================
+// Page 1 Registers
+// ============================================================
+
+struct PowerConfiguration : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x01;
+
+	uint8_t : 3;
+	uint8_t DisableWeakAVDDtoDVDD : 1;
+	uint8_t : 4;
+};
+
+struct LDOControl : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x02;
+
+	uint8_t AVDDLDOPowerUp : 1;
+	uint8_t AVDDLDOOverCurrent : 1;
+	uint8_t DVDDLDOOverCurrent : 1;
+	uint8_t AnalogBlocksDisabled : 1;
+
+	uint8_t AVDDLDOControl : 2;
+	enum AVDDLDOControls { AVDD_1_72V = 0b00, AVDD_1_67V = 0b01, AVDD_1_77V = 0b10 };
+
+	uint8_t DVDDLDOControl : 2;
+	enum DVDDLDOControls { DVDD_1_72V = 0b00, DVDD_1_67V = 0b01, DVDD_1_77V = 0b10 };
+};
+
+struct PlaybackConfiguration1 : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x03;
+
+	uint8_t : 2;
+
+	uint8_t LeftDACPTM : 3;
+	enum DACPTMs { PTM_P3_P4 = 0b000, PTM_P2 = 0b001, PTM_P1 = 0b010 };
+
+	uint8_t : 1;
+
+	uint8_t LeftDACDriver : 2;
+	enum DACDrivers { ClassAB = 0b00, ClassD = 0b11 };
+};
+
+struct PlaybackConfiguration2 : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x04;
+
+	uint8_t : 2;
+	uint8_t RightDACPTM : 3;
+	uint8_t : 1;
+	uint8_t RightDACDriver : 2;
+};
+
+// Registers 5-8 (0x05-0x08): Reserved
+
+struct OutputDriverPowerControl : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x09;
+
+	uint8_t MARPowerUp : 1;
+	uint8_t MALPowerUp : 1;
+	uint8_t LORPowerUp : 1;
+	uint8_t LOLPowerUp : 1;
+	uint8_t HPRPowerUp : 1;
+	uint8_t HPLPowerUp : 1;
+	uint8_t : 2;
+};
+
+struct CommonModeControl : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x0A;
+
+	uint8_t LDOINRange : 1;
+	enum LDOINRanges { Range_1_5V_to_1_95V = 0, Range_1_8V_to_3_6V = 1 };
+
+	uint8_t HPPoweredByLDOIN : 1;
+	uint8_t : 1;
+	uint8_t LOCommonMode : 1;
+
+	uint8_t HPCommonMode : 2;
+	enum HPCommonModes { HP_FullChip = 0b00, HP_1_25V = 0b01, HP_1_5V = 0b10, HP_1_65V = 0b11 };
+
+	uint8_t FullChipCommonMode : 1;
+	enum FullChipCommonModes { CM_0_9V = 0, CM_0_75V = 1 };
+
+	uint8_t : 1;
+};
+
+struct OverCurrentProtection : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x0B;
+
+	uint8_t PowerDownOnOverCurrent : 1;
+
+	uint8_t OverCurrentDebounce : 3;
+	enum OverCurrentDebounces {
+		Debounce_None = 0b000,
+		Debounce_8ms = 0b001,
+		Debounce_16ms = 0b010,
+		Debounce_32ms = 0b011,
+		Debounce_64ms = 0b100,
+		Debounce_128ms = 0b101,
+		Debounce_256ms = 0b110,
+		Debounce_512ms = 0b111,
+	};
+
+	uint8_t OverCurrentDetectionEnabled : 1;
+	uint8_t : 3;
+};
+
+struct HPLRoutingSelection : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x0C;
+
+	uint8_t MARtoHPL : 1;
+	uint8_t MALtoHPL : 1;
+	uint8_t IN1LtoHPL : 1;
+	uint8_t LeftDACtoHPL : 1;
+	uint8_t : 4;
+};
+
+struct HPRRoutingSelection : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x0D;
+
+	uint8_t HPLtoHPR : 1;
+	uint8_t MARtoHPR : 1;
+	uint8_t IN1RtoHPR : 1;
+	uint8_t RightDACtoHPR : 1;
+	uint8_t LeftDACNegtoHPR : 1;
+	uint8_t : 3;
+};
+
+struct LOLRoutingSelection : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x0E;
+
+	uint8_t LORtoLOL : 1;
+	uint8_t MALtoLOL : 1;
+	uint8_t : 1;
+	uint8_t LeftDACtoLOL : 1;
+	uint8_t RightDACNegtoLOL : 1;
+	uint8_t : 3;
+};
+
+struct LORRoutingSelection : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x0F;
+
+	uint8_t : 1;
+	uint8_t MARtoLOR : 1;
+	uint8_t : 1;
+	uint8_t RightDACtoLOR : 1;
+	uint8_t : 4;
+};
+
+struct HPLDriverGain : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x10;
+
+	uint8_t Gain : 6;
+	uint8_t Mute : 1;
+	uint8_t : 1;
+};
+
+struct HPRDriverGain : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x11;
+
+	uint8_t Gain : 6;
+	uint8_t Mute : 1;
+	uint8_t : 1;
+};
+
+struct LOLDriverGain : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x12;
+
+	uint8_t Gain : 6;
+	uint8_t Mute : 1;
+	uint8_t : 1;
+};
+
+struct LORDriverGain : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x13;
+
+	uint8_t Gain : 6;
+	uint8_t Mute : 1;
+	uint8_t : 1;
+};
+
+struct HeadphoneDriverStartup : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x14;
+
+	uint8_t RampResistance : 2;
+	enum RampResistances { Ramp_25k = 0b00, Ramp_6k = 0b01, Ramp_2k = 0b10 };
+
+	uint8_t PowerUpTimeConstants : 4;
+
+	uint8_t SoftRoutingStepTime : 2;
+	enum SoftRoutingStepTimes { Step_0ms = 0b00, Step_50ms = 0b01, Step_100ms = 0b10, Step_200ms = 0b11 };
+};
+
+// Register 21 (0x15): Reserved
+
+struct IN1LtoHPLVolume : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x16;
+
+	uint8_t Volume : 7;
+	uint8_t : 1;
+};
+
+struct IN1RtoHPRVolume : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x17;
+
+	uint8_t Volume : 7;
+	uint8_t : 1;
+};
+
+struct MixerAmpLeftVolume : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x18;
+
+	uint8_t Volume : 6;
+	uint8_t : 2;
+};
+
+struct MixerAmpRightVolume : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x19;
+
+	uint8_t Volume : 6;
+	uint8_t : 2;
+};
+
+// Registers 26-50 (0x1A-0x32): Reserved
+
+struct MICBIASConfiguration : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x33;
+
+	uint8_t : 3;
+	uint8_t MICBIASFromLDOIN : 1;
+
+	uint8_t MICBIASVoltage : 2;
+	enum MICBIASVoltages {
+		MICBIAS_1_04V_or_1_25V = 0b00,
+		MICBIAS_1_425V_or_1_7V = 0b01,
+		MICBIAS_2_075V_or_2_5V = 0b10,
+		MICBIAS_PowerSupply = 0b11,
+	};
+
+	uint8_t MICBIASPowerUp : 1;
+	uint8_t : 1;
+};
+
+struct LeftMICPGAPositiveRouting : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x34;
+
+	uint8_t IN1RtoLeftMICPGA : 2;
+	uint8_t IN3LtoLeftMICPGA : 2;
+	uint8_t IN2LtoLeftMICPGA : 2;
+	uint8_t IN1LtoLeftMICPGA : 2;
+	enum InputRoutings { NotRouted = 0b00, Routed_10k = 0b01, Routed_20k = 0b10, Routed_40k = 0b11 };
+};
+
+// Register 53 (0x35): Reserved
+
+struct LeftMICPGANegativeRouting : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x36;
+
+	uint8_t CM2LtoLeftMICPGA : 2;
+	uint8_t IN3RtoLeftMICPGA : 2;
+	uint8_t IN2RtoLeftMICPGA : 2;
+	uint8_t CM1LtoLeftMICPGA : 2;
+};
+
+struct RightMICPGAPositiveRouting : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x37;
+
+	uint8_t IN2LtoRightMICPGA : 2;
+	uint8_t IN3RtoRightMICPGA : 2;
+	uint8_t IN2RtoRightMICPGA : 2;
+	uint8_t IN1RtoRightMICPGA : 2;
+};
+
+// Register 56 (0x38): Reserved
+
+struct RightMICPGANegativeRouting : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x39;
+
+	uint8_t CM2RtoRightMICPGA : 2;
+	uint8_t IN3LtoRightMICPGA : 2;
+	uint8_t IN1LtoRightMICPGA : 2;
+	uint8_t CM1RtoRightMICPGA : 2;
+};
+
+struct FloatingInputConfiguration : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x3A;
+
+	uint8_t : 2;
+	uint8_t IN3RWeaklyDriven : 1;
+	uint8_t IN3LWeaklyDriven : 1;
+	uint8_t IN2RWeaklyDriven : 1;
+	uint8_t IN2LWeaklyDriven : 1;
+	uint8_t IN1RWeaklyDriven : 1;
+	uint8_t IN1LWeaklyDriven : 1;
+};
+
+struct LeftMICPGAVolume : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x3B;
+
+	uint8_t Volume : 7;
+	uint8_t GainDisabled : 1;
+};
+
+struct RightMICPGAVolume : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x3C;
+
+	uint8_t Volume : 7;
+	uint8_t GainDisabled : 1;
+};
+
+struct ADCPowerTuneConfiguration : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x3D;
+
+	uint8_t PTMConfiguration;
+	enum PTMConfigurations { PTM_R4 = 0x00, PTM_R3 = 0x64, PTM_R2 = 0xB6, PTM_R1 = 0xFF };
+};
+
+struct ADCAnalogVolumeFlag : ReadOnly {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x3E;
+
+	uint8_t RightVolumeApplied : 1;
+	uint8_t LeftVolumeApplied : 1;
+	uint8_t : 6;
+};
+
+struct DACAnalogGainFlag : ReadOnly {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x3F;
+
+	uint8_t MARVolumeApplied : 1;
+	uint8_t MALVolumeApplied : 1;
+	uint8_t IN1RtoHPRVolumeApplied : 1;
+	uint8_t IN1LtoHPLVolumeApplied : 1;
+	uint8_t LORGainApplied : 1;
+	uint8_t LOLGainApplied : 1;
+	uint8_t HPRGainApplied : 1;
+	uint8_t HPLGainApplied : 1;
+};
+
+// Registers 64-70 (0x40-0x46): Reserved
+
+struct AnalogInputQuickCharging : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x47;
+
+	uint8_t PowerUpTime : 6;
+	enum PowerUpTimes { Default = 0b000000, Time_3_1ms = 0b110001, Time_6_4ms = 0b110010, Time_1_6ms = 0b110011 };
+
+	uint8_t : 2;
+};
+
+// Registers 72-122 (0x48-0x7A): Reserved
+
+struct ReferencePowerUpConfiguration : ReadWrite {
+	static constexpr uint8_t Page = 0x01;
+	static constexpr uint8_t Address = 0x7B;
+
+	uint8_t Configuration : 3;
+	enum Configurations {
+		AutoSlow = 0b000,
+		Auto40ms = 0b001,
+		Auto80ms = 0b010,
+		Auto120ms = 0b011,
+		ForceSlow = 0b100,
+		Force40ms = 0b101,
+		Force80ms = 0b110,
+		Force120ms = 0b111,
+	};
+
+	uint8_t : 5;
+};
+
+// Registers 124-127 (0x7C-0x7F): Reserved
+
 using Registers = std::variant<PageSelect,
 							   SwReset,
 							   ClockSettingMultiplexors,
@@ -1138,6 +1539,39 @@ using Registers = std::variant<PageSelect,
 							   LeftDCMeasurementOutput3,
 							   RightDCMeasurementOutput1,
 							   RightDCMeasurementOutput2,
-							   RightDCMeasurementOutput3>;
+							   RightDCMeasurementOutput3,
+							   PowerConfiguration,
+							   LDOControl,
+							   PlaybackConfiguration1,
+							   PlaybackConfiguration2,
+							   OutputDriverPowerControl,
+							   CommonModeControl,
+							   OverCurrentProtection,
+							   HPLRoutingSelection,
+							   HPRRoutingSelection,
+							   LOLRoutingSelection,
+							   LORRoutingSelection,
+							   HPLDriverGain,
+							   HPRDriverGain,
+							   LOLDriverGain,
+							   LORDriverGain,
+							   HeadphoneDriverStartup,
+							   IN1LtoHPLVolume,
+							   IN1RtoHPRVolume,
+							   MixerAmpLeftVolume,
+							   MixerAmpRightVolume,
+							   MICBIASConfiguration,
+							   LeftMICPGAPositiveRouting,
+							   LeftMICPGANegativeRouting,
+							   RightMICPGAPositiveRouting,
+							   RightMICPGANegativeRouting,
+							   FloatingInputConfiguration,
+							   LeftMICPGAVolume,
+							   RightMICPGAVolume,
+							   ADCPowerTuneConfiguration,
+							   ADCAnalogVolumeFlag,
+							   DACAnalogGainFlag,
+							   AnalogInputQuickCharging,
+							   ReferencePowerUpConfiguration>;
 
 } // namespace mdrivlib::CodecTLV320AIC3204Register
