@@ -35,7 +35,7 @@ using namespace CodecTLV320AIC3204Register;
 
 constexpr std::array<Registers, 1> default_init{
 	{
-		Page{.page = 0},
+		PageSelect{.page = 0},
 	},
 };
 
@@ -87,7 +87,7 @@ CodecTLV320AIC3204::Error CodecTLV320AIC3204::init_registers(uint32_t sample_rat
 	// ...subsequently the device can be reset via software reset. Writing ‘1’ into Page 0, Register 1, D(0) resets the device.
 
 	HAL_Delay(2);
-	write<Page>({.page = 0});
+	write<PageSelect>({.page = 0});
 	write<SwReset>({.Reset = 1});
 	HAL_Delay(2);
 
