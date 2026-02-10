@@ -3,8 +3,6 @@
 #include "drivers/dma_registers.hh"
 #include "drivers/interrupt.hh"
 #include "drivers/interrupt_control.hh"
-#include "drivers/stm32xx.h"
-#include "drivers/system.hh"
 
 namespace mdrivlib
 {
@@ -61,24 +59,28 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_rx_sai() {
 		hsai_rx.Init.AudioMode = SAI_MODEMASTER_RX;
 		hsai_rx.Init.Synchro = SAI_ASYNCHRONOUS;
 		hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 	}
 	if (saidef_.mode == SaiConfig::TXMaster) {
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
 		hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 	}
 	if (saidef_.mode == SaiConfig::ExtSynced) {
 		// Not supported
 		hsai_rx.Init.AudioMode = SAI_MODESLAVE_RX;
 		hsai_rx.Init.Synchro = SAI_SYNCHRONOUS;
 		hsai_rx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+		hsai_rx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 	}
 
 	hsai_rx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_rx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_rx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;
 	hsai_rx.Init.AudioFrequency = saidef_.samplerate;
-	hsai_rx.Init.Mckdiv = 0; //not used
+	hsai_rx.Init.Mckdiv = 0; // calculated automatically
+	hsai_rx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_rx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_rx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_rx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
@@ -122,22 +124,28 @@ SaiTdmPeriph::Error SaiTdmPeriph::_config_tx_sai() {
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
 		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
 		hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 	}
 	if (saidef_.mode == SaiConfig::TXMaster) {
 		hsai_tx.Init.AudioMode = SAI_MODEMASTER_TX;
 		hsai_tx.Init.Synchro = SAI_ASYNCHRONOUS;
 		hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
 	}
 	if (saidef_.mode == SaiConfig::ExtSynced) {
 		// Not supported
 		hsai_tx.Init.AudioMode = SAI_MODESLAVE_TX;
+		hsai_tx.Init.Synchro = SAI_SYNCHRONOUS;
 		hsai_tx.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+		hsai_tx.Init.MckOutput = SAI_MCK_OUTPUT_DISABLE;
 	}
 
 	hsai_tx.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 	hsai_tx.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
 	hsai_tx.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;
 	hsai_tx.Init.AudioFrequency = saidef_.samplerate;
+	hsai_tx.Init.Mckdiv = 0; // calculated automatically
+	hsai_tx.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
 	hsai_tx.Init.MonoStereoMode = SAI_STEREOMODE;
 	hsai_tx.Init.CompandingMode = SAI_NOCOMPANDING;
 	hsai_tx.Init.TriState = SAI_OUTPUT_NOTRELEASED;
