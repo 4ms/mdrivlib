@@ -69,6 +69,57 @@ struct ClockSettingPLLPandRValues : ReadWrite {
 	uint8_t PLLPowerUp : 1;
 };
 
-using Registers = std::variant<PageSelect, SwReset, ClockSettingMultiplexors, ClockSettingPLLPandRValues>;
+struct ClockSettingPLLJValues : ReadWrite {
+	static constexpr uint8_t Page = 0x00;
+	static constexpr uint8_t Address = 0x06;
+
+	uint8_t PLLDividerJ : 6;
+	enum PLLDividerRs { J4 = 0b000100, J5, J6, /*...*/ J63 = 0b111111 };
+
+	uint8_t PLLPowerUp : 2;
+};
+
+struct ClockSettingPLLDValuesMSB : ReadWrite {
+	static constexpr uint8_t Page = 0x00;
+	static constexpr uint8_t Address = 0x07;
+
+	uint8_t PLLDividerDMSB : 6;
+	uint8_t : 2;
+};
+
+struct ClockSettingPLLDValuesLSB : ReadWrite {
+	static constexpr uint8_t Page = 0x00;
+	static constexpr uint8_t Address = 0x08;
+
+	uint8_t PLLDividerDLSB;
+};
+
+// Registers 9-10 (0x09-0x0A): Reserved
+
+struct ClockSettingNDACValues : ReadWrite {
+	static constexpr uint8_t Page = 0x00;
+	static constexpr uint8_t Address = 0x0B;
+
+	uint8_t NDACValue : 7;
+	uint8_t NDACPowerUp : 1;
+};
+
+struct ClockSettingMDACValues : ReadWrite {
+	static constexpr uint8_t Page = 0x00;
+	static constexpr uint8_t Address = 0x0C;
+
+	uint8_t MDACValue : 7;
+	uint8_t MDACPowerUp : 1;
+};
+
+using Registers = std::variant<PageSelect,
+							   SwReset,
+							   ClockSettingMultiplexors,
+							   ClockSettingPLLPandRValues,
+							   ClockSettingPLLJValues,
+							   ClockSettingPLLDValuesMSB,
+							   ClockSettingPLLDValuesLSB,
+							   ClockSettingNDACValues,
+							   ClockSettingMDACValues>;
 
 } // namespace mdrivlib::CodecTLV320AIC3204Register
