@@ -37,6 +37,8 @@ struct SwReset : ReadWrite {
 	uint8_t : 7;
 };
 
+// Registers 2-3: Reserved
+
 struct ClockSettingMultiplexors : ReadWrite {
 	static constexpr uint8_t Page = 0x00;
 	static constexpr uint8_t Address = 0x04;
@@ -58,8 +60,8 @@ struct ClockSettingPLLPandRValues : ReadWrite {
 	static constexpr uint8_t Page = 0x00;
 	static constexpr uint8_t Address = 0x05;
 
-	uint8_t PLLDividerR : 3;
-	enum PLLDividerRs { R1 = 0b001, R2, R3, R4 };
+	uint8_t PLLDividerR : 4;
+	enum PLLDividerRs { R1 = 0b0001, R2, R3, R4 };
 
 	uint8_t PLLDividerP : 3;
 	enum PLLDividerPs { P8 = 0b000, P1 = 0b001, P2, P3, P4, P5, P6, P7 };
