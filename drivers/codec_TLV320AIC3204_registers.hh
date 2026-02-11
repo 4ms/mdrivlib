@@ -190,6 +190,7 @@ struct AudioInterfaceSetting1 : ReadWrite {
 	uint8_t : 1;
 	uint8_t WCLKDirection : 1;
 	uint8_t BCLKDirection : 1;
+	enum Directions { Input = 0, Output = 1 };
 
 	uint8_t WordLength : 2;
 	enum WordLengths { Bits16 = 0b00, Bits20 = 0b01, Bits24 = 0b10, Bits32 = 0b11 };
@@ -1069,8 +1070,8 @@ struct LDOControl : ReadWrite {
 	static constexpr uint8_t Address = 0x02;
 
 	uint8_t AVDDLDOPowerUp : 1;
-	uint8_t AVDDLDOOverCurrent : 1;
-	uint8_t DVDDLDOOverCurrent : 1;
+	uint8_t AVDDLDOOverCurrent : 1; //Read-only
+	uint8_t DVDDLDOOverCurrent : 1; //Read-only
 	uint8_t AnalogBlocksDisabled : 1;
 
 	uint8_t AVDDLDOControl : 2;
@@ -1312,6 +1313,8 @@ struct MICBIASConfiguration : ReadWrite {
 	uint8_t : 1;
 };
 
+enum InputRoutings { NotRouted = 0b00, Routed_10k = 0b01, Routed_20k = 0b10, Routed_40k = 0b11 };
+
 struct LeftMICPGAPositiveRouting : ReadWrite {
 	static constexpr uint8_t Page = 0x01;
 	static constexpr uint8_t Address = 0x34;
@@ -1320,7 +1323,6 @@ struct LeftMICPGAPositiveRouting : ReadWrite {
 	uint8_t IN3LtoLeftMICPGA : 2;
 	uint8_t IN2LtoLeftMICPGA : 2;
 	uint8_t IN1LtoLeftMICPGA : 2;
-	enum InputRoutings { NotRouted = 0b00, Routed_10k = 0b01, Routed_20k = 0b10, Routed_40k = 0b11 };
 };
 
 // Register 53 (0x35): Reserved
