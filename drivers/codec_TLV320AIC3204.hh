@@ -1,5 +1,5 @@
 /*
- * CodecPCM3060.cc
+ * CodecTLV320AIC3204.cc
  *
  * Author: Dan Green (danngreen1@gmail.com)
  *
@@ -28,31 +28,31 @@
 
 #pragma once
 #include "codec.hh"
-#include "codec_PCM3060_registers.hh"
 #include "i2c.hh"
-#include <span>
+#include <cstdint>
 
 namespace mdrivlib
 {
 
-class CodecPCM3060 : public CodecBase {
+class CodecTLV320AIC3204 : public CodecBase {
 public:
-	CodecPCM3060(I2CPeriph &i2c, const SaiConfig &saidef);
+	CodecTLV320AIC3204(I2CPeriph &i2c, const SaiConfig &saidef);
 
 	Error init();
-	Error init(const std::span<const CodecPCM3060Register::AnyRegister> init_regs);
 	void start();
 	void stop();
+	void dump_registers();
 
 private:
 	I2CPeriph &i2c_;
-	uint32_t samplerate_;
 	Pin reset_pin_;
 
-	Error _write_all_registers(const std::span<const CodecPCM3060Register::AnyRegister> init_regs,
-							   uint32_t sample_rate);
+	// uint32_t samplerate_;
 
-	const uint8_t I2C_address;
+	Error init_registers(uint32_t sample_rate);
+
+	// Error _write_all_registers(const std::span<const CodecPCM3060Register::AnyRegister> init_regs,
+	// 						   uint32_t sample_rate);
 
 	// Returns true on success
 	template<typename Reg>
@@ -60,16 +60,20 @@ private:
 		return i2c_.write_reg(I2C_address, data) == mdrivlib::I2CPeriph::I2C_NO_ERR;
 	}
 
-	// Returns 0 if failed
+	// Returns zero-ed register value on failure
 	template<typename Reg>
 	Reg read() {
 		auto reg = i2c_.read_reg<Reg>(I2C_address);
 		return reg.value_or(Reg::make(0));
 	}
 
+	// Returns nullopt on failure
 	template<typename Reg>
 	std::optional<Reg> try_read() {
 		return i2c_.read_reg<Reg>(I2C_address);
 	}
+
+	const uint8_t I2C_address;
+	static inline constexpr auto REGISTER_ADDR_SIZE = I2C_MEMADD_SIZE_8BIT;
 };
 } // namespace mdrivlib

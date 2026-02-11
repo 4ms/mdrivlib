@@ -48,6 +48,8 @@ struct DMA_Config {
 	DMA_TypeDef *DMAx;
 #if defined(DMA1_Stream1)
 	DMA_Stream_TypeDef *stream;
+#elif defined(DMA1_Channel1)
+	unsigned request;
 #endif
 	uint32_t channel;
 	IRQn_Type IRQn;
@@ -133,6 +135,16 @@ constexpr volatile uint32_t *dma_get_ISR_reg(T) {
 template<typename T>
 constexpr volatile uint32_t *dma_get_IFCR_reg(T) {
 	return &(DMA1->IFCR);
+}
+
+#elif defined(DMA1_Channel1) && defined(DMA2_Channel1)
+
+inline volatile uint32_t *dma_get_ISR_reg(DMA_Channel_TypeDef *chan) {
+	return (chan >= DMA2_Channel1) ? &(DMA2->ISR) : &(DMA1->ISR);
+}
+
+inline volatile uint32_t *dma_get_IFCR_reg(DMA_Channel_TypeDef *chan) {
+	return (chan >= DMA2_Channel1) ? &(DMA2->IFCR) : &(DMA1->IFCR);
 }
 
 #endif
@@ -357,7 +369,7 @@ inline constexpr uint32_t DMA3StreamBase[8] = {DMA3_Stream0_BASE,
 											   DMA3_Stream7_BASE};
 #endif
 
-#elif defined(STM32F030x6)
+#elif defined(STM32F030x6) || defined(DMA1_Channel1)
 
 template<typename T>
 constexpr uint32_t dma_get_TC_flag_index(T channel) {

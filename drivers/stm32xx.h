@@ -15,6 +15,9 @@
 #elif defined(STM32F0)
 #include "stm32f0xx.h"
 
+#elif defined(STM32G4)
+#include "stm32g4xx_hal.h"
+
 #elif defined(STM32MP13)
 #include "stm32mp13xx.h"
 
@@ -32,7 +35,7 @@
 #include "stubs/stm32/cmsis_periphs.hh"
 #else
 #error                                                                                                                 \
-	"Please #define STM32F0, STM32F4, STM32F7, STM32H7, or STM32MP1 in a header or Makefile. Other targets are not yet supported."
+	"Please #define STM32F0, STM32F4, STM32F7, STM32G4, STM32H7, STM32MP13 or STM32MP1 in a header or Makefile. Other targets are not yet supported."
 #endif
 
 // Peripheral names not defined in CMSIS header will be set to nullptr or 0

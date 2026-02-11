@@ -1,0 +1,1509 @@
+DecimalPage# DecimalReg# HexPage# HexReg# DESCRIPTION
+-----------------------------------------------------
+0 0 0x00 0x00 Page Select Register
+0 1 0x00 0x01 Software Reset Register
+0 2 0x00 0x02 Reserved Register
+0 3 0x00 0x03 Reserved Register
+0 4 0x00 0x04 Clock Setting Register 1, Multiplexers
+0 5 0x00 0x05 Clock Setting Register 2, PLL P&R Values
+0 6 0x00 0x06 Clock Setting Register 3, PLL J Values
+0 7 0x00 0x07 Clock Setting Register 4, PLL D Values (MSB)
+0 8 0x00 0x08 Clock Setting Register 5, PLL D Values (LSB)
+0 9-10 0x00 0x09-0x0A Reserved Register
+0 11 0x00 0x0B Clock Setting Register 6, NDAC Values
+0 12 0x00 0x0C Clock Setting Register 7, MDAC Values
+0 13 0x00 0x0D DAC OSR Setting Register 1, MSB Value
+0 14 0x00 0x0E DAC OSR Setting Register 2, LSB Value
+0 15 0x00 0x0F Reserved Register
+0 16 0x00 0x10 Reserved Register
+0 17 0x00 0x11 Reserved Register
+0 18 0x00 0x12 Clock Setting Register 8, NADC Values
+0 19 0x00 0x13 Clock Setting Register 9, MADC Values
+0 20 0x00 0x14 ADC Oversampling (AOSR) Register
+0 21 0x00 0x15 Reserved Register
+0 22 0x00 0x16 Reserved Register
+0 23 0x00 0x17 Reserved Register
+0 24 0x00 0x18 Reserved Register
+0 25 0x00 0x19 Clock Setting Register 10, Multiplexers
+0 26 0x00 0x1A Clock Setting Register 11, CLKOUT M divider value
+0 27 0x00 0x1B Audio Interface Setting Register 1
+0 28 0x00 0x1C Audio Interface Setting Register 2, Data offset setting
+0 29 0x00 0x1D Audio Interface Setting Register 3
+0 30 0x00 0x1E Clock Setting Register 12, BCLK N Divider
+0 31 0x00 0x1F Audio Interface Setting Register 4, Secondary Audio Interface
+0 32 0x00 0x20 Audio Interface Setting Register 5
+0 33 0x00 0x21 Audio Interface Setting Register 6
+0 34 0x00 0x22 Digital Interface Misc. Setting Register
+0 35 0x00 0x23 Reserved Register
+0 36 0x00 0x24 ADC Flag Register
+0 37 0x00 0x25 DAC Flag Register 1
+0 38 0x00 0x26 DAC Flag Register 2
+0 39-41 0x00 0x27-0x29 Reserved Register
+0 42 0x00 0x2A Sticky Flag Register 1
+0 43 0x00 0x2B Interrupt Flag Register 1
+0 44 0x00 0x2C Sticky Flag Register 2
+0 45 0x00 0x2D Sticky Flag Register 3
+0 46 0x00 0x2E Interrupt Flag Register 2
+0 47 0x00 0x2F Interrupt Flag Register 3
+0 48 0x00 0x30 INT1 Interrupt Control Register
+0 49 0x00 0x31 INT2 Interrupt Control Register
+0 50-51 0x00 0x32-0x33 Reserved Register
+0 52 0x00 0x34 GPIO/MFP5 Control Register
+0 53 0x00 0x35 DOUT/MFP2 Function Control Register
+0 54 0x00 0x36 DIN/MFP1 Function Control Register
+0 55 0x00 0x37 MISO/MFP4 Function Control Register
+0 56 0x00 0x38 SCLK/MFP3 Function Control Register
+0 57-59 0x00 0x39-0x3B Reserved Registers
+0 60 0x00 0x3C DAC Signal Processing Block Control Register
+0 61 0x00 0x3D ADC Signal Processing Block Control Register
+0 62 0x00 0x3E Reserved Register
+0 63 0x00 0x3F DAC Channel Setup Register 1
+0 64 0x00 0x40 DAC Channel Setup Register 2
+0 65 0x00 0x41 Left DAC Channel Digital Volume Control Register
+0 66 0x00 0x42 Right DAC Channel Digital Volume Control Register
+0 67 0x00 0x43 Headset Detection Configuration Register
+0 68 0x00 0x44 DRC Control Register 1
+0 69 0x00 0x45 DRC Control Register 2
+0 70 0x00 0x46 DRC Control Register 3
+0 71 0x00 0x47 Beep Generator Register 1
+0 72 0x00 0x48 Beep Generator Register 2
+0 73 0x00 0x49 Beep Generator Register 3
+0 74 0x00 0x4A Beep Generator Register 4
+0 75 0x00 0x4B Beep Generator Register 5
+0 76 0x00 0x4C Beep Generator Register 6
+0 77 0x00 0x4D Beep Generator Register 7
+0 78 0x00 0x4E Beep Generator Register 8
+0 79 0x00 0x4F Beep Generator Register 9
+0 80 0x00 0x50 Reserved Register
+0 81 0x00 0x51 ADC Channel Setup Register
+0 82 0x00 0x52 ADC Fine Gain Adjust Register
+0 83 0x00 0x53 Left ADC Channel Volume Control Register
+0 84 0x00 0x54 Right ADC Channel Volume Control Register
+0 85 0x00 0x55 ADC Phase Adjust Register
+0 86 0x00 0x56 Left Channel AGC Control Register 1
+0 87 0x00 0x57 Left Channel AGC Control Register 2
+0 88 0x00 0x58 Left Channel AGC Control Register 3
+0 89 0x00 0x59 Left Channel AGC Control Register 4
+0 90 0x00 0x5A Left Channel AGC Control Register 5
+0 91 0x00 0x5B Left Channel AGC Control Register 6
+0 92 0x00 0x5C Left Channel AGC Control Register 7
+0 93 0x00 0x5D Left Channel AGC Control Register 8
+0 94 0x00 0x5E Right Channel AGC Control Register 1
+0 95 0x00 0x5F Right Channel AGC Control Register 2
+0 96 0x00 0x60 Right Channel AGC Control Register 3
+0 97 0x00 0x61 Right Channel AGC Control Register 4
+0 98 0x00 0x62 Right Channel AGC Control Register 5
+0 99 0x00 0x63 Right Channel AGC Control Register 6
+0 100 0x00 0x64 Right Channel AGC Control Register 7
+0 101 0x00 0x65 Right Channel AGC Control Register 8
+0 102 0x00 0x66 DC Measurement Register 1
+0 103 0x00 0x67 DC Measurement Register 2
+0 104 0x00 0x68 Left Channel DC Measurement Output Register 1
+0 105 0x00 0x69 Left Channel DC Measurement Output Register 2
+0 106 0x00 0x6A Left Channel DC Measurement Output Register 3
+0 107 0x00 0x6B Right Channel DC Measurement Output Register 1
+0 108 0x00 0x6C Right Channel DC Measurement Output Register 2
+0 109 0x00 0x6D Right Channel DC Measurement Output Register 3
+0 110-127 0x00 0x6E-0x7F Reserved Register
+1 0 0x01 0x00 Page Select Register
+1 1 0x01 0x01 Power Configuration Register
+1 2 0x01 0x02 LDO Control Register
+1 3 0x01 0x03 Playback Configuration Register 1
+1 4 0x01 0x04 Playback Configuration Register 2
+1 5-8 0x01 0x05-0x08 Reserved Register
+1 9 0x01 0x09 Output Driver Power Control Register
+1 10 0x01 0x0A Common Mode Control Register
+1 11 0x01 0x0B Over Current Protection Configuration Register
+1 12 0x01 0x0C HPL Routing Selection Register
+1 13 0x01 0x0D HPR Routing Selection Register
+1 14 0x01 0x0E LOL Routing Selection Register
+1 15 0x01 0x0F LOR Routing Selection Register
+1 16 0x01 0x10 HPL Driver Gain Setting Register
+1 17 0x01 0x11 HPR Driver Gain Setting Register
+1 18 0x01 0x12 LOL Driver Gain Setting Register
+1 19 0x01 0x13 LOR Driver Gain Setting Register
+1 20 0x01 0x14 Headphone Driver Startup Control Register
+1 21 0x01 0x15 Reserved Register
+1 22 0x01 0x16 IN1L to HPL Volume Control Register
+1 23 0x01 0x17 IN1R to HPR Volume Control Register
+1 24 0x01 0x18 Mixer Amplifier Left Volume Control Register
+1 25 0x01 0x19 Mixer Amplifier Right Volume Control Register
+1 26-50 0x01 0x1A-0x32 Reserved Register
+1 51 0x01 0x33 MICBIAS Configuration Register
+1 52 0x01 0x34 Left MICPGA Positive Terminal Input Routing Configuration Register
+1 53 0x01 0x35 Reserved Register
+1 54 0x01 0x36 Left MICPGA Negative Terminal Input Routing Configuration Register
+1 55 0x01 0x37 Right MICPGA Positive Terminal Input Routing Configuration Register
+1 56 0x01 0x38 Reserved Register
+1 57 0x01 0x39 Right MICPGA Negative Terminal Input Routing Configuration Register
+1 58 0x01 0x3A Floating Input Configuration Register
+1 59 0x01 0x3B Left MICPGA Volume Control Register
+1 60 0x01 0x3C Right MICPGA Volume Control Register
+1 61 0x01 0x3D ADC Power Tune Configuration Register
+1 62 0x01 0x3E ADC Analog Volume Control Flag Register
+1 63 0x01 0x3F DAC Analog Gain Control Flag Register
+1 64-70 0x01 0x40-0x46 Reserved Register
+1 71 0x01 0x47 Analog Input Quick Charging Configuration Register
+1 72-122 0x01 0x48-0x7A Reserved Register
+1 123 0x01 0x7B Reference Power-up Configuration Register
+1 124-127 0x01 0x7C-0x7F Reserved Register
+8 0 0x08 0x00 Page Select Register
+8 1 0x08 0x01 ADC Adaptive Filter Configuration Register
+8 2-7 0x08 0x02-0x07 Reserved
+8 8-127 0x08 0x08-0x7F ADC Coefficients Buffer-A C(0:29)
+9-16 0 0x09-0x10 0x00 Page Select Register
+9-16 1-7 0x09-0x10 0x01-0x07 Reserved
+9-16 8-127 0x09-0x10 0x08-0x7F ADC Coefficients Buffer-A C(30:255)
+26-34 0 0x1A-0x22 0x00 Page Select Register
+26-34 1-7 0x1A-0x22 0x01-0x07 Reserved.
+26-34 8-127 0x1A-0x22 0x08-0x7F ADC Coefficients Buffer-B C(0:255)
+44 0 0x2C 0x00 Page Select Register
+44 1 0x2C 0x01 DAC Adaptive Filter Configuration Register
+44 2-7 0x2C 0x02-0x07 Reserved
+44 8-127 0x2C 0x08-0x7F DAC Coefficients Buffer-A C(0:29)
+45-52 0 0x2D-0x34 0x00 Page Select Register
+45-52 1-7 0x2D-0x34 0x01-0x07 Reserved.
+45-52 8-127 0x2D-0x34 0x08-0x7F DAC Coefficients Buffer-A C(30:255)
+62-70 0 0x3E-0x46 0x00 Page Select Register
+62-70 1-7 0x3E-0x46 0x01-0x07 Reserved.
+62-70 8-127 0x3E-0x46 0x08-0x7F DAC Coefficients Buffer-B C(0:255)
+
+
+-------------------------------------------------------------
+|  LEGEND:
+|  
+|  Da-Db R/W yyyy yyyy Description
+|  
+|  Da-Db: Bit or bit range
+|  R/W: read and/or write (R, W, R/W)
+|  yyyy yyyy: Reset Value
+|  Description: a text description of the bit(s) function
+|  
+|  Lines below this contain possible values for the 
+|  bits and their meaning
+-------------------------------------------------------------
+
+5.2 Page 0 Registers
+
+5.2.1 Page 0 / Register 0: Page Select Register - 0x00 / 0x00 (P0_R0)
+D7-D0 R/W 0000 0000 Page Select Register
+0-255: Selects the Register Page for next read or write command.
+
+5.2.2 Page 0 / Register 1: Software Reset Register - 0x00 / 0x01 (P0_R1)
+D7-D1 R 0000 000 Reserved, Write only default values
+D0 W 0 Self clearing software reset bit
+0: Don't care
+1: Self clearing software reset
+
+5.2.3 Page 0 / Register 2: Reserved Register - 0x00 / 0x02 (P0_R2)
+D7-D0 R 0XXX 0XXX Reserved, Write only default values
+
+5.2.4 Page 0 / Register 3: Reserved Register - 0x00 / 0x03 (P0_R3)
+D7-D0 R 0000 0000 Reserved, Write only default values to this register
+
+5.2.5 Page 0 / Register 4: Clock Setting Register 1, Multiplexers - 0x00 / 0x04 (P0_R4)
+D7 R 0 Reserved, Write only default values
+D6 R/W 0 Select PLL Range
+0: Low PLL Clock Range
+1: High PLL Clock Range
+D5-D4 R 00 Reserved, Write only default values
+D3-D2 R/W 00 Select PLL Input Clock
+00: MCLK pin is input to PLL
+01: BCLK pin is input to PLL
+10: GPIO pin is input to PLL
+11: DIN pin is input to PLL
+D1-D0 R/W 00 Select CODEC_CLKIN
+00: MCLK pin is CODEC_CLKIN
+01: BCLK pin is CODEC_CLKIN
+10: GPIO pin is CODEC_CLKIN
+11: PLL Clock is CODEC_CLKIN
+
+5.2.6 Page 0 / Register 5: Clock Setting Register 2, PLL P and R Values - 0x00 / 0x05 (P0_R5)
+D7 R/W 0 PLL Power Up
+0: PLL is powered down
+1: PLL is powered up
+D6-D4 R/W 001 PLL divider P Value
+000: P = 8
+001: P = 1
+010: P = 2
+…
+110: P = 6
+111: P = 7
+D3-D0 R/W 0001 PLL divider R Value
+000: Reserved, do not use
+001: R = 1
+010: R = 2
+011: R = 3
+100: R = 4
+101…111: Reserved, do not use
+
+5.2.7 Page 0 / Register 6: Clock Setting Register 3, PLL J Values - 0x00 / 0x06 (P0_R6)
+D7-D6 R 00 Reserved. Write only default values
+D5-D0 R/W 00 0100 PLL divider J value
+00 0000…00 0011: Do not use
+00 0100: J = 4
+00 0101: J = 5
+…
+11 1110: J = 62
+11 1111: J = 63
+
+5.2.8 Page 0 / Register 7: Clock Setting Register 4, PLL D Values (MSB) - 0x00 / 0x07 (P0_R7)
+D7-D6 R 00 Reserved. Write only default values
+D5-D0 R/W 00 0000 PLL divider D value (MSB)
+PLL divider D value(MSB) and PLL divider D value(LSB)
+00 0000 0000 0000: D = 0000
+00 0000 0000 0001: D = 0001
+…
+10 0111 0000 1110: D = 9998
+10 0111 0000 1111: D = 9999
+10 0111 0001 0000…11 1111 1111 1111: Do not use
+Note: This register will be updated only when the Page-0, Reg-8 is written immediately after Page-
+0, Reg-7
+
+5.2.9 Page 0 / Register 8: Clock Setting Register 5, PLL D Values (LSB) - 0x00 / 0x08 (P0_R8)
+D7-D0 R/W 0000 0000 PLL divider D value (LSB)
+PLL divider D value(MSB) and PLL divider D value(LSB)
+00 0000 0000 0000: D = 0000
+00 0000 0000 0001: D = 0001
+…
+10 0111 0000 1110: D = 9998
+10 0111 0000 1111: D = 9999
+10 0111 0001 0000…11 1111 1111 1111: Do not use
+Note: Page-0, Reg-8 should be written immediately after Page-0, Reg-7
+
+5.2.10 Page 0 / Register 9-10: Reserved Register - 0x00 / 0x09-0x0A (P0_R9-10)
+D7-D0 R 0000 0000 Reserved, Write only default values.
+
+5.2.11 Page 0 / Register 11: Clock Setting Register 6, NDAC Values - 0x00 / 0x0B (P0_R11)
+D7 R/W 0 NDAC Divider Power Control
+0: NDAC divider powered down
+1: NDAC divider powered up
+D6-D0 R/W 000 0001 NDAC Value
+000 0000: NDAC = 128
+000 0001: NDAC = 1
+000 0010: NDAC = 2
+…
+111 1110: NDAC = 126
+111 1111: NDAC = 127
+Note: Please check the clock frequency requirements in the Overview section
+
+5.2.12 Page 0 / Register 12: Clock Setting Register 7, MDAC Values - 0x00 / 0x0C (P0_R12)
+D7 R/W 0 MDAC Divider Power Control
+0: MDAC divider powered down
+1: MDAC divider powered up
+D6-D0 R/W 000 0001 MDAC Value
+000 0000: MDAC = 128
+000 0001: MDAC = 1
+000 0010: MDAC = 2
+…
+111 1110: MDAC = 126
+111 1111: MDAC = 127
+Note: Please check the clock frequency requirements in the Overview section
+
+5.2.13 Page 0 / Register 13: DAC OSR Setting Register 1, MSB Value - 0x00 / 0x0D (P0_R13)
+D7-D2 R 0000 00 Reserved. Write only default values
+D1-D0 R/W 00 DAC OSR (DOSR) Setting
+DAC OSR(MSB) and DAC OSR(LSB)
+00 0000 0000: DOSR = 1024
+00 0000 0001: Reserved. Do not use
+00 0000 0010: DOSR = 2
+…
+11 1111 1110: DOSR = 1022
+11 1111 1111: Reserved. Do not use
+Note: This register is updated when Page-0, Reg-14 is written to immediately after Page-0, Reg-13
+Note: DOSR should be a multiple of 2 while using DAC Filter Type A, Multiple of 4 while using
+DAC Filter Type B and Multiple of 8 while using DAC Filter Type C
+
+5.2.14 Page 0 / Register 14: DAC OSR Setting Register 2, LSB Value - 0x00 / 0x0E (P0_R14)
+D7-D0 R/W 1000 0000 DAC OSR (DOSR) Setting
+DAC OSR(MSB) and DAC OSR(LSB)
+00 0000 0000: DOSR = 1024
+00 0000 0001: Reserved. Do not use
+00 0000 0010: DOSR = 2
+…
+11 1111 1110: DOSR = 1022
+11 1111 1111: Reserved. Do not use
+Note: This register should be written immediately after Page-0, Reg-13
+Note: DOSR should be a multiple of 2 while using DAC Filter Type A, Multiple of 4 while using
+DAC Filter Type B and Multiple of 8 while using DAC Filter Type C
+
+5.2.15 Page 0 / Register 15: Reserved Register - 0x00 / 0x0F (P0_R15)
+D7-D0 R 0000 0010 Reserved. Write only default value
+
+5.2.16 Page 0 / Register 16: Reserved Register - 0x00 / 0x10 (P0_R16)
+D7-D0 R/W 0000 0000 Reserved. Write only default value
+
+5.2.17 Page 0 / Register 17: Reserved Register - 0x00 / 0x11 (P0_R17)
+D7-D0 R 0000 1000 Reserved. Write only default values
+
+5.2.18 Page 0 / Register 18: Clock Setting Register 8, NADC Values - 0x00 / 0x12 (P0_R18)
+D7 R/W 0 NADC Clock Divider Power Control
+0: NADC divider powered down, ADC_CLK is same as DAC_CLK
+1: NADC divider powered up
+D6-D0 R/W 000 0001 NADC Value
+000 0000: NADC=128
+000 0001: NADC=1
+…
+111 1110: NADC=126
+111 1111: NADC=127
+Note: Please check the clock frequency requirements in the application overview section
+
+5.2.19 Page 0 / Register 19: Clock Setting Register 9, MADC Values - 0x00 / 0x13 (P0_R19)
+D7 R/W 0 MADC Clock Divider Power Control
+0: MADC divider powered down, ADC_MOD_CLK is same as DAC_MOD_CLK
+1: MADC divider powered up
+D6-D0 R/W 000 0001 MADC Value
+000 0000: MADC=128
+000 0001: MADC=1
+…
+111 1110: MADC=126
+111 1111: MADC=127
+Note: Please check the clock frequency requirements in the application overview section
+
+5.2.20 Page 0 / Register 20: ADC Oversampling (AOSR) Register - 0x00 / 0x14 (P0_R20)
+D7-D0 R/W 1000 0000 ADC Oversampling Value
+0000 0000: ADC AOSR = 256
+0000 0001-0001 1111: Reserved. Do not use
+0010 0000: ADC AOSR = 32 (Use with PRB_R13 to PRB_R18, ADC Filter Type C)
+0010 0001-0011 1111: Reserved.Do not use
+0100 0000: AOSR = 64 (Use with PRB_R1 to PRB_R12, ADC Filter Type A or B)
+0100 0001-0111 1111: Reserved. Do not use
+1000 0000: AOSR = 128(Use with PRB_R1 to PRB_R6, ADC Filter Type A)
+1000 0001-1111 1111: Reserved. Do not use
+
+5.2.21 Page 0 / Register 21: Reserved Register - 0x00 / 0x15 (P0_R21)
+D7-D0 R 0000 0001 Reserved. Write only default values
+
+5.2.22 Page 0 / Register 22: Reserved Register - 0x00 / 0x16 (P0_R22)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.23 Page 0 / Register 23: Reserved Register - 0x00 / 0x17 (P0_R23)
+D7-D0 R 0000 0100 Reserved. Write only default values
+
+5.2.24 Page 0 / Register 24: Reserved Register - 0x00 / 0x18 (P0_R24)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.25 Page 0 / Register 25: Clock Setting Register 10, Multiplexers - 0x00 / 0x19 (P0_R25)
+D7-D3 R 0000 0 Reserved. Write only default values
+D2-D0 R/W 000 CDIV_CLKIN Clock Selection
+000: CDIV_CLKIN= MCLK
+001: CDIV_CLKIN= BCLK
+010: CDIV_CLKIN=DIN
+011: CDIV_CLKIN=PLL_CLK
+100: CDIV_CLKIN=DAC_CLK
+101: CDIV_CLKIN=DAC_MOD_CLK
+110: CDIV_CLKIN=ADC_CLK
+111: CDIV_CLKIN=ADC_MOD_CLK
+
+5.2.26 Page 0 / Register 26: Clock Setting Register 11, CLKOUT M divider value - 0x00 / 0x1A
+(P0_R26)
+D7 R/W 0 CLKOUT M divider power control
+0: CLKOUT M divider powered down
+1: CLKOUT M divider powered up
+D6-D0 R/W 000 0001 CLKOUT M divider value
+000 0000: CLKOUT M divider = 128
+000 0001: CLKOUT M divider = 1
+000 0010: CLKOUT M divider = 2
+…
+111 1110: CLKOUT M divider = 126
+111 1111: CLKOUT M divider = 127
+Note: Please check the clock frequency requirements in the application overview section
+
+5.2.27 Page 0 / Register 27: Audio Interface Setting Register 1 - 0x00 / 0x1B (P0_R27)
+D7-D6 R/W 00 Audio Interface Selection
+00: Audio Interface = I2S
+01: Audio Interface = DSP
+10: Audio Interface = RJF
+11: Audio Interface = LJF
+D5-D4 R/W 00 Audio Data Word length
+00: Data Word length = 16 bits
+01: Data Word length = 20 bits
+10: Data Word length = 24 bits
+11: Data Word length = 32 bits
+D3 R/W 0 BCLK Direction Control
+0: BCLK is input to the device
+1: BCLK is output from the device
+D2 R/W 0 WCLK Direction Control
+0: WCLK is input to the device
+1: WCLK is output from the device
+D1 R 0 Reserved. Write only default value
+D0 R/W 0 DOUT High Impendance Output Control
+0: DOUT will not be high impedance while Audio Interface is active
+1: DOUT will be high impedance after data has been transferred
+
+5.2.28 Page 0 / Register 28: Audio Interface Setting Register 2, Data offset setting - 0x00 /
+0x1C (P0_R28)
+D7-D0 R/W 0000 0000 Data Offset Value
+0000 0000: Data Offset = 0 BCLKs
+0000 0001: Data Offset = 1 BCLKs
+…
+1111 1110: Data Offset = 254 BCLKs
+1111 1111: Data Offset = 255 BCLKs
+
+5.2.29 Page 0 / Register 29: Audio Interface Setting Register 3 - 0x00 / 0x1D (P0_R29)
+D7-D6 R 00 Reserved. Write only default values
+D5 R/W 0 Loopback control
+0: No Loopback
+1: Audio Data in is routed to Audio Data out. (Works only when WCLK is configured as input.)
+D4 R/W 0 Loopback control
+0: No Loopback
+1: Stereo ADC output is routed to Stereo DAC input
+D3 R/W 0 Audio Bit Clock Polarity Control
+0: Default Bit Clock polarity
+1: Bit Clock is inverted w.r.t. default polarity
+D2 R/W 0 Primary BCLK and Primary WCLK Power control
+0: Priamry BCLK and Primary WCLK buffers are powered down when the codec is powered down
+1: Primary BCLK and Primary WCLK buffers are powered up when they are used in clock
+generation even when the codec is powered down
+D1-D0 R/W 00 BDIV_CLKIN Multiplexer Control
+00: BDIV_CLKIN = DAC_CLK
+01: BDIV_CLKIN = DAC_MOD_CLK
+10: BDIV_CLKIN = ADC_CLK
+11: BDIV_CLKIN = ADC_MOD_CLK
+
+5.2.30 Page 0 / Register 30: Clock Setting Register 12, BCLK N Divider - 0x00 / 0x1E (P0_R30)
+D7 R/W 0 BCLK N Divider Power Control
+0: BCLK N divider powered down
+1: BCLK N divider powered up
+D6-D0 R/W 000 0001 BCLK N Divider value
+0000 0000: BCLK N divider = 128
+0000 0001: BCLK N divider = 1
+…
+1111 1110: BCLK N divider = 126
+1111 1111: BCLK N divider = 127
+
+5.2.31 Page 0 / Register 31: Audio Interface Setting Register 4, Secondary Audio Interface -
+0x00 / 0x1F (P0_R31)
+D7 R 0 Reserved. Write only default values
+D6-D5 R/W 00 Secondary Bit Clock Multiplexer
+00: Secondary Bit Clock = GPIO
+01: Secondary Bit Clock = SCLK
+10: Secondary Bit Clock = MISO
+11: Secondary Bit Clock = DOUT
+D4-D3 R/W 00 Secondary Word Clock Multiplexer
+00: Secondary Word Clock = GPIO
+01: Secondary Word Clock = SCLK
+10: Secondary Word Clock = MISO
+11: Secondary Word Clock = DOUT
+D2-D1 R/W 00 ADC Word Clock Multiplexer
+00: ADC Word Clock = GPIO
+01: ADC Word Clock = SCLK
+10: ADC Word Clock = MISO
+11: Do not use
+D0 R/W 0 Secondary Data Input Multiplexer
+0: Secondary Data Input = GPIO
+1: Secondary Data Input = SCLK
+
+5.2.32 Page 0 / Register 32: Audio Interface Setting Register 5 - 0x00 / 0x20 (P0_R32)
+D7-D4 R 0000 Reserved. Write only default values
+D3 R/W 0 Primary / Secondary Bit Clock Control
+0: Primary Bit Clock(BCLK) is used for Audio Interface and Clocking
+1: Secondary Bit Clock is used for Audio Interface and Clocking
+D2 R/W 0 Primary / Secondary Word Clock Control
+0: Primary Word Clock(WCLK) is used for Audio Interface
+1: Secondary Word Clock is used for Audio Interface
+D1 R/W 0 ADC Word Clock Control
+0: ADC Word Clock is same as DAC Word Clock
+1: ADC Word Clock is Secondary ADC Word Clock
+D0 R/W 0 Audio Data In Control
+0: DIN is used for Audio Data In
+1: Secondary Data In is used for Audio Data In
+
+5.2.33 Page 0 / Register 33: Audio Interface Setting Register 6 - 0x00 / 0x21 (P0_R33)
+D7 R/W 0 BCLK Output Control
+0: BCLK Output = Generated Primary Bit Clock
+1: BCLK Output = Secondary Bit Clock Input
+D6 R/W 0 Secondary Bit Clock Output Control
+0: Secondary Bit Clock = BCLK input
+1: Secondary Bit Clock = Generated Primary Bit Clock
+D5-D4 R/W 00 WCLK Output Control
+00: WCLK Output = Generated DAC_FS
+01: WCLK Output = Generated ADC_FS
+10: WCLK Output = Secondary Word Clock Input
+11: Reserved. Do not use
+D3-D2 R/W 00 Secondary Word Clock Output Control
+00: Secondary Word Clock output = WCLK input
+01: Secondary Word Clock output = Generated DAC_FS
+10: Secondary Word Clock output = Generated ADC_FS
+11: Reserved. Do not use
+D1 R/W 0 Primary Data Out output control
+0: DOUT output = Data Output from Serial Interface
+1: DOUT output = Secondary Data Input (Loopback)
+D0 R/W 0 Secondary Data Out output control
+0: Secondary Data Output = DIN input (Loopback)
+1: Secondary Data Output = Data output from Serial Interface
+
+5.2.34 Page 0 / Register 34: Digital Interface Misc. Setting Register - 0x00 / 0x22 (P0_R34)
+D7 R 0 Reserved. Write only default value
+D6 R 0 Reserved. Write only default value
+D5 R/W 0 I2C General Call Address Configuration
+0: I2C General Call Address will be ignored
+1: I2C General Call Address accepted
+D4-D0 R 0 0000 Reserved. Write only default values
+
+5.2.35 Page 0 / Register 35: Reserved Register - 0x00 / 0x23 (P0_R35)
+D7-D0 R 0000 0000 Reserved. Write only default value
+
+5.2.36 Page 0 / Register 36: ADC Flag Register - 0x00 / 0x24 (P0_R36)
+D7 R 0 Left ADC PGA Status Flag
+0: Gain Applied in Left ADC PGA is not equal to Programmed Gain in Control Register
+1: Gain Applied in Left ADC PGA is equal to Programmed Gain in Control Register
+D6 R 0 Left ADC Power Status Flag
+0: Left ADC Powered Down
+1: Left ADC Powered Up
+D5 R 0 Left AGC Gain Status. This sticky flag will self clear on reading
+0: Gain in Left AGC is not saturated
+1: Gain in Left ADC is equal to maximum allowed gain in Left AGC
+D4 R 0 Reserved. Write only default values
+D3 R 0 Right ADC PGA Status Flag
+0: Gain Applied in Right ADC PGA is not equal to Programmed Gain in Control Register
+1: Gain Applied in Right ADC PGA is equal to Programmed Gain in Control Register
+D2 R 0 Right ADC Power Status Flag
+0: Right ADC Powered Down
+1: Right ADC Powered Up
+D1 R 0 Right AGC Gain Status. This sticky flag will self clear on reading
+0: Gain in Right AGC is not saturated
+1: Gain in Right ADC is equal to maximum allowed gain in Right AGC
+D0 R 0 Reserved. Write only default values
+
+5.2.37 Page 0 / Register 37: DAC Flag Register 1 - 0x00 / 0x25 (P0_R37)
+D7 R 0 Left DAC Power Status Flag
+0: Left DAC Powered Down
+1: Left DAC Powered Up
+D6 R 0 Left Line Output Driver(LOL) Power Status Flag
+0: LOL Powered Down
+1: LOL Powered Up
+D5 R 0 Left Headphone Driver (HPL) Power Status Flag
+0: HPL Powered Down
+1: HPL Powered Up
+D4 R 0 Reserved. Write only default values
+D3 R 0 Right DAC Power Status Flag
+0: Right DAC Powered Down
+1: Right DAC Powered Up
+D2 R 0 Right Line Output Driver(LOR) Power Status Flag
+0: LOR Powered Down
+1: LOR Powered Up
+D1 R 0 Right Headphone Driver (HPR) Power Status Flag
+0: HPR Powered Down
+1: HPR Powered Up
+D0 R 0 Reserved. Write only default values
+
+5.2.38 Page 0 / Register 38: DAC Flag Register 2 - 0x00 / 0x26 (P0_R38)
+D7-D5 R 000 Reserved. Write only default values
+D4 R 0 Left DAC PGA Status Flag
+0: Gain applied in Left DAC PGA is not equal to Gain programmed in Control Register
+1: Gain applied in Left DAC PGA is equal to Gain programmed in Control Register
+D3-D1 R 000 Reserved. Write only default values
+D0 R 0 Right DAC PGA Status Flag
+0: Gain applied in Right DAC PGA is not equal to Gain programmed in Control Register
+1: Gain applied in Right DAC PGA is equal to Gain programmed in Control Register
+
+5.2.39 Page 0 / Register 39-41: Reserved Register - 0x00 / 0x27-0x29 (P0_R39-41)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.40 Page 0 / Register 42: Sticky Flag Register 1 - 0x00 / 0x2A (P0_R42)
+D7 R 0 Left DAC Overflow Status. This sticky flag will self clear on read
+0: No overflow in Left DAC
+1: Overflow has happened in Left DAC since last read of this register
+D6 R 0 Right DAC Overflow Status. This sticky flag will self clear on read
+0: No overflow in Right DAC
+1: Overflow has happened in Right DAC since last read of this register
+D5-D4 R 00 Reserved. Write only default values
+D3 R 0 Left ADC Overflow Status. This sticky flag will self clear on read
+0: No overflow in Left ADC
+1: Overflow has happened in Left ADC since last read of this register
+D2 R 0 Right ADC Overflow Status. This sticky flag will self clear on read
+0: No overflow in Right ADC
+1: Overflow has happened in Right ADC since last read of this register
+D1-D0 R 00 Reserved. Write only default values
+
+5.2.41 Page 0 / Register 43: Interrupt Flag Register 1 - 0x00 / 0x2B (P0_R43)
+D7 R 0 Left DAC Overflow Status.
+0: No overflow in Left DAC
+1: Overflow condition is present in Left ADC at the time of reading the register
+D6 R 0 Right DAC Overflow Status.
+0: No overflow in Right DAC
+1: Overflow condition is present in Right DAC at the time of reading the register
+D5-D4 R 00 Reserved. Write only default values
+D3 R 0 Left ADC Overflow Status.
+0: No overflow in Left ADC
+1: Overflow condition is present in Left ADC at the time of reading the register
+D2 R 0 Right ADC Overflow Status.
+0: No overflow in Right ADC
+1: Overflow condition is present in Right ADC at the time of reading the register
+D1-D0 R 0 Reserved. Write only default values
+
+5.2.42 Page 0 / Register 44: Sticky Flag Register 2 - 0x00 / 0x2C (P0_R44)
+D7 R 0 HPL Over Current Detect Flag
+0: Over Current not detected on HPL
+1: Over Current detected on HPL (will be cleared when the register is read)
+D6 R 0 HPR Over Current Detect Flag
+0: Over Current not detected on HPR
+1: Over Current detected on HPR (will be cleared when the register is read)
+D5 R 0 Headset Button Press
+0: Button Press not detected
+1: Button Press detected (will be cleared when the register is read)
+D4 R 0 Headset Insertion/Removal Detect Flag
+0: Insertion/Removal event not detected
+1: Insertion/Removal event detected (will be cleared when the register is read)
+D3 R 0 Left Channel DRC, Signal Threshold Flag
+0: Signal Power is below Signal Threshold
+1: Signal Power exceeded Signal Threshold (will be cleared when the register is read)
+D2 R 0 Right Channel DRC, Signal Threshold Flag
+0: Signal Power is below Signal Threshold
+1: Signal Power exceeded Signal Threshold (will be cleared when the register is read)
+D1-D0 R 00 Reserved. Write only default values
+
+5.2.43 Page 0 / Register 45: Sticky Flag Register 3 - 0x00 / 0x2D (P0_R45)
+D7 R 0 Reserved. Write only default values
+D6 R 0 Left AGC Noise Threshold Flag
+0: Signal Power is greater than Noise Threshold
+1: Signal Power was lower than Noise Threshold (will be cleared when the register is read)
+D5 R 0 Right AGC Noise Threshold Flag
+0: Signal Power is greater than Noise Threshold
+1: Signal Power was lower than Noise Threshold (will be cleared when the register is read)
+D4-D3 R 00 Reserved. Write only default values
+D2 R 0 Left ADC DC Measurement Data Available Flag
+0: Data not available
+1: Data available (will be cleared when the register is read)
+D1 R 0 Right ADC DC Measurement Data Available Flag
+0: Data not available
+1: Data available (will be cleared when the register is read)
+D0 R 0 Reserved. Write only default values
+
+5.2.44 Page 0 / Register 46: Interrupt Flag Register 2 - 0x00 / 0x2E (P0_R46)
+D7 R 0 HPL Over Current Detect Flag
+0: Over Current not detected on HPL
+1: Over Current detected on HPL
+D6 R 0 HPR Over Current Detect Flag
+0: Over Current not detected on HPR
+1: Over Current detected on HPR
+D5 R 0 Headset Button Press
+0: Button Press not detected
+1: Button Press detected
+D4 R 0 Headset Insertion/Removal Detect Flag
+0: Headset removal detected
+1: Headset insertion detected
+D3 R 0 Left Channel DRC, Signal Threshold Flag
+0: Signal Power is below Signal Threshold
+1: Signal Power exceeded Signal Threshold
+D2 R 0 Right Channel DRC, Signal Threshold Flag
+0: Signal Power is below Signal Threshold
+1: Signal Power exceeded Signal Threshold
+D1-D0 R 00 Reserved. Write only default values
+
+5.2.45 Page 0 / Register 47: Interrupt Flag Register 3 - 0x00 / 0x2F (P0_R47)
+D7 R 0 Reserved. Write only default values
+D6 R 0 Left AGC Noise Threshold Flag
+0: Signal Power is greater than Noise Threshold
+1: Signal Power was lower than Noise Threshold
+D5 R 0 Right AGC Noise Threshold Flag
+0: Signal Power is greater than Noise Threshold
+1: Signal Power was lower than Noise Threshold
+D4-D3 R 00 Reserved. Write only default values
+D2 R 0 Left ADC DC Measurement Data Available Flag
+0: Data not available
+1: Data available
+D1 R 0 Right ADC DC Measurement Data Available Flag
+0: Data not available
+1: Data available
+D0 R 0 Reserved. Write only default values
+
+5.2.46 Page 0 / Register 48: INT1 Interrupt Control Register - 0x00 / 0x30 (P0_R48)
+D7 R/W 0 INT1 Interrupt for Headset Insertion Event
+0: Headset Insertion event will not generate a INT1 interrupt
+1: Headset Insertion even will generate a INT1 interrupt
+D6 R/W 0 INT1 Interrupt for Button Press Event
+0: Button Press event will not generate a INT1 interrupt
+1: Button Press event will generate a INT1 interrupt
+D5 R/W 0 INT1 Interrupt for DAC DRC Signal Threshold
+0: DAC DRC Signal Power exceeding Signal Threshold will not generate a INT1 interrupt
+1: DAC DRC Signal Power exceeding Signal Threshold for either of Left or Right Channel will
+generate a INT1 interrupt.
+Read Page-0, Register-44 to distinguish between Left or Right Channel
+D4 R/W 0 INT1 Interrupt for AGC Noise Interrupt
+0: Noise level detected by AGC will not generate a INT1 interrupt
+1: Noise level detected by either off Left or Right Channel AGC will generate a INT1 interrupt.
+Read Page-0, Register-45 to distinguish between Left or Right Channel
+D3 R/W 0 INT1 Interrupt for Over Current Condition
+0: Headphone Over Current condition will not generate a INT1 interrupt.
+1: Headphone Over Current condition on either off Left or Right Channels will generate a INT1
+interrupt.
+Read Page-0, Register-44 to distinguish between HPL and HPR
+D2 R/W 0 INT1 Interrupt for overflow event
+0: ADC or DAC data overflows does not result in a INT1 interrupt
+1: ADC or DAC data overflow will result in a INT1 interrupt.
+Read Page-0, Register-42 to distinguish between ADC or DAC data overflow
+D1 R/W 0 INT1 Interrupt for DC Measurement
+0: DC Measurement data available will not generate INT1 interrupt
+1: DC Measurement data available will generate INT1 interrupt
+D0 R/W 0 INT1 pulse control
+0: INT1 is active high interrupt of 1 pulse of approx. 2ms duration
+1: INT1 is active high interrupt of multiple pulses, each of duration 2ms. To stop the pulse train,
+read Page-0, Reg-42d, 44d or 45d
+
+5.2.47 Page 0 / Register 49: INT2 Interrupt Control Register - 0x00 / 0x31 (P0_R49)
+D7 R/W 0 INT2 Interrupt for Headset Insertion Event
+0: Headset Insertion event will not generate a INT2 interrupt
+1: Headset Insertion even will generate a INT2 interrupt
+D6 R/W 0 INT2 Interrupt for Button Press Event
+0: Button Press event will not generate a INT2 interrupt
+1: Button Press event will generate a INT2 interrupt
+D5 R/W 0 INT2 Interrupt for DAC DRC Signal Threshold
+0: DAC DRC Signal Power exceeding Signal Threshold will not generate a INT2 interrupt
+1: DAC DRC Signal Power exceeding Signal Threshold for either of Left or Right Channel will
+generate a INT2 interrupt.
+Read Page-0, Register-44 to distinguish between Left or Right Channel
+D4 R/W 0 INT2 Interrupt for AGC Noise Interrupt
+0: Noise level detected by AGC will not generate a INT2 interrupt
+1: Noise level detected by either off Left or Right Channel AGC will generate a INT2 interrupt.
+Read Page-0, Register-45 to distinguish between Left or Right Channel
+D3 R/W 0 INT2 Interrupt for Over Current Condition
+0: Headphone Over Current condition will not generate a INT2 interrupt.
+1: Headphone Over Current condition on either off Left or Right Channels will generate a INT2
+interrupt.
+Read Page-0, Register-44 to distinguish between HPL and HPR
+D2 R/W 0 INT2 Interrupt for overflow event
+0: ADC or DAC data overflow will not result in an INT2 interrupt
+1: ADC or DAC data overflow will result in an INT2 interrupt.
+Read Page-0, Register-42 to distinguish between ADC or DAC data overflow
+D1 R/W 0 INT2 Interrupt for DC Measurement
+0: DC Measurement data available will not generate INT2 interrupt
+1: DC Measurement data available will generate INT2 interrupt
+D0 R/W 0 INT2 pulse control
+0: INT2 is active high interrupt of 1 pulse of approx. 2ms duration
+1: INT2 is active high interrupt of multiple pulses, each of duration 2ms. To stop the pulse train,
+read Page-0, Reg-42d, 44d and 45d
+
+5.2.48 Page 0 / Register 50-51: Reserved Register - 0x00 / 0x32-0x33 (P0_R50-51)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.49 Page 0 / Register 52: GPIO/MFP5 Control Register - 0x00 / 0x34 (P0_R52)
+D7-D6 R 00 Reserved. Write only default values
+D5-D2 R/W 0000 GPIO Control
+0000: GPIO input/output disabled.
+0001: GPIO input is used for secondary audio interface, digital microphone input or clock input.
+Configure other registers to choose the functionality of GPIO input
+0010: GPIO is general purpose input
+0011: GPIO is general purpose output
+0100: GPIO output is CLKOUT
+0101: GPIO output is INT1
+0110: GPIO output is INT2
+0111: GPIO output is ADC_WCLK for Audio Interface
+1000: GPIO output is secondary bit-clock for Audio Interface
+1001: GPIO output is secondary word-clock for Audio Interface
+1010: GPIO output is clock for digital microphone
+1011-1111: Reserved. Do not use.
+D1 R X GPIO Input Pin state, used along with GPIO as general purpose input
+D0 R/W 0 GPIO as general purpose output control
+0: GPIO pin is driven to '0' in general purpose output mode
+1: GPIO pin is driven to '1' in general purpose output mode
+
+5.2.50 Page 0 / Register 53: DOUT/MFP2 Function Control Register - 0x00 / 0x35 (P0_R53)
+D7-D5 R 000 Reserved. Write only default values
+D4 R/W 1 DOUT Bus Keeper Control
+0: DOUT Bus Keeper Enabled
+1: DOUT Bus Keeper Disabled
+D3-D1 R/W 001 DOUT MUX Control
+000: DOUT disabled
+001: DOUT is Primary DOUT
+010: DOUT is General Purpose Output
+011: DOUT is CLKOUT
+100: DOUT is INT1
+101: DOUT is INT2
+110: DOUT is Secondary BCLK
+111: DOUT is Secondary WCLK
+D0 R/W 0 DOUT as General Purpose Output
+0: DOUT General Purpose Output is '0'
+1: DOUT General Purpose Output is '1'
+
+5.2.51 Page 0 / Register 54: DIN/MFP1 Function Control Register - 0x00 / 0x36 (P0_R54)
+D7-D3 R 0 0000 Reserved. Write only reserved values
+D2-D1 R/W 01 DIN function control
+00: DIN pin is disabled
+01: DIN is enabled for Primary Data Input or Digital Microphone Input or General Purpose Clock
+input
+10: DIN is used as General Purpose Input
+11: Reserved. Do not use
+D0 R X Value of DIN input pin. To be used when for General Purpose Input
+
+5.2.52 Page 0 / Register 55: MISO/MFP4 Function Control Register - 0x00 / 0x37 (P0_R55)
+D7-D5 R 000 Reserved. Write only default values
+D4-D1 R/W 0001 MISO function control
+0000: MISO buffer disabled
+0001: MISO is used for data output in SPI interface, is disabled for I2C interface
+0010: MISO is General Purpose Output
+0011: MISO is CLKOUT output
+0100: MISO is INT1 output
+0101: MISO is INT2 output
+0110: MISO is ADC Word Clock output
+0111: MISO is clock output for Digital Microphone
+1000: MISO is Secondary Data Output for Audio Interface
+1001: MISO is Secondary Bit Clock for Audio Interface
+1010: MISO is Secondary Word Clock for Audio Interface
+1011-1111: Reserved. Do not use
+D0 R/W 0 Value to be driven on MISO pin when used as General Purpose Output
+
+5.2.53 Page 0 / Register 56: SCLK/MFP3 Function Control Register - 0x00 / 0x38 (P0_R56)
+D7-D3 R 0 0000 Reserved. Write only default values
+D2-D1 R/W 01 SCLK function control
+00: SCLK pin is disabled
+01: SCLK pin is enabled for SPI clock in SPI Interface mode or when in I2C Interface enabled for
+Secondary Data Input or Secondary Bit Clock Input or Secondary Word Clock or Secondary ADC
+Word Clock or Digital Microphone Input
+10: SCLK is enabled as General Purpose Input
+11: Reserved. Do not use
+D0 R X Value of SCLK input pin when used as General Purpose Input
+
+5.2.54 Page 0 / Register 57-59: Reserved Registers - 0x00 / 0x39-0x3B (P0_R57-59)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.55 Page 0 / Register 60: DAC Signal Processing Block Control Register - 0x00 / 0x3C
+(P0_R60)
+D7-D5 R 000 Reserved. Write only default values
+D4-D0 R/W 0 0001 Selects the DAC (playback) signal processing block
+0 0000: Reserved. Do not use
+0 0001: DAC Signal Processing Block PRB_P1
+0 0010: DAC Signal Processing Block PRB_P2
+0 0011: DAC Signal Processing Block PRB_P3
+0 0100: DAC Signal Processing Block PRB_P4
+…
+1 1000: DAC Signal Processing Block PRB_P24
+1 1001: DAC Signal Processing Block PRB_P25
+1 1010-1 1111: Reserved. Do not use
+Note; Please check the overview section for description of the Signal Processing Blocks
+
+5.2.56 Page 0 / Register 61: ADC Signal Processing Block Control Register - 0x00 / 0x3D
+(P0_R61)
+D7-D5 R 000 Reserved. Write only default values
+D4-D0 R/W 0 0001 Selects the ADC (recording) signal processing block
+0 0000: Reserved. Do not use
+0 0001: ADC Singal Processing Block PRB_R1
+0 0010: ADC Signal Processing Block PRB_R2
+0 0011: ADC Signal Processing Block PRB_R3
+0 0100: ADC Signal Processing Block PRB_R4
+…
+1 0001: ADC Signal Processing Block PRB_R17
+1 0010: ADC Signal Processing Block PRB_R18
+1 0010-1 1111: Reserved. Do not use
+Note: Please check the overview section for description of the Signal Processing Blocks
+
+5.2.57 Page 0 / Register 62: Reserved Register - 0x00 / 0x3E (P0_R62)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.58 Page 0 / Register 63: DAC Channel Setup Register 1 - 0x00 / 0x3F (P0_R63)
+D7 R/W 0 Left DAC Channel Power Control
+0: Left DAC Channel Powered Down
+1: Left DAC Channel Powered Up
+D6 R/W 0 Right DAC Channel Power Control
+0: Right DAC Channel Powered Down
+1: Right DAC Channel Powered Up
+D5-D4 R/W 01 Left DAC Data path Control
+00: Left DAC data is disabled
+01: Left DAC data Left Channel Audio Interface Data
+10: Left DAC data is Right Channel Audio Interface Data
+11: Left DAC data is Mono Mix of Left and Right Channel Audio Interface Data
+D3-D2 R/W 01 Right DAC Data path Control
+00: Right DAC data is disabled
+01: Right DAC data Right Channel Audio Interface Data
+10: Right DAC data is Left Channel Audio Interface Data
+11: Right DAC data is Mono Mix of Left and Right Channel Audio Interface Data
+D1-D0 R/W 00 DAC Channel Volume Control's Soft-Step control
+00: Soft-Stepping is 1 step per 1 DAC Word Clock
+01: Soft-Stepping is 1 step per 2 DAC Word Clocks
+10: Soft-Stepping is disabled
+11: Reserved. Do not use
+
+5.2.59 Page 0 / Register 64: DAC Channel Setup Register 2 - 0x00 / 0x40 (P0_R64)
+D7 R/W 0 Right Modulator Output Control
+0: When Right DAC Channel is powered down, the data is zero.
+1: When Right DAC Channel is powered down, the data is inverted version of Left DAC Modulator
+Output. Can be used when differential mono output is used
+D6-D4 R/W 000 DAC Auto Mute Control
+000: Auto Mute disabled
+001: DAC is auto muted if input data is DC for more than 100 consecutive inputs
+010: DAC is auto muted if input data is DC for more than 200 consecutive inputs
+011: DAC is auto muted if input data is DC for more than 400 consecutive inputs
+100: DAC is auto muted if input data is DC for more than 800 consecutive inputs
+101: DAC is auto muted if input data is DC for more than 1600 consecutive inputs
+110: DAC is auto muted if input data is DC for more than 3200 consecutive inputs
+111: DAC is auto muted if input data is DC for more than 6400 consecutive inputs
+D3 R/W 1 Left DAC Channel Mute Control
+0: Left DAC Channel not muted
+1: Left DAC Channel muted
+D2 R/W 1 Right DAC Channel Mute Control
+0: Right DAC Channel not muted
+1: Right DAC Channel muted
+D1-D0 R/W 00 DAC Master Volume Control
+00: Left and Right Channel have independent volume control
+01: Left Channel Volume is controlled by Right Channel Volume Control setting
+10: Right Channel Volume is controlled by Left Channel Volume Control setting
+11: Reserved. Do not use
+
+5.2.60 Page 0 / Register 65: Left DAC Channel Digital Volume Control Register - 0x00 / 0x41
+(P0_R65)
+D7-D0 R/W 0000 0000 Left DAC Channel Digital Volume Control Setting
+0111 1111-0011 0001: Reserved. Do not use
+0011 0000: Digital Volume Control = +24dB
+0010 1111: Digital Volume Control = +23.5dB
+…
+0000 0001: Digital Volume Control = +0.5dB
+0000 0000: Digital Volume Control = 0.0dB
+1111 1111: Digital Volume Control = -0.5dB
+...
+1000 0010: Digital Volume Control = -63dB
+1000 0001: Digital Volume Control = -63.5dB
+1000 0000: Reserved. Do not use
+
+5.2.61 Page 0 / Register 66: Right DAC Channel Digital Volume Control Register - 0x00 / 0x42
+(P0_R66)
+D7-D0 R/W 0000 0000 Right DAC Channel Digital Volume Control Setting
+0111 1111-0011 0001: Reserved. Do not use
+0011 0000: Digital Volume Control = +24dB
+0010 1111: Digital Volume Control = +23.5dB
+…
+0000 0001: Digital Volume Control = +0.5dB
+0000 0000: Digital Volume Control = 0.0dB
+1111 1111: Digital Volume Control = -0.5dB
+...
+1000 0010: Digital Volume Control = -63dB
+1000 0001: Digital Volume Control = -63.5dB
+1000 0000: Reserved. Do not use
+
+5.2.62 Page 0 / Register 67: Headset Detection Configuration Register - 0x00 / 0x43 (P0_R67)
+D7 R/W 0 0: Headset Detection Disabled
+1: Headset Detection Enabled
+D6-D5 R 00 Headset Type Flag
+00: Headset not detected
+01: Stereo Headset detected
+10: Reserved
+11: Stereo + Cellular Headset detected
+D4-D2 R/W 000 Headset Detection Debounce Programmability
+000: Debounce Time = 16ms
+001: Debounce Time = 32ms
+010: Debounce Time = 64ms
+011: Debounce Time = 128ms
+100: Debounce Time = 256ms
+101: Debounce Time = 512ms
+110-111: Reserved. Do not use
+Note: All times are typical values
+D1-D0 R/W 00 Headset Button Press Debounce Programmability
+00: Debounce disabled
+01: Debounce Time = 8ms
+10: Debounce Time = 16ms
+11: Debounce Time = 32ms
+Note: All times are typical values
+
+5.2.63 Page 0 / Register 68: DRC Control Register 1 - 0x00 / 0x44 (P0_R68)
+D7 R 0 Reserved. Write only default value
+D6 R/W 1 DRC Enable Control
+0: Left Channel DRC disabled
+1: Left Channel DRC enabled
+Note: DRC only active if a PRB_Px has been selected that supports DRC
+D5 R/W 1 DRC Enable Control
+0: Right Channel DRC disabled
+1: Right Channel DRC enabled
+Note: DRC only active if a PRB_Px has been selected that supports DRC
+D4-D2 R/W 011 DRC Threshold control
+000: DRC Threshold = -3dBFS
+001: DRC Threshold = -6dBFS
+010: DRC Threshold = -9dBFS
+011: DRC Threshold = -12dBFS
+100: DRC Threshold = -15dBFS
+101: DRC Threshold = -18dBFS
+110: DRC Threshold = -21dBFS
+111: DRC Threshold = -24dBFS
+D1-D0 R/W 11 DRC Hysteresis Control
+00: DRC Hysteresis = 0dB
+01: DRC Hysteresis = 1dB
+10: DRC Hysteresis = 2dB
+11: DRC Hysteresis = 3dB
+
+5.2.64 Page 0 / Register 69: DRC Control Register 2 - 0x00 / 0x45 (P0_R69)
+D7 R 0 Reserved. Write only default value.
+D6-D3 R/W 0111 DRC Hold Programmability
+0000: DRC Hold Disabled
+0001: DRC Hold Time = 32 DAC Word Clocks
+0010: DRC Hold Time = 64 DAC Word Clocks
+0011: DRC Hold Time = 128 DAC Word Clocks
+0100: DRC Hold Time = 256 DAC Word Clocks
+0101: DRC Hold Time = 512 DAC Word Clocks
+...
+1110: DRC Hold Time = 4*32768 DAC Word Clocks
+1111: DRC Hold Time = 5*32768 DAC Word Clocks
+D2-D0 R/W 000 Reserved. Write only default values
+
+5.2.65 Page 0 / Register 70: DRC Control Register 3 - 0x00 / 0x46 (P0_R70)
+D7-D4 R/W 0000 DRC Attack Rate control
+0000: DRC Attack Rate = 4.0dB per DAC Word Clock
+0001: DRC Attack Rate = 2.0dB per DAC Word Clock
+0010: DRC Attack Rae = 1.0dB per DAC Word Clock
+…
+1110: DRC Attack Rate = 2.4414e-4dB per DAC Word Clock
+1111: DRC Attack Rate = 1.2207e-4dB per DAC Word Clock
+D3-D0 R/W 0000 DRC Decay Rate control
+0000: DRC Decay Rate = 1.5625e-2dB per DAC Word Clock
+0001: DRC Decay Rate = 7.8125e-3dB per DAC Word Clock
+0010: DRC Decay Rae = 3.9062e-3dB per DAC Word Clock
+…
+1110: DRC Decay Rate = 9.5367e-7dB per DAC Word Clock
+1111: DRC Decay Rate = 4.7683e-7dB per DAC Word Clock
+
+5.2.66 Page 0 / Register 71: Beep Generator Register 1 - 0x00 / 0x47 (P0_R71)
+D7 R/W 0 0: Beep Generator Disabled
+1: Beep Generator Enabled. This bit will self clear after the beep has been generated.
+D6 R 0 Reserved. Write only default value
+D5-D0 R/W 00 0000 Left Channel Beep Volume Control
+00 0000: Left Channel Beep Volume = 0dB
+00 0001: Left Channel Beep Volume = -1dB
+…
+11 1110: Left Channel Beep Volume = -62dB
+11 1111: Left Channel Beep Volume = -63dB
+
+5.2.67 Page 0 / Register 72: Beep Generator Register 2 - 0x00 / 0x48 (P0_R72)
+D7-D6 R/W 00 Beep Generator Master Volume Control Setting
+00: Left and Right Channels have independent Volume Settings
+01: Left Channel Beep Volume is the same as programmed for Right Channel
+10: Right Channel Beep Volume is the same as programmed for Left Channel
+11: Reserved. Do not use
+D5-D0 R 00 0000 Right Channel Beep Volume Control
+00 0000: Right Channel Beep Volume = 0dB
+00 0001: Right Channel Beep Volume = -1dB
+…
+11 1110: Right Channel Beep Volume = -62dB
+11 1111: Right Channel Beep Volume = -63dB
+
+5.2.68 Page 0 / Register 73: Beep Generator Register 3 - 0x00 / 0x49 (P0_R73)
+D7-D0 R/W 0000 0000 Programmed value is Beep Sample Length(23:16)
+
+5.2.69 Page 0 / Register 74: Beep Generator Register 4 - 0x00 / 0x4A (P0_R74)
+D7-D0 R/W 0000 0000 Programmed value is Beep Sample Length(15:8)
+
+5.2.70 Page 0 / Register 75: Beep Generator Register 5 - 0x00 / 0x4B (P0_R75)
+D7-D0 R/W 1110 1110 Programmed value is Beep Sample Length(7:0)
+
+5.2.71 Page 0 / Register 76: Beep Generator Register 6 - 0x00 / 0x4C (P0_R76)
+D7-D0 R/W 0001 0000 Programmed Value is Beep Sin(x)(15:8), where
+Sin(x) = sin(2*pi*Fin/Fs), where Fin is desired beep frequency and Fs is
+DAC sample rate
+
+5.2.72 Page 0 / Register 77: Beep Generator Register 7 - 0x00 / 0x4D (P0_R77)
+D7-D0 R/W 1101 1000 Programmed Value is Beep Sin(x)(7:0), where
+Sin(x) = sin(2*pi*Fin/Fs), where Fin is desired beep frequency and Fs is
+DAC sample rate
+
+5.2.73 Page 0 / Register 78: Beep Generator Register 8 - 0x00 / 0x4E (P0_R78)
+D7-D0 R/W 0111 1110 Programmed Value is Beep Cos(x)(15:8), where
+Cos(x) = cos(2*pi*Fin/Fs), where Fin is desired beep frequency and Fs is
+DAC sample rate
+
+5.2.74 Page 0 / Register 79: Beep Generator Register 9 - 0x00 / 0x4F (P0_R79)
+D7-D0 R/W 1110 0011 Programmed Value is Beep Cos(x)(7:0), where
+Cos(x) = cos(2*π*Fin/Fs), where Fin is desired beep frequency and Fs is
+DAC sample rate
+
+5.2.75 Page 0 / Register 80: Reserved Register - 0x00 / 0x50 (P0_R80)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.2.76 Page 0 / Register 81: ADC Channel Setup Register - 0x00 / 0x51 (P0_R81)
+D7 R/W 0 Left Channel ADC Power Control
+0: Left Channel ADC is powered down
+1: Left Channel ADC is powered up
+D6 R/W 0 Right Channel ADC Power Control
+0: Right Channel ADC is powered down
+1: Right Channel ADC is powered up
+D5-D4 R/W 00 Digital Microphone Input Configuration
+00: GPIO serves as Digital Microphone Input
+01: SCLK serves as Digital Microphone Input
+10: DIN serves as Digital Microphone Input
+11: Reserved. Do not use
+D3 R/W 0 Left Channel Digital Microphone Power Control
+0: Left Channel ADC not configured for Digital Microphone
+1: Left Channel ADC configured for Digital Microphone
+D2 R/W 0 Right Channel Digital Microphone Power Control
+0: Right Channel ADC not configured for Digital Microphone
+1: Right Channel ADC configured for Digital Microphone
+D1-D0 R/W 00 ADC Volume Control Soft-Stepping Control
+00: ADC Volume Control changes by 1 gain step per ADC Word Clock
+01: ADC Volume Control changes by 1 gain step per two ADC Word Clocks
+10: ADC Volume Control Soft-Stepping disabled
+11: Reserved. Do not use
+
+5.2.77 Page 0 / Register 82: ADC Fine Gain Adjust Register - 0x00 / 0x52 (P0_R82)
+D7 R/W 1 Left ADC Channel Mute Control
+0: Left ADC Channel Un-muted
+1: Left ADC Channel Muted
+D6-D4 R/W 000 Left ADC Channel Fine Gain Adjust
+000: Left ADC Channel Fine Gain = 0dB
+111: Left ADC Channel Fine Gain = -0.1dB
+110: Left ADC Channel Fine Gain = -0.2dB
+101: Left ADC Channel Fine Gain = -0.3dB
+100: Left ADC Channel Fine Gain = -0.4dB
+001-011: Reserved. Do not use
+D3 R/W 1 Right ADC Channel Mute Control
+0: Right ADC Channel Un-muted
+1: Right ADC Channel Muted
+D2-D0 R/W 000 Right ADC Channel Fine Gain Adjust
+000: Right ADC Channel Fine Gain = 0dB
+111: Right ADC Channel Fine Gain = -0.1dB
+110: Right ADC Channel Fine Gain = -0.2dB
+101: Right ADC Channel Fine Gain = -0.3dB
+100: Right ADC Channel Fine Gain = -0.4dB
+001-011: Reserved. Do not use
+
+5.2.78 Page 0 / Register 83: Left ADC Channel Volume Control Register - 0x00 / 0x53 (P0_R83)
+D7 R 0 Reserved. Write only default values
+D6-D0 R/W 000 0000 Left ADC Channel Volume Control
+100 0000-110 0111: Reserved. Do not use
+110 1000: Left ADC Channel Volume = -12dB
+110 1001: Left ADC Channel Volume = -11.5dB
+110 1010: Left ADC Channel Volume = -11.0dB
+…
+111 1111: Left ADC Channel Volume = -0.5dB
+000 0000: Left ADC Channel Volume = 0.0dB
+000 0001: Left ADC Channel Volume = 0.5dB
+...
+010 0110: Left ADC Channel Volume = 19.0dB
+010 0111: Left ADC Channel Volume = 19.5dB
+010 1000: Left ADC Channel Volume = 20.0dB
+010 1001-111 1111: Reserved. Do not use
+
+5.2.79 Page 0 / Register 84: Right ADC Channel Volume Control Register - 0x00 / 0x54
+(P0_R84)
+D7 R 0 Reserved. Write only default values
+D6-D0 R/W 000 0000 Right ADC Channel Volume Control
+100 0000-110 0111: Reserved. Do not use
+110 1000: Right ADC Channel Volume = -12dB
+110 1001: Right ADC Channel Volume = -11.5dB
+110 1010: Right ADC Channel Volume = -11.0dB
+…
+111 1111: Right ADC Channel Volume = -0.5dB
+000 0000: Right ADC Channel Volume = 0.0dB
+000 0001: Right ADC Channel Volume = 0.5dB
+...
+010 0110: Right ADC Channel Volume = 19.0dB
+010 0111: Right ADC Channel Volume = 19.5dB
+010 1000: Right ADC Channel Volume = 20.0dB
+010 1001-111 1111: Reserved. Do not use
+
+5.2.80 Page 0 / Register 85: ADC Phase Adjust Register - 0x00 / 0x55 (P0_R85)
+D7-D0 R/W 0000 0000 ADC Phase Compensation Control
+1000 0000-1111 1111: Left ADC Channel Data is delayed with respect to Right ADC Channel
+Data. For details of delayed amount please refer to the description of Phase Compensation in the
+Overview section.
+0000 0000: Left and Right ADC Channel data are not delayed with respect to each other
+0000 0001-0111 1111: Right ADC Channel Data is delayed with respect to Left ADC Channel
+Data. For details of delayed amount please refer to the description of Phase Compensation in the
+Overview section.
+
+5.2.81 Page 0 / Register 86: Left Channel AGC Control Register 1 - 0x00 / 0x56 (P0_R86)
+D7 R/W 0 0: Left Channel AGC Disabled
+1: Left Channel AGC Enabled
+D6-D4 R/W 000 Left Channel AGC Target Level Setting
+000: Left Channel AGC Target Level = -5.5dBFS
+001: Left Channel AGC Target Level = -8.0dBFS
+010: Left Channel AGC Target Level = -10.0dBFS
+011: Left Channel AGC Target Level = -12.0dBFS
+100: Left Channel AGC Target Level = -14.0dBFS
+101: Left Channel AGC Target Level = -17.0dBFS
+110: Left Channel AGC Target Level = -20.0dBFS
+111: Left Channel AGC Target Level = -24.0dBFS
+D3-D2 R 00 Reserved. Write only default values
+D1-D0 R/W 00 Left Channel AGC Gain Hysteresis Control
+00: Left Channel AGC Gain Hysteresis is disabled
+01: Left Channel AGC Gain Hysteresis is ±0.5dB
+10: Left Channel AGC Gain Hysteresis is ±1.0dB
+11: Left Channel AGC Gain Hysteresis is ±1.5dB
+
+5.2.82 Page 0 / Register 87: Left Channel AGC Control Register 2 - 0x00 / 0x57 (P0_R87)
+D7-D6 R/W 00 Left Channel AGC Hysteresis Setting
+00: Left Channel AGC Hysteresis is 1.0dB
+01: Left Channel AGC Hysteresis is 2.0dB
+10: Left Channel AGC Hysteresis is 4.0dB
+11: Left Channel AGC Hysteresis is disabled
+D5-D1 R/W 0 0000 Left Channel AGC Noise Threshold
+0 0000: Left Channel AGC Noise Gate disabled
+0 0001: Left Channel AGC Noise Threshold is -30dB
+0 0010: Left Channel AGC Noise Threshold is -32dB
+0 0011: Left Channel AGC Noise Threshold is -34dB
+…
+1 1101: Left Channel AGC Noise Threshold is -86dB
+1 1110: Left Channel AGC Noise Threshold is -88dB
+1 1111: Left Channel AGC Noise Threshold is -90dB
+D0 R 0 Reserved. Write only default value
+
+5.2.83 Page 0 / Register 88: Left Channel AGC Control Register 3 - 0x00 / 0x58 (P0_R88)
+D7 R 0 Reserved. Write only default value
+D6-D0 R/W 111 1111 Left Channel AGC Maximum Gain Setting
+000 0000: Left Channel AGC Maximum Gain = 0.0dB
+000 0001: Left Channel AGC Maximum Gain = 0.5dB
+000 0010: Left Channel AGC Maximum Gain = 1.0dB
+…
+111 0011: Left Channel AGC Maximum Gain = 57.5dB
+111 0100: Left Channel AGC Maximum Gain = 58.0dB
+111 0101-111 1111: not recommended for usage, Left Channel AGC Maximum Gain = 58.0dB
+
+5.2.84 Page 0 / Register 89: Left Channel AGC Control Register 4 - 0x00 / 0x59 (P0_R89)
+D7-D3 R/W 0 0000 Left Channel AGC Attack Time Setting
+0 0000: Left Channel AGC Attack Time = 1*32 ADC Word Clocks
+0 0001: Left Channel AGC Attack Time = 3*32 ADC Word Clocks
+0 0010: Left Channel AGC Attack Time = 5*32 ADC Word Clocks
+…
+1 1101: Left Channel AGC Attack Time = 59*32 ADC Word Clocks
+1 1110: Left Channel AGC Attack Time = 61*32 ADC Word Clocks
+1 1111: Left Channel AGC Attack Time = 63*32 ADC Word Clocks
+D2-D0 R/W 000 Left Channel AGC Attack Time Scale Factor Setting
+000: Scale Factor = 1
+001: Scale Factor = 2
+010: Scale Factor = 4
+…
+101: Scale Factor = 32
+110: Scale Factor = 64
+111: Scale Factor = 128
+
+5.2.85 Page 0 / Register 90: Left Channel AGC Control Register 5 - 0x00 / 0x5A (P0_R90)
+D7-D3 R/W 0 0000 Left Channel AGC Decay Time Setting
+0 0000: Left Channel AGC Decay Time = 1*512 ADC Word Clocks
+0 0001: Left Channel AGC Decay Time = 3*512 ADC Word Clocks
+0 0010: Left Channel AGC Decay Time = 5*512 ADC Word Clocks
+…
+1 1101: Left Channel AGC Decay Time = 59*512 ADC Word Clocks
+1 1110: Left Channel AGC Decay Time = 61*512 ADC Word Clocks
+1 1111: Left Channel AGC Decay Time = 63*512 ADC Word Clocks
+D2-D0 R/W 000 Left Channel AGC Decay Time Scale Factor Setting
+000: Scale Factor = 1
+001: Scale Factor = 2
+010: Scale Factor = 4
+…
+101: Scale Factor = 32
+110: Scale Factor = 64
+111: Scale Factor = 128
+
+5.2.86 Page 0 / Register 91: Left Channel AGC Control Register 6 - 0x00 / 0x5B (P0_R91)
+D7-D5 R 000 Reserved. Write only default values
+D4-D0 R/W 0 0000 Left Channel AGC Noise Debounce Time Setting
+0 0001: Left Channel AGC Noise Debounce Time = 0
+0 0010: Left Channel AGC Noise Debounce Time = 4 ADC Word Clocks
+0 0011: Left Channel AGC Noise Debounce Time = 8 ADC Word Clocks
+…
+0 1010: Left Channel AGC Noise Debounce Time = 2048 ADC Word Clocks
+0 1011: Left Channel AGC Noise Debounce Time = 4096 ADC Word Clocks
+0 1100: Left Channel AGC Noise Debounce Time = 2*4096 ADC Word Clocks
+0 1101: Left Channel AGC Noise Debounce Time = 3*4096 ADC Word Clocks
+...
+1 1101: Left Channel AGC Noise Debounce Time = 19*4096 ADC Word Clocks
+1 1110: Left Channel AGC Noise Debounce Time = 20*4096 ADC Word Clocks
+1 1111: Left Channel AGC Noise Debounce Time = 21*4096 ADC Word Clocks
+
+5.2.87 Page 0 / Register 92: Left Channel AGC Control Register 7 - 0x00 / 0x5C (P0_R92)
+D7-D4 R 0000 Reserved. Write only default values
+D3-D0 R/W 0000 Left Channel AGC Signal Debounce Time Setting
+0001: Left Channel AGC Signal Debounce Time = 0
+0010: Left Channel AGC Signal Debounce Time = 4 ADC Word Clocks
+0011: Left Channel AGC Signal Debounce Time = 8 ADC Word Clocks
+…
+1001: Left Channel AGC Signal Debounce Time = 1024 ADC Word Clocks
+1010: Left Channel AGC Signal Debounce Time = 2048 ADC Word Clocks
+1011: Left Channel AGC Signal Debounce Time = 2*2048 ADC Word Clocks
+1100: Left Channel AGC Signal Debounce Time = 3*2048 ADC Word Clocks
+1101: Left Channel AGC Signal Debounce Time = 4*2048 ADC Word Clocks
+1110: Left Channel AGC Signal Debounce Time = 5*2048 ADC Word Clocks
+1111: Left Channel AGC Signal Debounce Time = 6*2048 ADC Word Clocks
+
+5.2.88 Page 0 / Register 93: Left Channel AGC Control Register 8 - 0x00 / 0x5D (P0_R93)
+D7-D0 R 0000 0000 Left Channel AGC Gain Flag
+1110 1000: Left Channel AGC Gain = -12.0dB
+1110 1001: Left Channel AGC Gain = -11.5dB
+1110 1010: Left Channel AGC Gain = -11.0dB
+…
+0000 0000: Left Channel AGC Gain = 0.0dB
+…
+0111 0010: Left Channel AGC Gain = 57.0dB
+0111 0011: Left Channel AGC Gain = 57.5dB
+0111 0100: Left Channel AGC Gain = 58.0dB
+
+5.2.89 Page 0 / Register 94: Right Channel AGC Control Register 1 - 0x00 / 0x5E (P0_R94)
+D7 R/W 0 0: Right Channel AGC Disabled
+1: Right Channel AGC Enabled
+D6-D4 R/W 000 Right Channel AGC Target Level Setting
+000: Right Channel AGC Target Level = -5.5dBFS
+001: Right Channel AGC Target Level = -8.0dBFS
+010: Right Channel AGC Target Level = -10.0dBFS
+011: Right Channel AGC Target Level = -12.0dBFS
+100: Right Channel AGC Target Level = -14.0dBFS
+101: Right Channel AGC Target Level = -17.0dBFS
+110: Right Channel AGC Target Level = -20.0dBFS
+111: Right Channel AGC Target Level = -24.0dBFS
+D3-D2 R 00 Reserved. Write only default values
+D1-D0 R/W 00 Right Channel AGC Gain Hysteresis Control
+00: Right Channel AGC Gain Hysteresis is disabled
+01: Right Channel AGC Gain Hysteresis is ±0.5dB
+10: Right Channel AGC Gain Hysteresis is ±1.0dB
+11: Right Channel AGC Gain Hysteresis is ±1.5dB
+
+5.2.90 Page 0 / Register 95: Right Channel AGC Control Register 2 - 0x00 / 0x5F (P0_R95)
+D7-D6 R/W 00 Right Channel AGC Hysteresis Setting
+00: Right Channel AGC Hysteresis is 1.0dB
+01: Right Channel AGC Hysteresis is 2.0dB
+10: Right Channel AGC Hysteresis is 4.0dB
+11: Right Channel AGC Hysteresis is disabled
+D5-D1 R/W 0 0000 Right Channel AGC Noise Threshold
+0 0000: Right Channel AGC Noise Gate disabled
+0 0001: Right Channel AGC Noise Threshold is -30dB
+0 0010: Right Channel AGC Noise Threshold is -32dB
+0 0011: Right Channel AGC Noise Threshold is -34dB
+…
+1 1101: Right Channel AGC Noise Threshold is -86dB
+1 1110: Right Channel AGC Noise Threshold is -88dB
+1 1111: Right Channel AGC Noise Threshold is -90dB
+D0 R 0 Reserved. Write only default value
+
+5.2.91 Page 0 / Register 96: Right Channel AGC Control Register 3 - 0x00 / 0x60 (P0_R96)
+D7 R 0 Reserved. Write only default value
+D6-D0 R/W 111 1111 Right Channel AGC Maximum Gain Setting
+000 0000: Right Channel AGC Maximum Gain = 0.0dB
+000 0001: Right Channel AGC Maximum Gain = 0.5dB
+000 0010: Right Channel AGC Maximum Gain = 1.0dB
+…
+111 0011: Right Channel AGC Maximum Gain = 57.5dB
+111 0100: Right Channel AGC Maximum Gain = 58.0dB
+111 0101-111 1111: not recommended for usage, Right Channel AGC Maximum Gain = 58.0dB
+
+5.2.92 Page 0 / Register 97: Right Channel AGC Control Register 4 - 0x00 / 0x61 (P0_R97)
+D7-D3 R/W 0 0000 Right Channel AGC Attack Time Setting
+0 0000: Right Channel AGC Attack Time = 1*32 ADC Word Clocks
+0 0001: Right Channel AGC Attack Time = 3*32 ADC Word Clocks
+0 0010: Right Channel AGC Attack Time = 5*32 ADC Word Clocks
+…
+1 1101: Right Channel AGC Attack Time = 59*32 ADC Word Clocks
+1 1110: Right Channel AGC Attack Time = 61*32 ADC Word Clocks
+1 1111: Right Channel AGC Attack Time = 63*32 ADC Word Clocks
+D2-D0 R/W 000 Right Channel AGC Attack Time Scale Factor Setting
+000: Scale Factor = 1
+001: Scale Factor = 2
+010: Scale Factor = 4
+…
+101: Scale Factor = 32
+110: Scale Factor = 64
+111: Scale Factor = 128
+
+5.2.93 Page 0 / Register 98: Right Channel AGC Control Register 5 - 0x00 / 0x62 (P0_R98)
+D7-D3 R/W 0 0000 Right Channel AGC Decay Time Setting
+0 0000: Right Channel AGC Decay Time = 1*512 ADC Word Clocks
+0 0001: Right Channel AGC Decay Time = 3*512 ADC Word Clocks
+0 0010: Right Channel AGC Decay Time = 5*512 ADC Word Clocks
+…
+1 1101: Right Channel AGC Decay Time = 59*512 ADC Word Clocks
+1 1110: Right Channel AGC Decay Time = 61*512 ADC Word Clocks
+1 1111: Right Channel AGC Decay Time = 63*512 ADC Word Clocks
+D2-D0 R/W 000 Right Channel AGC Decay Time Scale Factor Setting
+000: Scale Factor = 1
+001: Scale Factor = 2
+010: Scale Factor = 4
+…
+101: Scale Factor = 32
+110: Scale Factor = 64
+111: Scale Factor = 128
+
+5.2.94 Page 0 / Register 99: Right Channel AGC Control Register 6 - 0x00 / 0x63 (P0_R99)
+D7-D5 R 000 Reserved. Write only default values
+D4-D0 R/W 0 0000 Right Channel AGC Noise Debounce Time Setting
+0 0001: Right Channel AGC Noise Debounce Time = 0
+0 0010: Right Channel AGC Noise Debounce Time = 4 ADC Word Clocks
+0 0011: Right Channel AGC Noise Debounce Time = 8 ADC Word Clocks
+…
+0 1010: Right Channel AGC Noise Debounce Time = 2048 ADC Word Clocks
+0 1011: Right Channel AGC Noise Debounce Time = 4096 ADC Word Clocks
+0 1100: Right Channel AGC Noise Debounce Time = 2*4096 ADC Word Clocks
+0 1101: Right Channel AGC Noise Debounce Time = 3*4096 ADC Word Clocks
+...
+1 1101: Right Channel AGC Noise Debounce Time = 19*4096 ADC Word Clocks
+1 1110: Right Channel AGC Noise Debounce Time = 20*4096 ADC Word Clocks
+1 1111: Right Channel AGC Noise Debounce Time = 21*4096 ADC Word Clocks
+
+5.2.95 Page 0 / Register 100: Right Channel AGC Control Register 7 - 0x00 / 0x64 (P0_R100)
+D7-D4 R 0000 Reserved. Write only default values
+D3-D0 R/W 0000 Right Channel AGC Signal Debounce Time Setting
+0001: Right Channel AGC Signal Debounce Time = 0
+0010: Right Channel AGC Signal Debounce Time = 4 ADC Word Clocks
+0011: Right Channel AGC Signal Debounce Time = 8 ADC Word Clocks
+…
+1001: Right Channel AGC Signal Debounce Time = 1024 ADC Word Clocks
+1010: Right Channel AGC Signal Debounce Time = 2048 ADC Word Clocks
+1011: Right Channel AGC Signal Debounce Time = 2*2048 ADC Word Clocks
+1100: Right Channel AGC Signal Debounce Time = 3*2048 ADC Word Clocks
+1101: Right Channel AGC Signal Debounce Time = 4*2048 ADC Word Clocks
+1110: Right Channel AGC Signal Debounce Time = 5*2048 ADC Word Clocks
+1111: Right Channel AGC Signal Debounce Time = 6*2048 ADC Word Clocks
+
+5.2.96 Page 0 / Register 101: Right Channel AGC Control Register 8 - 0x00 / 0x65 (P0_R101)
+D7-D0 R 0000 0000 Right Channel AGC Gain Flag
+1110 1000: Right Channel AGC Gain = -12.0dB
+1110 1001: Right Channel AGC Gain = -11.5dB
+1110 1010: Right Channel AGC Gain = -11.0dB
+…
+0000 0000: Right Channel AGC Gain = 0.0dB
+…
+0111 0010: Right Channel AGC Gain = 57.0dB
+0111 0011: Right Channel AGC Gain = 57.5dB
+0111 0100: Right Channel AGC Gain = 58.0dB
+
+5.2.97 Page 0 / Register 102: DC Measurement Register 1 - 0x00 / 0x66 (P0_R102)
+D7 R/W 0 0: DC Measurement Mode disabled for Left ADC Channel
+1: DC Measurement Mode enabled for Left ADC Channel
+D6 R/W 0 0: DC Measurement Mode disabled for Right ADC Channel
+1: DC Measurement Mode enabled for Right ADC Channel
+D5 R/W 0 0: DC Measurement is done using 1st order moving average filter with averaging of 2ED
+1: DC Measurement is done with 1sr order Low-pass IIR filter with coefficients as a function of D
+D4-D0 R/W 0 0000 DC Measurement D setting
+0 0000: Reserved. Do not use
+0 0001: DC Measurement D parameter = 1
+0 0010: DC Measurement D parameter = 2
+..
+1 0011: DC Measurement D parameter = 19
+1 0100: DC Measurement D parameter = 20
+1 0101-1 1111: Reserved. Do not use
+
+5.2.98 Page 0 / Register 103: DC Measurement Register 2 - 0x00 / 0x67 (P0_R103)
+D7 R 0 Reserved. Write only default values
+D6 R/W 0 0: Left and Right Channel DC measurement result update enabled
+1: Left and Right Channel DC measurement result update disabled; new results will be updated
+while old results are being read
+D5 R/W 0 0: For IIR based DC measurement, measurement value is the instantaneous output of IIR filter
+1: For IIR based DC measurement, the measurement value is updated before periodic clearing of
+IIR filter
+D4-D0 R/W 0 0000 IIR based DC Measurement, averaging time setting
+0 0000: Infinite average is used
+0 0001: Averaging time is 2E1 ADC Modulator clocks
+0 0010: Averaging time is 2E2 ADC Modulator clocks
+…
+1 0011: Averaging time is 2E19 ADC Modulator clocks
+1 0100: Averaging time is 2E20 ADC Modulator clocks
+1 0101-1 1111: Reserved. Do not use
+
+5.2.99 Page 0 / Register 104: Left Channel DC Measurement Output Register 1 - 0x00 / 0x68
+(P0_R104)
+D7-D0 R 0000 0000 Left Channel DC Measurement Output (23:16)
+
+5.2.100 Page 0 / Register 105: Left Channel DC Measurement Output Register 2 - 0x00 / 0x69
+(P0_R105)
+D7-D0 R 0000 0000 Left Channel DC Measurement Output (15:8)
+
+5.2.101 Page 0 / Register 106: Left Channel DC Measurement Output Register 3 - 0x00 / 0x6A
+(P0_R106)
+D7-D0 R 0000 0000 Left Channel DC Measurement Output (7:0)
+
+5.2.102 Page 0 / Register 107: Right Channel DC Measurement Output Register 1 - 0x00 / 0x6B
+(P0_R107)
+D7-D0 R 0000 0000 Right Channel DC Measurement Output (23:16)
+
+5.2.103 Page 0 / Register 108: Right Channel DC Measurement Output Register 2 - 0x00 / 0x6C
+(P0_R108)
+D7-D0 R 0000 0000 Right Channel DC Measurement Output (15:8)
+
+5.2.104 Page 0 / Register 109: Right Channel DC Measurement Output Register 3 - 0x00 / 0x6D
+(P0_R109)
+D7-D0 R 0000 0000 Right Channel DC Measurement Output (7:0)
+
+5.2.105 Page 0 / Register 110-127: Reserved Register - 0x00 / 0x6E-0x7F (P0_R110-127)
+D7-D0 R 0000 0000 Reserved. Write only default values

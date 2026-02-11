@@ -20,47 +20,18 @@ template<AdcPeriphNum PeriphNum>
 struct ADCn {
 	static void enable() {
 		if constexpr (PeriphNum == AdcPeriphNum::_1)
-			RCC_Enable::ADC1_::set();
+			RCC_Enable::ADC12_::set();
 		else if (PeriphNum == AdcPeriphNum::_2)
-			RCC_Enable::ADC2_::set();
-		else if (PeriphNum == AdcPeriphNum::_3)
-			RCC_Enable::ADC3_::set();
+			RCC_Enable::ADC12_::set();
 	}
 
 	static void disable() {
 		if constexpr (PeriphNum == AdcPeriphNum::_1)
-			RCC_Enable::ADC1_::clear();
+			RCC_Enable::ADC12_::clear();
 		else if (PeriphNum == AdcPeriphNum::_2)
-			RCC_Enable::ADC2_::clear();
-		else if (PeriphNum == AdcPeriphNum::_3)
-			RCC_Enable::ADC3_::clear();
+			RCC_Enable::ADC12_::clear();
 	}
 };
-
-// struct ADC_ {
-// 	static void enable(const unsigned periph_num) {
-// 		if (periph_num == 1)
-// 			RCC_Enable::ADC1_::set();
-// 		else if (periph_num == 2)
-// 			RCC_Enable::ADC2_::set();
-// 		else if (periph_num == 3)
-// 			RCC_Enable::ADC3_::set();
-// 	}
-// 	static void enable(ADC_TypeDef *ADCx) {
-// 		enable(PeriphUtil::ADC::to_num(ADCx));
-// 	}
-// 	static void disable(const unsigned periph_num) {
-// 		if (periph_num == 1)
-// 			RCC_Enable::ADC1_::clear();
-// 		else if (periph_num == 2)
-// 			RCC_Enable::ADC2_::clear();
-// 		else if (periph_num == 3)
-// 			RCC_Enable::ADC3_::clear();
-// 	}
-// 	static void disable(ADC_TypeDef *ADCx) {
-// 		disable(PeriphUtil::ADC::to_num(ADCx));
-// 	}
-// };
 
 struct DMA {
 	static void enable(const DMA_TypeDef *DMAx) {
@@ -74,8 +45,10 @@ struct DMA {
 		else if (DMAx == DMA3)
 			RCC_Enable::DMA3_::set();
 #endif
+#if defined(BDMA_BASE) && (BDMA_BASE != 0)
 		else if (DMAx == reinterpret_cast<DMA_TypeDef *>(BDMA))
 			RCC_Enable::BDMA_::set();
+#endif
 	}
 	static void disable(const DMA_TypeDef *DMAx) {
 		if (DMAx == nullptr)
@@ -88,8 +61,10 @@ struct DMA {
 		else if (DMAx == DMA3)
 			RCC_Enable::DMA3_::clear();
 #endif
+#if defined(BDMA_BASE) && (BDMA_BASE != 0)
 		else if (BDMA && DMAx == reinterpret_cast<DMA_TypeDef *>(BDMA))
 			RCC_Enable::BDMA_::clear();
+#endif
 	}
 };
 

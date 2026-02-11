@@ -1,0 +1,534 @@
+
+5.3 Page 1 Registers
+
+
+5.3.1 Page 1 / Register 0: Page Select Register - 0x01 / 0x00 (P1_R0)
+D7-D0 R/W 0000 0000 Page Select Register
+0-255: Selects the Register Page for next read or write command.
+Refer Table "Summary of Memory Map" for details.
+
+5.3.2 Page 1 / Register 1: Power Configuration Register - 0x01 / 0x01 (P1_R1)
+D7-D4 R 0000 Reserved. Write only default values
+D3 R/W 0 0: AVDD will be weakly connected to DVDD.
+Use when DVDD is powered, but AVDD LDO is
+powered down and AVDD is not externally powered
+1: Disabled weak connection of AVDD with DVDD
+D2-D0 R 000 Reserved. Write only default values
+
+5.3.3 Page 1 / Register 2: LDO Control Register - 0x01 / 0x02 (P1_R2)
+D7-D6 R/W 00 DVDD LDO Control
+00: DVDD LDO output is nominally 1.72V
+01: DVDD LDO output is nominally 1.67V
+10: DVDD LDO output is nominally 1.77V
+11: Do not use
+D5-D4 R/W 00 AVDD LDO Control
+00: AVDD LDO output is nominally 1.72V
+01: AVDD LDO output is nominally 1.67V
+10: AVDD LDO output is nominally 1.77V
+11: Do not use
+D3 R/W 1 Analog Block Power Control
+0: Analog Blocks Enabled
+1: Analog Blocks Disabled
+D2 R 0 DVDD LDO Over Current Detect
+0: Over Current not detected for DVDD LDO
+1: Over Current detected for DVDD LDO
+D1 R 0 AVDD LDO Over Current Detect
+0: Over Current not detected for AVDD LDO
+1: Over Current detected for AVDD LDO
+D0 R/W 0 AVDD LDO Power Control
+0: AVDD LDO Powered down
+1: AVDD LDO Powered up
+
+5.3.4 Page 1 / Register 3: Playback Configuration Register 1 - 0x01 / 0x03 (P1_R3)
+D7-D6 R/W 00 00: Left DAC routing to HPL uses Class-AB driver
+01-10: Reserved. Do not use
+11: Left DAC routing to HPL uses Class-D driver
+D5 R 0 Reserved. Write only default values
+D4-D2 R/W 000 Left DAC PTM Control
+000: Left DAC in mode PTM_P3, PTM_P4
+001: Left DAC in mode PTM_P2
+010: Left DAC in mode PTM_P1
+011-111: Reserved. Do not use
+D1-D0 R 00 Reserved. Write only default values
+
+5.3.5 Page 1 / Register 4: Playback Configuration Register 2 - 0x01 / 0x04 (P1_R4)
+D7-D6 R/W 00 00: Right DAC routing to HPL uses Class-AB driver
+01-10: Reserved. Do not use
+11: Right DAC routing to HPL uses Class-D driver
+D5 R 0 Reserved. Write only default values
+D4-D2 R/W 000 Right DAC PTM Control
+000: Right DAC in mode PTM_P3, PTM_P4
+001: Right DAC in mode PTM_P2
+010: Right DAC in mode PTM_P1
+011-111: Reserved. Do not use
+D1-D0 R 00 Reserved. Write only default values
+
+5.3.6 Page 1 / Register 5-8: Reserved Register - 0x01 / 0x05-0x08 (P1_R5-8)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.7 Page 1 / Register 9: Output Driver Power Control Register - 0x01 / 0x09 (P1_R9)
+D7-D6 R 00 Reserved. Write only default value
+D5 R/W 0 0: HPL is powered down
+1: HPL is powered up
+D4 R/W 0 0: HPR is powered down
+1: HPR is powered up
+D3 R/W 0 0: LOL is powered down
+1: LOL is powered up
+D2 R/W 0 0: LOR is powered down
+1: LOR is powered up
+D1 R/W 0 0: Left Mixer Amplifier (MAL) is powered down
+1: Left Mixer Amplifier (MAL) is powered up
+D0 R/W 0 0: Right Mixer Amplifier (MAR) is powered down
+1: Right Mixer Amplifier (MAR) is powered up
+
+5.3.8 Page 1 / Register 10: Common Mode Control Register - 0x01 / 0x0A (P1_R10)
+D7 R 0 Reserved. Write only default value.
+D6 R/W 0 0: Full Chip Common Mode is 0.9V
+1: Full Chip Common Mode is 0.75V
+D5-D4 R/W 00 00: Output Common Mode for HPL and HPR is same as full-chip common mode
+01: Output Common Mode for HPL and HPR is 1.25V
+10: Output Common Mode for HPL and HPR is 1.5V
+11: Output Common Mode for HPL and HPR is 1.65V if D6=0, 1.5V if D6=1
+D3 R/W 0 0: Output Common Mode for LOL and LOR is same as full-chip common mode
+1: Output Common Mode for LOL and LOR is 1.65V and output is powered by LDOIN
+D2 R 0 Reserved. Write only default value
+D1 R/W 0 0: Output of HPL and HPR is powered with AVDD supply
+1: Output of HPL and HPR is powered with LDOIN supply
+D0 R/W 0 0: When Page-1, Reg-10, D1=1, then LDOIN input range is 1.5V to 1.95V
+1: When Page-1, Reg-10, D1=1, then LDOIN input range is 1.8V to 3.6V
+
+5.3.9 Page 1 / Register 11: Over Current Protection Configuration Register - 0x01 / 0x0B
+(P1_R11)
+D7-D5 R 000 Reserved. Write only default values
+D4 R/W 1 0: Over Current detection is disabled for HPL and HPR
+1: Over Current detection is enabled for HPL and HPR
+D3-D1 R/W 000 000: No debounce is used for Over Current detection
+001: Over Current detection is debounced by 8ms
+010: Over Current detection is debounce by 16ms
+011: Over Current detection is debounced by 32ms
+100: Over Current detection is debounced by 64ms
+101: Over Current detection is debounced by 128ms
+110: Over Current detection is debounced by 256ms
+111: Over Current detection is debounced by 512ms
+D0 R/W 0 0: Output current will be limited if over current condition is detected
+1: Output driver will be powered down if over current condition is detected
+
+5.3.10 Page 1 / Register 12: HPL Routing Selection Register - 0x01 / 0x0C (P1_R12)
+D7-D4 R 0000 Reserved. Write only default values
+D3 R/W 0 0: Left Channel DAC reconstruction filter's positive terminal is not routed to HPL
+1: Left Channel DAC reconstruction filter's positive terminal is routed to HPL
+D2 R/W 0 0: IN1L is not routed to HPL
+1: IN1L is routed to HPL
+D1 R/W 0 0: MAL output is not routed to HPL
+1: MAL output is routed to HPL
+D0 R/W 0 0: MAR output is not routed to HPL
+1: MAR output is routed to HPL
+
+5.3.11 Page 1 / Register 13: HPR Routing Selection Register - 0x01 / 0x0D (P1_R13)
+D7-D5 R 000 Reserved. Write only default values
+D4 R/W 0 0: Left Channel DAC reconstruction filter's negative terminal is not routed to HPR
+1: Left Channel DAC reconstruction filter's negative terminal is routed to HPR
+D3 R/W 0 0: Right Channel DAC reconstruction filter's positive terminal is not routed to HPR
+1: Right Channel DAC reconstruction filter's positive terminal is routed to HPR
+D2 R/W 0 0: IN1R is not routed to HPR
+1: IN1R is routed to HPR
+D1 R/W 0 0: MAR output is not routed to HPR
+1: MAR output is routed to HPR
+D0 R/W 0 0: HPL output is not routed to HPR
+1: HPL output is routed to HPR (use when HPL and HPR output is powered by AVDD)
+
+5.3.12 Page 1 / Register 14: LOL Routing Selection Register - 0x01 / 0x0E (P1_R14)
+D7-D5 R 000 Reserved. Write only default values
+D4 R/W 0 0: Right Channel DAC reconstruction filter's negative terminal is not routed to LOL
+1: Right Channel DAC reconstruction filter's negative terminal is routed to LOL
+D3 R/W 0 0: Left Channel DAC reconstruction filter output is not routed to LOL
+1: Left Channel DAC reconstruction filter output is routed to LOL
+D2 R 0 Reserved. Write only default value.
+D1 R/W 0 0: MAL output is not routed to LOL
+1: MAL output is routed to LOL
+D0 R/W 0 0: LOR output is not routed to LOL
+1: LOR output is routed to LOL(use when LOL and LOR output is powered by AVDD)
+
+5.3.13 Page 1 / Register 15: LOR Routing Selection Register - 0x01 / 0x0F (P1_R15)
+D7-D4 R 0000 Reserved. Write only default values
+D3 R/W 0 0: Right Channel DAC reconstruction filter output is not routed to LOR
+1: Right Channel DAC reconstruction filter output is routed to LOR
+D2 R 0 Reserved. Write only default value.
+D1 R/W 0 0: MAR output is not routed to LOR
+1: MAR output is routed to LOR
+D0 R 0 Reserved. Write only default value.
+
+5.3.14 Page 1 / Register 16: HPL Driver Gain Setting Register - 0x01 / 0x10 (P1_R16)
+D7 R 0 Reserved. Write only default value.
+D6 R/W 1 0: HPL driver is not muted
+1: HPL driver is muted
+D5-D0 R/W 00 0000 10 0000-11 1001: Reserved. Do not use
+11 1010: HPL driver gain is -6dB
+(Note: It is not possible to mute HPR while programmed to -6dB)
+11 1011: HPL driver gain is -5dB
+11 1100: HPL driver gain is -4dB
+…
+00 0000: HPL driver gain is 0dB
+...
+01 1011: HPL driver gain is 27dB
+01 1100: HPL driver gain is 28dB
+01 1101: HPL driver gain is 29dB
+01 1110-01 1111: Reserved. Do not use
+Note: These gains are not valid while using the driver in Class-D mode
+
+5.3.15 Page 1 / Register 17: HPR Driver Gain Setting Register - 0x01 / 0x11 (P1_R17)
+D7 R 0 Reserved. Write only default value.
+D6 R/W 1 0: HPR driver is not muted
+1: HPR driver is muted
+D5-D0 R/W 00 0000 10 0000-11 1001: Reserved. Do not use
+11 1010: HPR driver gain is -6dB
+(Note: It is not possible to mute HPR while programmed to -6dB)
+11 1011: HPR driver gain is -5dB
+11 1100: HPR driver gain is -4dB
+…
+00 0000: HPR driver gain is 0dB
+...
+01 1011: HPR driver gain is 27dB
+01 1100: HPR driver gain is 28dB
+01 1101: HPR driver gain is 29dB
+01 1110-01 1111: Reserved. Do not use
+Note: These gains are not valid while using the driver in Class-D mode
+
+5.3.16 Page 1 / Register 18: LOL Driver Gain Setting Register - 0x01 / 0x12 (P1_R18)
+D7 R 0 Reserved. Write only default value.
+D6 R/W 1 0: LOL driver is not muted
+1: LOL driver is muted
+D5-D0 R/W 00 0000 10 0000-11 1001: Reserved. Do not use
+11 1010: LOL driver gain is -6dB
+11 1011: LOL driver gain is -5dB
+11 1100: LOL driver gain is -4dB
+…
+00 0000: LOL driver gain is 0dB
+...
+01 1011: LOL driver gain is 27dB
+01 1100: LOL driver gain is 28dB
+01 1101: LOL driver gain is 29dB
+01 1110-01 1111: Reserved. Do not use
+
+5.3.17 Page 1 / Register 19: LOR Driver Gain Setting Register - 0x01 / 0x13 (P1_R19)
+D7 R 0 Reserved. Write only default value.
+D6 R/W 1 0: LOR driver is not muted
+1: LOR driver is muted
+D5-D0 R/W 00 0000 10 0000-11 1001: Reserved. Do not use
+11 1010: LOR driver gain is -6dB
+11 1011: LOR driver gain is -5dB
+11 1100: LOR driver gain is -4dB
+…
+00 0000: LOR driver gain is 0dB
+...
+01 1011: LOR driver gain is 27dB
+01 1100: LOR driver gain is 28dB
+01 1101: LOR driver gain is 29dB
+01 1110-01 1111: Reserved. Do not use
+
+5.3.18 Page 1 / Register 20: Headphone Driver Startup Control Register - 0x01 / 0x14 (P1_R20)
+D7-D6 R/W 00 00: Soft routing step time is 0ms
+01: Soft routing step time is 50ms
+10: Soft routing step time is 100ms
+11: Soft routing step time is 200ms
+D5-D2 R/W 0000 0000: Slow power up of headphone amp's is disabled
+0001: Headphone ramps power up slowly in 0.5 time constants
+0010: Headphone ramps power up slowly in 0.625 time constants
+0011; Headphone ramps power up slowly in 0.725 time constants
+0100: Headphone ramps power up slowly in 0.875 time constants
+0101: Headphone ramps power up slowly in 1.0 time constants
+0110: Headphone ramps power up slowly in 2.0 time constants
+0111: Headphone ramps power up slowly in 3.0 time constants
+1000: Headphone ramps power up slowly in 4.0 time constants
+1001: Headphone ramps power up slowly in 5.0 time constants
+1010: Headphone ramps power up slowly in 6.0 time constants
+1011: Headphone ramps power up slowly in 7.0 time constants
+1100: Headphone ramps power up slowly in 8.0 time constants
+1101: Headphone ramps power up slowly in 16.0 time constants ( do not use for Rchg=25K)
+1110: Headphone ramps power up slowly in 24.0 time constants (do not use for Rchg=25K)
+1111: Headphone ramps power up slowly in 32.0 time constants (do not use for Rchg=25K)
+Note: Time constants assume 47uF decoupling cap
+D1-D0 R/W 00 00: Headphone ramps power up time is determined with 25k resistance
+01: Headphone ramps power up time is determined with 6k resistance
+10: Headphone ramps power up time is determined with 2k resistance
+11: Reserved. Do not use
+
+5.3.19 Page 1 / Register 21: Reserved Register - 0x01 / 0x15 (P1_R21)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.20 Page 1 / Register 22: IN1L to HPL Volume Control Register - 0x01 / 0x16 (P1_R22)
+D7 R 0 Reserved. Write only default value.
+D6-D0 R/W 000 0000 IN1L to HPL Volume Control
+000 0000: Volume Control = 0.0dB
+000 0001: Volume Control = -0.5dB
+...
+111 0100: Volume Control = -72.3dB
+111 0101: Volume Control = MUTE
+111 0110-111 1111: Reserved. Do not use
+
+5.3.21 Page 1 / Register 23: IN1R to HPR Volume Control Register - 0x01 / 0x17 (P1_R23)
+D7 R 0 Reserved. Write only default value
+D6-D0 R/W 000 0000 IN1R to HPR Volume Control
+000 0000: Volume Control = 0.0dB
+000 0001: Volume Control = -0.5dB
+...
+111 0100: Volume Control = -72.3dB
+111 0101: Volume Control = MUTE
+111 0110-111 1111: Reserved. Do not use
+
+5.3.22 Page 1 / Register 24: Mixer Amplifier Left Volume Control Register - 0x01 / 0x18
+(P1_R24)
+D7-D6 R 00 Reserved. Write only default values
+D5-D0 R/W 00 0000 Mixer Amplifier Left Volume Control
+00 0000: Volume Control = 0.0dB
+00 0001: Volume Control = -0.4dB
+...
+10 0111: Volume Control = -30.1dB
+10 1000: Volume Control = MUTE
+10 1001-11 1111: Reserved. Do no use
+
+5.3.23 Page 1 / Register 25: Mixer Amplifier Right Volume Control Register - 0x01 / 0x19
+(P1_R25)
+D7-D6 R 00 Reserved. Write only default values
+D5-D0 R/W 00 0000 Mixer Amplifier Right Volume Control
+00 0000: Volume Control = 0.0dB
+00 0001: Volume Control = -0.4dB
+...
+10 0111: Volume Control = -30.1dB
+10 1000: Volume Control = MUTE
+10 1001-11 1111: Reserved. Do no use
+
+5.3.24 Page 1 / Register 26-50: Reserved Register - 0x01 / 0x1A-0x32 (P1_R26-50)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.25 Page 1 / Register 51: MICBIAS Configuration Register - 0x01 / 0x33 (P1_R51)
+D7 R 0 Reserved. Write only default value.
+D6 R/W 0 0: MICBIAS powered down
+1: MICBIAS powered up
+D5-D4 R/W 00 MICBIAS Output Voltage Configuration
+00: MICBIAS = 1.04V (CM = 0.75V) or MICBIAS = 1.25V(CM = 0.9V)
+01: MICBIAS = 1.425V(CM = 0.75V) or MICBIAS = 1.7V(CM = 0.9V)
+10: MICBIAS = 2.075V(CM = 0.75V) or MICBIAS = 2.5V(CM = 0.9V)
+11: MICBIAS is switch to power supply
+D3 R/W 0 0: MICBIAS voltage is generated from AVDD
+1: MICBIAS voltage is generated from LDOIN
+D2-D0 R 000 Reserved. Write only default value.
+
+5.3.26 Page 1 / Register 52: Left MICPGA Positive Terminal Input Routing Configuration
+Register - 0x01 / 0x34 (P1_R52)
+D7-D6 R/W 00 IN1L to Left MICPGA positive terminal selection
+00: IN1L is not routed to Left MICPGA
+01: IN1L is routed to Left MICPGA with 10k resistance
+10: IN1L is routed to Left MICPGA with 20k resistance
+11: IN1L is routed to Left MICPGA with 40k resistance
+D5-D4 R/W 00 IN2L to Left MICPGA positive terminal selection
+00: IN2L is not routed to Left MICPGA
+01: IN2L is routed to Left MICPGA with 10k resistance
+10: IN2L is routed to Left MICPGA with 20k resistance
+11: IN2L is routed to Left MICPGA with 40k resistance
+D3-D2 R/W 00 IN3L to Left MICPGA positive terminal selection
+00: IN3L is not routed to Left MICPGA
+01: IN3L is routed to Left MICPGA with 10k resistance
+10: IN3L is routed to Left MICPGA with 20k resistance
+11: IN3L is routed to Left MICPGA with 40k resistance
+D1-D0 R/W 00 IN1R to Left MICPGA positive terminal selection
+00: IN1R is not routed to Left MICPGA
+01: IN1R is routed to Left MICPGA with 10k resistance
+10: IN1R is routed to Left MICPGA with 20k resistance
+11: IN1R is routed to Left MICPGA with 40k resistance
+
+5.3.27 Page 1 / Register 53: Reserved Register - 0x01 / 0x35 (P1_R53)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.28 Page 1 / Register 54: Left MICPGA Negative Terminal Input Routing Configuration
+Register - 0x01 / 0x36 (P1_R54)
+D7-D6 R/W 00 CM to Left MICPGA (CM1L) positive terminal selection
+00: CM is not routed to Left MICPGA
+01: CM is routed to Left MICPGA via CM1L with 10k resistance
+10: CM is routed to Left MICPGA via CM1L with 20k resistance
+11: CM is routed to Left MICPGA via CM1L with 40k resistance
+D5-D4 R/W 00 IN2R to Left MICPGA positive terminal selection
+00: IN2R is not routed to Left MICPGA
+01: IN2R is routed to Left MICPGA with 10k resistance
+10: IN2R is routed to Left MICPGA with 20k resistance
+11: IN2R is routed to Left MICPGA with 40k resistance
+D3-D2 R/W 00 IN3R to Left MICPGA positive terminal selection
+00: IN3R is not routed to Left MICPGA
+01: IN3R is routed to Left MICPGA with 10k resistance
+10: IN3R is routed to Left MICPGA with 20k resistance
+11: IN3R is routed to Left MICPGA with 40k resistance
+D1-D0 R/W 00 CM to Left MICPGA (CM2L) positive terminal selection
+00: CM is not routed to Left MICPGA
+01: CM is routed to Left MICPGA via CM2L with 10k resistance
+10: CM is routed to Left MICPGA via CM2L with 20k resistance
+11: CM is routed to Left MICPGA via CM2L with 40k resistance
+
+5.3.29 Page 1 / Register 55: Right MICPGA Positive Terminal Input Routing Configuration
+Register - 0x01 / 0x37 (P1_R55)
+D7-D6 R/W 00 IN1R to Right MICPGA positive terminal selection
+00: IN1R is not routed to Right MICPGA
+01: IN1R is routed to Right MICPGA with 10k resistance
+10: IN1R is routed to Right MICPGA with 20k resistance
+11: IN1R is routed to Right MICPGA with 40k resistance
+D5-D4 R/W 00 IN2R to Right MICPGA positive terminal selection
+00: IN2R is not routed to Right MICPGA
+01: IN2R is routed to Right MICPGA with 10k resistance
+10: IN2R is routed to Right MICPGA with 20k resistance
+11: IN2R is routed to Right MICPGA with 40k resistance
+D3-D2 R/W 00 IN3R to Right MICPGA positive terminal selection
+00: IN3R is not routed to Right MICPGA
+01: IN3R is routed to Right MICPGA with 10k resistance
+10: IN3R is routed to Right MICPGA with 20k resistance
+11: IN3R is routed to Right MICPGA with 40k resistance
+D1-D0 R/W 00 IN2L to Right MICPGA positive terminal selection
+00: IN2L is not routed to Right MICPGA
+01: IN2L is routed to Right MICPGA with 10k resistance
+10: IN2L is routed to Right MICPGA with 20k resistance
+11: IN2L is routed to Right MICPGA with 40k resistance
+
+5.3.30 Page 1 / Register 56: Reserved Register - 0x01 / 0x38 (P1_R56)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.31 Page 1 / Register 57: Right MICPGA Negative Terminal Input Routing Configuration
+Register - 0x01 / 0x39 (P1_R57)
+D7-D6 R/W 00 CM to Right MICPGA (CM1R) positive terminal selection
+00: CM is not routed to Right MICPGA
+01: CM is routed to Right MICPGA via CM1R with 10k resistance
+10: CM is routed to Right MICPGA via CM1R with 20k resistance
+11: CM is routed to Right MICPGA via CM1R with 40k resistance
+D5-D4 R/W 00 IN1L to Right MICPGA positive terminal selection
+00: IN1L is not routed to Right MICPGA
+01: IN1L is routed to Right MICPGA with 10k resistance
+10: IN1L is routed to Right MICPGA with 20k resistance
+11: IN1L is routed to Right MICPGA with 40k resistance
+D3-D2 R/W 00 IN3L to Right MICPGA positive terminal selection
+00: IN3L is not routed to Right MICPGA
+01: IN3L is routed to Right MICPGA with 10k resistance
+10: IN3L is routed to Right MICPGA with 20k resistance
+11: IN3L is routed to Right MICPGA with 40k resistance
+D1-D0 R/W 00 CM to Right MICPGA (CM2R) positive terminal selection
+00: CM is not routed to Right MICPGA
+01: CM is routed to Right MICPGA via CM2R with 10k resistance
+10: CM is routed to Right MICPGA via CM2R with 20k resistance
+11: CM is routed to Right MICPGA via CM2R with 40k resistance
+
+5.3.32 Page 1 / Register 58: Floating Input Configuration Register - 0x01 / 0x3A (P1_R58)
+D7 R/W 0 0: IN1L input is not weakly connected to common mode
+1: IN1L input is weakly driven to common mode. Use when not routing IN1L to Left and Right
+MICPGA and HPL
+D6 R/W 0 0: IN1R input is not weakly connected to common mode
+1: IN1R input is weakly driven to common mode. Use when not routing IN1L to Left and Right
+MICPGA and HPR
+D5 R/W 0 0: IN2L input is not weakly connected to common mode
+1: IN2L input is weakly driven to common mode. Use when not routing IN2L to Left and Right
+MICPGA
+D4 R/W 0 0: IN2R input is not weakly connected to common mode
+1: IN2R input is weakly driven to common mode. Use when not routing IN2R to Left and Right
+MICPGA
+D3 R/W 0 0: IN3L input is not weakly connected to common mode
+1: IN3L input is weakly driven to common mode. Use when not routing IN3L to Left and Right
+MICPGA
+D2 R/W 0 0: IN3R input is not weakly connected to common mode
+1: IN3R input is weakly driven to common mode. Use when not routing IN3R to Left and Right
+MICPGA
+D1-D0 R 00 Reserved. Write only default values
+
+5.3.33 Page 1 / Register 59: Left MICPGA Volume Control Register - 0x01 / 0x3B (P1_R59)
+D7 R/W 1 0: Left MICPGA Gain is enabled
+1: Left MICPGA Gain is set to 0dB
+D6-D0 R/W 000 0000 Left MICPGA Volume Control
+000 0000: Volume Control = 0.0dB
+000 0001: Volume Control = 0.5dB
+000 0010: Volume Control = 1.0dB
+…
+101 1101: Volume Control = 46.5dB
+101 1110: Volume Control = 47.0dB
+101 1111: Volume Control = 47.5dB
+110 0000-111 1111: Reserved. Do not use
+
+5.3.34 Page 1 / Register 60: Right MICPGA Volume Control Register - 0x01 / 0x3C (P1_R60)
+D7 R/W 1 0: Right MICPGA Gain is enabled
+1: Right MICPGA Gain is set to 0dB
+D6-D0 R/W 000 0000 Right MICPGA Volume Control
+000 0000: Volume Control = 0.0dB
+000 0001: Volume Control = 0.5dB
+000 0010: Volume Control = 1.0dB
+…
+101 1101: Volume Control = 46.5dB
+101 1110: Volume Control = 47.0dB
+101 1111: Volume Control = 47.5dB
+110 0000-111 1111: Reserved. Do not use
+
+5.3.35 Page 1 / Register 61: ADC Power Tune Configuration Register - 0x01 / 0x3D (P1_R61)
+D7-D0 R/W 0000 0000 0000 0000: PTM_R4 (Default)
+0110 0100: PTM_R3
+1011 0110: PTM_R2
+1111 1111: PTM_R1
+
+5.3.36 Page 1 / Register 62: ADC Analog Volume Control Flag Register - 0x01 / 0x3E (P1_R62)
+D7-D2 R 00 0000 Reserved. Write only default values
+D1 R 0 Left Channel Analog Volume Control Flag
+0: Applied Volume is not equal to Programmed Volume
+1: Applied Volume is equal to Programmed Volume
+D0 R 0 Right Channel Analog Volume Control Flag
+0: Applied Volume is not equal to Programmed Volume
+1: Applied Volume is equal to Programmed Volume
+
+5.3.37 Page 1 / Register 63: DAC Analog Gain Control Flag Register - 0x01 / 0x3F (P1_R63)
+D7 R 0 HPL Gain Flag
+0: Applied Gain is not equal to Programmed Gain
+1: Applied Gain is equal to Programmed Gain
+D6 R 0 HPR Gain Flag
+0: Applied Gain is not equal to Programmed Gain
+1: Applied Gain is equal to Programmed Gain
+D5 R 0 LOL Gain Flag
+0: Applied Gain is not equal to Programmed Gain
+1: Applied Gain is equal to Programmed Gain
+D4 R 0 LOR Gain Flag
+0: Applied Gain is not equal to Programmed Gain
+1: Applied Gain is equal to Programmed Gain
+D3 R 0 IN1L to HPL Bypass Volume Flag
+0: Applied Volume is not equal to Programmed Volume
+1: Applied Volume is equal to Programmed Volume
+D2 R 0 IN1R to HPR Bypass Volume Flag
+0: Applied Volume is not equal to Programmed Volume
+1: Applied Volume is equal to Programmed Volume
+D1 R 0 MAL Volume Flag
+0: Applied Volume is not equal to Programmed Volume
+1: Applied Volume is equal to Programmed Volume
+D0 R 0 MAR Volume Flag
+0: Applied Volume is not equal to Programmed Volume
+1: Applied Volume is equal to Programmed Volume
+
+5.3.38 Page 1 / Register 64-70: Reserved Register - 0x01 / 0x40-0x46 (P1_R64-70)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.39 Page 1 / Register 71: Analog Input Quick Charging Configuration Register - 0x01 / 0x47
+(P1_R71)
+D7-D6 R 00 Reserved. Write only default values
+D5-D0 R/W 00 0000 Analog inputs power up time
+00 0000: Default. Use one of the values give below
+11 0001: Analog inputs power up time is 3.1 ms
+11 0010: Analog inputs power up time is 6.4 ms
+11 0011: Analog inputs power up time is 1.6 ms
+Others: Do not use
+
+5.3.40 Page 1 / Register 72-122: Reserved Register - 0x01 / 0x48-0x7A (P1_R72-122)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
+5.3.41 Page 1 / Register 123: Reference Power-up Configuration Register - 0x01 / 0x7B
+(P1_R123)
+D7-D3 R 0 0000 Reserved. Write only default values
+D2-D0 R/W 000 Reference Power Up configuration
+000: Reference will power up slowly when analog blocks are powered up
+001: Reference will power up in 40ms when analog blocks are powered up
+010: Reference will power up in 80ms when analog blocks are powered up
+011: Reference will power up in 120ms when analog blocks are powered up
+100: Force power up of reference. Power up will be slow
+101: Force power up of reference. Power up time will be 40ms
+110: Force power up of reference. Power up time will be 80ms
+111: Force power up of reference. Power up time will be 120ms
+
+5.3.42 Page 1 / Register 124-127: Reserved Register - 0x01 / 0x7C-0x7F (P1_R124-127)
+D7-D0 R 0000 0000 Reserved. Write only default values
+
