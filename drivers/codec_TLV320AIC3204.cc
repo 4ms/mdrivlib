@@ -135,8 +135,6 @@ constexpr std::array<Registers, 42> default_init{
 		LeftMICPGAVolume{.Volume = 0xc},
 		RightMICPGAVolume{.Volume = 0xc},
 
-		// HPLRoutingSelection{.LeftDACtoHPL = 1},
-		// HPRRoutingSelection{.RightDACtoHPR = 1},
 		LOLRoutingSelection{.LeftDACtoLOL = 1},
 		LORRoutingSelection{.RightDACtoLOR = 1},
 		PlaybackConfiguration1{.LeftDACPTM = PlaybackConfiguration1::PTM_P3_P4},
@@ -172,7 +170,6 @@ constexpr std::array<Registers, 42> default_init{
 
 		LeftDACVolume{.Volume = 0x0},  //0 = 0dB
 		RightDACVolume{.Volume = 0x0}, //0 = 0dB
-
 	},
 };
 
