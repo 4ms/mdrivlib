@@ -20,16 +20,16 @@ template<AdcPeriphNum PeriphNum>
 struct ADCn {
 	static void enable() {
 		if constexpr (PeriphNum == AdcPeriphNum::_1)
-			RCC_Enable::ADC12_::set();
+			RCC_Enable::ADC1_::set();
 		else if (PeriphNum == AdcPeriphNum::_2)
-			RCC_Enable::ADC12_::set();
+			RCC_Enable::ADC2_::set();
 	}
 
 	static void disable() {
 		if constexpr (PeriphNum == AdcPeriphNum::_1)
-			RCC_Enable::ADC12_::clear();
+			RCC_Enable::ADC1_::clear();
 		else if (PeriphNum == AdcPeriphNum::_2)
-			RCC_Enable::ADC12_::clear();
+			RCC_Enable::ADC2_::clear();
 	}
 };
 
