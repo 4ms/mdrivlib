@@ -83,7 +83,10 @@ private:
 	// Bit Low: 0.15us - 0.45us pulse (0.3us target)
 	static constexpr uint16_t PWM_LO = (Conf.period + 1) * (TimPwmChan<Conf>::is_inverted() ? 0.76f : 0.24f);
 
-	static constexpr uint16_t PWM_RESET = 0;
+	static constexpr uint16_t PWM_RESET =
+		(Conf.channum == TimChannelNum::_1N || Conf.channum == TimChannelNum::_2N || Conf.channum == TimChannelNum::_3N)
+			? 0
+			: 0xFFFF;
 
 	TimPwmChan<Conf> pwm;
 	DMATransfer<DMAConf> dma;
