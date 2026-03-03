@@ -61,6 +61,14 @@ struct TimPwmChan {
 		LL_TIM_EnableCounter(get_TIM());
 	}
 
+	static void downcount_mode() {
+		LL_TIM_OC_SetMode(get_TIM(), (uint32_t)get_base_channel(), LL_TIM_OCMODE_PWM2);
+	}
+
+	static void upcount_mode() {
+		LL_TIM_OC_SetMode(get_TIM(), (uint32_t)get_base_channel(), LL_TIM_OCMODE_PWM1);
+	}
+
 	static volatile uint32_t *get_CCR() {
 		if constexpr (get_base_channel() == TimChannelNum::_1)
 			return &get_TIM()->CCR1;
@@ -96,6 +104,12 @@ struct TimPwmChan {
 	}
 	static void stop_output() {
 		LL_TIM_CC_DisableChannel(get_TIM(), static_cast<uint32_t>(Conf.channum));
+	}
+	static void start_timer() {
+		LL_TIM_EnableCounter(get_TIM());
+	}
+	static void stop_timer() {
+		LL_TIM_DisableCounter(get_TIM());
 	}
 
 	static void enable_dma_mode() {
