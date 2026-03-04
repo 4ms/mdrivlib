@@ -42,15 +42,22 @@ struct GPIOExpander {
 		: _conf{conf}
 		, _device_addr(conf.addr << 1)
 		, _i2c{i2c} {
-		i2c.enable_IT(conf.irq_priority, conf.irq_subpriority);
 	}
 
 	bool start() {
-		_data[0] = ConfigPort0;
-		_data[1] = static_cast<uint8_t>(_conf.config & 0x00FF);
-		_data[2] = static_cast<uint8_t>(_conf.config >> 8);
-		auto err = _i2c.write(_device_addr, _data, 3);
+		_data[0] = static_cast<uint8_t>(_conf.config & 0x00FF);
+		_data[1] = static_cast<uint8_t>(_conf.config >> 8);
+		printf("Configuring address %u as %x%x (1=button, 0=led)\n", _device_addr, _data[0], _data[1]);
+		auto err = _i2c.mem_write(_device_addr, ConfigPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
 		return err == I2CPeriph::I2C_NO_ERR;
+	}
+
+	std::optional<uint16_t> read_pin_config() {
+		auto err = _i2c.mem_read(_device_addr, ConfigPort0, I2C_MEMADD_SIZE_8BIT, _data, 2);
+		if (err == I2CPeriph::I2C_NO_ERR)
+			return ((uint16_t(_data[1]) << 8) | uint16_t(_data[0]));
+		else
+			return std::nullopt;
 	}
 
 	bool is_present() {
