@@ -41,6 +41,11 @@ enum class AdcChanNum : uint32_t {
 #endif
 };
 
+#if defined(STM32MP1)
+#define ADC_OVERSAMPLING_RATIO_256 256
+#define ADC_OVERSAMPLING_RATIO_1024 1024
+#endif
+
 enum AdcSamplingTime : uint32_t {
 #if defined(STM32MP1)
 	_1Cycle = ADC_SAMPLETIME_1CYCLE_5,
