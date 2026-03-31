@@ -122,7 +122,40 @@ bool I2CPeriph::is_ready() {
 
 void I2CPeriph::deinit() {
 	Clocks::I2C::disable(hal_i2c_.Instance);
-	Clocks::I2C::force_reset(hal_i2c_.Instance);
+	HAL_Delay(1);
+
+	if (hal_i2c_.Instance == I2C1) {
+		RCC_Reset::I2C1_::set();
+		HAL_Delay(1);
+		RCC_Reset::I2C1_::clear();
+		HAL_Delay(1);
+	} else if (hal_i2c_.Instance == I2C2) {
+		RCC_Reset::I2C2_::set();
+		HAL_Delay(1);
+		RCC_Reset::I2C2_::clear();
+		HAL_Delay(1);
+	} else if (hal_i2c_.Instance == I2C3) {
+		RCC_Reset::I2C3_::set();
+		HAL_Delay(1);
+		RCC_Reset::I2C3_::clear();
+		HAL_Delay(1);
+	} else if (hal_i2c_.Instance == I2C4) {
+		RCC_Reset::I2C4_::set();
+		HAL_Delay(1);
+		RCC_Reset::I2C4_::clear();
+		HAL_Delay(1);
+	} else if (hal_i2c_.Instance == I2C5) {
+		RCC_Reset::I2C5_::set();
+		HAL_Delay(1);
+		RCC_Reset::I2C5_::clear();
+		HAL_Delay(1);
+	} else if (hal_i2c_.Instance == I2C6) {
+		RCC_Reset::I2C6_::set();
+		HAL_Delay(1);
+		RCC_Reset::I2C6_::clear();
+		HAL_Delay(1);
+	}
+
 	already_init = false;
 }
 
