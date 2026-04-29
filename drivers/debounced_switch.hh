@@ -8,8 +8,9 @@ template<PinDef Pindef,
 		 PinPolarity Polarity,
 		 unsigned RisingEdgePattern = 0x00000001,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
-		 unsigned StateMask = 0x00000FFF>
-struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> {
+		 unsigned StateMask = 0x00000FFF,
+		 bool DebounceRawState = false>
+struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask, DebounceRawState> {
 
 	using PinT = FPin<Pindef.gpio, Pindef.pin, PinMode::Input, Polarity>;
 
@@ -23,8 +24,14 @@ struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, St
 	}
 };
 
-template<PinDef Pindef, PinPolarity Polarity>
-using DebouncedSwitch = DebouncedPin<Pindef, Polarity>;
+template<PinDef Pindef,
+		 PinPolarity Polarity,
+		 unsigned RisingEdgePattern = 0x00000001,
+		 unsigned FallingEdgePattern = 0xFFFFFFFE,
+		 unsigned StateMask = 0x00000FFF,
+		 bool DebounceRawState = false>
+using DebouncedSwitch =
+	DebouncedPin<Pindef, Polarity, RisingEdgePattern, FallingEdgePattern, StateMask, DebounceRawState>;
 
 //
 // DebouncedButton: same as DebouncedSwitch/Pin but counts how long is held down or up
