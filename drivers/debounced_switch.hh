@@ -1,7 +1,6 @@
 #pragma once
 #include "pin.hh"
 #include "util/debouncer.hh"
-#include <cstdint>
 
 namespace mdrivlib
 {
@@ -34,8 +33,9 @@ template<PinDef Pindef,
 		 PinPolarity Polarity,
 		 unsigned RisingEdgePattern = 0x00000001,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
-		 unsigned StateMask = 0x00000FFF>
-struct DebouncedButton : public DebouncerCounter<RisingEdgePattern, FallingEdgePattern, StateMask> {
+		 unsigned StateMask = 0x00000FFF,
+		 bool DebounceRawState = false>
+struct DebouncedButton : public DebouncerCounter<RisingEdgePattern, FallingEdgePattern, StateMask, DebounceRawState> {
 
 	using PinT = FPin<Pindef.gpio, Pindef.pin, PinMode::Input, Polarity>;
 
@@ -71,8 +71,8 @@ template<PinDef PinRightDef,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
 		 unsigned StateMask = 0x00000FFF>
 struct DebouncedSPDT3pos {
-	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> debouncer_right;
-	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> debouncer_left;
+	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask, true> debouncer_right;
+	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask, true> debouncer_left;
 
 	using PinRightT = FPin<PinRightDef.gpio, PinRightDef.pin, PinMode::Input, Polarity>;
 	using PinLeftT = FPin<PinLeftDef.gpio, PinLeftDef.pin, PinMode::Input, Polarity>;
