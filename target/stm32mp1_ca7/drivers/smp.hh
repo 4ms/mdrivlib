@@ -38,7 +38,7 @@ struct SMPControl {
 	template<uint32_t reg_num = 0>
 	static void write(uint32_t value) {
 		if constexpr (reg_num < NumRegs)
-			regs[reg_num].store(value);
+			regs[reg_num].store(value, std::memory_order_release);
 	}
 
 	static void write(uint32_t reg_num, uint32_t value) {
@@ -56,7 +56,7 @@ struct SMPControl {
 	}
 
 	static uint32_t read(uint32_t reg_num) {
-		return reg_num < NumRegs ? regs[reg_num].load() : 0;
+		return reg_num < NumRegs ? regs[reg_num].load(std::memory_order_acquire) : 0;
 	}
 };
 
