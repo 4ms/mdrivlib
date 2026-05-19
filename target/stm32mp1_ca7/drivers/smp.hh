@@ -22,7 +22,7 @@ struct SMPControl {
 
 	static constexpr uint32_t NumCores = 2;
 	static constexpr uint32_t NumRegs = 64;
-	static inline __attribute__((section(".noncachable"))) std::array<std::atomic<uint32_t>, NumRegs> regs{};
+	static inline __attribute__((section(".sharedmem"))) std::array<std::atomic<uint32_t>, NumRegs> regs{};
 
 	template<uint32_t channel>
 	static void notify() {
