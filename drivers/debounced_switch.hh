@@ -1,7 +1,6 @@
 #pragma once
 #include "pin.hh"
 #include "util/debouncer.hh"
-#include <cstdint>
 
 namespace mdrivlib
 {
@@ -9,8 +8,9 @@ template<PinDef Pindef,
 		 PinPolarity Polarity,
 		 unsigned RisingEdgePattern = 0x00000001,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
-		 unsigned StateMask = 0x00000FFF>
-struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> {
+		 unsigned StateMask = 0x00000FFF,
+		 bool DebounceRawState = false>
+struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask, DebounceRawState> {
 
 	using PinT = FPin<Pindef.gpio, Pindef.pin, PinMode::Input, Polarity>;
 
@@ -24,8 +24,14 @@ struct DebouncedPin : public Debouncer<RisingEdgePattern, FallingEdgePattern, St
 	}
 };
 
-template<PinDef Pindef, PinPolarity Polarity>
-using DebouncedSwitch = DebouncedPin<Pindef, Polarity>;
+template<PinDef Pindef,
+		 PinPolarity Polarity,
+		 unsigned RisingEdgePattern = 0x00000001,
+		 unsigned FallingEdgePattern = 0xFFFFFFFE,
+		 unsigned StateMask = 0x00000FFF,
+		 bool DebounceRawState = false>
+using DebouncedSwitch =
+	DebouncedPin<Pindef, Polarity, RisingEdgePattern, FallingEdgePattern, StateMask, DebounceRawState>;
 
 //
 // DebouncedButton: same as DebouncedSwitch/Pin but counts how long is held down or up
@@ -34,8 +40,9 @@ template<PinDef Pindef,
 		 PinPolarity Polarity,
 		 unsigned RisingEdgePattern = 0x00000001,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
-		 unsigned StateMask = 0x00000FFF>
-struct DebouncedButton : public DebouncerCounter<RisingEdgePattern, FallingEdgePattern, StateMask> {
+		 unsigned StateMask = 0x00000FFF,
+		 bool DebounceRawState = false>
+struct DebouncedButton : public DebouncerCounter<RisingEdgePattern, FallingEdgePattern, StateMask, DebounceRawState> {
 
 	using PinT = FPin<Pindef.gpio, Pindef.pin, PinMode::Input, Polarity>;
 
@@ -71,8 +78,8 @@ template<PinDef PinRightDef,
 		 unsigned FallingEdgePattern = 0xFFFFFFFE,
 		 unsigned StateMask = 0x00000FFF>
 struct DebouncedSPDT3pos {
-	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> debouncer_right;
-	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask> debouncer_left;
+	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask, true> debouncer_right;
+	Debouncer<RisingEdgePattern, FallingEdgePattern, StateMask, true> debouncer_left;
 
 	using PinRightT = FPin<PinRightDef.gpio, PinRightDef.pin, PinMode::Input, Polarity>;
 	using PinLeftT = FPin<PinLeftDef.gpio, PinLeftDef.pin, PinMode::Input, Polarity>;

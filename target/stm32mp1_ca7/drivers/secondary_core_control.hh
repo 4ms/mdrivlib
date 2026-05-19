@@ -21,14 +21,6 @@ struct SecondaryCoreController {
 		setup_sgi();
 		unlock_backup_registers();
 
-		// Todo: some way to reload new firmware while debugging without a hard reset
-		// This mimicks what u-boot does, but it doesn't work.
-		// stop();
-		// reset();
-		// *MagicNumberRegister = 0xFFFFFFFF;
-		// while (*MagicNumberRegister != 0)
-		// 	send_sgi();
-
 		*BranchAddressRegister = reinterpret_cast<uint32_t>(&aux_core_start);
 		*MagicNumberRegister = MagicNumberValue;
 		send_sgi(irq0);

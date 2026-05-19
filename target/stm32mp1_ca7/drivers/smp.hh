@@ -11,7 +11,7 @@ namespace mdrivlib
 
 struct SMPControl {
 
-	static constexpr std::array<IRQn_Type, 4> SMPIRQn{SGI1_IRQn, SGI2_IRQn, SGI3_IRQn, SGI4_IRQn};
+	static constexpr std::array<IRQn_Type, 5> SMPIRQn{SGI1_IRQn, SGI2_IRQn, SGI3_IRQn, SGI4_IRQn, SGI5_IRQn};
 
 	static constexpr auto IRQn(uint32_t channel) {
 		if (channel <= SMPIRQn.size())
@@ -44,13 +44,13 @@ struct SMPControl {
 	static void write(uint32_t reg_num, uint32_t value) {
 		if (reg_num >= NumRegs)
 			return;
-		regs[reg_num].store(value);
+		regs[reg_num].store(value, std::memory_order_release);
 	}
 
 	template<uint32_t reg_num = 0>
 	static uint32_t read() {
 		if constexpr (reg_num < NumRegs)
-			return regs[reg_num].load();
+			return regs[reg_num].load(std::memory_order_acquire);
 		else
 			return 0;
 	}
@@ -64,21 +64,41 @@ struct SMPThread {
 	static constexpr uint32_t StatusReg = 0;
 	enum Status { NotRunning = 0, Running = 1 };
 
-	enum : uint32_t { CustomFunc0 = 0, CustomFunc1 = 0, CustomFunc2 = 2, CallFunction = 3 };
+	enum : uint32_t { CallFunctionIRQn = SGI5_IRQn };
 
 	static inline std::function<void()> thread_func;
 
-	// Moves a function to static storage and notifies the secondary core that it should execute it
-	// Aux Core must respond to the SGI#3 by calling SMPThread::execute();
+	// Moves a function to static storage and notifies the other core via SGI
+	// Other Core must respond to the SGI by calling SMPThread::execute();
 	static void launch(std::function<void()> &&entry) {
 		thread_func = std::move(entry);
 		SMPControl::write<StatusReg>(Running);
-		SMPControl::notify<CallFunction>();
+		SMPControl::notify<CallFunctionIRQn>();
 	}
 
-	// Called by the aux core to respond to receiving an SGI3
+	template<typename Fn>
+	static auto run(Fn fn) -> std::invoke_result_t<Fn> {
+		using R = std::invoke_result_t<Fn>;
+
+		if constexpr (std::is_void_v<R>) {
+			thread_func = std::move(fn);
+			SMPControl::write<StatusReg>(Running);
+			SMPControl::notify<CallFunctionIRQn>();
+			join();
+		} else {
+			R result{};
+			thread_func = [&]() { result = fn(); };
+			SMPControl::write<StatusReg>(Running);
+			SMPControl::notify<CallFunctionIRQn>();
+			join();
+			return result;
+		}
+	}
+
+	// Called by the "other" core to respond to receiving an SGI
 	static void execute() {
-		thread_func();
+		if (thread_func)
+			thread_func();
 		signal_done();
 	}
 
