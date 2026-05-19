@@ -76,7 +76,7 @@ void SystemInitAuxCore(void) {
 
 	__FPU_Enable();
 
-	MMU_CreateTranslationTable();
+	MMU_CreateTranslationTableAuxCore();
 	MMU_Enable();
 
 	L1C_EnableCaches();
