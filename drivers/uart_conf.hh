@@ -11,6 +11,9 @@ struct UartConf {
 	uint32_t wordlen = 8;
 	enum class Parity { None, Odd, Even } parity = Parity::None;
 	enum class StopBits { _0_5, _1, _1_5, _2 } stopbits = StopBits::_1;
+
+	// Synchronous (clock-driven, SPI-like) USART mode
+	bool synchronous = false;
 	//TODO: CLK polarity, phase, lastbit
 	//TODO: HWFlowCtl, OverSampling, OneBitSampling
 };

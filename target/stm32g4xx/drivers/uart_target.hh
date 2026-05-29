@@ -10,9 +10,6 @@ template<UartConf Conf>
 struct UartTarget {
 
 	static void uart_init() {
-		constexpr bool is_usart =
-			(Conf.base_addr == USART1_BASE || Conf.base_addr == USART2_BASE || Conf.base_addr == USART3_BASE);
-
 		if constexpr (Conf.base_addr == USART1_BASE)
 			RCC_Enable::USART1_::set();
 		if constexpr (Conf.base_addr == USART2_BASE)
@@ -26,7 +23,7 @@ struct UartTarget {
 		using enum UartConf::Parity;
 		using enum UartConf::Mode;
 
-		if constexpr (is_usart) {
+		if constexpr (Conf.synchronous) {
 			USART_HandleTypeDef hal_h;
 			hal_h.Instance = reinterpret_cast<USART_TypeDef *>(Conf.base_addr);
 			hal_h.Init.BaudRate = Conf.baud;
@@ -82,8 +79,7 @@ struct UartTarget {
 	}
 
 	static bool has_rx(auto uart) {
-		//FIXME: Implement
-		return false;
+		return (uart->ISR & USART_ISR_RXNE) != 0;
 	}
 
 	static bool set_baudrate(uint32_t baudrate_in_hz) {
