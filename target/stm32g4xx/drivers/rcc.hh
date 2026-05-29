@@ -65,6 +65,9 @@ using USB_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR1),
 using WWDG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR1), RCC_APB1ENR1_WWDGEN>;
 //  clang-format on
 
+using ADC1_ = ADC12_;
+using ADC2_ = ADC12_;
+
 
 //// special-case: GPIO port base address can be used to calc bit-offset of RCC enable bit
 struct GPIO {
