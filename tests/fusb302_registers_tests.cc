@@ -55,6 +55,16 @@ TEST_CASE("Can use write_reg<RegType>({.NamedDesignator1=1, .NamedDesignator2=1,
 	write_reg<FUSB302::InterruptA>({.HardResetRx = 1, .SoftResetRx = 1});
 }
 
+TEST_CASE("Control2 toggle polling-mode bytes") {
+	using namespace FUSB302;
+	// These are the exact Control2 values written by start_drp/src/snk_polling()
+	// (Toggle=1, ToggleIgnoreRa=1, plus the polling-mode bits). Locking them in
+	// guards the "wrong MODE bits" failure class for the role-forcing feature.
+	CHECK((uint8_t)Control2{.Toggle = 1, .PollingMode = Control2::PollDRP, .ToggleIgnoreRa = 1} == 0b00100011);
+	CHECK((uint8_t)Control2{.Toggle = 1, .PollingMode = Control2::PollSNK, .ToggleIgnoreRa = 1} == 0b00100101);
+	CHECK((uint8_t)Control2{.Toggle = 1, .PollingMode = Control2::PollSRC, .ToggleIgnoreRa = 1} == 0b00100111);
+}
+
 TEST_CASE("constexpr and bit endianness") {
 	// Bit at LSB end
 	constexpr auto b = FUSB302::InterruptA::make(0x01);

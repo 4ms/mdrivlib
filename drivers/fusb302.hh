@@ -50,7 +50,29 @@ struct Device {
 		return device_id;
 	}
 
+	// Auto host/device: DRP toggle, settling to either role depending on what's
+	// attached
 	void start_drp_polling() {
+		start_toggle_polling(Control2::PollDRP);
+	}
+
+	// Force host role: SRC-only toggle. The port presents Rp (pull-up) and only
+	// ever attaches as a host (to a device/sink). Will not attach to another host.
+	void start_src_polling() {
+		start_toggle_polling(Control2::PollSRC);
+	}
+
+	// Force device role: SNK-only toggle. The port presents Rd (pull-down) and
+	// only ever attaches as a device (to a host/source).
+	void start_snk_polling() {
+		start_toggle_polling(Control2::PollSNK);
+	}
+
+	// Start the FUSB302 toggle state machine in the given polling mode (Control2
+	// PollDRP/PollSRC/PollSNK). All three roles use the same attach/detach
+	// detection: on settle, I_TOGGLE fires and Status1A.TOGSS reports the outcome
+	// (decoded in handle_interrupt). Only the set of roles toggled differs.
+	void start_toggle_polling(uint8_t polling_mode) {
 		// Setup per datasheet p. 7 (Toggle Functionality)
 		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
 
@@ -62,7 +84,7 @@ struct Device {
 		// Turn toggle bit off, then on (otherwise TOGGLE mode is not re-started)
 		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
 		HAL_Delay(10);
-		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollDRP, .ToggleIgnoreRa = 1});
+		write<Control2>({.Toggle = 1, .PollingMode = polling_mode, .ToggleIgnoreRa = 1});
 
 		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
 		// Note: setting Mask::VBusOK to 0 when HostCurrentReq is 0 results in it
