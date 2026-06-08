@@ -5,9 +5,10 @@
 
 // Debugging:
 // #define FUSBDEBUG
+
 #ifdef FUSBDEBUG
-#include "printf.h"
-#define pr_debug printf_
+#include <cstdio>
+#define pr_debug printf
 #include <optional>
 #include <string_view>
 #else
@@ -123,7 +124,7 @@ struct Device {
 		auto intrB = read<InterruptB>();
 
 		pr_debug("Int = 0x%x VBusOK=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
-		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", intrA, intrB, intrA.ToggleDone);
+		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", (int)intrA, (int)intrB, intrA.ToggleDone);
 
 		switch (state) {
 			case ConnectedState::TogglePolling: {
@@ -196,7 +197,7 @@ struct Device {
 		static uint8_t last_val = 0xFF;
 		auto val = read<Reg>();
 		if ((uint8_t)val != last_val)
-			pr_debug("Changed %s: 0x%x\n", regname.data(), val);
+			pr_debug("Changed %s: 0x%x\n", regname.data(), (int)val);
 		last_val = val;
 	}
 
