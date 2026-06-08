@@ -51,6 +51,17 @@ struct Device {
 		return device_id;
 	}
 
+	// Software-reset the FUSB302: all registers return to their power-on defaults
+	// and any pending interrupts are cleared.
+	void reset() {
+		write<Reset>({.SWReset = 1});
+		HAL_Delay(10); // let the POR settle before further register access
+		// Interrupt registers are cleared on read
+		read<Interrupt>();
+		read<InterruptA>();
+		read<InterruptB>();
+	}
+
 	// Auto host/device: DRP toggle, settling to either role depending on what's
 	// attached
 	void start_drp_polling() {
@@ -74,6 +85,8 @@ struct Device {
 	// detection: on settle, I_TOGGLE fires and Status1A.TOGSS reports the outcome
 	// (decoded in handle_interrupt). Only the set of roles toggled differs.
 	void start_toggle_polling(uint8_t polling_mode) {
+		reset();
+
 		// Setup per datasheet p. 7 (Toggle Functionality)
 		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
 
