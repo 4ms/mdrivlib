@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // Debugging:
-// #define FUSBDEBUG
+#define FUSBDEBUG
 
 #ifdef FUSBDEBUG
 #include <cstdio>
@@ -143,8 +143,19 @@ struct Device {
 			case ConnectedState::TogglePolling: {
 				pr_debug("State is currently Polling\n");
 
+				Status0 status0{read<Status0>()};
 				Status1A status1a{read<Status1A>()};
-				if (status1a.ToggleOutcomeIsSink)
+
+				// VBUS present while we are only polling means the *partner* is
+				// sourcing it -- we never drive our own 5V source during polling --
+				// so the partner is the host and we must attach as a device,
+				// whatever the DRP toggle reported. The FUSB302 DRP toggle can
+				// otherwise settle to SRC against a powered host (a sampling race),
+				// causing a host-host conflict and VBUS contention.
+				if (status0.VBusOK)
+					state = ConnectedState::AsDevice;
+
+				else if (status1a.ToggleOutcomeIsSink)
 					state = ConnectedState::AsDevice;
 
 				else if (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2)
