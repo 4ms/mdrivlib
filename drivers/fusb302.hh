@@ -161,6 +161,24 @@ struct Device {
 				else if (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2)
 					state = ConnectedState::AsHost;
 
+				// As a device (sink), the clean detach signal is VBUS loss, so
+				// unmask the VBusOK interrupt for reliable disconnect detection.
+				// Otherwise only BC_LVL is unmasked, and an OXI-style host+power
+				// unplug (VBUS and CC drop together) intermittently produces no
+				// interrupt, leaving us stuck in AsDevice. VBusOK stays masked
+				// while polling/host (set in start_toggle_polling, which re-arms
+				// the mask on the next re-poll) because as a source we drive VBUS
+				// ourselves and it would race host-unplug detection.
+				if (state == ConnectedState::AsDevice)
+					write<Mask>({.HostCurrentReq = 0,
+								 .Collision = 1,
+								 .Wake = 1,
+								 .Alert = 1,
+								 .CRCCheck = 1,
+								 .CompChange = 1,
+								 .CCBusActivity = 1,
+								 .VBusOK = 0});
+
 				// could also check Status0: Comp == 0 && BCLevel < 3
 				// Comp == 0 means CC pin is read as less than reference, meaning device
 				// Rd pull-down was detected BC<3 means CC pin is read as < 1.23V, meaning
