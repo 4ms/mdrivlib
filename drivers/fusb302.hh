@@ -152,8 +152,41 @@ struct Device {
 				// whatever the DRP toggle reported. The FUSB302 DRP toggle can
 				// otherwise settle to SRC against a powered host (a sampling race),
 				// causing a host-host conflict and VBUS contention.
-				if (status0.VBusOK)
+				if (status0.VBusOK) {
 					state = ConnectedState::AsDevice;
+
+					// If the toggle did not itself settle as SNK (it settled SRC, or
+					// hadn't settled yet), the chip is still presenting Rp: the
+					// partner never sees our Rd (a compliant host won't even source
+					// VBUS to us), and the Rp-vs-Rp contention on CC causes an
+					// endless BC_LVL/COMP_CHNG interrupt storm. Manually drop the
+					// chip into the attached-sink configuration: stop the toggle,
+					// present Rd on both CC pins, and measure the live CC line.
+					if (!status1a.ToggleOutcomeIsSink) {
+						write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+						write<Power>(
+							{.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 0, .IntOsc = 0});
+
+						// Find the live CC by probing: measure each CC in turn until
+						// the host's Rp is seen (BCLevel > 0). The CC that TOGSS
+						// flagged is only a hint -- on a mis-settle it can point at
+						// the open CC line, and measuring the open line means
+						// BC_LVL never changes again, so unplug goes undetected.
+						uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
+						for (auto tries = 0; tries < 2; tries++) {
+							write<Switches0>({.PullDownCC1 = 1,
+											  .PullDownCC2 = 1,
+											  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+											  .MeasureCC2 = cc2});
+							HAL_Delay(2); // let the BC_LVL comparator settle
+							Status0 probe{read<Status0>()};
+							pr_debug("Sink override: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
+							if (probe.BCLevel > 0)
+								break;
+							cc2 = cc2 ? uint8_t{0} : uint8_t{1};
+						}
+					}
+				}
 
 				else if (status1a.ToggleOutcomeIsSink)
 					state = ConnectedState::AsDevice;
