@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // Debugging:
-#define FUSBDEBUG
+// #define FUSBDEBUG
 
 #ifdef FUSBDEBUG
 #include <cstdio>
@@ -164,8 +164,7 @@ struct Device {
 					// present Rd on both CC pins, and measure the live CC line.
 					if (!status1a.ToggleOutcomeIsSink) {
 						write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-						write<Power>(
-							{.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 0, .IntOsc = 0});
+						write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 0, .IntOsc = 0});
 
 						// Find the live CC by probing: measure each CC in turn until
 						// the host's Rp is seen (BCLevel > 0). The CC that TOGSS
