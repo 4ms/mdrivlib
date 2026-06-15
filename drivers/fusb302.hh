@@ -80,6 +80,67 @@ struct Device {
 		start_toggle_polling(Control2::PollSNK);
 	}
 
+	// One-shot "is a device attached downstream?" check, for use while forced
+	// into the device (SNK) role. In SNK polling the port presents Rd and is
+	// electrically blind to a downstream device: that device also presents Rd
+	// and sources no VBUS, so two Rd's face each other and nothing is detected
+	// (a USB drive plugged in here does nothing). The only way to sense it is to
+	// momentarily present Rp -- the host signature -- and look for the partner's
+	// Rd pulling a CC line into range, exactly as a host/SRC toggle would.
+	//
+	// This stops the toggle, presents Rp on both CC pins, measures each, then
+	// re-arms SNK toggle polling and returns true if a device was seen. It never
+	// sources VBUS or VCONN, so nothing downstream is powered or enumerated -- it
+	// only senses presence. Call it periodically while idle (state stays
+	// TogglePolling); the brief Rp window means a host attaching at that instant
+	// is simply caught on the next SNK poll instead. Expects to be called while
+	// SNK polling (it restores SNK polling on exit).
+	bool probe_snk_for_device() {
+		// Stop the toggle state machine so it can neither fire I_TOGGLE nor drive
+		// the CC pins while we measure them manually.
+		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+
+		// Power up for a real CC measurement. NB the Power fields are misnamed vs
+		// the FUSB302 datasheet: "MeasureBlock" is PWR1 (receiver + current
+		// references) and "RXAndCurrentRefs" is PWR2 (the actual measure block).
+		// Both are required for a valid BC_LVL reading. Unlike the sink override,
+		// we have just stopped the toggle, so the chip is no longer powering the
+		// measure block for us -- with PWR2 off an open CC line mis-reads as a
+		// device. Also enable the host pull-up current (Rp) via Control0.
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
+
+		bool device_present = false;
+		for (uint8_t cc2 = 0; cc2 <= 1 && !device_present; cc2++) {
+			write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+							  .MeasureCC2 = cc2,
+							  .PullUpCC1 = 1,
+							  .PullUpCC2 = 1});
+			HAL_Delay(2); // let the BC_LVL comparator settle
+			Status0 probe{read<Status0>()};
+			pr_debug("Device probe: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
+			// With Rp presented, BC_LVL reads the partner's pull-down: 3 (0b11) is
+			// an open line (no device), 0 is Ra/VCONN only (a powered cable, not a
+			// device); 1 or 2 means a device's Rd is pulling CC into range.
+			if (probe.BCLevel == 1 || probe.BCLevel == 2)
+				device_present = true;
+		}
+
+		// Restore SNK toggle polling: drop the manual Rp, power the measure block
+		// back down (the toggle SM manages it), clear any interrupt the manual CC
+		// changes latched, and re-enable the SNK toggle. The toggle bit has been
+		// off throughout the measurement (well over the off->on settle time), so
+		// no extra delay is needed before re-enabling it.
+		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
+		read<Interrupt>();
+		read<InterruptA>();
+		read<InterruptB>();
+		write<Control2>({.Toggle = 1, .PollingMode = Control2::PollSNK, .ToggleIgnoreRa = 1});
+
+		return device_present;
+	}
+
 	// Start the FUSB302 toggle state machine in the given polling mode (Control2
 	// PollDRP/PollSRC/PollSNK). All three roles use the same attach/detach
 	// detection: on settle, I_TOGGLE fires and Status1A.TOGSS reports the outcome
