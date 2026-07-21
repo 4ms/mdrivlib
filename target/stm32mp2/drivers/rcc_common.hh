@@ -301,6 +301,16 @@ struct GPIO {
 	}
 };
 
+
+// Aliases for peripheral names that shared drivers (drivers/clocks.hh) reference
+// but that do not exist (or are combined) on MP2:
+using ADC1_ = ADC12_;
+using ADC2_ = ADC12_;
+using DMA1_ = NonexistantRegister;
+using DMA2_ = NonexistantRegister;
+using DMAMUX_ = NonexistantRegister;
+using TIM9_ = NonexistantRegister;
+
 } // namespace RCC_Enable
 
 namespace RCC_Reset
