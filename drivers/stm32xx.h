@@ -37,6 +37,11 @@
 #include "stm32mp2xx.h"
 #elif defined(CORE_CA35)
 #include "stm32mp2xx.h"
+// stm32mp2xx.h only pulls in the per-module HAL headers (via the hal_conf);
+// HAL_Delay & co. are declared in the top-level HAL header:
+#if defined(USE_HAL_DRIVER)
+#include "stm32mp2xx_hal.h"
+#endif
 #elif defined(CORE_CM0)
 #include "stm32mp2xx.h"
 #else

@@ -50,6 +50,8 @@ struct DMA_Config {
 	DMA_Stream_TypeDef *stream;
 #elif defined(DMA1_Channel1)
 	unsigned request;
+#elif defined(HPDMA1_Channel0)
+	DMA_Channel_TypeDef *stream; // HPDMA channel (STM32MP2)
 #endif
 	uint32_t channel;
 	IRQn_Type IRQn;
