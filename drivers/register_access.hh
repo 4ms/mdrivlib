@@ -4,7 +4,11 @@
 
 namespace mdrivlib
 {
-using regsize_t = unsigned long; //32bits on Cortex-M, 64-bits on x86_64 and ARM64
+#if defined(STM32MP2) && defined(CORE_CA35)
+using regsize_t = uint32_t; //32 bits on Cortex-A35
+#else
+using regsize_t = unsigned long; //32bits on Cortex-M, 64-bits on x86_64
+#endif
 
 // Mask Helpers
 // from github.com/kensmith/cortex-from-scratch

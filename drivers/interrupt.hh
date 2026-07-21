@@ -19,10 +19,12 @@ namespace mdrivlib
 // Interrupt Manager class
 class Interrupt {
 public:
-	static constexpr uint32_t NumISRs = TargetName == Targets::stm32f0 ? 38
-									  : TargetName == Targets::stm32f4 ? 85
-									  : TargetName == Targets::stm32f7 ? 128
-																	   : 256;
+	static constexpr uint32_t NumISRs = TargetName == Targets::stm32f0		 ? 38
+									  : TargetName == Targets::stm32f4		 ? 85
+									  : TargetName == Targets::stm32f7		 ? 128
+									  : TargetName == Targets::stm32mp2_ca35 ? 416
+									  : TargetName == Targets::stm32mp2_cm33 ? 416
+																			 : 256;
 	using ISRType = Callback;
 	using IRQType = IRQn_Type;
 

@@ -6,6 +6,8 @@ enum class Targets {
 	stm32mp1_ca7,
 	stm32mp1_cm4,
 	stm32mp13,
+	stm32mp2_ca35,
+	stm32mp2_cm33,
 	stm32h7x5,
 	stm32f7,
 	stm32f4,
@@ -27,6 +29,16 @@ constexpr auto TargetName = Targets::stm32mp1_cm4;
 #elif defined(STM32MP13)
 constexpr bool TargetIsFound = true;
 constexpr auto TargetName = Targets::stm32mp13;
+
+// STM32MP2 CoreA35
+#elif defined(STM32MP2) && defined(CORE_CA35)
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::stm32mp2_ca35;
+
+// STM32MP2 CoreM33
+#elif defined(STM32MP2) && defined(CORE_CM33)
+constexpr bool TargetIsFound = true;
+constexpr auto TargetName = Targets::stm32mp2_cm33;
 
 // STM32H745 and STM32H755
 #elif defined(STM32H745xx) || defined(STM32H755xx)
