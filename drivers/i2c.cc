@@ -202,6 +202,30 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 	hal_i2c_.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
 #endif
 
+#if defined(STM32MP2)
+	// STM32MP2 has a single combined event+error IRQ per I2C peripheral
+	if (hal_i2c_.Instance == I2C1)
+		i2c_irq_num_ = I2C1_IRQn;
+	else if (hal_i2c_.Instance == I2C2)
+		i2c_irq_num_ = I2C2_IRQn;
+	else if (hal_i2c_.Instance == I2C3)
+		i2c_irq_num_ = I2C3_IRQn;
+	else if (hal_i2c_.Instance == I2C4)
+		i2c_irq_num_ = I2C4_IRQn;
+	else if (hal_i2c_.Instance == I2C5)
+		i2c_irq_num_ = I2C5_IRQn;
+	else if (hal_i2c_.Instance == I2C6)
+		i2c_irq_num_ = I2C6_IRQn;
+#ifdef I2C7
+	else if (hal_i2c_.Instance == I2C7)
+		i2c_irq_num_ = I2C7_IRQn;
+#endif
+#ifdef I2C8
+	else if (hal_i2c_.Instance == I2C8)
+		i2c_irq_num_ = I2C8_IRQn;
+#endif
+	i2c_err_irq_num_ = i2c_irq_num_;
+#else
 	if (hal_i2c_.Instance == I2C1) {
 		i2c_irq_num_ = I2C1_EV_IRQn;
 		i2c_err_irq_num_ = I2C1_ER_IRQn;
@@ -221,6 +245,7 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 		i2c_irq_num_ = I2C6_EV_IRQn;
 		i2c_err_irq_num_ = I2C6_ER_IRQn;
 	}
+#endif
 
 	Clocks::I2C::enable(defs.I2Cx);
 
@@ -240,8 +265,16 @@ I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
 }
 
 void I2CPeriph::enable_IT(uint8_t pri1, uint8_t pri2) {
-	event_isr.register_and_start_isr(i2c_irq_num_, pri1, pri2, [this]() { i2c_event_handler(); });
-	error_isr.register_and_start_isr(i2c_err_irq_num_, pri1, pri2, [this]() { i2c_error_handler(); });
+	if (i2c_irq_num_ == i2c_err_irq_num_) {
+		// Single combined event+error IRQ (STM32MP2)
+		event_isr.register_and_start_isr(i2c_irq_num_, pri1, pri2, [this]() {
+			i2c_event_handler();
+			i2c_error_handler();
+		});
+	} else {
+		event_isr.register_and_start_isr(i2c_irq_num_, pri1, pri2, [this]() { i2c_event_handler(); });
+		error_isr.register_and_start_isr(i2c_err_irq_num_, pri1, pri2, [this]() { i2c_error_handler(); });
+	}
 }
 
 void I2CPeriph::disable_IT() {
