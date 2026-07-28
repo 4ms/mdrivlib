@@ -103,10 +103,7 @@ struct Device {
 		// Power up for a real CC measurement. NB the Power fields are misnamed vs
 		// the FUSB302 datasheet: "MeasureBlock" is PWR1 (receiver + current
 		// references) and "RXAndCurrentRefs" is PWR2 (the actual measure block).
-		// Both are required for a valid BC_LVL reading. Unlike the sink override,
-		// we have just stopped the toggle, so the chip is no longer powering the
-		// measure block for us -- with PWR2 off an open CC line mis-reads as a
-		// device. Also enable the host pull-up current (Rp) via Control0.
+		// Both are required for a valid BC_LVL reading.
 		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
 		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
 
@@ -222,7 +219,12 @@ struct Device {
 					// present Rd on both CC pins, and measure the live CC line.
 					if (!status1a.ToggleOutcomeIsSink) {
 						write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-						write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 0, .IntOsc = 0});
+
+						// Enable PWR1 (MeasureBlock) and PWR2 RXAndCurrentRefs):
+						// we just stopped the toggle state machine (line above), so the chip is
+						// no longer powering the measure block for us. With PWR2 off, BC_LVL reads 0
+						// forever and the 250ms link-check backstop sees a false detach every cycle.
+						write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
 
 						// Find the live CC by probing: measure each CC in turn until
 						// the host's Rp is seen (BCLevel > 0). The CC that TOGSS
