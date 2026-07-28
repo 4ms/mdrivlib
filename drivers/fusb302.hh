@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // Debugging:
-// #define FUSBDEBUG
+#define FUSBDEBUG
 
 #ifdef FUSBDEBUG
 #include <cstdio>
@@ -112,10 +112,7 @@ struct Device {
 
 		bool device_present = false;
 		for (uint8_t cc2 = 0; cc2 <= 1 && !device_present; cc2++) {
-			write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1),
-							  .MeasureCC2 = cc2,
-							  .PullUpCC1 = 1,
-							  .PullUpCC2 = 1});
+			write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1), .MeasureCC2 = cc2, .PullUpCC1 = 1, .PullUpCC2 = 1});
 			HAL_Delay(2); // let the BC_LVL comparator settle
 			Status0 probe{read<Status0>()};
 			pr_debug("Device probe: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
