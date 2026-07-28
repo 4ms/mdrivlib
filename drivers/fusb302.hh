@@ -26,6 +26,7 @@ struct Device {
 	uint8_t device_id = 0;
 
 	enum class ConnectedState { None, TogglePolling, AsHost, AsDevice } state = ConnectedState::None;
+	uint8_t last_polling_mode = Control2::PollDRP;
 
 	Device(mdrivlib::I2CPeriph &i2c, uint8_t device_addr)
 		: i2c{i2c}
@@ -140,6 +141,7 @@ struct Device {
 	// detection: on settle, I_TOGGLE fires and Status1A.TOGSS reports the outcome
 	// (decoded in handle_interrupt). Only the set of roles toggled differs.
 	void start_toggle_polling(uint8_t polling_mode) {
+		last_polling_mode = polling_mode;
 		reset();
 
 		// Setup per datasheet p. 7 (Toggle Functionality)
@@ -201,54 +203,97 @@ struct Device {
 				Status0 status0{read<Status0>()};
 				Status1A status1a{read<Status1A>()};
 
-				// VBUS present while we are only polling means the *partner* is
-				// sourcing it -- we never drive our own 5V source during polling --
-				// so the partner is the host and we must attach as a device,
-				// whatever the DRP toggle reported. The FUSB302 DRP toggle can
-				// otherwise settle to SRC against a powered host (a sampling race),
-				// causing a host-host conflict and VBUS contention.
-				if (status0.VBusOK) {
+				if (status1a.ToggleOutcomeIsSink) {
+					// The toggle settled as an attached sink: the partner presents Rp,
+					// so it is the host (whether or not it sources VBUS).
 					state = ConnectedState::AsDevice;
-
-					// If the toggle did not itself settle as SNK (it settled SRC, or
-					// hadn't settled yet), the chip is still presenting Rp: the
-					// partner never sees our Rd (a compliant host won't even source
-					// VBUS to us), and the Rp-vs-Rp contention on CC causes an
-					// endless BC_LVL/COMP_CHNG interrupt storm. Manually drop the
-					// chip into the attached-sink configuration: stop the toggle,
-					// present Rd on both CC pins, and measure the live CC line.
-					if (!status1a.ToggleOutcomeIsSink) {
-						write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-
-						// Enable PWR1 (MeasureBlock) and PWR2 RXAndCurrentRefs):
-						// we just stopped the toggle state machine (line above), so the chip is
-						// no longer powering the measure block for us. With PWR2 off, BC_LVL reads 0
-						// forever and the 250ms link-check backstop sees a false detach every cycle.
-						write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
-
-						// Find the live CC by probing: measure each CC in turn until
-						// the host's Rp is seen (BCLevel > 0). The CC that TOGSS
-						// flagged is only a hint -- on a mis-settle it can point at
-						// the open CC line, and measuring the open line means
-						// BC_LVL never changes again, so unplug goes undetected.
-						uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
-						for (auto tries = 0; tries < 2; tries++) {
-							write<Switches0>({.PullDownCC1 = 1,
-											  .PullDownCC2 = 1,
-											  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
-											  .MeasureCC2 = cc2});
-							HAL_Delay(2); // let the BC_LVL comparator settle
-							Status0 probe{read<Status0>()};
-							pr_debug("Sink override: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
-							if (probe.BCLevel > 0)
-								break;
-							cc2 = cc2 ? uint8_t{0} : uint8_t{1};
-						}
-					}
 				}
 
-				else if (status1a.ToggleOutcomeIsSink)
-					state = ConnectedState::AsDevice;
+				// VBUS present while we are only polling means the *partner* drives
+				// it -- we never drive our own 5V source during polling -- but that
+				// alone does not prove the partner is a host. Two very different
+				// partners look like this when the toggle did not settle as SNK:
+				//  - A powered host the DRP toggle mis-settled against (a sampling
+				//    race): it presents Rp. We must attach as a sink -- staying SRC
+				//    means Rp-vs-Rp contention on CC and an endless BC_LVL/COMP_CHNG
+				//    interrupt storm.
+				//  - A self-powered *device* that backfeeds VBUS while presenting Rd
+				//    (RPi USB gadget rigs, OXI One): here the toggle settled SRC
+				//    *correctly*. Forcing sink would leave neither side presenting
+				//    Rp, so BC_LVL reads 0 and we would bounce attach/detach forever
+				//    without ever enumerating it.
+				// Distinguish them by measuring CC ourselves: stop the toggle,
+				// present Rd on both CC pins, and look for the partner's Rp.
+				else if (status0.VBusOK) {
+					write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+
+					// Enable PWR1 (MeasureBlock) and PWR2 RXAndCurrentRefs):
+					// we just stopped the toggle state machine (line above), so the chip is
+					// no longer powering the measure block for us. With PWR2 off, BC_LVL reads 0
+					// forever and the 250ms link-check backstop sees a false detach every cycle.
+					write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+
+					// Find the live CC by probing: measure each CC in turn until
+					// the host's Rp is seen (BCLevel > 0). The CC that TOGSS
+					// flagged is only a hint -- on a mis-settle it can point at
+					// the open CC line, and measuring the open line means
+					// BC_LVL never changes again, so unplug goes undetected.
+					uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
+					bool host_rp_found = false;
+					for (auto tries = 0; tries < 2; tries++) {
+						write<Switches0>({.PullDownCC1 = 1,
+										  .PullDownCC2 = 1,
+										  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+										  .MeasureCC2 = cc2});
+						HAL_Delay(2); // let the BC_LVL comparator settle
+						Status0 probe{read<Status0>()};
+						pr_debug("Sink override: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
+						if (probe.BCLevel > 0) {
+							host_rp_found = true;
+							break;
+						}
+						cc2 = cc2 ? uint8_t{0} : uint8_t{1};
+					}
+
+					if (host_rp_found) {
+						// A host's Rp is out there: attach as a sink. The live CC is
+						// left selected for measurement, so detach detection (VBUS
+						// loss or BC_LVL 0) keeps working.
+						state = ConnectedState::AsDevice;
+					} else {
+						// No Rp on either CC: the VBUS is backfed by a self-powered
+						// device, and the toggle's SRC outcome was right. Attach as
+						// host: present Rp on both CC pins and select the CC where
+						// the partner's Rd is for measurement, so the AsHost detach
+						// check (BC_LVL == 3, line open) keeps working.
+						cc2 = status1a.ToggleOutcomeIsCC2;
+						bool device_rd_found = false;
+						for (auto tries = 0; tries < 2; tries++) {
+							write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+											  .MeasureCC2 = cc2,
+											  .PullUpCC1 = 1,
+											  .PullUpCC2 = 1});
+							HAL_Delay(2); // let the BC_LVL comparator settle
+							Status0 probe{read<Status0>()};
+							pr_debug("Source override: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
+							// With Rp presented: 3 is an open line, 0 is Ra only
+							// (powered cable); 1 or 2 means a device's Rd.
+							if (probe.BCLevel == 1 || probe.BCLevel == 2) {
+								device_rd_found = true;
+								break;
+							}
+							cc2 = cc2 ? uint8_t{0} : uint8_t{1};
+						}
+
+						if (device_rd_found)
+							state = ConnectedState::AsHost;
+						else
+							// Neither Rp nor Rd anywhere despite VBUS: transient
+							// (partner mid-plug or mid-power-up). Re-arm the toggle
+							// and keep polling; state stays TogglePolling.
+							start_toggle_polling(last_polling_mode);
+					}
+				}
 
 				else if (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2)
 					state = ConnectedState::AsHost;
