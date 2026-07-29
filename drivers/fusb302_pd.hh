@@ -160,11 +160,17 @@ struct PDSink {
 	}
 
 	// True while the engine is mid-negotiation and the caller should hold off
-	// other (blind) role experiments
+	// other (blind) role experiments. Deliberately NOT true while merely
+	// waiting for Source_Capabilities from a partner that has never spoken PD:
+	// most partners are not PD sources, and delaying the role fallback for
+	// them breaks partners with narrow attach windows (the OXI One only
+	// presents D+ for ~3s after attach -- a 1s hold-off here pushed the host
+	// trial past it). A real PD source's caps arrive well inside the fallback
+	// timeout and move the state on anyway.
 	bool busy() const {
 		switch (state) {
 			case State::WaitCaps:
-				return HAL_GetTick() - enabled_tick < CapsGraceMs;
+				return partner_is_pd && HAL_GetTick() - enabled_tick < CapsGraceMs;
 			case State::WaitAccept:
 			case State::WaitPSRdy:
 			case State::SwapSent:

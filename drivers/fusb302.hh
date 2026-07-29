@@ -219,6 +219,62 @@ struct Device {
 		return state;
 	}
 
+	// --- Characterization/experiment support ---
+
+	// Present Rd on both CC pins, statically: no toggle state machine, no
+	// interrupts (caller polls), measure block powered. The partner sees a
+	// plain attached sink and nothing we do ever perturbs the CC lines.
+	void configure_static_sink() {
+		reset();
+		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 1});
+		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Switches0>({.PullDownCC1 = 1, .PullDownCC2 = 1, .MeasureCC1 = 1, .MeasureCC2 = 0});
+		// Everything masked; the experiment loop polls Status0
+		write<Mask>(Mask::make(0xFF));
+		write<MaskA>(MaskA::make(0xFF));
+		write<MaskB>(MaskB::make(0x01));
+		state = ConnectedState::AsDevice;
+	}
+
+	// Present Rp on both CC pins, statically (source persona): no toggle, no
+	// interrupts, measure block powered. BC_LVL semantics with Rp presented:
+	// 3 = open, 0 = Ra, 1/2 = partner Rd.
+	void configure_static_src() {
+		reset();
+		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 1});
+		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Switches0>({.MeasureCC1 = 1, .MeasureCC2 = 0, .PullUpCC1 = 1, .PullUpCC2 = 1});
+		write<Mask>(Mask::make(0xFF));
+		write<MaskA>(MaskA::make(0xFF));
+		write<MaskB>(MaskB::make(0x01));
+		state = ConnectedState::AsHost;
+	}
+
+	struct CCLevels {
+		uint8_t cc1;
+		uint8_t cc2;
+		uint8_t vbusok;
+	};
+
+	// Measure both CC lines (BC_LVL) and VBUS. Only the internal measurement
+	// mux is switched; what we present on the pins is untouched.
+	CCLevels read_both_cc() {
+		auto sw = read<Switches0>();
+		sw.MeasureCC1 = 1;
+		sw.MeasureCC2 = 0;
+		write<Switches0>(sw);
+		HAL_Delay(1);
+		Status0 s1{read<Status0>()};
+		sw.MeasureCC1 = 0;
+		sw.MeasureCC2 = 1;
+		write<Switches0>(sw);
+		HAL_Delay(1);
+		Status0 s2{read<Status0>()};
+		return {s1.BCLevel, s2.BCLevel, s2.VBusOK};
+	}
+
 	void handle_interrupt() {
 		auto intr = read<Interrupt>();
 		auto intrA = read<InterruptA>();
@@ -338,42 +394,17 @@ struct Device {
 
 					// A toggling partner that also backfeeds VBUS is a self-powered
 					// DRP that wants the *device* data role (OXI One "Device Self
-					// Powered"): it has no host stack, so if its toggle settles SRC
-					// against our Rd it dead-ends -- it will never enumerate us nor
-					// present D+, and it speaks no PD to swap roles (verified: no
-					// Source_Capabilities ever arrive). Type-C's answer is Try.SRC:
-					// present Rp steadily and let the partner's toggle settle SNK
-					// against us, where its device stack runs and D+ appears. If its
-					// Rd settles on us, attach as host (VBUS stays partner-sourced).
-					if (host_rp_found && partner_toggling) {
-						pr_debug("Toggling partner with VBUS: trying SRC role (presenting Rp)\n");
-						write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1),
-										  .MeasureCC2 = cc2,
-										  .PullUpCC1 = 1,
-										  .PullUpCC2 = 1});
-						// Partner Rd must hold steady well past its toggle's Rd
-						// phase length (<= ~70ms) to count as settled
-						uint8_t stable = 0;
-						for (auto tries = 0; tries < 50 && stable < 10; tries++) {
-							HAL_Delay(10);
-							Status0 probe{read<Status0>()};
-							stable = (probe.BCLevel == 1 || probe.BCLevel == 2) ? stable + 1 : 0;
-						}
-						if (stable >= 10) {
-							pr_debug("Partner settled as sink on CC%d, attaching as host\n", cc2 ? 2 : 1);
-							state = ConnectedState::AsHost;
-						} else {
-							// Partner would not take the sink role: fall back to
-							// attaching as a sink ourselves (previous behavior)
-							pr_debug("Partner did not settle as sink, attaching as device\n");
-							write<Switches0>({.PullDownCC1 = 1,
-											  .PullDownCC2 = 1,
-											  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
-											  .MeasureCC2 = cc2});
-							state = ConnectedState::AsDevice;
-							pd.enable(cc2);
-						}
-					} else if (host_rp_found) {
+					// Powered"): if its toggle settles SRC against our Rd it
+					// dead-ends -- no host stack, no D+, no PD to swap roles.
+					// We can't win the role here: taking the SRC role requires
+					// sourcing VBUS the moment the partner settles SNK (it pulls
+					// its Rd back otherwise), and this driver has no VBUS control.
+					// Attach as sink; the USB manager's Try.SRC pass (which
+					// pre-enables VBUS) handles the role reversal.
+					if (partner_toggling)
+						pr_debug("Partner is a toggling self-powered DRP\n");
+
+					if (host_rp_found) {
 						// A steady host Rp is out there: attach as a sink. The live
 						// CC is left selected for measurement, so detach detection
 						// (VBUS loss or BC_LVL 0) keeps working.
@@ -404,13 +435,34 @@ struct Device {
 							cc2 = cc2 ? uint8_t{0} : uint8_t{1};
 						}
 
-						if (device_rd_found)
-							state = ConnectedState::AsHost;
-						else
+						if (device_rd_found) {
+							// One Rd sample is not an attach: a toggling DRP (OXI
+							// One) alternates Rd/Rp until it has seen our steady
+							// Rp for its debounce time (tCCDebounce 100-200ms).
+							// Attaching on a phase-sample starts the host stack
+							// against a partner that swings away ~50ms later.
+							// Keep Rp presented and require a full debounce worth
+							// of continuous Rd; allow up to 1s for the partner's
+							// toggle to come around and commit.
+							uint8_t stable = 1;
+							for (auto t = 0; t < 100 && stable < 15; t++) {
+								HAL_Delay(10);
+								Status0 probe{read<Status0>()};
+								stable = (probe.BCLevel == 1 || probe.BCLevel == 2) ? stable + 1 : 0;
+							}
+							if (stable >= 15) {
+								pr_debug("Partner Rd committed on CC%d, attaching as host\n", cc2 ? 2 : 1);
+								state = ConnectedState::AsHost;
+							} else {
+								pr_debug("Partner Rd did not commit, re-polling\n");
+								start_toggle_polling(last_polling_mode);
+							}
+						} else {
 							// Neither Rp nor Rd anywhere despite VBUS: transient
 							// (partner mid-plug or mid-power-up). Re-arm the toggle
 							// and keep polling; state stays TogglePolling.
 							start_toggle_polling(last_polling_mode);
+						}
 					}
 				}
 
@@ -508,8 +560,27 @@ struct Device {
 				// Comp==1, BC==3 means CC pin is read as > 1.23V, meaning no device Rd
 				// pull-down
 				// FIXME: why isn't Comp set at this point? it gets set a moment later...
-				if (/*status.Comp == 1 &&*/ status.BCLevel == 3)
-					state = ConnectedState::None;
+				if (/*status.Comp == 1 &&*/ status.BCLevel == 3) {
+					// Confirm before detaching: the open reading must out-last a
+					// DRP toggle's Rp phase (~30-70ms) -- a partner still mid-
+					// commit (OXI One) swings its Rd away and back, and single CC
+					// reads here have a history of transients (see FIXME above).
+					// A real unplug reads open throughout; the 150ms of extra
+					// detach latency is imperceptible.
+					bool detached = true;
+					for (auto i = 0; i < 15; i++) {
+						HAL_Delay(10);
+						Status0 confirm{read<Status0>()};
+						if (confirm.BCLevel != 3) {
+							pr_debug("Host CC open was transient (BCLevel=%d), staying attached\n",
+									 confirm.BCLevel);
+							detached = false;
+							break;
+						}
+					}
+					if (detached)
+						state = ConnectedState::None;
+				}
 			} break;
 
 			case ConnectedState::None: {
