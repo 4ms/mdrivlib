@@ -28,6 +28,13 @@ struct Device {
 	enum class ConnectedState { None, TogglePolling, AsHost, AsDevice } state = ConnectedState::None;
 	uint8_t last_polling_mode = Control2::PollDRP;
 
+	// AsDevice unplug debounce (see handle_interrupt AsDevice case):
+	// 0 = link reads up; else tick when the current down-episode began
+	uint32_t link_down_since = 0;
+	uint32_t link_down_last_seen = 0;
+	static constexpr uint32_t LinkDownDebounceMs = 350;
+	static constexpr uint32_t LinkDownEpisodeMs = 600; // > UsbManager's 250ms link poll period
+
 	Device(mdrivlib::I2CPeriph &i2c, uint8_t device_addr)
 		: i2c{i2c}
 		, dev_addr{device_addr} {
@@ -142,6 +149,7 @@ struct Device {
 	// (decoded in handle_interrupt). Only the set of roles toggled differs.
 	void start_toggle_polling(uint8_t polling_mode) {
 		last_polling_mode = polling_mode;
+		link_down_since = 0;
 		reset();
 
 		// Setup per datasheet p. 7 (Toggle Functionality)
@@ -328,9 +336,41 @@ struct Device {
 
 				// Look for unplug event:
 				// VBusOK = 0 means no VBUS, BCLevel == 0 means CC detected as low (no
-				// host pull-up detected)
-				if (status0.VBusOK == 0 || status0.BCLevel == 0)
-					state = ConnectedState::None;
+				// host pull-up detected).
+				//
+				// Debounced: some partners (OXI One "Device Self Powered") briefly dip
+				// VBUS/CC shortly after attaching. One bad read is not an unplug --
+				// treating it as one tears down the connection and restarts the whole
+				// attach (and data-role-fallback) sequence, which is where the
+				// "works sometimes" behavior came from. Only detach after the link has
+				// read down for LinkDownDebounceMs. Persistent outages are re-read by
+				// the ~250ms link poll backstop in UsbManager, so a real unplug is
+				// confirmed in roughly LinkDownDebounceMs + one poll period. A gap of
+				// more than LinkDownEpisodeMs between bad reads starts a new episode
+				// (a good read in between isn't guaranteed to reach us: the backstop
+				// only calls in when *it* sees a bad status).
+				if (status0.VBusOK == 0 || status0.BCLevel == 0) {
+					auto now = HAL_GetTick();
+					if (link_down_since == 0 || now - link_down_last_seen > LinkDownEpisodeMs) {
+						link_down_since = now ? now : 1;
+						pr_debug("Device link down (Status0=0x%x VBusOK=%d BCLevel=%d), debouncing\n",
+								 (uint8_t)status0,
+								 status0.VBusOK,
+								 status0.BCLevel);
+					} else if (now - link_down_since >= LinkDownDebounceMs) {
+						pr_debug("Device link down confirmed (Status0=0x%x VBusOK=%d BCLevel=%d)\n",
+								 (uint8_t)status0,
+								 status0.VBusOK,
+								 status0.BCLevel);
+						link_down_since = 0;
+						state = ConnectedState::None;
+					}
+					link_down_last_seen = now;
+				} else {
+					if (link_down_since)
+						pr_debug("Device link restored (Status0=0x%x), ignoring dip\n", (uint8_t)status0);
+					link_down_since = 0;
+				}
 			} break;
 
 			case ConnectedState::AsHost: {
