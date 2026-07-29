@@ -282,7 +282,14 @@ struct Device {
 					// BC_LVL never changes again, so unplug goes undetected.
 					uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
 					bool host_rp_found = false;
-					for (auto tries = 0; tries < 2; tries++) {
+					// In deliberate SRC-only polling (ForceHost, or the manager's
+					// Try.SRC pass for a self-powered device), a TOGDONE means the
+					// partner's Rd landed on our Rp: it took the sink role. Never
+					// yield to sink here -- the sink-override protection below is
+					// for DRP auto-attach only (a real host never fires TOGDONE in
+					// SRC polling: Rp-vs-Rp detects nothing).
+					bool src_only = last_polling_mode == Control2::PollSRC;
+					for (auto tries = 0; tries < 2 && !src_only; tries++) {
 						write<Switches0>({.PullDownCC1 = 1,
 										  .PullDownCC2 = 1,
 										  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
@@ -306,7 +313,7 @@ struct Device {
 					// Rp phase >= 30% duty). Blocks ~120ms, only on this ambiguous
 					// attach path.
 					bool partner_toggling = false;
-					if (!host_rp_found) {
+					if (!host_rp_found && !src_only) {
 						for (auto rounds = 0; rounds < 6 && !host_rp_found; rounds++) {
 							for (uint8_t probe_cc2 = 0; probe_cc2 <= 1 && !host_rp_found; probe_cc2++) {
 								write<Switches0>({.PullDownCC1 = 1,
