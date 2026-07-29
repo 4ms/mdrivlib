@@ -39,12 +39,17 @@ struct Device {
 	static constexpr uint32_t LinkDownEpisodeMs = 600; // > UsbManager's 250ms link poll period
 
 	// Off until the data connection is established (set by the USB manager once
-	// enumeration succeeds). Before that, a VBUS/CC dip is the partner cycling
-	// its port -- tearing down immediately re-syncs our next CC attach with the
-	// partner's restart, which some devices (OXI One "Device Self Powered")
-	// require before they will offer their data role. After enumeration, dips
-	// are transient noise that must not kill a working session.
+	// enumeration succeeds). Before that, a VBUS/CC dip is meaningful (see the
+	// AsDevice handler); after enumeration, dips are transient noise that must
+	// not kill a working session.
 	bool link_down_debounce_enabled = false;
+
+	// Set when attached AsHost to a partner that sources VBUS itself (toggling
+	// self-powered DRP like the OXI One, or a backfeeding gadget rig). For
+	// these partners VBUS-loss is the only trustworthy detach signal: the OXI
+	// keeps toggling its CC even while enumerated, so BC_LVL flaps between
+	// "Rd present" and "open" forever and must be ignored.
+	bool host_partner_sources_vbus = false;
 
 	void set_link_debounce(bool enabled) {
 		link_down_debounce_enabled = enabled;
@@ -172,7 +177,8 @@ struct Device {
 	void start_toggle_polling(uint8_t polling_mode) {
 		last_polling_mode = polling_mode;
 		set_link_debounce(false); // re-enabled by the manager once enumerated
-		pd.on_chip_reset();		  // SWReset below wipes the chip's PD block
+		host_partner_sources_vbus = false;
+		pd.on_chip_reset(); // SWReset below wipes the chip's PD block
 		reset();
 
 		// Setup per datasheet p. 7 (Toggle Functionality)
@@ -217,6 +223,35 @@ struct Device {
 
 	ConnectedState get_state() {
 		return state;
+	}
+
+	// Attach as host to a self-powered partner by presenting steady Rp on both
+	// CCs (source persona), measuring the given CC. Scope-verified against the
+	// OXI One "Device Self Powered": it latches its *device* persona when its
+	// CC sees Rp (D+ rises ~250ms later) even though its own CC keeps
+	// DRP-toggling forever -- so there is no Rd settle to wait for, and detach
+	// detection must ride on VBUS (host_partner_sources_vbus).
+	void attach_as_static_src(bool meas_cc2) {
+		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Switches0>({.MeasureCC1 = uint8_t(meas_cc2 ? 0 : 1),
+						  .MeasureCC2 = uint8_t(meas_cc2 ? 1 : 0),
+						  .PullUpCC1 = 1,
+						  .PullUpCC2 = 1});
+		// The partner's CC toggling would storm BC_LVL/COMP interrupts: mask
+		// them; unmask VBusOK (rise is reliable; loss is backstopped by the
+		// manager's poll)
+		write<Mask>({.HostCurrentReq = 1,
+					 .Collision = 1,
+					 .Wake = 1,
+					 .Alert = 1,
+					 .CRCCheck = 1,
+					 .CompChange = 1,
+					 .CCBusActivity = 1,
+					 .VBusOK = 0});
+		host_partner_sources_vbus = true;
+		pd.on_chip_reset(); // partner classified non-PD; stop servicing
+		state = ConnectedState::AsHost;
 	}
 
 	// --- Characterization/experiment support ---
@@ -394,17 +429,15 @@ struct Device {
 
 					// A toggling partner that also backfeeds VBUS is a self-powered
 					// DRP that wants the *device* data role (OXI One "Device Self
-					// Powered"): if its toggle settles SRC against our Rd it
-					// dead-ends -- no host stack, no D+, no PD to swap roles.
-					// We can't win the role here: taking the SRC role requires
-					// sourcing VBUS the moment the partner settles SNK (it pulls
-					// its Rd back otherwise), and this driver has no VBUS control.
-					// Attach as sink; the USB manager's Try.SRC pass (which
-					// pre-enables VBUS) handles the role reversal.
-					if (partner_toggling)
-						pr_debug("Partner is a toggling self-powered DRP\n");
+					// Powered"): it never enumerates anyone and never holds a CC
+					// role, but it latches its device persona on seeing steady Rp
+					// (scope-verified: D+ ~250ms later). Host it directly.
+					if (partner_toggling) {
+						pr_debug("Toggling self-powered partner: presenting Rp to host it\n");
+						attach_as_static_src(cc2);
+					}
 
-					if (host_rp_found) {
+					else if (host_rp_found) {
 						// A steady host Rp is out there: attach as a sink. The live
 						// CC is left selected for measurement, so detach detection
 						// (VBUS loss or BC_LVL 0) keeps working.
@@ -452,6 +485,9 @@ struct Device {
 							}
 							if (stable >= 15) {
 								pr_debug("Partner Rd committed on CC%d, attaching as host\n", cc2 ? 2 : 1);
+								// VBUS is partner-backfed (this whole branch):
+								// detach on VBUS loss
+								host_partner_sources_vbus = true;
 								state = ConnectedState::AsHost;
 							} else {
 								pr_debug("Partner Rd did not commit, re-polling\n");
@@ -519,6 +555,18 @@ struct Device {
 				// (a good read in between isn't guaranteed to reach us: the backstop
 				// only calls in when *it* sees a bad status).
 				if (status0.VBusOK == 0 || status0.BCLevel == 0) {
+					if (!link_down_debounce_enabled && status0.VBusOK && status0.BCLevel == 0) {
+						// CC dropped while VBUS stays, before enumeration: not an
+						// unplug (a real unplug drops both) -- the partner is a
+						// toggling self-powered DRP (OXI One "Device Self
+						// Powered"). It will never enumerate us and never holds a
+						// CC role, but it latches its device persona on seeing
+						// steady Rp. Flip to the source persona and host it.
+						auto sw = read<Switches0>();
+						pr_debug("CC dropped, VBUS present: toggling self-powered partner; presenting Rp to host it\n");
+						attach_as_static_src(sw.MeasureCC2);
+						break;
+					}
 					if (!link_down_debounce_enabled) {
 						// Not yet enumerated: treat the dip as a real detach right
 						// away (see link_down_debounce_enabled)
@@ -556,6 +604,19 @@ struct Device {
 			case ConnectedState::AsHost: {
 				pr_debug("State is currently Host\n");
 				Status0 status{read<Status0>()};
+
+				// Partner sources VBUS (toggling self-powered DRP / gadget rig):
+				// VBUS-loss is the only trustworthy detach signal -- the OXI One
+				// keeps toggling its CC even while enumerated, so BC_LVL flaps
+				// between Rd and open forever and means nothing.
+				if (host_partner_sources_vbus) {
+					if (status.VBusOK == 0) {
+						pr_debug("Partner VBUS gone, detaching\n");
+						state = ConnectedState::None;
+					}
+					break;
+				}
+
 				// Look for Unplug event:
 				// Comp==1, BC==3 means CC pin is read as > 1.23V, meaning no device Rd
 				// pull-down
