@@ -303,11 +303,9 @@ struct Device {
 					// as host and collide Rp-vs-Rp when the partner flips back.
 					// Before concluding "no host here", keep our Rd presented and
 					// watch both CCs across a full DRP toggle period (tDRP <= 100ms,
-					// Rp phase >= 30% duty): a host-capable partner that sees our
-					// steady Rd settles as SRC and its Rp becomes steady. Only a
-					// partner that *never* shows Rp (RPi gadget rig: hardwired Rd)
-					// is safe to attach to as host. Blocks ~120ms, only on this
-					// ambiguous attach path.
+					// Rp phase >= 30% duty). Blocks ~120ms, only on this ambiguous
+					// attach path.
+					bool partner_toggling = false;
 					if (!host_rp_found) {
 						for (auto rounds = 0; rounds < 6 && !host_rp_found; rounds++) {
 							for (uint8_t probe_cc2 = 0; probe_cc2 <= 1 && !host_rp_found; probe_cc2++) {
@@ -322,16 +320,56 @@ struct Device {
 											 probe_cc2 ? 2 : 1,
 											 probe.BCLevel);
 									host_rp_found = true; // leave this CC selected for detach detection
-										cc2 = probe_cc2;
-									}
+									cc2 = probe_cc2;
+									// The quick probe just saw this partner NOT
+									// presenting Rp: it is alternating Rp/Rd (a DRP)
+									partner_toggling = true;
+								}
 							}
 						}
 					}
 
-					if (host_rp_found) {
-						// A host's Rp is out there: attach as a sink. The live CC is
-						// left selected for measurement, so detach detection (VBUS
-						// loss or BC_LVL 0) keeps working.
+					// A toggling partner that also backfeeds VBUS is a self-powered
+					// DRP that wants the *device* data role (OXI One "Device Self
+					// Powered"): it has no host stack, so if its toggle settles SRC
+					// against our Rd it dead-ends -- it will never enumerate us nor
+					// present D+, and it speaks no PD to swap roles (verified: no
+					// Source_Capabilities ever arrive). Type-C's answer is Try.SRC:
+					// present Rp steadily and let the partner's toggle settle SNK
+					// against us, where its device stack runs and D+ appears. If its
+					// Rd settles on us, attach as host (VBUS stays partner-sourced).
+					if (host_rp_found && partner_toggling) {
+						pr_debug("Toggling partner with VBUS: trying SRC role (presenting Rp)\n");
+						write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+										  .MeasureCC2 = cc2,
+										  .PullUpCC1 = 1,
+										  .PullUpCC2 = 1});
+						// Partner Rd must hold steady well past its toggle's Rd
+						// phase length (<= ~70ms) to count as settled
+						uint8_t stable = 0;
+						for (auto tries = 0; tries < 50 && stable < 10; tries++) {
+							HAL_Delay(10);
+							Status0 probe{read<Status0>()};
+							stable = (probe.BCLevel == 1 || probe.BCLevel == 2) ? stable + 1 : 0;
+						}
+						if (stable >= 10) {
+							pr_debug("Partner settled as sink on CC%d, attaching as host\n", cc2 ? 2 : 1);
+							state = ConnectedState::AsHost;
+						} else {
+							// Partner would not take the sink role: fall back to
+							// attaching as a sink ourselves (previous behavior)
+							pr_debug("Partner did not settle as sink, attaching as device\n");
+							write<Switches0>({.PullDownCC1 = 1,
+											  .PullDownCC2 = 1,
+											  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+											  .MeasureCC2 = cc2});
+							state = ConnectedState::AsDevice;
+							pd.enable(cc2);
+						}
+					} else if (host_rp_found) {
+						// A steady host Rp is out there: attach as a sink. The live
+						// CC is left selected for measurement, so detach detection
+						// (VBUS loss or BC_LVL 0) keeps working.
 						state = ConnectedState::AsDevice;
 						pd.enable(cc2);
 					} else {
