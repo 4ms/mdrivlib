@@ -35,6 +35,20 @@ struct Device {
 	static constexpr uint32_t LinkDownDebounceMs = 350;
 	static constexpr uint32_t LinkDownEpisodeMs = 600; // > UsbManager's 250ms link poll period
 
+	// Off until the data connection is established (set by the USB manager once
+	// enumeration succeeds). Before that, a VBUS/CC dip is the partner cycling
+	// its port -- tearing down immediately re-syncs our next CC attach with the
+	// partner's restart, which some devices (OXI One "Device Self Powered")
+	// require before they will offer their data role. After enumeration, dips
+	// are transient noise that must not kill a working session.
+	bool link_down_debounce_enabled = false;
+
+	void set_link_debounce(bool enabled) {
+		link_down_debounce_enabled = enabled;
+		if (!enabled)
+			link_down_since = 0;
+	}
+
 	Device(mdrivlib::I2CPeriph &i2c, uint8_t device_addr)
 		: i2c{i2c}
 		, dev_addr{device_addr} {
@@ -149,7 +163,7 @@ struct Device {
 	// (decoded in handle_interrupt). Only the set of roles toggled differs.
 	void start_toggle_polling(uint8_t polling_mode) {
 		last_polling_mode = polling_mode;
-		link_down_since = 0;
+		set_link_debounce(false); // re-enabled by the manager once enumerated
 		reset();
 
 		// Setup per datasheet p. 7 (Toggle Functionality)
@@ -263,6 +277,36 @@ struct Device {
 						cc2 = cc2 ? uint8_t{0} : uint8_t{1};
 					}
 
+					// Two quick reads can catch a *toggling* partner (a DRP, or the
+					// OXI One in Device Self Powered mode) in its Rd phase and
+					// mistake it for a static self-powered device -- then we attach
+					// as host and collide Rp-vs-Rp when the partner flips back.
+					// Before concluding "no host here", keep our Rd presented and
+					// watch both CCs across a full DRP toggle period (tDRP <= 100ms,
+					// Rp phase >= 30% duty): a host-capable partner that sees our
+					// steady Rd settles as SRC and its Rp becomes steady. Only a
+					// partner that *never* shows Rp (RPi gadget rig: hardwired Rd)
+					// is safe to attach to as host. Blocks ~120ms, only on this
+					// ambiguous attach path.
+					if (!host_rp_found) {
+						for (auto rounds = 0; rounds < 6 && !host_rp_found; rounds++) {
+							for (uint8_t probe_cc2 = 0; probe_cc2 <= 1 && !host_rp_found; probe_cc2++) {
+								write<Switches0>({.PullDownCC1 = 1,
+												  .PullDownCC2 = 1,
+												  .MeasureCC1 = uint8_t(probe_cc2 ? 0 : 1),
+												  .MeasureCC2 = probe_cc2});
+								HAL_Delay(10);
+								Status0 probe{read<Status0>()};
+								if (probe.BCLevel > 0) {
+									pr_debug("Sink override (extended): CC%d BCLevel=%d\n",
+											 probe_cc2 ? 2 : 1,
+											 probe.BCLevel);
+									host_rp_found = true; // leave this CC selected for detach detection
+								}
+							}
+						}
+					}
+
 					if (host_rp_found) {
 						// A host's Rp is out there: attach as a sink. The live CC is
 						// left selected for measurement, so detach detection (VBUS
@@ -350,6 +394,17 @@ struct Device {
 				// (a good read in between isn't guaranteed to reach us: the backstop
 				// only calls in when *it* sees a bad status).
 				if (status0.VBusOK == 0 || status0.BCLevel == 0) {
+					if (!link_down_debounce_enabled) {
+						// Not yet enumerated: treat the dip as a real detach right
+						// away (see link_down_debounce_enabled)
+						pr_debug("Device link down (Status0=0x%x VBusOK=%d BCLevel=%d), detaching\n",
+								 (uint8_t)status0,
+								 status0.VBusOK,
+								 status0.BCLevel);
+						state = ConnectedState::None;
+						break;
+					}
+
 					auto now = HAL_GetTick();
 					if (link_down_since == 0 || now - link_down_last_seen > LinkDownEpisodeMs) {
 						link_down_since = now ? now : 1;
