@@ -16,6 +16,9 @@ static inline void pr_debug(...) {
 }
 #endif
 
+// Needs pr_debug, so included here rather than at the top
+#include "drivers/fusb302_pd.hh"
+
 namespace FUSB302
 {
 
@@ -48,6 +51,11 @@ struct Device {
 		if (!enabled)
 			link_down_since = 0;
 	}
+
+	// Minimal PD sink engine (contract + DR_Swap); see fusb302_pd.hh. Enabled
+	// automatically on sink attach; policy calls (request_dr_swap) come from
+	// the USB manager.
+	PDSink<Device> pd{*this};
 
 	Device(mdrivlib::I2CPeriph &i2c, uint8_t device_addr)
 		: i2c{i2c}
@@ -164,6 +172,7 @@ struct Device {
 	void start_toggle_polling(uint8_t polling_mode) {
 		last_polling_mode = polling_mode;
 		set_link_debounce(false); // re-enabled by the manager once enumerated
+		pd.on_chip_reset();		  // SWReset below wipes the chip's PD block
 		reset();
 
 		// Setup per datasheet p. 7 (Toggle Functionality)
@@ -228,7 +237,18 @@ struct Device {
 				if (status1a.ToggleOutcomeIsSink) {
 					// The toggle settled as an attached sink: the partner presents Rp,
 					// so it is the host (whether or not it sources VBUS).
+					// Take over from the toggle state machine: stop it, present Rd on
+					// both CCs and measure the settled CC, so BC_LVL detach detection
+					// and the PD engine's BMC TX/RX have a defined, live CC.
+					uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
+					write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
+					write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+					write<Switches0>({.PullDownCC1 = 1,
+									  .PullDownCC2 = 1,
+									  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
+									  .MeasureCC2 = cc2});
 					state = ConnectedState::AsDevice;
+					pd.enable(cc2);
 				}
 
 				// VBUS present while we are only polling means the *partner* drives
@@ -302,7 +322,8 @@ struct Device {
 											 probe_cc2 ? 2 : 1,
 											 probe.BCLevel);
 									host_rp_found = true; // leave this CC selected for detach detection
-								}
+										cc2 = probe_cc2;
+									}
 							}
 						}
 					}
@@ -312,6 +333,7 @@ struct Device {
 						// left selected for measurement, so detach detection (VBUS
 						// loss or BC_LVL 0) keeps working.
 						state = ConnectedState::AsDevice;
+						pd.enable(cc2);
 					} else {
 						// No Rp on either CC: the VBUS is backfed by a self-powered
 						// device, and the toggle's SRC outcome was right. Attach as
@@ -358,12 +380,14 @@ struct Device {
 				// while polling/host (set in start_toggle_polling, which re-arms
 				// the mask on the next re-poll) because as a source we drive VBUS
 				// ourselves and it would race host-unplug detection.
+				// CRCCheck also unmasked: INT_N must assert on each received PD
+				// packet so the PD engine can respond within tSenderResponse
 				if (state == ConnectedState::AsDevice)
 					write<Mask>({.HostCurrentReq = 0,
 								 .Collision = 1,
 								 .Wake = 1,
 								 .Alert = 1,
-								 .CRCCheck = 1,
+								 .CRCCheck = 0,
 								 .CompChange = 1,
 								 .CCBusActivity = 1,
 								 .VBusOK = 0});
@@ -376,6 +400,10 @@ struct Device {
 
 			case ConnectedState::AsDevice: {
 				pr_debug("State is currently Device\n");
+
+				// PD protocol servicing (uses the just-read InterruptA flags)
+				pd.service(intrA);
+
 				Status0 status0{read<Status0>()};
 
 				// Look for unplug event:
