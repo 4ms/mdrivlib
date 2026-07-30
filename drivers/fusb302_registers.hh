@@ -279,19 +279,19 @@ struct Power : ReadWrite {
 	enum : uint8_t { Address = 0x0B };
 
 	uint8_t BandGapAndWake : 1;
-	uint8_t MeasureBlock : 1;
-	uint8_t RXAndCurrentRefs : 1;
+	uint8_t MeasureRefsAndRX : 1;
+	uint8_t MeasuringBlock : 1;
 	uint8_t IntOsc : 1;
 	uint8_t : 4;
 
 	constexpr operator uint8_t() {
-		return (BandGapAndWake << 0) | (MeasureBlock << 1) | (RXAndCurrentRefs << 2) | (IntOsc << 3);
+		return (BandGapAndWake << 0) | (MeasureRefsAndRX << 1) | (MeasuringBlock << 2) | (IntOsc << 3);
 	}
 	constexpr static Power make(uint8_t raw) {
 		return {
 			.BandGapAndWake = Bits<0>(raw),
-			.MeasureBlock = Bits<1>(raw),
-			.RXAndCurrentRefs = Bits<2>(raw),
+			.MeasureRefsAndRX = Bits<1>(raw),
+			.MeasuringBlock = Bits<2>(raw),
 			.IntOsc = Bits<3>(raw),
 		};
 	}

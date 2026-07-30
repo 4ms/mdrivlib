@@ -2,24 +2,34 @@
 // Minimal USB-PD 2.0 sink policy engine for the FUSB302.
 //
 // Purpose-built for one job: land the implicit 5V contract a PD source
-// requires, then get the *data* roles swapped (DR_Swap) so a partner like the
-// OXI One in "Device Self Powered" mode -- power source but data device, with
-// its D+ pull-up gated on a PD contract + data-role swap -- will finally
-// present D+ and enumerate. We never source power and never do PR_Swap: power
-// stays partner->us (we ignore it; the module is Eurorack-powered), only the
-// data role moves.
+// requires, then get the data roles swapped (DR_Swap).
 //
-// Leans on the FUSB302 hardware assists: auto-GoodCRC (with role/rev bits from
+// We never source power and never do PR_Swap: power stays partner->us
+// (we ignore it, this driver assumes it's running on a self-powered unit).
+//
+// Uses the FUSB302 hardware: auto-GoodCRC (with role/rev bits from
 // Switches1), auto-retry on missing GoodCRC, hard-reset signaling. This engine
 // only builds/parses the policy-level messages.
 //
-// NOT a general PD stack: SOP only (no cables/VCONN), Rev 2.0 header (sources
+// This is NOT a general PD stack: SOP only (no cables/VCONN), Rev 2.0 header (sources
 // downgrade), fixed 5V request, no PPS/extended/chunked messages.
 //
-// Include from fusb302.hh (after its pr_debug definition).
+// Include from fusb302.hh
 
 #include "drivers/fusb302_registers.hh"
+#include "drivers/i2c.hh"
 #include <cstdint>
+
+// Debugging:
+// #define FUSBDEBUG_PD
+
+#ifdef FUSBDEBUG_PD
+#include <cstdio>
+#define pr_debug_pd printf
+#else
+static inline void pr_debug_pd(...) {
+}
+#endif
 
 namespace FUSB302
 {
@@ -48,7 +58,7 @@ struct PDSink {
 	uint32_t enabled_tick = 0;
 	uint32_t state_tick = 0;
 
-	static constexpr uint32_t CapsGraceMs = 1000;	  // no caps by then => not a PD source
+	static constexpr uint32_t CapsGraceMs = 1000;	   // no caps by then => not a PD source
 	static constexpr uint32_t ResponseTimeoutMs = 250; // covers tSenderResponse+margin
 	static constexpr uint32_t FifoAddr = 0x43;
 
@@ -108,7 +118,7 @@ struct PDSink {
 		// constraint ambiguous.)
 		write_raw(Control3::Address, 0x07); // AutoRetryCRC | NumRetries=3
 		// All power blocks on (IntOsc is required for BMC TX)
-		dev.template write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 1});
+		dev.template write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 1});
 		// Unmask the PD interrupts (chip-level Mask for CRC_CHK is handled by
 		// the caller's AsDevice mask write)
 		dev.template write<MaskA>({.HardResetRx = 0,
@@ -131,7 +141,7 @@ struct PDSink {
 		tx_msg_id = 0;
 		last_rx_msg_id = -1;
 		enabled_tick = state_tick = HAL_GetTick();
-		pr_debug("PD: sink engine enabled on CC%d\n", cc_is_cc2 ? 2 : 1);
+		pr_debug_pd("PD: sink engine enabled on CC%d\n", cc_is_cc2 ? 2 : 1);
 	}
 
 	// Call whenever the chip is reset / we detach (state only; the chip's PD
@@ -186,7 +196,7 @@ struct PDSink {
 	bool request_dr_swap() {
 		if (state != State::Ready || data_role_host || swap_refused)
 			return false;
-		pr_debug("PD: sending DR_Swap\n");
+		pr_debug_pd("PD: sending DR_Swap\n");
 		send_control(Ctrl::DR_Swap);
 		state = State::SwapSent;
 		state_tick = HAL_GetTick();
@@ -203,7 +213,7 @@ struct PDSink {
 			// Source hard reset: VBUS will cycle; PD restarts from caps.
 			// (The caller's link-down handling may also tear the whole
 			// attach down, which is fine too.)
-			pr_debug("PD: hard reset received\n");
+			pr_debug_pd("PD: hard reset received\n");
 			dev.template write<Reset>({.SWReset = 0, .PDReset = 1});
 			flush_fifos();
 			state = State::WaitCaps;
@@ -216,7 +226,7 @@ struct PDSink {
 		}
 
 		if (intra.SoftResetRx) {
-			pr_debug("PD: soft reset received\n");
+			pr_debug_pd("PD: soft reset received\n");
 			tx_msg_id = 0;
 			last_rx_msg_id = -1;
 			send_control(Ctrl::Accept);
@@ -235,7 +245,7 @@ struct PDSink {
 
 		if (intra.RetryFail) {
 			// Partner never GoodCRC'd us: treat as not-PD / lost
-			pr_debug("PD: retries failed, disabling\n");
+			pr_debug_pd("PD: retries failed, disabling\n");
 			state = State::Disabled;
 			return;
 		}
@@ -262,7 +272,7 @@ private:
 		auto sw1 = dev.template read<Switches1>();
 		sw1.DataRoleSrc = 1;
 		dev.template write<Switches1>(sw1);
-		pr_debug("PD: data role swapped, we are now DFP (host)\n");
+		pr_debug_pd("PD: data role swapped, we are now DFP (host)\n");
 	}
 
 	void check_timeouts() {
@@ -271,13 +281,13 @@ private:
 			case State::WaitAccept:
 			case State::WaitPSRdy:
 				if (now - state_tick > ResponseTimeoutMs) {
-					pr_debug("PD: contract timeout in state %d\n", (int)state);
+					pr_debug_pd("PD: contract timeout in state %d\n", (int)state);
 					state = State::Disabled;
 				}
 				break;
 			case State::SwapSent:
 				if (now - state_tick > ResponseTimeoutMs) {
-					pr_debug("PD: DR_Swap not answered\n");
+					pr_debug_pd("PD: DR_Swap not answered\n");
 					swap_refused = true;
 					state = State::Ready;
 				}
@@ -354,7 +364,7 @@ private:
 			dev.i2c.mem_read(dev.dev_addr, FifoAddr, 1, &token, 1);
 			if ((token & 0xE0) != 0xE0) {
 				// Not an SOP packet (SOP'/'', or FIFO out of sync): discard all
-				pr_debug("PD: non-SOP token 0x%x, flushing RX\n", token);
+				pr_debug_pd("PD: non-SOP token 0x%x, flushing RX\n", token);
 				flush_rx();
 				return;
 			}
@@ -402,12 +412,12 @@ private:
 			case Data::Source_Capabilities: {
 				// Always request object 1: the spec guarantees PDO 1 is
 				// vSafe5V fixed. We draw (almost) nothing: 100mA op/max.
-				pr_debug("PD: got source caps (%d PDOs, PDO1=0x%08x)\n", num_objects, (unsigned)objs[0]);
-				uint32_t rdo = (1u << 28)	  // object position 1
-							 | (1u << 25)	  // USB communications capable
-							 | (1u << 24)	  // no USB suspend
-							 | (10u << 10)	  // operating current 100mA
-							 | (10u << 0);	  // max operating current 100mA
+				pr_debug_pd("PD: got source caps (%d PDOs, PDO1=0x%08x)\n", num_objects, (unsigned)objs[0]);
+				uint32_t rdo = (1u << 28)  // object position 1
+							 | (1u << 25)  // USB communications capable
+							 | (1u << 24)  // no USB suspend
+							 | (10u << 10) // operating current 100mA
+							 | (10u << 0); // max operating current 100mA
 				send_data(Data::Request, &rdo, 1);
 				state = State::WaitAccept;
 				state_tick = HAL_GetTick();
@@ -435,7 +445,7 @@ private:
 
 			case Ctrl::PS_RDY:
 				if (state == State::WaitPSRdy) {
-					pr_debug("PD: explicit contract established\n");
+					pr_debug_pd("PD: explicit contract established\n");
 					state = State::Ready;
 					state_tick = HAL_GetTick();
 				}
@@ -444,7 +454,7 @@ private:
 			case Ctrl::Reject:
 			case Ctrl::Wait:
 				if (state == State::SwapSent) {
-					pr_debug("PD: DR_Swap refused\n");
+					pr_debug_pd("PD: DR_Swap refused\n");
 					swap_refused = true;
 					state = State::Ready;
 				} else if (state == State::WaitAccept) {
@@ -458,7 +468,7 @@ private:
 				// that makes us the host: exactly what we want. (If we're
 				// already DFP the swap would demote us; refuse.)
 				if (!data_role_host && contract_ready()) {
-					pr_debug("PD: partner requests DR_Swap, accepting\n");
+					pr_debug_pd("PD: partner requests DR_Swap, accepting\n");
 					send_control(Ctrl::Accept);
 					swap_pending_tx = true; // swap when Accept is delivered
 				} else {
@@ -475,11 +485,11 @@ private:
 			case Ctrl::Get_Sink_Cap: {
 				// Fixed 5V 100mA sink; unconstrained power (Eurorack-powered),
 				// USB comm capable, dual-role data
-				uint32_t pdo = (1u << 27)	 // unconstrained power
-							 | (1u << 26)	 // USB communications capable
-							 | (1u << 25)	 // dual-role data
-							 | (100u << 10)	 // 5V in 50mV units
-							 | (10u << 0);	 // 100mA in 10mA units
+				uint32_t pdo = (1u << 27)	// unconstrained power
+							 | (1u << 26)	// USB communications capable
+							 | (1u << 25)	// dual-role data
+							 | (100u << 10) // 5V in 50mV units
+							 | (10u << 0);	// 100mA in 10mA units
 				send_data(Data::Sink_Capabilities, &pdo, 1);
 			} break;
 

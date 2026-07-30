@@ -1,4 +1,5 @@
 #pragma once
+#include "drivers/fusb302_pd.hh"
 #include "drivers/i2c.hh"
 #include "fusb302_registers.hh"
 #include <cstdint>
@@ -16,39 +17,39 @@ static inline void pr_debug(...) {
 }
 #endif
 
-// Note on connecting to self-powered devices that constantly toggle CC lines
-// e.g. OXI One mkI in Self Powered Device mode (note that the OXI is compliant
-// in Device mode, it's just "Device Self Powered" mode that is non-compliant)
+// A large portion of this driver is for handling some non-compliant USB devices.
+// Example: OXI One mkI in "Device Self Powered" mode (only that mode, not in Device or Host mode).
 //
+// Symptom: a connecting unit holds VBUS high the entire time it's connected (like a Host would do)
+// and also toggles an Rp (pull-up) on/off on the CC lines at around 80ms high + 40ms low period.
+// However, it never enumerates attached devices and only wants to be a device itself.
+// Despite CC toggling, it continues to operate as a Device normally.
+//
+// Problem 1: Normally if we see an attached unit present VBUS then we assume it's a
+// Host since that's what the USB standard dictates. However in this case we need to treat it as a device.
+//
+// Problem 2: CC toggling can indicate a disconnect when it goes low. It also can confuse
+// the state machine because toggling Rp/Rd indicates the attached unit can be host or device,
+// but in this case it only wants to be a Device.
+//
+// Detection of problem units:
 // When we plug into a device like this, we see VBUS high from the partner,
 // so we present a Rd (advertise ourselves as device/sink).
-// If the other machine doesn't enumerate us, then we keep trying another way.
+// If the other machine doesn't enumerate us, then we try another way.
 //
-// OXI One is particularly strange in "Device Self Powered" mode in that it continues
-// to toggle Rp/no-Rp even after it seemingly has decided on a role, which means we
-// can't just sample the value once and know what role it intends to take. So we
-// have to detect the toggling itself by sampling over a period, and then we know it's
-// a non-compliant device and we can try to connect.
+// We first try to detect the Rp/no-Rp toggling. We keep our Rd presented and sample the CC lines
+// over a 120ms period to see if the BC Levels are toggling. If we see toggling, steady high
+// VBUS, and no response when we try present as a device (presenting Rd), then we've found
+// a problem unit and proceed with the remedy.
 //
-// When our side presents an Rd, the FUSB measures BCLevel=1/2/3 when the OXI has Rp
-// (OXI advertises 1.5A so we read 2), and 0 when it doesn't.
-// Steady-Rp partners (real hosts) are identified by the first quick probe, so seeing no Rp
-// at first and then Rp within a ~120ms window, all while VBUS is high, means the partner is
-// toggling: not a normal host or device. So we flag it as a Self Powered Device.
+// Sometimes we detect the toggling by chance: first we see VBUS high and an Rp, so we start
+// to attach as a device. Then we see BCLevel drop to 0 while VBUS is still high. This means
+// the partner dropped its Rp (toggled) and is now advertising as a device, yet it keeps
+// sourcing VBUS.
 //
-// To connect, we present an Rp to advertise as a host, and stop responding to CC toggles.
-// We do not supply VBUS since it's already present.
+// Remedy: To connect to such a unit, we present an Rp to advertise as a host,
+// and ignore all CC toggles. We do not supply VBUS since it's already present.
 //
-// Another way we detect the OXI is when we see VBUS high and an Rp and then start to attach as a
-// device. Then before we've been enumerated we see BCLevel drop to 0 while VBUS is still high,
-// meaning the partner dropped its Rp and is now advertising as a device, yet it keeps sourcing
-// VBUS. If the partner had been unplugged, we'd see VBUS drop, so this can only be a Self Powered Device.
-//
-// Basically, the OXI's VBUS source when in Self Powered Device mode is unconditional, decoupled from its CC role.
-// From then on we ignore its CC entirely and watch VBUS to detect detach events.
-
-// Needs pr_debug, so included here rather than at the top
-#include "drivers/fusb302_pd.hh"
 
 namespace FUSB302
 {
@@ -62,25 +63,14 @@ struct Device {
 	enum class ConnectedState { None, TogglePolling, AsHost, AsDevice } state = ConnectedState::None;
 	uint8_t last_polling_mode = Control2::PollDRP;
 
-	// AsDevice unplug debounce (see handle_interrupt AsDevice case):
-	// 0 = link reads up; else tick when the current down-episode began
+	// The OXI One in Device Self Powered mode toggles the CC lines even
+	// when connected. We don't want to interpret that as a disconnect (link down).
+	// So, we enable a debouncer once a connection is established.
+	bool link_down_debounce_enabled = false;
 	uint32_t link_down_since = 0;
 	uint32_t link_down_last_seen = 0;
 	static constexpr uint32_t LinkDownDebounceMs = 350;
 	static constexpr uint32_t LinkDownEpisodeMs = 600; // > UsbManager's 250ms link poll period
-
-	// Off until the data connection is established (set by the USB manager once
-	// enumeration succeeds). Before that, a VBUS/CC dip is meaningful (see the
-	// AsDevice handler); after enumeration, dips are transient noise that must
-	// not kill a working session.
-	bool link_down_debounce_enabled = false;
-
-	// Set when attached AsHost to a partner that sources VBUS itself (toggling
-	// self-powered DRP like the OXI One, or a backfeeding gadget rig). For
-	// these partners VBUS-loss is the only trustworthy detach signal: the OXI
-	// keeps toggling its CC even while enumerated, so BC_LVL flaps between
-	// "Rd present" and "open" forever and must be ignored.
-	bool host_partner_sources_vbus = false;
 
 	void set_link_debounce(bool enabled) {
 		link_down_debounce_enabled = enabled;
@@ -88,9 +78,14 @@ struct Device {
 			link_down_since = 0;
 	}
 
-	// Minimal PD sink engine (contract + DR_Swap); see fusb302_pd.hh. Enabled
-	// automatically on sink attach; policy calls (request_dr_swap) come from
-	// the USB manager.
+	// Set when attached AsHost to a partner device that sources VBUS itself
+	// (self-powered DRP like the OXI One, or a backfeeding gadget rig). For
+	// these partners VBUS-loss is the only trustworthy detach signal since
+	// the CC lines are toggled during normal operation.
+	bool host_partner_sources_vbus = false;
+
+	// Minimal PD sink engine (contract + DR_Swap) in fusb302_pd.hh.
+	// FIXME: Not tested on any external PD device!
 	PDSink<Device> pd{*this};
 
 	Device(mdrivlib::I2CPeriph &i2c, uint8_t device_addr)
@@ -146,39 +141,36 @@ struct Device {
 		start_toggle_polling(Control2::PollSNK);
 	}
 
-	// One-shot "is a device attached downstream?" check, for use while forced
-	// into the device (SNK) role. In SNK polling the port presents Rd and is
-	// electrically blind to a downstream device: that device also presents Rd
-	// and sources no VBUS, so two Rd's face each other and nothing is detected
-	// (a USB drive plugged in here does nothing). The only way to sense it is to
-	// momentarily present Rp -- the host signature -- and look for the partner's
-	// Rd pulling a CC line into range, exactly as a host/SRC toggle would.
+	// probe_snk_for_device():
+	// Used when we are in Device-only mode to detect if the user plugged in a device.
+	// The device is ignored (as it should be -- the user explicitly set a preference
+	// to NOT act as a Host), but this could be confusing for the user if they
+	// forgot or didn't understand the preference they set.
+	// Solution is to periodically poll for attached devices when we are in unattached
+	// Device-only mode. If we see one, we can notify the user that they need to change
+	// to Auto or Host-only mode to use the attached device.
 	//
-	// This stops the toggle, presents Rp on both CC pins, measures each, then
-	// re-arms SNK toggle polling and returns true if a device was seen. It never
-	// sources VBUS or VCONN, so nothing downstream is powered or enumerated -- it
-	// only senses presence. Call it periodically while idle (state stays
-	// TogglePolling); the brief Rp window means a host attaching at that instant
-	// is simply caught on the next SNK poll instead. Expects to be called while
-	// SNK polling (it restores SNK polling on exit).
+	// How it works: When in SNK polling (Device-only) we momentarily present an Rp
+	// and read the CC lines to see if there is an Rd attached. We don't source VBUS
+	// (or VCONN) so the downstream device doesn't get powered or enumerated.
+	// Then we restore SNK-only polling.
 	bool probe_snk_for_device() {
 		// Stop the toggle state machine so it can neither fire I_TOGGLE nor drive
 		// the CC pins while we measure them manually.
 		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
 
-		// Power up for a real CC measurement. NB the Power fields are misnamed vs
-		// the FUSB302 datasheet: "MeasureBlock" is PWR1 (receiver + current
-		// references) and "RXAndCurrentRefs" is PWR2 (the actual measure block).
-		// Both are required for a valid BC_LVL reading.
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		// Power up for a real CC measurement
+		write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 0});
 		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 0});
 
 		bool device_present = false;
-		for (uint8_t cc2 = 0; cc2 <= 1 && !device_present; cc2++) {
-			write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1), .MeasureCC2 = cc2, .PullUpCC1 = 1, .PullUpCC2 = 1});
+		// Try CC1 and then CC2
+		for (uint8_t cc_n = 0; cc_n <= 1 && !device_present; cc_n++) {
+			write<Switches0>(
+				{.MeasureCC1 = uint8_t(cc_n == 0), .MeasureCC2 = uint8_t(cc_n == 1), .PullUpCC1 = 1, .PullUpCC2 = 1});
 			HAL_Delay(2); // let the BC_LVL comparator settle
 			Status0 probe{read<Status0>()};
-			pr_debug("Device probe: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
+			pr_debug("Device probe: CC%d BCLevel=%d\n", cc_n ? 2 : 1, probe.BCLevel);
 			// With Rp presented, BC_LVL reads the partner's pull-down: 3 (0b11) is
 			// an open line (no device), 0 is Ra/VCONN only (a powered cable, not a
 			// device); 1 or 2 means a device's Rd is pulling CC into range.
@@ -192,7 +184,7 @@ struct Device {
 		// off throughout the measurement (well over the off->on settle time), so
 		// no extra delay is needed before re-enabling it.
 		write<Switches0>({.ConnectVConnCC1 = 0, .ConnectVConnCC2 = 0});
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 0, .MeasuringBlock = 0, .IntOsc = 0});
 		read<Interrupt>();
 		read<InterruptA>();
 		read<InterruptB>();
@@ -245,7 +237,7 @@ struct Device {
 					  .ToggleDone = 0,
 					  .OCPTempEvent = 1});
 		write<MaskB>({.GoodCRCSent = 1});
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 0, .RXAndCurrentRefs = 0, .IntOsc = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 0, .MeasuringBlock = 0, .IntOsc = 0});
 
 		dump_all_regs();
 
@@ -256,22 +248,17 @@ struct Device {
 		return state;
 	}
 
-	// Attach as host to a self-powered partner by presenting steady Rp on both
-	// CCs (source persona), measuring the given CC. Scope-verified against the
-	// OXI One "Device Self Powered": it latches its *device* persona when its
-	// CC sees Rp (D+ rises ~250ms later) even though its own CC keeps
-	// DRP-toggling forever -- so there is no Rd settle to wait for, and detach
-	// detection must ride on VBUS (host_partner_sources_vbus).
+	// Force attachment as a Host to a "problem unit" partner that supplies VBUS and also
+	// toggles CC (e.g. OXI One in Device Self Powered mode, see comments at top).
 	void attach_as_static_src(bool meas_cc2) {
 		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 0});
 		write<Switches0>({.MeasureCC1 = uint8_t(meas_cc2 ? 0 : 1),
 						  .MeasureCC2 = uint8_t(meas_cc2 ? 1 : 0),
 						  .PullUpCC1 = 1,
 						  .PullUpCC2 = 1});
-		// The partner's CC toggling would storm BC_LVL/COMP interrupts: mask
-		// them; unmask VBusOK (rise is reliable; loss is backstopped by the
-		// manager's poll)
+		// The partner's CC toggling would trigger BC_LVL/COMP interrupts, so mask them.
+		// Unmask VBusOK (rise is reliable, and loss is checked by the USB manager polling)
 		write<Mask>({.HostCurrentReq = 1,
 					 .Collision = 1,
 					 .Wake = 1,
@@ -294,7 +281,7 @@ struct Device {
 		reset();
 		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 1});
 		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 0});
 		write<Switches0>({.PullDownCC1 = 1, .PullDownCC2 = 1, .MeasureCC1 = 1, .MeasureCC2 = 0});
 		// Everything masked; the experiment loop polls Status0
 		write<Mask>(Mask::make(0xFF));
@@ -310,7 +297,7 @@ struct Device {
 		reset();
 		write<Control0>({.HostCurrent = Control0::DefaultCurrent, .MaskAllInt = 1});
 		write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-		write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+		write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 0});
 		write<Switches0>({.MeasureCC1 = 1, .MeasureCC2 = 0, .PullUpCC1 = 1, .PullUpCC2 = 1});
 		write<Mask>(Mask::make(0xFF));
 		write<MaskA>(MaskA::make(0xFF));
@@ -325,7 +312,7 @@ struct Device {
 	};
 
 	// Measure both CC lines (BC_LVL) and VBUS. Only the internal measurement
-	// mux is switched; what we present on the pins is untouched.
+	// mux is switched. What we present on the pins is untouched.
 	CCLevels read_both_cc() {
 		auto sw = read<Switches0>();
 		sw.MeasureCC1 = 1;
@@ -346,7 +333,7 @@ struct Device {
 		auto intrA = read<InterruptA>();
 		auto intrB = read<InterruptB>();
 
-		pr_debug("Int = 0x%x VBusOK=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
+		pr_debug("Int Flags = 0x%x VBusOK(rising edge intr.)=%d, BCLVL=%d\n", (uint8_t)intr, intr.VBusOK, intr.BCLevel);
 		pr_debug("IntA = 0x%x IntB = 0x%x TogDone=%d\n", (int)intrA, (int)intrB, intrA.ToggleDone);
 
 		switch (state) {
@@ -362,79 +349,69 @@ struct Device {
 					// Take over from the toggle state machine: stop it, present Rd on
 					// both CCs and measure the settled CC, so BC_LVL detach detection
 					// and the PD engine's BMC TX/RX have a defined, live CC.
-					uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
+					bool cc_is_cc2 = status1a.ToggleOutcomeIsCC2;
 					write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
-					write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+					write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 0});
 					write<Switches0>(
-						{.PullDownCC1 = 1, .PullDownCC2 = 1, .MeasureCC1 = uint8_t(cc2 ? 0 : 1), .MeasureCC2 = cc2});
+						{.PullDownCC1 = 1, .PullDownCC2 = 1, .MeasureCC1 = !cc_is_cc2, .MeasureCC2 = cc_is_cc2});
 					state = ConnectedState::AsDevice;
-					pd.enable(cc2);
+					pd.enable(cc_is_cc2);
 				}
 
-				// VBUS present while we are only polling means the *partner* drives
-				// it -- we never drive our own 5V source during polling -- but that
-				// alone does not prove the partner is a host. Two very different
-				// partners look like this when the toggle did not settle as SNK:
-				//  - A powered host the DRP toggle mis-settled against (a sampling
-				//    race): it presents Rp. We must attach as a sink -- staying SRC
-				//    means Rp-vs-Rp contention on CC and an endless BC_LVL/COMP_CHNG
-				//    interrupt storm.
-				//  - A self-powered *device* that backfeeds VBUS while presenting Rd
-				//    (RPi USB gadget rigs, OXI One): here the toggle settled SRC
-				//    *correctly*. Forcing sink would leave neither side presenting
-				//    Rp, so BC_LVL reads 0 and we would bounce attach/detach forever
-				//    without ever enumerating it.
-				// Distinguish them by measuring CC ourselves: stop the toggle,
-				// present Rd on both CC pins, and look for the partner's Rp.
 				else if (status0.VBusOK)
 				{
+					// The toggle outcome and VBUS disagree:
+					// We got an interrupt that VBUS is changed (from the partner: we never drive it while toggling).
+					// And we did not get an interrupt that the Toggle Outcome was SNK (therefore
+					// we are the SRC/host or maybe we mis-read an open CC line)
+					//
+					// This could mean a problem unit (acts as a Device, supplies VBUS, toggles Rp)
+					// or it could mean a normal Host and we just mis-setttled on the toggle read.
+					//
+					// Distinguish them by measuring CC ourselves: stop the toggle,
+					// present Rd on both CC pins, and look for the partner's Rp.
+
 					write<Control2>({.Toggle = 0, .PollingMode = 0, .ToggleIgnoreRa = 1});
 
-					// Enable PWR1 (MeasureBlock) and PWR2 RXAndCurrentRefs):
-					// we just stopped the toggle state machine (line above), so the chip is
-					// no longer powering the measure block for us. With PWR2 off, BC_LVL reads 0
-					// forever and the 250ms link-check backstop sees a false detach every cycle.
-					write<Power>({.BandGapAndWake = 1, .MeasureBlock = 1, .RXAndCurrentRefs = 1, .IntOsc = 0});
+					// Enable MeasuringBlock (the line above powered it down via stopping toggling).
+					write<Power>({.BandGapAndWake = 1, .MeasureRefsAndRX = 1, .MeasuringBlock = 1, .IntOsc = 0});
 
-					// Find the live CC by probing: measure each CC in turn until
-					// the host's Rp is seen (BCLevel > 0). The CC that TOGSS
-					// flagged is only a hint -- on a mis-settle it can point at
-					// the open CC line, and measuring the open line means
-					// BC_LVL never changes again, so unplug goes undetected.
-					uint8_t cc2 = status1a.ToggleOutcomeIsCC2;
+					// Check both CC lines to see if either one has an Rp (e.g. we see a host connected).
+					// Present an Rd, pause, then measure one CC line. Then repeat, measuring the other CC line.
+					bool cc_is_cc2 = status1a.ToggleOutcomeIsCC2;
 					bool host_rp_found = false;
-					// In deliberate SRC-only polling (ForceHost, or the manager's
-					// Try.SRC pass for a self-powered device), a TOGDONE means the
-					// partner's Rd landed on our Rp: it took the sink role. Never
-					// yield to sink here -- the sink-override protection below is
-					// for DRP auto-attach only (a real host never fires TOGDONE in
-					// SRC polling: Rp-vs-Rp detects nothing).
-					bool src_only = last_polling_mode == Control2::PollSRC;
-					for (auto tries = 0; tries < 2 && !src_only; tries++) {
-						write<Switches0>({.PullDownCC1 = 1,
-										  .PullDownCC2 = 1,
-										  .MeasureCC1 = uint8_t(cc2 ? 0 : 1),
-										  .MeasureCC2 = cc2});
-						HAL_Delay(2); // let the BC_LVL comparator settle
-						Status0 probe{read<Status0>()};
-						pr_debug("Sink override: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
-						if (probe.BCLevel > 0) {
-							host_rp_found = true;
-							break;
+					bool force_host = last_polling_mode == Control2::PollSRC;
+					// If we are in Force-Host mode (PollSRC) then skip this check since
+					// we are not interested in being a device and presenting an Rd
+					// could tell the upstream Host we're a device.
+					if (!force_host) {
+						for (auto tries = 0; tries < 2; tries++) {
+							write<Switches0>({.PullDownCC1 = 1,
+											  .PullDownCC2 = 1,
+											  .MeasureCC1 = !cc_is_cc2,
+											  .MeasureCC2 = cc_is_cc2});
+							HAL_Delay(2); // let the BC_LVL comparator settle
+							Status0 probe{read<Status0>()};
+							pr_debug("Present Rd, look for Rp: CC%d BCLevel=%d\n", cc_is_cc2 ? 2 : 1, probe.BCLevel);
+							if (probe.BCLevel > 0) {
+								host_rp_found = true;
+								// We have VBUS and we detected an Rp -- so we found a potential host.
+								// If it turns out to be a "problem unit" and the Rp was just part
+								// of a toggling CC, then we'll fail to connect and the AsDevice
+								// handler below will fire when the OXI toggles the CC line low.
+								// Note: whichever CC we detected the BCLevel on is the active one,
+								// so keep it selected.
+								break;
+							}
+							cc_is_cc2 = !cc_is_cc2;
 						}
-						cc2 = cc2 ? uint8_t{0} : uint8_t{1};
 					}
 
-					// Two quick reads can catch a *toggling* partner (a DRP, or the
-					// OXI One in Device Self Powered mode) in its Rd phase and
-					// mistake it for a static self-powered device -- then we attach
-					// as host and collide Rp-vs-Rp when the partner flips back.
-					// Before concluding "no host here", keep our Rd presented and
-					// watch both CCs across a full DRP toggle period (tDRP <= 100ms,
-					// Rp phase >= 30% duty). Blocks ~120ms, only on this ambiguous
-					// attach path.
+					// If we didn't see an Rp, but we still have VBUS then look for
+					// toggling CC lines over a period of 120ms.
+					// Measure the CC levels for 6 rounds x 2 CCs x 10ms = 120ms
 					bool partner_toggling = false;
-					if (!host_rp_found && !src_only) {
+					if (!host_rp_found && !force_host) {
 						for (auto rounds = 0; rounds < 6 && !host_rp_found; rounds++) {
 							for (uint8_t probe_cc2 = 0; probe_cc2 <= 1 && !host_rp_found; probe_cc2++) {
 								write<Switches0>({.PullDownCC1 = 1,
@@ -444,70 +421,54 @@ struct Device {
 								HAL_Delay(10);
 								Status0 probe{read<Status0>()};
 								if (probe.BCLevel > 0) {
-									pr_debug("Sink override (extended): CC%d BCLevel=%d\n",
-											 probe_cc2 ? 2 : 1,
-											 probe.BCLevel);
+									pr_debug("Toggle detection: CC%d BCLevel=%d\n", probe_cc2 ? 2 : 1, probe.BCLevel);
 									host_rp_found = true; // leave this CC selected for detach detection
-									cc2 = probe_cc2;
-									// The quick probe just saw this partner NOT
-									// presenting Rp: it is alternating Rp/Rd (a DRP)
+									cc_is_cc2 = probe_cc2;
+									// The previous probe just saw this partner NOT
+									// presenting Rp, therefore it is toggling Rp/Rd
 									partner_toggling = true;
 								}
 							}
 						}
 					}
 
-					// A toggling partner that also backfeeds VBUS is a self-powered
-					// DRP that wants the *device* data role (OXI One "Device Self
-					// Powered"): it never enumerates anyone and never holds a CC
-					// role, but it latches its device persona on seeing steady Rp
-					// (scope-verified: D+ ~250ms later). Host it directly.
 					if (partner_toggling) {
 						pr_debug("Toggling self-powered partner: presenting Rp to host it\n");
-						attach_as_static_src(cc2);
+						attach_as_static_src(cc_is_cc2);
 					}
 
 					else if (host_rp_found)
 					{
-						// A steady host Rp is out there: attach as a sink. The live
+						// A steady host Rp is out there: attach as a device/sink. The live
 						// CC is left selected for measurement, so detach detection
 						// (VBUS loss or BC_LVL 0) keeps working.
 						state = ConnectedState::AsDevice;
-						pd.enable(cc2);
+						pd.enable(cc_is_cc2);
 					} else {
-						// No Rp on either CC: the VBUS is backfed by a self-powered
-						// device, and the toggle's SRC outcome was right. Attach as
-						// host: present Rp on both CC pins and select the CC where
-						// the partner's Rd is for measurement, so the AsHost detach
-						// check (BC_LVL == 3, line open) keeps working.
-						cc2 = status1a.ToggleOutcomeIsCC2;
+						// No Rp on either CC but yet we have VBUS. It must be backfed by a self-powered
+						// device, and the toggle's SRC outcome was right. Attach as a host.
+						// First, figure out which CC line is active.
+						cc_is_cc2 = status1a.ToggleOutcomeIsCC2;
 						bool device_rd_found = false;
 						for (auto tries = 0; tries < 2; tries++) {
-							write<Switches0>({.MeasureCC1 = uint8_t(cc2 ? 0 : 1),
-											  .MeasureCC2 = cc2,
-											  .PullUpCC1 = 1,
-											  .PullUpCC2 = 1});
+							write<Switches0>(
+								{.MeasureCC1 = !cc_is_cc2, .MeasureCC2 = cc_is_cc2, .PullUpCC1 = 1, .PullUpCC2 = 1});
 							HAL_Delay(2); // let the BC_LVL comparator settle
 							Status0 probe{read<Status0>()};
-							pr_debug("Source override: CC%d BCLevel=%d\n", cc2 ? 2 : 1, probe.BCLevel);
-							// With Rp presented: 3 is an open line, 0 is Ra only
-							// (powered cable); 1 or 2 means a device's Rd.
+							pr_debug("Source override: CC%d BCLevel=%d\n", cc_is_cc2 ? 2 : 1, probe.BCLevel);
+							// With Rp presented, BCLevel means:
+							// 3 is an open line
+							// 1 or 2 means a device's Rd.
+							// 0 is Ra only (powered cable)
 							if (probe.BCLevel == 1 || probe.BCLevel == 2) {
 								device_rd_found = true;
 								break;
 							}
-							cc2 = cc2 ? uint8_t{0} : uint8_t{1};
+							cc_is_cc2 = !cc_is_cc2;
 						}
 
 						if (device_rd_found) {
-							// One Rd sample is not an attach: a toggling DRP (OXI
-							// One) alternates Rd/Rp until it has seen our steady
-							// Rp for its debounce time (tCCDebounce 100-200ms).
-							// Attaching on a phase-sample starts the host stack
-							// against a partner that swings away ~50ms later.
-							// Keep Rp presented and require a full debounce worth
-							// of continuous Rd; allow up to 1s for the partner's
-							// toggle to come around and commit.
+							// Probe CC's until we read a stable Rd (BCLevel=1 or 2) for 150ms
 							uint8_t stable = 1;
 							for (auto t = 0; t < 100 && stable < 15; t++) {
 								HAL_Delay(10);
@@ -515,9 +476,8 @@ struct Device {
 								stable = (probe.BCLevel == 1 || probe.BCLevel == 2) ? stable + 1 : 0;
 							}
 							if (stable >= 15) {
-								pr_debug("Partner Rd committed on CC%d, attaching as host\n", cc2 ? 2 : 1);
-								// VBUS is partner-backfed (this whole branch):
-								// detach on VBUS loss
+								pr_debug("Partner Rd committed on CC%d, attaching as host\n", cc_is_cc2 ? 2 : 1);
+								// VBUS is partner-backfed, so detach on VBUS loss not on CC change
 								host_partner_sources_vbus = true;
 								state = ConnectedState::AsHost;
 							} else {
@@ -527,26 +487,27 @@ struct Device {
 						} else {
 							// Neither Rp nor Rd anywhere despite VBUS: transient
 							// (partner mid-plug or mid-power-up). Re-arm the toggle
-							// and keep polling; state stays TogglePolling.
+							// and keep polling
 							start_toggle_polling(last_polling_mode);
 						}
 					}
 				}
 
 				else if (status1a.ToggleOutcomeIsCC1 || status1a.ToggleOutcomeIsCC2)
+				{
+					// ToggleOutcomeIsSink did not fire, and VBUS change interrupt did not fire
+					// so we must be the SRC (Host).
 					state = ConnectedState::AsHost;
+				}
 
-				// As a device (sink), the clean detach signal is VBUS loss, so
-				// unmask the VBusOK interrupt for reliable disconnect detection.
-				// Otherwise only BC_LVL is unmasked, and an OXI-style host+power
-				// unplug (VBUS and CC drop together) intermittently produces no
-				// interrupt, leaving us stuck in AsDevice. VBusOK stays masked
-				// while polling/host (set in start_toggle_polling, which re-arms
-				// the mask on the next re-poll) because as a source we drive VBUS
-				// ourselves and it would race host-unplug detection.
-				// CRCCheck also unmasked: INT_N must assert on each received PD
-				// packet so the PD engine can respond within tSenderResponse
 				if (state == ConnectedState::AsDevice)
+					// As a device (sink), the clean detach signal is VBUS loss, so
+					// unmask the VBusOK interrupt. However, this is just our best effort
+					// because in the field sometimes we do not see a VBusOK interrupt
+					// fire when VBUS goes low. The manager's polling should catch it
+					// in that case.
+					// CRCCheck also unmasked: INT_N must assert on each received PD
+					// packet so the PD engine can respond within tSenderResponse
 					write<Mask>({.HostCurrentReq = 0,
 								 .Collision = 1,
 								 .Wake = 1,
@@ -555,11 +516,6 @@ struct Device {
 								 .CompChange = 1,
 								 .CCBusActivity = 1,
 								 .VBusOK = 0});
-
-				// could also check Status0: Comp == 0 && BCLevel < 3
-				// Comp == 0 means CC pin is read as less than reference, meaning device
-				// Rd pull-down was detected BC<3 means CC pin is read as < 1.23V, meaning
-				// a device Rd pull-down was detected
 			} break;
 
 			case ConnectedState::AsDevice: {
@@ -574,33 +530,27 @@ struct Device {
 				// VBusOK = 0 means no VBUS, BCLevel == 0 means CC detected as low (no
 				// host pull-up detected).
 				//
-				// Debounced: some partners (OXI One "Device Self Powered") briefly dip
-				// VBUS/CC shortly after attaching. One bad read is not an unplug --
-				// treating it as one tears down the connection and restarts the whole
-				// attach (and data-role-fallback) sequence, which is where the
-				// "works sometimes" behavior came from. Only detach after the link has
-				// read down for LinkDownDebounceMs. Persistent outages are re-read by
-				// the ~250ms link poll backstop in UsbManager, so a real unplug is
-				// confirmed in roughly LinkDownDebounceMs + one poll period. A gap of
-				// more than LinkDownEpisodeMs between bad reads starts a new episode
-				// (a good read in between isn't guaranteed to reach us: the backstop
-				// only calls in when *it* sees a bad status).
+				// Debounce detecting a low CC/VBUS as a disconnect event.
+				// Only detach after the link has read down for LinkDownDebounceMs.
+				// Persistent outages are re-read by the ~250ms link poll in UsbManager,
+				// so a real unplug is confirmed in roughly LinkDownDebounceMs + one poll
+				// period. A gap of more than LinkDownEpisodeMs between bad reads starts a
+				// new episode (a good read in between isn't guaranteed to reach us: the backstop
+				// only calls in when it sees a bad status).
 				if (status0.VBusOK == 0 || status0.BCLevel == 0) {
 					if (!link_down_debounce_enabled && status0.VBusOK && status0.BCLevel == 0) {
-						// CC dropped while VBUS stays, before enumeration: not an
-						// unplug (a real unplug drops both) -- the partner is a
-						// toggling self-powered DRP (OXI One "Device Self
-						// Powered"). It will never enumerate us and never holds a
-						// CC role, but it latches its device persona on seeing
-						// steady Rp. Flip to the source persona and host it.
+						// CC dropped while VBUS stays, before enumeration: not an unplug
+						// (a real unplug drops both) -- the partner is a toggling self-powered unit
+						// (OXI "Device Self Powered"). It will never enumerate us and never holds a
+						// CC role, but it latches its device persona on seeing steady Rp. Flip to
+						// the source persona and host it.
 						auto sw = read<Switches0>();
 						pr_debug("CC dropped, VBUS present: toggling self-powered partner; presenting Rp to host it\n");
 						attach_as_static_src(sw.MeasureCC2);
 						break;
 					}
 					if (!link_down_debounce_enabled) {
-						// Not yet enumerated: treat the dip as a real detach right
-						// away (see link_down_debounce_enabled)
+						// Not yet enumerated: treat the dip as a real detach right away
 						pr_debug("Device link down (Status0=0x%x VBusOK=%d BCLevel=%d), detaching\n",
 								 (uint8_t)status0,
 								 status0.VBusOK,
@@ -636,11 +586,9 @@ struct Device {
 				pr_debug("State is currently Host\n");
 				Status0 status{read<Status0>()};
 
-				// Partner sources VBUS (toggling self-powered DRP / gadget rig):
-				// VBUS-loss is the only trustworthy detach signal -- the OXI One
-				// keeps toggling its CC even while enumerated, so BC_LVL flaps
-				// between Rd and open forever and means nothing.
 				if (host_partner_sources_vbus) {
+					// Partner sources VBUS (toggling self-powered DRP / gadget rig):
+					// VBUS-loss is the only trustworthy detach signal
 					if (status.VBusOK == 0) {
 						pr_debug("Partner VBUS gone, detaching\n");
 						state = ConnectedState::None;
