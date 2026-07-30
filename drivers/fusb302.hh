@@ -17,29 +17,35 @@ static inline void pr_debug(...) {
 #endif
 
 // Note on connecting to self-powered devices that constantly toggle CC lines
-// e.g. OXI One in Self Powered Device mode
+// e.g. OXI One mkI in Self Powered Device mode (note that the OXI is compliant
+// in Device mode, it's just "Device Self Powered" mode that is non-compliant)
 //
-// When we plug into a device like this, we will see VBUS high from the device,
+// When we plug into a device like this, we see VBUS high from the partner,
 // so we present a Rd (advertise ourselves as device/sink).
 // If the other machine doesn't enumerate us, then we keep trying another way.
 //
-// OXI One is particularly strange in that it continues to toggle Rp/no-Rp even after
-// it seemingly has decided on a role, which means we can't just sample the value once
-// and know what role it intends to take. So we have to detect the
-// toggling itslef by sampling over a period, and then we know it's an OXI.
+// OXI One is particularly strange in "Device Self Powered" mode in that it continues
+// to toggle Rp/no-Rp even after it seemingly has decided on a role, which means we
+// can't just sample the value once and know what role it intends to take. So we
+// have to detect the toggling itself by sampling over a period, and then we know it's
+// a non-compliant device and we can try to connect.
 //
-// We check to see if the other machine is toggling the CC lines between having an Rp (advertising as a Source/host)
-// and no Rp (advertising as a sink/device) -- presumably an Rd.
-// When our side puts an Rd on, then FUSB measures BCLevel=2 (or 1) when the OXI has Rp, and 0 when it doesn't.
-// If we see this toggling 2/0/2/0 while VBUS is high, then it's not a normal host or normal device,
-// so we flag it as a Self Powered Device. To connect, we present an Rp to advertise as a host, and we
-// stop responding to toggles on the CC lines. We do not supply VBUS since it's already present.
+// When our side presents an Rd, the FUSB measures BCLevel=1/2/3 when the OXI has Rp
+// (OXI advertises 1.5A so we read 2), and 0 when it doesn't.
+// Steady-Rp partners (real hosts) are identified by the first quick probe, so seeing no Rp
+// at first and then Rp within a ~120ms window, all while VBUS is high, means the partner is
+// toggling: not a normal host or device. So we flag it as a Self Powered Device.
 //
-// Another way we can detect the OXI is if when we connect, we see VBUS high and an Rp, so we start
-// to attach as a device. We don't get enumerated, but then we see BCLevel=0 and still VBUS is high.
-// That means the other machine is now presenting Rd, advertising itself as a device, yet
-// still presenting VBUS (presumably this is a leak/backflow in the OXI circuit). So then we
-// know it's Self Powered Device and we ignore VBUS and CC toggles.
+// To connect, we present an Rp to advertise as a host, and stop responding to CC toggles.
+// We do not supply VBUS since it's already present.
+//
+// Another way we detect the OXI is when we see VBUS high and an Rp and then start to attach as a
+// device. Then before we've been enumerated we see BCLevel drop to 0 while VBUS is still high,
+// meaning the partner dropped its Rp and is now advertising as a device, yet it keeps sourcing
+// VBUS. If the partner had been unplugged, we'd see VBUS drop, so this can only be a Self Powered Device.
+//
+// Basically, the OXI's VBUS source when in Self Powered Device mode is unconditional, decoupled from its CC role.
+// From then on we ignore its CC entirely and watch VBUS to detect detach events.
 
 // Needs pr_debug, so included here rather than at the top
 #include "drivers/fusb302_pd.hh"
