@@ -22,6 +22,7 @@ uint32_t I2CPeriph::_check_errors(uint32_t retries) {
 }
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Receive(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
@@ -32,6 +33,7 @@ I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t s
 }
 
 I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Receive_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
@@ -42,6 +44,7 @@ I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_
 }
 
 I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Transmit(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
@@ -52,6 +55,7 @@ I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t 
 }
 
 I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Transmit_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
@@ -63,6 +67,7 @@ I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16
 
 I2CPeriph::Error
 I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Read(&hal_i2c_, dev_address, mem_address, memadd_size, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
@@ -74,6 +79,7 @@ I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_
 
 I2CPeriph::Error
 I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Read_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
@@ -85,6 +91,7 @@ I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t mema
 
 I2CPeriph::Error
 I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Write(&hal_i2c_, dev_address, mem_address, memadd_size, data, size, _I2C_LONG_TIMEOUT) ==
@@ -97,6 +104,7 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 
 I2CPeriph::Error I2CPeriph::mem_write_IT(
 	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Write_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
@@ -108,6 +116,7 @@ I2CPeriph::Error I2CPeriph::mem_write_IT(
 
 I2CPeriph::Error I2CPeriph::mem_write_dma(
 	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	HAL_StatusTypeDef err;
 	while ((err = HAL_I2C_Mem_Write_DMA(&hal_i2c_, dev_address, mem_address, memadd_size, data, size)) != HAL_OK) {
 		if (HAL_I2C_GetError(&hal_i2c_) != HAL_I2C_ERROR_AF)
@@ -118,6 +127,25 @@ I2CPeriph::Error I2CPeriph::mem_write_dma(
 
 bool I2CPeriph::is_ready() {
 	return (HAL_I2C_GetState(&hal_i2c_) == HAL_I2C_STATE_READY);
+}
+
+uint32_t I2CPeriph::get_error() const {
+	return latched_error_;
+}
+
+bool I2CPeriph::had_error() const {
+	return latched_error_ != HAL_I2C_ERROR_NONE;
+}
+
+void I2CPeriph::clear_error() {
+	latched_error_ = HAL_I2C_ERROR_NONE;
+}
+
+// Store the HAL error code so we can detect a failed xfer that didn't
+// hang or kill the bus
+void I2CPeriph::latch_error() {
+	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE)
+		latched_error_ |= hal_i2c_.ErrorCode;
 }
 
 void I2CPeriph::deinit() {
@@ -157,6 +185,20 @@ void I2CPeriph::deinit() {
 	}
 
 	already_init = false;
+}
+
+I2CPeriph::Error I2CPeriph::reset(const I2CConfig &defs) {
+	// Mask the I2C interrupts before resetting so an in-flight
+	// IRQ won't read the I2C registers when they're not clocked.
+	disable_IT();
+
+	deinit();
+	clear_error();
+	const auto err = init(defs);
+
+	// TODO: if IT was not previously enabled, this would be wrong:
+	enable_IT(defs.priority1, defs.priority2);
+	return err;
 }
 
 I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
@@ -251,10 +293,13 @@ void I2CPeriph::disable_IT() {
 
 void I2CPeriph::i2c_event_handler() {
 	HAL_I2C_EV_IRQHandler(&hal_i2c_);
+	// NACKs (HAL_I2C_ERROR_AF) are detected on the event path, not the error path
+	latch_error();
 }
 
 void I2CPeriph::i2c_error_handler() {
 	HAL_I2C_ER_IRQHandler(&hal_i2c_);
+	latch_error();
 	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE) {
 		HAL_I2C_Init(&hal_i2c_);
 	}

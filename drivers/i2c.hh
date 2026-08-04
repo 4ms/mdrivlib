@@ -22,7 +22,14 @@ public:
 	Error init(const I2CConfig &defs);
 	void deinit();
 
+	// Full deinit() and re-init()
+	Error reset(const I2CConfig &defs);
+
 	bool is_ready();
+
+	uint32_t get_error() const;
+	bool had_error() const;
+	void clear_error();
 
 	template<typename Reg>
 	requires std::derived_from<Reg, BusReg::WriteAccess>
@@ -65,6 +72,7 @@ public:
 
 private:
 	bool already_init = false;
+	volatile uint32_t latched_error_ = 0; // HAL_I2C_ERROR_NONE
 	I2C_HandleTypeDef hal_i2c_;
 	IRQn_Type i2c_irq_num_;
 	IRQn_Type i2c_err_irq_num_;
@@ -75,6 +83,7 @@ private:
 
 	void i2c_error_handler();
 	void i2c_event_handler();
+	void latch_error();
 
 	uint32_t _check_errors(uint32_t retries);
 
