@@ -129,6 +129,11 @@ bool I2CPeriph::is_ready() {
 	return (HAL_I2C_GetState(&hal_i2c_) == HAL_I2C_STATE_READY);
 }
 
+bool I2CPeriph::probe(uint16_t dev_address) {
+	clear_error();
+	return HAL_I2C_IsDeviceReady(&hal_i2c_, dev_address, 1, _I2C_FLAG_TIMEOUT) == HAL_OK;
+}
+
 uint32_t I2CPeriph::get_error() const {
 	return latched_error_;
 }

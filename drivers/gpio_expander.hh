@@ -54,6 +54,9 @@ struct GPIOExpander {
 	}
 
 	bool is_present() {
+		if (!_i2c.probe(_device_addr))
+			return false;
+
 		auto err = _i2c.mem_read(_device_addr, InputPort0, I2C_MEMADD_SIZE_8BIT, _data, 1);
 		return err == I2CPeriph::I2C_NO_ERR;
 	}

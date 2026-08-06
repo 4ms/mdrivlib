@@ -26,6 +26,7 @@ public:
 	Error reset(const I2CConfig &defs);
 
 	bool is_ready();
+	bool probe(uint16_t dev_address);
 
 	uint32_t get_error() const;
 	bool had_error() const;
