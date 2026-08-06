@@ -10,6 +10,7 @@ namespace mdrivlib
 {
 
 constexpr uint32_t _I2C_FLAG_TIMEOUT = 1;
+constexpr uint32_t _I2C_PROBE_TIMEOUT = 3;
 constexpr uint32_t _I2C_LONG_TIMEOUT = 30;
 constexpr uint32_t _I2C_VLONG_TIMEOUT = 100;
 
@@ -129,9 +130,28 @@ bool I2CPeriph::is_ready() {
 	return (HAL_I2C_GetState(&hal_i2c_) == HAL_I2C_STATE_READY);
 }
 
+bool I2CPeriph::clear_stuck_busy() {
+	// Don't interrupt any transactions in flight
+	if (HAL_I2C_GetState(&hal_i2c_) != HAL_I2C_STATE_READY)
+		return false;
+
+	if (__HAL_I2C_GET_FLAG(&hal_i2c_, I2C_FLAG_BUSY) == RESET)
+		return false;
+
+	__HAL_I2C_DISABLE(&hal_i2c_);
+
+	// PE has to stay low for at least 3 APB cycles for the reset to take
+	for (uint32_t i = 0; i < 16; i++)
+		asm volatile("nop");
+
+	__HAL_I2C_ENABLE(&hal_i2c_);
+
+	return true;
+}
+
 bool I2CPeriph::probe(uint16_t dev_address) {
 	clear_error();
-	return HAL_I2C_IsDeviceReady(&hal_i2c_, dev_address, 1, _I2C_FLAG_TIMEOUT) == HAL_OK;
+	return HAL_I2C_IsDeviceReady(&hal_i2c_, dev_address, 1, _I2C_PROBE_TIMEOUT) == HAL_OK;
 }
 
 uint32_t I2CPeriph::get_error() const {
@@ -154,7 +174,7 @@ void I2CPeriph::latch_error() {
 }
 
 void I2CPeriph::deinit() {
-	Clocks::I2C::disable(hal_i2c_.Instance);
+	// Clocks::I2C::disable(hal_i2c_.Instance);
 	HAL_Delay(1);
 
 	if (hal_i2c_.Instance == I2C1) {
@@ -199,8 +219,16 @@ I2CPeriph::Error I2CPeriph::reset(const I2CConfig &defs) {
 
 	deinit();
 	clear_error();
+
+	hal_i2c_.Lock = HAL_UNLOCKED;
+	hal_i2c_.State = HAL_I2C_STATE_RESET;
+	hal_i2c_.ErrorCode = HAL_I2C_ERROR_NONE;
+
 	const auto err = init(defs);
 
+	// A pending error IRQ unmasked here is harmless now that the handler only
+	// latches: it reads flags that the re-init already cleared, and the next
+	// transfer clears the latch before it starts.
 	// TODO: if IT was not previously enabled, this would be wrong:
 	enable_IT(defs.priority1, defs.priority2);
 	return err;
@@ -305,9 +333,16 @@ void I2CPeriph::i2c_event_handler() {
 void I2CPeriph::i2c_error_handler() {
 	HAL_I2C_ER_IRQHandler(&hal_i2c_);
 	latch_error();
-	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE) {
-		HAL_I2C_Init(&hal_i2c_);
-	}
+
+	// Deliberately no HAL_I2C_Init() here. Re-initializing from interrupt
+	// context reconfigures the peripheral underneath whatever HAL call is in
+	// flight on the main loop, and forces State back to READY without clearing
+	// Lock (it only does that when State is RESET, which it isn't mid-transfer)
+	// -- leaving the handle half fixed-up and refusing every later transfer
+	// before it reaches the bus.
+	//
+	// The error is latched instead, and the caller's state machine recovers via
+	// reset(), which runs in the main context where re-init is safe.
 }
 
 void I2CPeriph::link_DMA_TX(DMA_HandleTypeDef *dmatx) {

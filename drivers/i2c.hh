@@ -28,6 +28,10 @@ public:
 	bool is_ready();
 	bool probe(uint16_t dev_address);
 
+	// Recover a peripheral whose BUSY flag is latched with no transfer running.
+	// Returns true if it was stuck and has been cleared.
+	bool clear_stuck_busy();
+
 	uint32_t get_error() const;
 	bool had_error() const;
 	void clear_error();

@@ -54,6 +54,7 @@ struct GPIOExpander {
 	}
 
 	bool is_present() {
+		_i2c.clear_stuck_busy();
 		if (!_i2c.probe(_device_addr))
 			return false;
 
