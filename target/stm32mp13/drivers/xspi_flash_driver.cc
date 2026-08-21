@@ -526,6 +526,7 @@ bool QSpiFlash::check_chip_id(uint32_t expected_id, uint32_t mask) {
 		id &= mask;
 		if (id == expected_id)
 			return true;
+		xspi_printf("Read ID 0x%x, expected %x mask %x\n", id, expected_id, mask);
 	} while (timeout--);
 	return false;
 }
