@@ -46,11 +46,13 @@ QSpiFlash::QSpiFlash(const QSPIFlashConfig &config_defs)
 																  : XSPI_DATA_1_LINE}
 	, quad_write_cmd{config_defs.chip_id == QSPIFlashConfig::IS25L		 ? IS25LQ0x0B_QUAD_IN_FAST_PROG_CMD
 					 : config_defs.chip_id == QSPIFlashConfig::W25Q128JV ? W25Q128JV_QUAD_IN_FAST_PROG_CMD
+					 : config_defs.chip_id == QSPIFlashConfig::W25Q16JV	 ? W25Q128JV_QUAD_IN_FAST_PROG_CMD
 																		 : S25FLxxxL_QUAD_IN_FAST_PROG_CMD}
-	, quad_read_dummy_cycles{config_defs.chip_id == QSPIFlashConfig::IS25L ? IS25LQ0x0B_QSPI_DUMMY_CYCLES_READ_QUAD_IO
-							 : config_defs.chip_id == QSPIFlashConfig::W25Q128JV
-								 ? W25Q128JV_QSPI_DUMMY_CYCLES_READ_QUAD_IO
-								 : S25FLxxxL_QSPI_DUMMY_CYCLES_READ_QUAD_IO} {
+	, quad_read_dummy_cycles{
+		  config_defs.chip_id == QSPIFlashConfig::IS25L		  ? IS25LQ0x0B_QSPI_DUMMY_CYCLES_READ_QUAD_IO
+		  : config_defs.chip_id == QSPIFlashConfig::W25Q128JV ? W25Q128JV_QSPI_DUMMY_CYCLES_READ_QUAD_IO
+		  : config_defs.chip_id == QSPIFlashConfig::W25Q16JV  ? W25Q128JV_QSPI_DUMMY_CYCLES_READ_QUAD_IO
+															  : S25FLxxxL_QSPI_DUMMY_CYCLES_READ_QUAD_IO} {
 	instance_ = this;
 
 	handle.Instance = QUADSPI;
