@@ -39,6 +39,10 @@ public:
 	uint32_t fe_errors = 0;
 	uint32_t dme_errors = 0;
 
+	// Number of blocks that were skipped because a callback ran past the next
+	// DMA half/full-transfer deadline (see _start_irq)
+	uint32_t missed_blocks = 0;
+
 private:
 	SaiConfig saidef_;
 	DMA_HandleTypeDef hdma_tx;
@@ -74,5 +78,9 @@ private:
 	uint32_t dma_dme_flag_index;
 	volatile uint32_t *dma_isr_reg;
 	volatile uint32_t *dma_ifcr_reg;
+
+	// The master stream, for reading the DMA position (NDTR) when we're late
+	DMA_Stream_TypeDef *dma_stream = nullptr;
+	uint32_t dma_half_transfer_count = 0;
 };
 } // namespace mdrivlib
