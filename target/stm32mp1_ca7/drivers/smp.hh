@@ -24,15 +24,21 @@ struct SMPControl {
 	static constexpr uint32_t NumRegs = 64;
 	static inline __attribute__((section(".noncachable"))) std::array<std::atomic<uint32_t>, NumRegs> regs{};
 
+	// The regs[] payload (and the Running flag) must be observed by the other core
+	// before it takes the SGI, so a DSB is required here: regs[] is Normal memory
+	// and GICD_SGIR is Device memory, which are not ordered against each other.
 	template<uint32_t channel>
 	static void notify() {
 		static_assert(channel <= SMPIRQn.size());
+		__DSB();
 		SecondaryCore::send_sgi(IRQn(channel));
 	}
 
 	static void notify(uint32_t channel) {
-		if (channel <= SMPIRQn.size())
+		if (channel <= SMPIRQn.size()) {
+			__DSB();
 			SecondaryCore::send_sgi(IRQn(channel));
+		}
 	}
 
 	template<uint32_t reg_num = 0>
@@ -117,6 +123,9 @@ struct SMPThread {
 	// Aux Core must call this after processing a custom command
 	static void signal_done() {
 		SMPControl::write<StatusReg>(NotRunning);
+		// Drain the store before returning from the ISR, so the waiting core
+		// sees NotRunning promptly instead of whenever the buffer happens to drain
+		__DSB();
 	}
 
 	// Returns true if thread is completed
