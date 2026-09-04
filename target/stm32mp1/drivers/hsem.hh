@@ -25,28 +25,48 @@ enum class HWSemaphoreFlag {
 	LockedOk = 1,
 	// AlreadySet, SameCoreAlreadySet, OtherCoreAlreadySet
 };
+// The HSEM registers are Device memory, but the data these semaphores protect is
+// not: it lives in shared RAM mapped Normal Non-cacheable. ARMv7-A lets Normal
+// accesses be buffered and reordered around Device accesses, so without a
+// barrier the other core can observe the semaphore released before the data it
+// guards has landed, and read it torn or stale.
+//
+// A DMB on each side turns lock()/unlock() into a proper acquire/release pair,
+// so callers can wrap plain (non-atomic) shared data and be correct. Users that
+// carry their own barriers -- seqlocks, the SPSC queues -- are unaffected.
+//
+// This mattered less when shared RAM was mapped Strongly-Ordered, which forbids
+// that reordering; don't remove these if that mapping ever comes back, because
+// the guarantee would then be coming from the wrong place.
 template<uint32_t SemaphoreID>
 struct HWSemaphore {
 	HWSemaphore() = delete;
 
 	static HWSemaphoreFlag lock() {
-		return (HSEM->RLR[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT)) ? HWSemaphoreFlag::LockedOk
-																				  : HWSemaphoreFlag::LockFailed;
+		if (HSEM->RLR[SemaphoreID] != (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT))
+			return HWSemaphoreFlag::LockFailed;
+
+		acquire_barrier();
+		return HWSemaphoreFlag::LockedOk;
 	}
 
 	static HWSemaphoreFlag lock(uint32_t processID) {
 		// Two-step lock:
 		HSEM->R[SemaphoreID] = HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID;
-		return (HSEM->R[SemaphoreID] == (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID))
-				 ? HWSemaphoreFlag::LockedOk
-				 : HWSemaphoreFlag::LockFailed;
+		if (HSEM->R[SemaphoreID] != (HSEM_R_LOCK | HSEM_CR_COREID_CURRENT | processID))
+			return HWSemaphoreFlag::LockFailed;
+
+		acquire_barrier();
+		return HWSemaphoreFlag::LockedOk;
 	}
 
 	static void unlock() {
+		release_barrier();
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT;
 	}
 
 	static void unlock(uint32_t processID) {
+		release_barrier();
 		HSEM->R[SemaphoreID] = HSEM_CR_COREID_CURRENT | processID;
 	}
 
@@ -79,6 +99,17 @@ struct HWSemaphore {
 			HSEM->C1ICR = 1 << SemaphoreID;
 		if constexpr (HSEM_CR_COREID_CURRENT == (HSEM_CPU2_COREID << HSEM_CR_COREID_Pos))
 			HSEM->C2ICR = 1 << SemaphoreID;
+	}
+
+	// Nothing the caller does with the guarded data may be reordered before the
+	// lock was seen, or after the unlock becomes visible. Also stops the
+	// compiler moving the accesses across.
+	static void acquire_barrier() {
+		asm volatile("dmb sy" ::: "memory");
+	}
+
+	static void release_barrier() {
+		asm volatile("dmb sy" ::: "memory");
 	}
 
 	// aka: is_status_after_masking_pending()
