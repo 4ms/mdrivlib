@@ -1,6 +1,8 @@
 #pragma once
 #include "drivers/i2c.hh"
 #include "lp5009_registers.hh"
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <span>
 
@@ -29,39 +31,52 @@ struct Device {
 		if (!ok)
 			return false;
 
-		write<DeviceConfig1>({.GlobalOff = 0,
-							  .MaxCurrentOption = 0,
-							  .PWMDitheringEnable = 1,
-							  .AutoIncEnable = 1,
-							  .PowerSaveEnable = 0,
-							  .LogScaleEnable = 1});
+		ok = write<DeviceConfig1>({.GlobalOff = 0,
+								   .MaxCurrentOption = 0,
+								   .PWMDitheringEnable = 1,
+								   .AutoIncEnable = 1,
+								   .PowerSaveEnable = 0,
+								   .LogScaleEnable = 1});
+		if (!ok)
+			return false;
 
-		write<LEDConfig>({.Led0BankEnable = 0, .Led1BankEnable = 0, .Led2BankEnable = 0, .Led3BankEnable = 0});
+		ok = write<LEDConfig>({.Led0BankEnable = 0, .Led1BankEnable = 0, .Led2BankEnable = 0, .Led3BankEnable = 0});
+		if (!ok)
+			return false;
 
-		all_leds_off();
-		return true;
+		ok = all_leds_off();
+		if (!ok)
+			return false;
+
+		uint32_t start = HAL_GetTick();
+		while (!i2c.is_ready()) {
+			if (HAL_GetTick() - start > 2000) // 2 seconds
+				return false;
+		}
+
+		return !i2c.had_error();
 	}
 
 	void set_led_element(unsigned led_element_id, uint8_t value) {
-		write(Out0Brightness::Address + led_element_id, value);
+		write_one(Out0Brightness::Address + led_element_id, value);
 	}
 
 	void set_rgb_led(unsigned rgb_led_id, const std::span<const uint8_t, 3> color) {
 		write(Out0Brightness::Address + rgb_led_id * 3, color);
 	}
 
-	void set_all_leds(const std::span<const uint8_t, NumRgbs * 3> values) {
-		write(Out0Brightness::Address, values);
+	bool set_all_leds(const std::span<const uint8_t, NumRgbs * 3> values) {
+		return write(Out0Brightness::Address, values);
 	}
 
 	void set_rgb_led_brightness(unsigned rgb_led_id, uint8_t brightness) {
 		if (rgb_led_id < NumRgbs)
-			write(LED0Brightness::Address + rgb_led_id, brightness);
+			write_one(LED0Brightness::Address + rgb_led_id, brightness);
 	}
 
 	void set_rgb_led_brightness(unsigned rgb_led_id, float brightness) {
-		auto u8_brightness = std::clamp<uint8_t>(0, 255, brightness * 255.f);
-		set_rgb_led_brightness(rgb_led_id, u8_brightness);
+		auto b = uint8_t(std::clamp(brightness, 0.f, 1.f) * 255.f);
+		set_rgb_led_brightness(rgb_led_id, b);
 	}
 
 	void set_all_led_brightness(const std::span<const uint8_t, NumRgbs> brightnesses) {
@@ -70,28 +85,42 @@ struct Device {
 
 	void dim_all_leds(uint8_t brightness) {
 		for (unsigned i = 0; i < NumRgbs; i++)
-			write(LED0Brightness::Address + i, brightness);
+			write_one(LED0Brightness::Address + i, brightness);
 	}
 
-	void all_leds_off() {
-		uint8_t data[NumRgbs * 3]{};
-		set_all_leds(data);
+	bool all_leds_off() {
+		std::ranges::fill(_data, 0);
+		return set_all_leds(_data);
 	}
 
 private:
+	// Always copy to an internal buffer because lifetime must extend to end of I2C transfer
+	// since we use interrrupts
+	std::array<uint8_t, NumRgbs * 3> _data{};
+
 	// Returns true on success
 	template<typename Reg>
 	bool write(Reg data) {
 		return i2c.write_reg(dev_addr, data) == mdrivlib::I2CPeriph::I2C_NO_ERR;
 	}
 
-	bool write(uint16_t mem_address, uint8_t data) {
-		return i2c.mem_write_IT(dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, &data, 1);
+	bool write_one(uint16_t mem_address, uint8_t data) {
+		if (!i2c.is_ready())
+			return false;
+		_data[0] = data;
+		return i2c.mem_write_IT(dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, &_data[0], 1) ==
+			   mdrivlib::I2CPeriph::I2C_NO_ERR;
 	}
 
 	bool write(uint16_t mem_address, const std::span<const uint8_t> data) {
-		return i2c.mem_write_IT(
-			dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, const_cast<uint8_t *>(data.data()), data.size());
+		if (!i2c.is_ready() || data.size() > _data.size())
+			return false;
+
+		if (_data.data() != data.data())
+			std::ranges::copy(data, _data.begin());
+
+		return i2c.mem_write_IT(dev_addr, mem_address, I2C_MEMADD_SIZE_8BIT, _data.data(), data.size()) ==
+			   mdrivlib::I2CPeriph::I2C_NO_ERR;
 	}
 };
 
