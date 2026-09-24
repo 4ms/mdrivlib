@@ -212,6 +212,49 @@ void I2CPeriph::deinit() {
 	already_init = false;
 }
 
+// At least 10us, so we're under 50kHz
+static void bus_clear_half_clock_delay() {
+	// FIXME: is SystemCoreClock guarenteed to be defined for all targets?
+	for (uint32_t i = 0; i < SystemCoreClock / 100'000; i++)
+		__NOP();
+}
+
+void I2CPeriph::clear_bus(const I2CConfig &defs) {
+	// If noise made a target miss a clock edge, it can be stuck mid-byte holding
+	// SDA low, and no amount of resetting our end will free the bus. Clocking SCL
+	// until SDA is released and then sending a STOP gets it back in sync.
+	disable_IT();
+
+	Pin scl{defs.SCL, PinMode::Input, PinPull::Up};
+	Pin sda{defs.SDA, PinMode::Input, PinPull::Up};
+
+	// Set the output registers high before switching to output, so there's no glitch
+	scl.high();
+	sda.high();
+	scl.set_otype(PinOType::OpenDrain);
+	sda.set_otype(PinOType::OpenDrain);
+	scl.set_mode(PinMode::Output);
+	bus_clear_half_clock_delay();
+
+	for (unsigned i = 0; i < 9 && !sda.read_raw(); i++) {
+		scl.low();
+		bus_clear_half_clock_delay();
+		scl.high();
+		bus_clear_half_clock_delay();
+	}
+
+	// STOP: SDA rises while SCL is high
+	scl.low();
+	bus_clear_half_clock_delay();
+	sda.set_mode(PinMode::Output);
+	sda.low();
+	bus_clear_half_clock_delay();
+	scl.high();
+	bus_clear_half_clock_delay();
+	sda.high();
+	bus_clear_half_clock_delay();
+}
+
 I2CPeriph::Error I2CPeriph::reset(const I2CConfig &defs) {
 	// Mask the I2C interrupts before resetting so an in-flight
 	// IRQ won't read the I2C registers when they're not clocked.

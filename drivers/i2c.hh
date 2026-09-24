@@ -25,6 +25,11 @@ public:
 	// Full deinit() and re-init()
 	Error reset(const I2CConfig &defs);
 
+	// Free a target stuck mid-byte holding SDA low, by clocking SCL until SDA
+	// is released and then sending a STOP. Masks the I2C interrupts and leaves
+	// the pins as GPIOs: call reset() afterwards to restore the peripheral.
+	void clear_bus(const I2CConfig &defs);
+
 	bool is_ready();
 	bool probe(uint16_t dev_address);
 
