@@ -22,7 +22,24 @@ public:
 	Error init(const I2CConfig &defs);
 	void deinit();
 
+	// Full deinit() and re-init()
+	Error reset(const I2CConfig &defs);
+
+	// Free a target stuck mid-byte holding SDA low, by clocking SCL until SDA
+	// is released and then sending a STOP. Masks the I2C interrupts and leaves
+	// the pins as GPIOs: call reset() afterwards to restore the peripheral.
+	void clear_bus(const I2CConfig &defs);
+
 	bool is_ready();
+	bool probe(uint16_t dev_address);
+
+	// Recover a peripheral whose BUSY flag is latched with no transfer running.
+	// Returns true if it was stuck and has been cleared.
+	bool clear_stuck_busy();
+
+	uint32_t get_error() const;
+	bool had_error() const;
+	void clear_error();
 
 	template<typename Reg>
 	requires std::derived_from<Reg, BusReg::WriteAccess>
@@ -65,6 +82,7 @@ public:
 
 private:
 	bool already_init = false;
+	volatile uint32_t latched_error_ = 0; // HAL_I2C_ERROR_NONE
 	I2C_HandleTypeDef hal_i2c_;
 	IRQn_Type i2c_irq_num_;
 	IRQn_Type i2c_err_irq_num_;
@@ -75,6 +93,7 @@ private:
 
 	void i2c_error_handler();
 	void i2c_event_handler();
+	void latch_error();
 
 	uint32_t _check_errors(uint32_t retries);
 

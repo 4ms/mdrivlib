@@ -336,6 +336,8 @@ void SaiTdmPeriph::start() {
 		dma_dme_flag_index = dma_get_DME_flag_index(hdma_rx.Instance);
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_rx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_rx.stream);
+		dma_stream = saidef_.dma_init_rx.stream;
+		dma_half_transfer_count = rx_block_size_ / 2;
 		_start_irq(rx_irqn);
 	}
 	if (saidef_.mode == SaiConfig::TXMaster) {
@@ -346,6 +348,8 @@ void SaiTdmPeriph::start() {
 		dma_dme_flag_index = dma_get_DME_flag_index(hdma_tx.Instance);
 		dma_isr_reg = dma_get_ISR_reg(saidef_.dma_init_tx.stream);
 		dma_ifcr_reg = dma_get_IFCR_reg(saidef_.dma_init_tx.stream);
+		dma_stream = saidef_.dma_init_tx.stream;
+		dma_half_transfer_count = tx_block_size_ / 2;
 		_start_irq(tx_irqn);
 	}
 	if (saidef_.mode == SaiConfig::ExtSynced) {
@@ -355,6 +359,7 @@ void SaiTdmPeriph::start() {
 	fe_errors = 0;
 	te_errors = 0;
 	dme_errors = 0;
+	missed_blocks = 0;
 
 	HAL_SAI_Transmit_DMA(&hsai_tx, tx_buf_ptr_, tx_block_size_);
 	HAL_SAI_Receive_DMA(&hsai_rx, rx_buf_ptr_, rx_block_size_);
@@ -362,12 +367,27 @@ void SaiTdmPeriph::start() {
 
 void SaiTdmPeriph::_start_irq(IRQn_Type irqn) {
 	InterruptManager::register_isr(irqn, [this]() {
-		if ((*dma_isr_reg & dma_tc_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_TC)*/) {
+		auto isr_flags = *dma_isr_reg;
+		bool full_transfer = (isr_flags & dma_tc_flag_index) != 0;
+		bool half_transfer = (isr_flags & dma_ht_flag_index) != 0;
+
+		if (full_transfer && half_transfer) {
+			// Both flags set means the callback ran past the deadline.
+			// Skip one block to catch up.
+			*dma_ifcr_reg = dma_tc_flag_index | dma_ht_flag_index;
+			missed_blocks++;
+
+			// This seems like ht/tc is swapped, but it works in practice
+			if (dma_stream->NDTR > dma_half_transfer_count)
+				tx_ht_cb();
+			else
+				tx_tc_cb();
+
+		} else if (full_transfer) {
 			*dma_ifcr_reg = dma_tc_flag_index;
 			tx_tc_cb();
-		}
 
-		if ((*dma_isr_reg & dma_ht_flag_index) /*&& (saidef_.dma_init_tx.stream->CR & DMA_IT_HT)*/) {
+		} else if (half_transfer) {
 			*dma_ifcr_reg = dma_ht_flag_index;
 			tx_ht_cb();
 		}

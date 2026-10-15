@@ -16,8 +16,6 @@ struct FlashCellBlock {
 
 	FlashCellBlock(QSpiFlash &qspi)
 		: qspi_(qspi) {
-		if (!qspi_.check_chip_id(0x180001, 0x00180001)) //182001 or 186001 or 1840EF
-			__BKPT(1);
 	}
 
 	using data_t = DataT;

@@ -10,6 +10,7 @@ namespace mdrivlib
 {
 
 constexpr uint32_t _I2C_FLAG_TIMEOUT = 1;
+constexpr uint32_t _I2C_PROBE_TIMEOUT = 3;
 constexpr uint32_t _I2C_LONG_TIMEOUT = 30;
 constexpr uint32_t _I2C_VLONG_TIMEOUT = 100;
 
@@ -22,6 +23,7 @@ uint32_t I2CPeriph::_check_errors(uint32_t retries) {
 }
 
 I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Receive(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
@@ -32,6 +34,7 @@ I2CPeriph::Error I2CPeriph::read(uint16_t dev_address, uint8_t *data, uint16_t s
 }
 
 I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Receive_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
@@ -42,6 +45,7 @@ I2CPeriph::Error I2CPeriph::read_IT(uint16_t dev_address, uint8_t *data, uint16_
 }
 
 I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Transmit(&hal_i2c_, dev_address, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
@@ -52,6 +56,7 @@ I2CPeriph::Error I2CPeriph::write(uint16_t dev_address, uint8_t *data, uint16_t 
 }
 
 I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Master_Transmit_IT(&hal_i2c_, dev_address, data, size) == HAL_OK)
@@ -63,6 +68,7 @@ I2CPeriph::Error I2CPeriph::write_IT(uint16_t dev_address, uint8_t *data, uint16
 
 I2CPeriph::Error
 I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Read(&hal_i2c_, dev_address, mem_address, memadd_size, data, size, _I2C_LONG_TIMEOUT) == HAL_OK)
@@ -74,6 +80,7 @@ I2CPeriph::mem_read(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_
 
 I2CPeriph::Error
 I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Read_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
@@ -85,6 +92,7 @@ I2CPeriph::mem_read_IT(uint16_t dev_address, uint16_t mem_address, uint32_t mema
 
 I2CPeriph::Error
 I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Write(&hal_i2c_, dev_address, mem_address, memadd_size, data, size, _I2C_LONG_TIMEOUT) ==
@@ -97,6 +105,7 @@ I2CPeriph::mem_write(uint16_t dev_address, uint16_t mem_address, uint32_t memadd
 
 I2CPeriph::Error I2CPeriph::mem_write_IT(
 	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	uint32_t retries = 16;
 	while (retries) {
 		if (HAL_I2C_Mem_Write_IT(&hal_i2c_, dev_address, mem_address, memadd_size, data, size) == HAL_OK)
@@ -108,6 +117,7 @@ I2CPeriph::Error I2CPeriph::mem_write_IT(
 
 I2CPeriph::Error I2CPeriph::mem_write_dma(
 	uint16_t dev_address, uint16_t mem_address, uint32_t memadd_size, uint8_t *data, uint16_t size) {
+	clear_error();
 	HAL_StatusTypeDef err;
 	while ((err = HAL_I2C_Mem_Write_DMA(&hal_i2c_, dev_address, mem_address, memadd_size, data, size)) != HAL_OK) {
 		if (HAL_I2C_GetError(&hal_i2c_) != HAL_I2C_ERROR_AF)
@@ -120,8 +130,51 @@ bool I2CPeriph::is_ready() {
 	return (HAL_I2C_GetState(&hal_i2c_) == HAL_I2C_STATE_READY);
 }
 
+bool I2CPeriph::clear_stuck_busy() {
+	// Don't interrupt any transactions in flight
+	if (HAL_I2C_GetState(&hal_i2c_) != HAL_I2C_STATE_READY)
+		return false;
+
+	if (__HAL_I2C_GET_FLAG(&hal_i2c_, I2C_FLAG_BUSY) == RESET)
+		return false;
+
+	__HAL_I2C_DISABLE(&hal_i2c_);
+
+	// PE has to stay low for at least 3 APB cycles for the reset to take
+	for (uint32_t i = 0; i < 16; i++)
+		asm volatile("nop");
+
+	__HAL_I2C_ENABLE(&hal_i2c_);
+
+	return true;
+}
+
+bool I2CPeriph::probe(uint16_t dev_address) {
+	clear_error();
+	return HAL_I2C_IsDeviceReady(&hal_i2c_, dev_address, 1, _I2C_PROBE_TIMEOUT) == HAL_OK;
+}
+
+uint32_t I2CPeriph::get_error() const {
+	return latched_error_;
+}
+
+bool I2CPeriph::had_error() const {
+	return latched_error_ != HAL_I2C_ERROR_NONE;
+}
+
+void I2CPeriph::clear_error() {
+	latched_error_ = HAL_I2C_ERROR_NONE;
+}
+
+// Store the HAL error code so we can detect a failed xfer that didn't
+// hang or kill the bus
+void I2CPeriph::latch_error() {
+	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE)
+		latched_error_ |= hal_i2c_.ErrorCode;
+}
+
 void I2CPeriph::deinit() {
-	Clocks::I2C::disable(hal_i2c_.Instance);
+	// Clocks::I2C::disable(hal_i2c_.Instance);
 	HAL_Delay(1);
 
 	if (hal_i2c_.Instance == I2C1) {
@@ -157,6 +210,71 @@ void I2CPeriph::deinit() {
 	}
 
 	already_init = false;
+}
+
+// At least 10us, so we're under 50kHz
+static void bus_clear_half_clock_delay() {
+	// FIXME: is SystemCoreClock guarenteed to be defined for all targets?
+	for (uint32_t i = 0; i < SystemCoreClock / 100'000; i++)
+		__NOP();
+}
+
+void I2CPeriph::clear_bus(const I2CConfig &defs) {
+	// If noise made a target miss a clock edge, it can be stuck mid-byte holding
+	// SDA low, and no amount of resetting our end will free the bus. Clocking SCL
+	// until SDA is released and then sending a STOP gets it back in sync.
+	disable_IT();
+
+	Pin scl{defs.SCL, PinMode::Input, PinPull::Up};
+	Pin sda{defs.SDA, PinMode::Input, PinPull::Up};
+
+	// Set the output registers high before switching to output, so there's no glitch
+	scl.high();
+	sda.high();
+	scl.set_otype(PinOType::OpenDrain);
+	sda.set_otype(PinOType::OpenDrain);
+	scl.set_mode(PinMode::Output);
+	bus_clear_half_clock_delay();
+
+	for (unsigned i = 0; i < 9 && !sda.read_raw(); i++) {
+		scl.low();
+		bus_clear_half_clock_delay();
+		scl.high();
+		bus_clear_half_clock_delay();
+	}
+
+	// STOP: SDA rises while SCL is high
+	scl.low();
+	bus_clear_half_clock_delay();
+	sda.set_mode(PinMode::Output);
+	sda.low();
+	bus_clear_half_clock_delay();
+	scl.high();
+	bus_clear_half_clock_delay();
+	sda.high();
+	bus_clear_half_clock_delay();
+}
+
+I2CPeriph::Error I2CPeriph::reset(const I2CConfig &defs) {
+	// Mask the I2C interrupts before resetting so an in-flight
+	// IRQ won't read the I2C registers when they're not clocked.
+	disable_IT();
+
+	deinit();
+	clear_error();
+
+	hal_i2c_.Lock = HAL_UNLOCKED;
+	hal_i2c_.State = HAL_I2C_STATE_RESET;
+	hal_i2c_.ErrorCode = HAL_I2C_ERROR_NONE;
+
+	const auto err = init(defs);
+
+	// A pending error IRQ unmasked here is harmless now that the handler only
+	// latches: it reads flags that the re-init already cleared, and the next
+	// transfer clears the latch before it starts.
+	// TODO: if IT was not previously enabled, this would be wrong:
+	enable_IT(defs.priority1, defs.priority2);
+	return err;
 }
 
 I2CPeriph::Error I2CPeriph::init(const I2CConfig &defs) {
@@ -284,13 +402,23 @@ void I2CPeriph::disable_IT() {
 
 void I2CPeriph::i2c_event_handler() {
 	HAL_I2C_EV_IRQHandler(&hal_i2c_);
+	// NACKs (HAL_I2C_ERROR_AF) are detected on the event path, not the error path
+	latch_error();
 }
 
 void I2CPeriph::i2c_error_handler() {
 	HAL_I2C_ER_IRQHandler(&hal_i2c_);
-	if (hal_i2c_.ErrorCode != HAL_I2C_ERROR_NONE) {
-		HAL_I2C_Init(&hal_i2c_);
-	}
+	latch_error();
+
+	// Deliberately no HAL_I2C_Init() here. Re-initializing from interrupt
+	// context reconfigures the peripheral underneath whatever HAL call is in
+	// flight on the main loop, and forces State back to READY without clearing
+	// Lock (it only does that when State is RESET, which it isn't mid-transfer)
+	// -- leaving the handle half fixed-up and refusing every later transfer
+	// before it reaches the bus.
+	//
+	// The error is latched instead, and the caller's state machine recovers via
+	// reset(), which runs in the main context where re-init is safe.
 }
 
 void I2CPeriph::link_DMA_TX(DMA_HandleTypeDef *dmatx) {
