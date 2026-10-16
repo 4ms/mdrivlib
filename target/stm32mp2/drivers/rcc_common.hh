@@ -37,8 +37,10 @@ using BKPSRAM_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, BKPSRA
 using BSEC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, BSECCFGR), RCC_BSECCFGR_BSECEN>;
 using CCI_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CCICFGR), RCC_CCICFGR_CCIEN>;
 using CRC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CRCCFGR), RCC_CRCCFGR_CRCEN>;
+#ifdef RCC_CRYP1CFGR_CRYP1EN // crypto parts only (STM32MP25xC/F)
 using CRYP1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CRYP1CFGR), RCC_CRYP1CFGR_CRYP1EN>;
 using CRYP2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CRYP2CFGR), RCC_CRYP2CFGR_CRYP2EN>;
+#endif
 using CSI2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CSI2CFGR), RCC_CSI2CFGR_CSI2EN>;
 using DBG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, DBGCFGR), RCC_DBGCFGR_DBGEN>;
 using DBGTRACE_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, DBGCFGR), RCC_DBGCFGR_TRACEEN>;
@@ -244,6 +246,8 @@ struct GPIO {
 			RCC_Enable::GPIOI_::set();
 		else if (periph == GPIOJ)
 			RCC_Enable::GPIOJ_::set();
+		else if (periph == GPIOK)
+			RCC_Enable::GPIOK_::set();
 		else if (periph == GPIOZ)
 			RCC_Enable::GPIOZ_::set();
 	}
@@ -269,6 +273,8 @@ struct GPIO {
 			RCC_Enable::GPIOI_::clear();
 		else if (periph == GPIOJ)
 			RCC_Enable::GPIOJ_::clear();
+		else if (periph == GPIOK)
+			RCC_Enable::GPIOK_::clear();
 		else if (periph == GPIOZ)
 			RCC_Enable::GPIOZ_::clear();
 	}
@@ -294,6 +300,8 @@ struct GPIO {
 			return RCC_Enable::GPIOI_::read();
 		else if (periph == GPIOJ)
 			return RCC_Enable::GPIOJ_::read();
+		else if (periph == GPIOK)
+			return RCC_Enable::GPIOK_::read();
 		else if (periph == GPIOZ)
 			return RCC_Enable::GPIOZ_::read();
 		else
@@ -339,8 +347,10 @@ using ADC3_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, ADC3CFGR)
 using ADF1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, ADF1CFGR), RCC_ADF1CFGR_ADF1RST>;
 using CCI_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CCICFGR), RCC_CCICFGR_CCIRST>;
 using CRC_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CRCCFGR), RCC_CRCCFGR_CRCRST>;
+#ifdef RCC_CRYP1CFGR_CRYP1EN // crypto parts only (STM32MP25xC/F)
 using CRYP1_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CRYP1CFGR), RCC_CRYP1CFGR_CRYP1RST>;
 using CRYP2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CRYP2CFGR), RCC_CRYP2CFGR_CRYP2RST>;
+#endif
 using CSI2_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, CSI2CFGR), RCC_CSI2CFGR_CSI2RST>;
 using DBG_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, DBGCFGR), RCC_DBGCFGR_DBGRST>;
 using DCMIPP_ = RegisterBits<ReadWrite, RCC_BASE + offsetof(RCC_TypeDef, DCMIPPCFGR), RCC_DCMIPPCFGR_DCMIPPRST>;

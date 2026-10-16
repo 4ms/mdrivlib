@@ -1,7 +1,7 @@
 // Weak hooks (override by defining the symbol in your project):
 //   early_print_el        - e.g. print the current EL to a UART (before anything else)
 //   block_ram_enable_el3  - e.g. open SYSRAM/SRAM/RETRAM via RISAB (see drivers/risab.hh)
-//   system_init           - clock/PLL setup, called just before main()
+//   system_init           - clock/PLL setup, called before C++ static constructors and main()
 //
 // Required from the app: mmu_enable / mmu_enable_el3 (copy templates/mmu_ca35.cc),
 // vectors (boot/vectors.S), IRQ_Dist_Initialize / IRQ_Initialize (boot/irq_init.c),
@@ -115,12 +115,12 @@ el3_entry:
     b       entry_done
 
 entry_done:
+    bl      system_init             // clocks before C++ static constructors (which may init peripherals)
     bl      __libc_init_array
     msr     daifclr, #0xf
     bl      IRQ_Dist_Initialize
     bl      IRQ_Initialize
 
-    bl      system_init
     bl      main
 
 hang:

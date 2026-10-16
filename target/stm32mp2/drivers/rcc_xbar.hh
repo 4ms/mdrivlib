@@ -12,6 +12,8 @@ struct FlexbarConf {
 		_6 = RCC_XBAR_CLKSRC_PLL6,
 		_7 = RCC_XBAR_CLKSRC_PLL7,
 		_8 = RCC_XBAR_CLKSRC_PLL8,
+		HSI = RCC_XBAR_CLKSRC_HSI, // not a PLL, but a valid flexgen source
+		HSE = RCC_XBAR_CLKSRC_HSE, // not a PLL, but a valid flexgen source
 	};
 	PLLx PLL = PLLx::_4;
 	uint8_t findiv = 0x3F;
@@ -19,6 +21,8 @@ struct FlexbarConf {
 
 	enum FlexbarChan {
 		SAI2_ = 24,
+		LTDC_ = 27,	  // ck_ker_ltdc: LTDC pixel clock (when SYSCFG DISPLAYCLKCR selects it)
+		DSIPHY_ = 28, // ck_ker_dsiphy: DSI D-PHY PLL reference (17-27 MHz)
 	};
 
 	void init(unsigned chan_num) {
