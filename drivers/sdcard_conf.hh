@@ -22,9 +22,15 @@ struct DefaultSDCardConf {
 	//       the card's internal pull-up then pulls it high)
 	// None: no detect signal: a card is present if it responds to initialization.
 	//       While no card is present, initialization is retried at most every redetect_interval_ms.
-	enum class CardDetect { DAT3, None };
+	// GPIOLow: if a GPIO is read as low, the card is present
+	// GPIOHigh: if a GPIO is read as high, the card is present
+	enum class CardDetect { DAT3, None, GPIOLow, GPIOHigh };
 	static constexpr CardDetect card_detect = CardDetect::DAT3;
 	static constexpr uint32_t redetect_interval_ms = 500;
+
+	// For GPIOLow/GPIOHigh card detect
+	static constexpr PinDef CardDetectPin{};
+	static constexpr PinPull card_detect_pull = PinPull::None;
 };
 
 template<typename T>

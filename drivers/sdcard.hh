@@ -34,8 +34,11 @@ struct SDCard {
 		Pin{ConfT::SCLK, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
 
 		// With DAT3 card detect, D3 is switched between GPIO and AltFunc by set_status_*()
-		if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::None)
+		if constexpr (ConfT::card_detect != DefaultSDCardConf::CardDetect::DAT3)
 			Pin{ConfT::D3, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
+
+		if constexpr (uses_detect_gpio())
+			card_det_pin.init(ConfT::CardDetectPin, PinMode::Input, ConfT::card_detect_pull);
 
 		init();
 	}
@@ -85,6 +88,13 @@ struct SDCard {
 				break;
 
 			case Status::Mounted: {
+				// A detect switch reports removal right away, without waiting for a command to fail
+				if constexpr (uses_detect_gpio()) {
+					if (!card_maybe_present()) {
+						set_status_nocard();
+						break;
+					}
+				}
 				hsd.ErrorCode = HAL_SD_ERROR_NONE;
 				auto cardstate = HAL_SD_GetCardState(&hsd);
 				if (HAL_SD_GetError(&hsd) != HAL_SD_ERROR_NONE || cardstate == HAL_SD_CARD_DISCONNECTED ||
@@ -259,10 +269,19 @@ private:
 	uint32_t last_init_attempt_tm = 0;
 	bool attempted_init = false;
 
+	static constexpr bool uses_detect_gpio() {
+		return ConfT::card_detect == DefaultSDCardConf::CardDetect::GPIOLow ||
+			   ConfT::card_detect == DefaultSDCardConf::CardDetect::GPIOHigh;
+	}
+
 	// Whether a card might be present, so initializing it is worth trying
 	bool card_maybe_present() {
 		if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::DAT3) {
 			return card_det_pin.is_on();
+		} else if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::GPIOLow) {
+			return !card_det_pin.read_raw();
+		} else if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::GPIOHigh) {
+			return card_det_pin.read_raw();
 		} else {
 			// No detect signal: rate-limit init attempts, since each failed one takes time
 			auto now = HAL_GetTick();
