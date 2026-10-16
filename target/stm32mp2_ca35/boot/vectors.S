@@ -17,25 +17,11 @@
 print_esr_description:
     ret
 
+// Each vector entry is limited to 128 bytes, so it only records the exception
+// type and branches (not bl: x30 must survive) to the shared dump routine below.
 .macro handle_exception exc_type
     mov     x21, #(\exc_type)
-    get_esr_elx x22
-    mov     x0, '\n'
-    bl      putchar_s
-    mov     x0, 'X'
-    bl      putchar_s
-    mov     x0, x21
-    bl      early_puthex64
-    mov     x0, '\n'
-    bl      putchar_s
-    mov     x0, x22
-    bl      early_puthex64
-    mov     x0, '\n'
-    bl      putchar_s
-    mov     x0, x22
-    bl      print_esr_description
-
-    b       .
+    b       exception_dump
 .endm
 
 
@@ -218,3 +204,53 @@ exit_irq_handler:
 
 unhandled_int:
     b       .
+
+// Print a label (up to 8 chars, packed little-endian into a register) followed by a hex value
+.macro print_label_hex label_reg, value_reg
+    mov     x26, \label_reg
+1:  and     x0, x26, #0xFF
+    cbz     x0, 2f
+    bl      putchar_s
+    lsr     x26, x26, #8
+    b       1b
+2:  mov     x0, \value_reg
+    bl      early_puthex64
+.endm
+
+// Dump: exception type tag (x21), ESR, ELR (faulting PC), FAR (faulting address),
+// LR (x30, e.g. the return address after a bad blr), and SP. Then hang.
+// x19-x28 are callee-saved, so they survive the putchar_s/early_puthex64 calls.
+.section .text
+.type exception_dump, @function
+exception_dump:
+    mov     x23, x30
+    mov     x24, sp
+    get_esr_elx x22
+    get_elr_elx x25
+    get_far_elx x27
+    mov     x0, '\n'
+    bl      putchar_s
+    mov     x0, 'X'
+    bl      putchar_s
+    mov     x0, x21
+    bl      early_puthex64
+    mov     x0, '\n'
+    bl      putchar_s
+    mov     x0, x22
+    bl      early_puthex64
+    mov     x0, '\n'
+    bl      putchar_s
+    ldr     x28, =0x3d524c45        // "ELR="
+    print_label_hex x28, x25
+    ldr     x28, =0x3d5241462020    // "  FAR="
+    print_label_hex x28, x27
+    ldr     x28, =0x3d524c2020      // "  LR="
+    print_label_hex x28, x23
+    ldr     x28, =0x3d50532020      // "  SP="
+    print_label_hex x28, x24
+    mov     x0, '\n'
+    bl      putchar_s
+    mov     x0, x22
+    bl      print_esr_description
+    b       .
+.ltorg
