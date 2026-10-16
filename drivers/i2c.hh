@@ -83,7 +83,7 @@ public:
 private:
 	bool already_init = false;
 	volatile uint32_t latched_error_ = 0; // HAL_I2C_ERROR_NONE
-	I2C_HandleTypeDef hal_i2c_;
+	I2C_HandleTypeDef hal_i2c_{}; // zeroed: the HAL treats NULL callbacks/handles as "use default"
 	IRQn_Type i2c_irq_num_;
 	IRQn_Type i2c_err_irq_num_;
 	Interrupt event_isr;
