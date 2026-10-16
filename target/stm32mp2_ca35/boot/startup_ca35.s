@@ -5,7 +5,7 @@
 //
 // Required from the app: mmu_enable / mmu_enable_el3 (copy templates/mmu_ca35.cc),
 // vectors (boot/vectors.S), IRQ_Dist_Initialize / IRQ_Initialize (boot/irq_init.c),
-// and the linker symbols _stack_start/_bss_start/_bss_end (templates linker script).
+// and the linker symbols _stack_end/_bss_start/_bss_end (templates linker script).
 
 .cpu cortex-a35
 
@@ -28,8 +28,8 @@ _Reset:
     // Mask interrupts
     msr     daifset, #0xf
 
-    // Set up stack
-    ldr     x1, =_stack_start
+    // Set up stack (grows down from the top of the region)
+    ldr     x1, =_stack_end
     bic     sp, x1, 0xf
 
     // Clear .bss

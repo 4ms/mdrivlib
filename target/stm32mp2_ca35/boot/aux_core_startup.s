@@ -1,4 +1,4 @@
-// Requires linker symbol _cpu1_stack_start and an aux_main() in the app.
+// Requires linker symbol _cpu1_stack_end and an aux_main() in the app.
 
 .global aux_main
 .global aux_core_startup
@@ -6,9 +6,9 @@ aux_core_startup:
     // Mask interrupts
     msr     daifset, #0xf
 
-    // Set up stack
-    ldr     x1, =_cpu1_stack_start
-    mov     sp, x1
+    // Set up stack (grows down from the top of the region)
+    ldr     x1, =_cpu1_stack_end
+    bic     sp, x1, 0xf
 
     // Branch to entry for our level
     mrs     x0, CurrentEL
