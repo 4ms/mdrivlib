@@ -80,7 +80,10 @@ struct SDCard {
 					if (HAL_SD_Init(&hsd) != HAL_OK) {
 						// printf_("Cannot re-mount, err %d\n", (unsigned)HAL_SD_GetError(&hsd));
 						mdrivlib::RCC_Reset::SDMMC1_::set();
-						HAL_Delay(100);
+						// With no detect signal, a failed init just means no card, and this runs
+						// every redetect_interval_ms: don't stall the caller
+						if constexpr (ConfT::card_detect != DefaultSDCardConf::CardDetect::None)
+							HAL_Delay(100);
 						mdrivlib::RCC_Reset::SDMMC1_::clear();
 						set_status_nocard();
 					}
