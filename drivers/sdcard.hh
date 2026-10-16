@@ -10,7 +10,7 @@ namespace mdrivlib
 
 template<SDCardConfC ConfT>
 struct SDCard {
-	SD_HandleTypeDef hsd;
+	SD_HandleTypeDef hsd{};
 	enum class Status { NotInit, NoCard, Mounted } status = Status::NotInit;
 	Pin card_det_pin;
 
@@ -33,7 +33,9 @@ struct SDCard {
 		Pin{ConfT::CMD, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
 		Pin{ConfT::SCLK, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
 
-		//Note: We do not init D3 as AltFunc; it's used as card detect
+		// With DAT3 card detect, D3 is switched between GPIO and AltFunc by set_status_*()
+		if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::None)
+			Pin{ConfT::D3, PinMode::Alt, PinPull::Up, PinPolarity::Normal, PinSpeed::VeryHigh};
 
 		init();
 	}
@@ -43,7 +45,7 @@ struct SDCard {
 			return;
 
 		set_status_nocard();
-		if (card_det_pin.is_on()) {
+		if (card_maybe_present()) {
 			set_status_mounted();
 			if (HAL_SD_Init(&hsd) != HAL_OK) {
 				set_status_nocard();
@@ -69,7 +71,7 @@ struct SDCard {
 	bool detect_card() {
 		switch (status) {
 			case Status::NoCard:
-				if (card_det_pin.is_on()) {
+				if (card_maybe_present()) {
 					set_status_mounted();
 					HAL_SD_DeInit(&hsd);
 					if (HAL_SD_Init(&hsd) != HAL_OK) {
@@ -101,9 +103,13 @@ struct SDCard {
 		if (status == Status::Mounted)
 			return true;
 		if (status == Status::NoCard) {
-			if (card_det_pin.is_on()) {
-				set_status_mounted();
-				return true;
+			if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::DAT3) {
+				if (card_det_pin.is_on()) {
+					set_status_mounted();
+					return true;
+				}
+			} else {
+				return detect_card(); // tries to initialize the card (rate-limited)
 			}
 		}
 		return false;
@@ -142,7 +148,7 @@ struct SDCard {
 		uint32_t bytes_to_read = buf.size_bytes();
 		auto read_ptr = buf.data();
 
-		bool buf_is_aligned = !((uint32_t)buf.data() & 0b11);
+		bool buf_is_aligned = !(reinterpret_cast<uintptr_t>(buf.data()) & 0b11);
 
 		if (buf_is_aligned && (bytes_to_read >= BlockSize)) {
 			uint32_t numblocks = bytes_to_read / BlockSize;
@@ -229,7 +235,7 @@ struct SDCard {
 			// 	return false;
 			if (!wait_until_ready())
 				return false;
-			if (!Target::write(&hsd, buf_ptr, block_num, numblocks))
+			if (!Target::write(&hsd, _data, block_num, numblocks))
 				return false;
 			if (!wait_until_ready())
 				return false;
@@ -250,17 +256,38 @@ struct SDCard {
 	}
 
 private:
+	uint32_t last_init_attempt_tm = 0;
+	bool attempted_init = false;
+
+	// Whether a card might be present, so initializing it is worth trying
+	bool card_maybe_present() {
+		if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::DAT3) {
+			return card_det_pin.is_on();
+		} else {
+			// No detect signal: rate-limit init attempts, since each failed one takes time
+			auto now = HAL_GetTick();
+			if (attempted_init && (now - last_init_attempt_tm) < ConfT::redetect_interval_ms)
+				return false;
+			attempted_init = true;
+			last_init_attempt_tm = now;
+			return true;
+		}
+	}
+
 	void set_status_mounted() {
 		status = Status::Mounted;
-		card_det_pin.init(ConfT::D3, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh);
+		if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::DAT3)
+			card_det_pin.init(ConfT::D3, PinMode::Alt, PinPull::None, PinPolarity::Normal, PinSpeed::VeryHigh);
 	}
 
 	void set_status_nocard() {
 		status = Status::NoCard;
-		//TODO: Check if we need to toggle pin state, we might be able to read the pin
-		// even when its in AF mode
-		card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
-		HAL_Delay(1);
+		if constexpr (ConfT::card_detect == DefaultSDCardConf::CardDetect::DAT3) {
+			//TODO: Check if we need to toggle pin state, we might be able to read the pin
+			// even when its in AF mode
+			card_det_pin.init(ConfT::D3, PinMode::Input, PinPull::None);
+			HAL_Delay(1);
+		}
 	}
 };
 
