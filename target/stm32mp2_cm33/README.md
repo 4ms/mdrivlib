@@ -11,4 +11,4 @@ It is loaded and started by the A35: see `target/stm32mp2_ca35/drivers/copro_con
 - `drivers/interrupt_control.hh`, `interrupt_handler.cc`: NVIC, same API as the other targets.
 - `drivers/hal_tick_stgen.cc`: `HAL_GetTick()`/`udelay()`/`mdelay()` from the system timestamp
   generator (STGEN), the same counter as the A35's CNTPCT. No SysTick needed.
-- `drivers/cache.hh`: no-ops for now (the M33 caches aren't enabled yet).
+- `drivers/cache.hh`: the DCACHE peripheral (S-AHB: DDR etc). Configure the MPU first; keep shared memory non-cacheable.
