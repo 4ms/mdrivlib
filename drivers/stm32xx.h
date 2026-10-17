@@ -33,9 +33,7 @@
 
 #elif defined(STM32MP2)
 
-#if defined(CORE_CM33)
-#include "stm32mp2xx.h"
-#elif defined(CORE_CA35)
+#if defined(CORE_CM33) || defined(CORE_CA35)
 #include "stm32mp2xx.h"
 // stm32mp2xx.h only pulls in the per-module HAL headers (via the hal_conf);
 // HAL_Delay & co. are declared in the top-level HAL header:
