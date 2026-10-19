@@ -57,6 +57,13 @@ el1_entry_aux:
 
 // EL3 entry:
 el3_entry_aux:
+    // Take part in the cluster's cache coherency. Must be set before the caches are enabled.
+    // (At lower ELs the secure monitor sets it; at EL3 nothing has, since we reset this core ourselves)
+    mrs     x0, S3_1_C15_C2_1       // CPUECTLR_EL1
+    orr     x0, x0, #(1 << 6)       // SMPEN
+    msr     S3_1_C15_C2_1, x0
+    isb
+
     ldr     x0, =vectors
     msr     vbar_el3, x0
     isb
@@ -77,7 +84,11 @@ el3_entry_aux:
     b       entry_done_aux
 
 entry_done_aux:
-    bl      __libc_init_array
+    // No __libc_init_array here: core 0 already ran the global constructors
+    // (before releasing this core), and all statics live in shared memory.
+    // Re-running them on core 1 re-constructs shared objects in place -- e.g.
+    // it wipes the InterruptManager ISR table, discarding every handler core 0
+    // had registered.
     msr     daifclr, #0xf
     bl      IRQ_Initialize
     bl      aux_main
