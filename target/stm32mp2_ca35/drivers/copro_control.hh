@@ -70,6 +70,19 @@ struct CoproController {
 		return *reinterpret_cast<volatile uint32_t *>(addr);
 	}
 
+	static int32_t wait_for_breadcrumb(uintptr_t vector_table_addr, unsigned num, uint32_t value, uint32_t timeout_ms) {
+		auto freq = read_cntfreq();
+		auto start = read_cntpct();
+		auto timeout_ticks = freq / 1000 * timeout_ms;
+		while (true) {
+			auto elapsed = read_cntpct() - start;
+			if (read_breadcrumb(vector_table_addr, num) == value)
+				return int32_t(elapsed * 1'000'000 / freq);
+			if (elapsed > timeout_ticks)
+				return -1;
+		}
+	}
+
 private:
 	static void sram2_set_secure() {
 		for (auto i = 0u; i < 32; i++)

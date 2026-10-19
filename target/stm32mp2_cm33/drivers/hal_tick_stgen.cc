@@ -76,3 +76,8 @@ extern "C" void mdelay(unsigned int ms) {
 	while ((stgen_read_counter() - start) < uint64_t(ms) * ticks_per_ms())
 		;
 }
+
+// Replaces the HAL's weak HAL_Delay() (stm32mp2xx_hal.c isn't needed otherwise)
+extern "C" void HAL_Delay(uint32_t ms) {
+	mdelay(ms);
+}
