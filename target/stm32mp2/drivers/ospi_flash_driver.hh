@@ -6,7 +6,6 @@ namespace mdrivlib
 {
 
 // Serial NOR flash (Winbond W25Qxx command set) on the STM32MP2 OCTOSPI, in indirect mode.
-// Same API as the QUADSPI driver (drivers/qspi_flash_driver.hh) so code using QSpiFlash works with it.
 //
 // Everything runs in the foreground: the EXECUTE_BACKGROUND options are accepted, but block like
 // EXECUTE_FOREGROUND.
@@ -14,7 +13,12 @@ namespace mdrivlib
 // Only one core may use the flash at a time: the constructor resets and re-initializes the OCTOSPI.
 class OSpiFlash {
 public:
-	enum ErasableSizes : uint32_t { SECTOR = 0x1000, BLOCK_32K = 0x8000, BLOCK_64K = 0x10000, ENTIRE_CHIP = 0xFFFFFFFF };
+	enum ErasableSizes : uint32_t {
+		SECTOR = 0x1000,
+		BLOCK_32K = 0x8000,
+		BLOCK_64K = 0x10000,
+		ENTIRE_CHIP = 0xFFFFFFFF
+	};
 	enum UseInterruptFlags { EXECUTE_FOREGROUND, EXECUTE_BACKGROUND };
 
 	static constexpr uint32_t PageSize = 256;
@@ -34,7 +38,8 @@ public:
 	bool write(const uint8_t *data, uint32_t write_addr, uint32_t num_bytes);
 
 	// Writes within one page (256 bytes)
-	bool write_page(const uint8_t *data, uint32_t write_addr, uint32_t num_bytes, UseInterruptFlags = EXECUTE_FOREGROUND);
+	bool
+	write_page(const uint8_t *data, uint32_t write_addr, uint32_t num_bytes, UseInterruptFlags = EXECUTE_FOREGROUND);
 
 	// size is one of the ErasableSizes. base_addr is rounded down to a multiple of size.
 	bool erase(uint32_t size, uint32_t base_addr, UseInterruptFlags = EXECUTE_FOREGROUND);
