@@ -33,4 +33,14 @@ inline bool add_ddr_region(
 	reg.CFGR = RISAF_REGCFGR_BREN | (secure ? RISAF_REGCFGR_SEC : 0);
 	return true;
 }
+
+// Disable a region added with add_ddr_region().
+// Returns false if RISAF4 is globally locked.
+inline bool remove_ddr_region(unsigned reg_index) {
+	if (RISAF4->CR & RISAF_CR_GLOCK)
+		return false;
+
+	RISAF4->REG[reg_index].CFGR &= ~RISAF_REGCFGR_BREN;
+	return true;
+}
 } // namespace mdrivlib::RISAF
