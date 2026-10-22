@@ -21,6 +21,16 @@ inline void invalidate_icache() {
 	isb();
 }
 
+// Invalidates the instruction caches of all the cores in the inner shareable domain (both A35
+// cores), e.g. after writing code that any core may run. Clean the data cache over the code first.
+inline void invalidate_icache_inner_shareable() {
+	asm volatile("dsb ish\n"
+				 "ic ialluis\n"
+				 "dsb ish\n"
+				 "isb" ::
+					 : "memory");
+}
+
 // Whole-cache ops on AArch64 iterate by set/way and clean+invalidate
 // (invalidate-only by set/way is unsafe on a running core).
 inline void invalidate_dcache() {
