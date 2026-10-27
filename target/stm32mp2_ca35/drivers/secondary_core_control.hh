@@ -4,15 +4,21 @@
 #include "drivers/system_reg.hh"
 #include <cstdint>
 
+extern "C" {
+// Used to pass Core0's CNTFRQ_EL0 value to core1.
+// Core 0 sets it in SecondaryCore::start() and Core 1 reads it in aux_core_startup
+inline uint64_t aux_core_cntfrq = 0;
+}
+
 namespace mdrivlib
 {
 
 struct SecondaryCore {
 	static constexpr uint64_t PSCI_CPU_ON_AARCH64 = 0xC4000003ULL;
 
-	// Start the second A35 core at the given entry point
-	// (typically aux_core_startup from boot/aux_core_startup.s, which calls aux_main()).
-	// At EL3 this resets the core directly; at lower ELs it uses PSCI CPU_ON via the
+	// Start the second A35 core at the given entry point.
+	// Typically the entry point is aux_core_startup from boot/aux_core_startup.s, which calls aux_main().
+	// At EL3 this resets the core directly, at lower ELs it uses PSCI CPU_ON via the
 	// Secure Monitor (context is only passed in the PSCI case).
 	// Returns 0 on success.
 	static int start(void (*cpu1_entry)(), uint64_t context = 0) {
@@ -23,6 +29,10 @@ struct SecondaryCore {
 		uint64_t target = (mpidr0 & ~0xFFULL) | 1ULL;
 
 		if (get_current_el() == 3) {
+			// Core 1 gets the same timer frequency as this core
+			aux_core_cntfrq = read_cntfreq();
+			dsb_sy();
+
 			// Set reset vector for CPU1 in 64-bit mode
 			CA35SYSCFG->VBAR_CR = ((uint32_t)(uintptr_t)cpu1_entry) & ~0b11;
 
