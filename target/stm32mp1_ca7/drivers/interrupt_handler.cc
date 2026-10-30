@@ -28,8 +28,9 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 		"ldr r0, [r3, #12]				\n" // AIAR: Acknowledge it with a read to the Interrupt Acknowledge Register
 		// "dsb sy							\n" // Data barrier (Todo: research why)
 
-		"bfc r0, #10, #3		   		\n" // Clear the sending CPU ID bits (which are set for SGIs)
-		"cmp r0, #0x03fc 				\n" // Check if it's a valid IRQ number
+		"ubfx r12, r0, #0, #10	   		\n" // IRQ number, without the sending CPU ID bits (which are set for SGIs).
+											// r0 keeps the CPU ID bits: EOIR needs them to end an SGI
+		"cmp r12, #0x03fc 				\n" // Check if it's a valid IRQ number
 		"bge ExitISRHandler				\n" // Skip this if it's invalid
 
 		"and r2, sp, #4  	 			\n" // Ensure stack is 8-byte aligned.
@@ -39,13 +40,14 @@ void __attribute__((naked)) __attribute__((section(".irqhandler"))) IRQ_Handler(
 		"vpush {d0-d15} 				\n" // Push all double and single registers
 		"vpush {d16-d31} 				\n"
 
-		"push {r0-r3}					\n" // Push IRQ number (r0), FPU Status (r1), stack adj. (r2), and GIC base (r3)
+		"push {r0-r3}					\n" // Push IAR value (r0), FPU Status (r1), stack adj. (r2), and GIC base (r3)
+		"mov r0, r12 					\n" // ISRHandler takes the IRQ number
 		"cpsie i 						\n" // Enable interrupts
 		"bl ISRHandler 					\n" // Handle the ISR
 		"cpsid i 						\n" // Disable interrupts while we exit
-		"pop {r0-r3} 					\n" // Restore the IRQ number, FPU status, stack adj. and GIC base
+		"pop {r0-r3} 					\n" // Restore the IAR value, FPU status, stack adj. and GIC base
 
-		"str r0, [r3, #16] 				\n" // EOIR: Write IRQ num to End of Interrupt Register to tell GIC we're done
+		"str r0, [r3, #16] 				\n" // EOIR: Write IAR value to End of Interrupt Register to tell GIC we're done
 
 		"vpop {d16-d31} 				\n"
 		"vpop {d0-d15} 					\n" // Push all double and single registers
